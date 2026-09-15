@@ -1,0 +1,7 @@
+(()=>{
+const RAW='https://raw.githubusercontent.com/kyle8824/chatgptfarm/main/world/state.json';
+const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+function render(w){const root=document.querySelector('#worldObjects');if(!root)return;const agents=new Map((w.agents||[]).map(a=>[a.id,a]));const shown=(w.artifacts||[]).filter(a=>a.status==='active'||a.status==='remnant').slice(-30);root.innerHTML=shown.map((art,i)=>{let c=art.coordinates;if(art.carrierId&&agents.has(art.carrierId))c=agents.get(art.carrierId).coordinates||c;if(!c)return'';const carried=!!art.carrierId,offset=carried?((i%3)-1)*2:((i%4)-1.5)*1.8;const title=`${art.id} · ${art.label}${art.provenance?' · '+art.provenance:''}`;return `<div class="world-artifact ${art.status==='remnant'?'remnant':''} ${carried?'carried':''}" style="left:${c.x+offset}%;bottom:${c.y+(carried?5:offset*.25)}%" title="${esc(title)}"><span>${esc(art.glyph||'•')}</span><small>${esc(art.label)}</small></div>`}).join('')}
+async function refresh(){try{const r=await fetch(`${RAW}?artifacts=${Date.now()}`,{cache:'no-store'});if(r.ok)render(await r.json())}catch{}}
+refresh();setInterval(refresh,15000);
+})();
