@@ -1,8 +1,8 @@
 {
   "version": "0.6",
   "day": 3,
-  "hour": 4,
-  "temperature": 44,
+  "hour": 6,
+  "temperature": 49,
   "weather": "cloudy",
   "resources": {
     "berries": 0,
@@ -33,12 +33,12 @@
     {
       "id": "agent-mara",
       "name": "Mara",
-      "position": "camp",
+      "position": "log",
       "needs": {
-        "hydration": 27,
-        "hunger": 49.599999999999966,
-        "energy": 27.2,
-        "warmth": 61
+        "hydration": 14,
+        "hunger": 41.19999999999996,
+        "energy": 11.599999999999998,
+        "warmth": 51
       },
       "inventory": {
         "berries": 0,
@@ -59,6 +59,18 @@
         "tubers": 0
       },
       "memories": [
+        {
+          "id": "M-M028",
+          "text": "Physical attempt 1: search fallen log produced no stable effect.",
+          "importance": 4,
+          "tags": [
+            "experiment",
+            "physical-attempt"
+          ],
+          "source": "experience:3-5",
+          "confidence": 0.64,
+          "lastSeen": "3:5"
+        },
         {
           "id": "M-M026",
           "text": "Mara should prioritize finding and gathering dry wood for overnight warmth, because she remembers that dry wood catches flame and provides strong warmth.",
@@ -236,7 +248,7 @@
         "cooperation": 0.68,
         "caution": 0.56
       },
-      "currentAction": "Rest in the shelter",
+      "currentAction": "search fallen log",
       "skills": {
         "sharp-edge": 1
       },
@@ -245,14 +257,12 @@
       },
       "mind": {
         "brainMode": "ai",
-        "currentGoal": "Survive the night with enough warmth.",
-        "intent": "Rest at camp and conserve energy.",
-        "confidence": 0.9,
-        "decisionSummary": "Energy is depleted, while warmth is not yet critically low; resting in the shelter is the safest immediate choice. Dry wood remains available for later warmth.",
+        "currentGoal": "Secure enough dry wood to keep warm through the night.",
+        "intent": "Search the fallen log for dry, burnable wood.",
+        "confidence": 0.95,
+        "decisionSummary": "Warmth and the overnight fuel goal make searching this nearby wood source the best next step.",
         "model": "gpt-5.6-luna",
         "recentActions": [
-          "rest",
-          "drink",
           "rest",
           "eat_berries",
           "eat_berries",
@@ -266,32 +276,97 @@
           "gather_dry_wood",
           "make_fire",
           "gather_dry_wood",
-          "rest"
+          "rest",
+          "physical:move:place:fallen_log",
+          "physical:search:place:fallen_log"
         ],
         "lastReferencedMemoryIds": [
           "M-M026",
-          "M-M007"
+          "M-M007",
+          "M-M005"
         ],
-        "lastPhysicalProposal": null
+        "lastPhysicalProposal": {
+          "verb": "search",
+          "primaryObjectId": "place:fallen_log",
+          "secondaryObjectId": "none",
+          "configuration": "none",
+          "purpose": "Find additional dry branches or other usable fuel at the fallen log."
+        }
       },
       "affordanceAttempts": {
-        "follow:animal_tracks:none:none": 1
+        "follow:animal_tracks:none:none": 1,
+        "move:place:fallen_log:none:none": 1,
+        "search:place:fallen_log:none:none": 1
       },
-      "coordinates": null,
-      "activeAction": null
+      "coordinates": {
+        "x": 59,
+        "y": 29
+      },
+      "activeAction": {
+        "id": "A-D-00095",
+        "decisionId": "D-00095",
+        "label": "search fallen log",
+        "actionId": "physical:search:place:fallen_log",
+        "worldDay": 3,
+        "worldHour": 5,
+        "from": {
+          "x": 59,
+          "y": 29
+        },
+        "to": {
+          "x": 59,
+          "y": 29
+        },
+        "target": {
+          "x": 59,
+          "y": 29
+        },
+        "moving": false,
+        "phases": [
+          {
+            "id": "decide",
+            "label": "Deciding",
+            "start": 0,
+            "end": 0.12
+          },
+          {
+            "id": "interact",
+            "label": "Acting",
+            "start": 0.12,
+            "end": 0.82
+          },
+          {
+            "id": "resolve",
+            "label": "Resolving",
+            "start": 0.82,
+            "end": 1
+          }
+        ],
+        "outcome": {
+          "success": false,
+          "detail": "Mara tries to search fallen log. No stable new effect emerges yet."
+        },
+        "physicalProposal": {
+          "verb": "search",
+          "primaryObjectId": "place:fallen_log",
+          "secondaryObjectId": "none",
+          "configuration": "none",
+          "purpose": "Find additional dry branches or other usable fuel at the fallen log."
+        }
+      }
     },
     {
       "id": "agent-ivo",
       "name": "Ivo",
-      "position": "camp",
+      "position": "creek",
       "needs": {
-        "hydration": 67.5,
-        "hunger": 43.99999999999994,
-        "energy": 72.20000000000012,
-        "warmth": 50
+        "hydration": 89.5,
+        "hunger": 63.59999999999994,
+        "energy": 66.60000000000012,
+        "warmth": 40
       },
       "inventory": {
-        "berries": 3,
+        "berries": 2,
         "dryWood": 0,
         "wetWood": 2,
         "stones": 1,
@@ -431,7 +506,7 @@
           ],
           "source": "experience:1-7",
           "confidence": 1,
-          "lastSeen": "2:23"
+          "lastSeen": "3:5"
         },
         {
           "id": "M-I002",
@@ -477,7 +552,7 @@
         "cooperation": 0.76,
         "caution": 0.48
       },
-      "currentAction": "Rest in the shelter",
+      "currentAction": "Drink from the creek",
       "skills": {
         "sharp-edge": 1,
         "clay-shaping": 1
@@ -487,15 +562,13 @@
         "clay-shaping": 1
       },
       "mind": {
-        "brainMode": "ai",
+        "brainMode": "fallback",
         "currentGoal": "Maintain basic survival through the cold night.",
-        "intent": "Return to the shelter and rest rather than spend energy exploring while warmth and energy are moderate.",
-        "confidence": 0.88,
-        "decisionSummary": "The shelter is a reliable survival resource, and resting is safer than further searching at this hour; berries and water remain available if needs worsen.",
-        "model": "gpt-5.6-luna",
+        "intent": "Drink from the creek",
+        "confidence": 0.62,
+        "decisionSummary": "AI unavailable; fallback policy used (Unterminated string in JSON at position 445 (line 1 column 446)).",
+        "model": null,
         "recentActions": [
-          "rest",
-          "drink",
           "shape_clay_vessel",
           "physical:search:place:berry_patch",
           "physical:search:place:reed_bed",
@@ -509,20 +582,73 @@
           "gather_dry_wood",
           "gather_berries",
           "gather_dry_wood",
-          "rest"
+          "rest",
+          "eat_berries",
+          "drink"
         ],
-        "lastReferencedMemoryIds": [
-          "M-I027",
-          "M-I008"
-        ],
+        "lastReferencedMemoryIds": [],
         "lastPhysicalProposal": null
       },
       "affordanceAttempts": {
         "search:place:berry_patch:none:none": 1,
         "search:place:reed_bed:none:none": 1
       },
-      "coordinates": null,
-      "activeAction": null
+      "coordinates": {
+        "x": 48,
+        "y": 19
+      },
+      "activeAction": {
+        "id": "A-D-00096",
+        "decisionId": "D-00096",
+        "label": "Drink from the creek",
+        "actionId": "drink",
+        "worldDay": 3,
+        "worldHour": 5,
+        "from": {
+          "x": 29,
+          "y": 31
+        },
+        "to": {
+          "x": 48,
+          "y": 19
+        },
+        "target": {
+          "x": 48,
+          "y": 19
+        },
+        "moving": true,
+        "phases": [
+          {
+            "id": "decide",
+            "label": "Deciding",
+            "start": 0,
+            "end": 0.1
+          },
+          {
+            "id": "travel",
+            "label": "Traveling",
+            "start": 0.1,
+            "end": 0.58
+          },
+          {
+            "id": "interact",
+            "label": "Acting",
+            "start": 0.58,
+            "end": 0.86
+          },
+          {
+            "id": "resolve",
+            "label": "Resolving",
+            "start": 0.86,
+            "end": 1
+          }
+        ],
+        "outcome": {
+          "success": true,
+          "detail": "Ivo drinks from the creek."
+        },
+        "physicalProposal": null
+      }
     }
   ],
   "relationships": {
@@ -536,6 +662,72 @@
     }
   },
   "history": [
+    {
+      "id": "E-00133",
+      "day": 3,
+      "hour": 5,
+      "type": "action",
+      "title": "Drink from the creek",
+      "detail": "Ivo drinks from the creek.",
+      "agentId": "agent-ivo",
+      "actionId": "drink"
+    },
+    {
+      "id": "E-00132",
+      "day": 3,
+      "hour": 5,
+      "type": "attempt",
+      "title": "search fallen log",
+      "detail": "Mara tries to search fallen log. No stable new effect emerges yet.",
+      "agentId": "agent-mara",
+      "physicalId": "P-00005",
+      "success": false,
+      "proposal": {
+        "verb": "search",
+        "primaryObjectId": "place:fallen_log",
+        "secondaryObjectId": "none",
+        "configuration": "none",
+        "purpose": "Find additional dry branches or other usable fuel at the fallen log."
+      }
+    },
+    {
+      "id": "E-00131",
+      "day": 3,
+      "hour": 5,
+      "type": "learn",
+      "title": "Mara formed a memory",
+      "detail": "Physical attempt 1: search fallen log produced no stable effect.",
+      "agentId": "agent-mara",
+      "memoryId": "M-M028"
+    },
+    {
+      "id": "E-00130",
+      "day": 3,
+      "hour": 4,
+      "type": "action",
+      "title": "Eat wild berries",
+      "detail": "Ivo eats tart red berries.",
+      "agentId": "agent-ivo",
+      "actionId": "eat_berries"
+    },
+    {
+      "id": "E-00129",
+      "day": 3,
+      "hour": 4,
+      "type": "physical",
+      "title": "move fallen log",
+      "detail": "Mara moves to the fallen log.",
+      "agentId": "agent-mara",
+      "physicalId": "P-00004",
+      "success": true,
+      "proposal": {
+        "verb": "move",
+        "primaryObjectId": "place:fallen_log",
+        "secondaryObjectId": "none",
+        "configuration": "none",
+        "purpose": "Reach the known wood source to obtain more fuel for warmth."
+      }
+    },
     {
       "id": "E-00128",
       "day": 3,
@@ -1886,6 +2078,761 @@
     }
   ],
   "dna": [
+    {
+      "protocol": "Decision DNA 0.6-farm",
+      "decision_id": "D-00096",
+      "day": 3,
+      "hour": 5,
+      "agent_id": "agent-ivo",
+      "agent_name": "Ivo",
+      "observation": {
+        "time": "Day 3, 05:00",
+        "weather": "cloudy",
+        "temperature": 46,
+        "position": "berries",
+        "nearby": [],
+        "needs": {
+          "hydration": 61,
+          "satiety": 67.79999999999994,
+          "energy": 69.40000000000012,
+          "warmth": 45
+        },
+        "inventory": {
+          "berries": 2,
+          "dryWood": 0,
+          "wetWood": 2,
+          "stones": 1,
+          "clay": 0,
+          "reeds": 3,
+          "sharpStone": 1,
+          "rawClayVessel": 1,
+          "firedVessel": 0,
+          "cordage": 0,
+          "woodPole": 0,
+          "pointedPole": 0,
+          "boundSharpTool": 0,
+          "rawMeat": 0,
+          "cookedMeat": 0,
+          "tubers": 0
+        },
+        "skills": {
+          "sharp-edge": 1,
+          "clay-shaping": 1
+        },
+        "knownPeople": [
+          {
+            "name": "Mara",
+            "trust": 36,
+            "familiarity": 17,
+            "affinity": 51,
+            "nearby": false
+          }
+        ]
+      },
+      "action": "drink",
+      "action_label": "Drink from the creek",
+      "winner_score": 65.998,
+      "baseline_policy_action": "drink",
+      "deviated_from_policy": false,
+      "candidates": [
+        {
+          "id": "drink",
+          "label": "Drink from the creek",
+          "score": 65.998,
+          "reasons": [
+            [
+              "thirst",
+              39
+            ]
+          ]
+        },
+        {
+          "id": "eat_berries",
+          "label": "Eat wild berries",
+          "score": 38.99,
+          "reasons": [
+            [
+              "hunger",
+              32.20000000000006
+            ]
+          ]
+        },
+        {
+          "id": "gather_clay",
+          "label": "Gather sticky clay",
+          "score": 12.64,
+          "reasons": [
+            [
+              "curiosity",
+              4.64
+            ]
+          ]
+        },
+        {
+          "id": "gather_reeds",
+          "label": "Gather flexible reeds",
+          "score": 12.64,
+          "reasons": [
+            [
+              "curiosity",
+              4.64
+            ]
+          ]
+        },
+        {
+          "id": "gather_stones",
+          "label": "Gather loose stones",
+          "score": 11.64,
+          "reasons": [
+            [
+              "curiosity",
+              4.64
+            ]
+          ]
+        },
+        {
+          "id": "seek_other",
+          "label": "Look for Mara",
+          "score": 11.1,
+          "reasons": [
+            [
+              "cooperation",
+              6.08
+            ]
+          ]
+        },
+        {
+          "id": "explore",
+          "label": "Explore beyond the known basin",
+          "score": 10.644,
+          "reasons": [
+            [
+              "curiosity",
+              7.539999999999999
+            ],
+            [
+              "novelty",
+              0
+            ]
+          ]
+        }
+      ],
+      "retrieved_memories": [
+        "M-I027",
+        "M-I018",
+        "M-I014",
+        "M-I022",
+        "M-I004",
+        "M-I002",
+        "M-I008",
+        "M-I016",
+        "M-I024",
+        "M-I006",
+        "M-I021",
+        "M-I013"
+      ],
+      "mind": {
+        "brain_mode": "fallback",
+        "model": null,
+        "goal": "Maintain basic survival through the cold night.",
+        "intent": "Drink from the creek",
+        "confidence": 0.62,
+        "decision_summary": "AI unavailable; fallback policy used (Unterminated string in JSON at position 445 (line 1 column 446)).",
+        "referenced_memory_ids": [],
+        "physical_proposal": null
+      },
+      "physics": {
+        "version": "affordance-0.5",
+        "outcome": {
+          "success": true,
+          "detail": "Ivo drinks from the creek.",
+          "actionId": "drink"
+        }
+      },
+      "memory_counterfactuals": []
+    },
+    {
+      "protocol": "Decision DNA 0.6-farm",
+      "decision_id": "D-00095",
+      "day": 3,
+      "hour": 5,
+      "agent_id": "agent-mara",
+      "agent_name": "Mara",
+      "observation": {
+        "time": "Day 3, 05:00",
+        "weather": "cloudy",
+        "temperature": 46,
+        "position": "log",
+        "nearby": [],
+        "needs": {
+          "hydration": 20.5,
+          "satiety": 45.39999999999996,
+          "energy": 21.4,
+          "warmth": 56
+        },
+        "inventory": {
+          "berries": 0,
+          "dryWood": 1,
+          "wetWood": 6,
+          "stones": 1,
+          "clay": 2,
+          "reeds": 3,
+          "sharpStone": 1,
+          "rawClayVessel": 0,
+          "firedVessel": 0,
+          "cordage": 0,
+          "woodPole": 0,
+          "pointedPole": 0,
+          "boundSharpTool": 0,
+          "rawMeat": 0,
+          "cookedMeat": 0,
+          "tubers": 0
+        },
+        "skills": {
+          "sharp-edge": 1
+        },
+        "knownPeople": [
+          {
+            "name": "Ivo",
+            "trust": 36,
+            "familiarity": 17,
+            "affinity": 51,
+            "nearby": false
+          }
+        ]
+      },
+      "action": "physical:search:place:fallen_log",
+      "action_label": "search fallen log",
+      "winner_score": null,
+      "baseline_policy_action": "drink",
+      "deviated_from_policy": true,
+      "candidates": [
+        {
+          "id": "drink",
+          "label": "Drink from the creek",
+          "score": 123.451,
+          "reasons": [
+            [
+              "thirst",
+              79.5
+            ]
+          ]
+        },
+        {
+          "id": "rest",
+          "label": "Rest in the shelter",
+          "score": 84.18,
+          "reasons": [
+            [
+              "fatigue",
+              78.6
+            ]
+          ]
+        },
+        {
+          "id": "gather_clay",
+          "label": "Gather sticky clay",
+          "score": 13.76,
+          "reasons": [
+            [
+              "curiosity",
+              5.76
+            ]
+          ]
+        },
+        {
+          "id": "gather_reeds",
+          "label": "Gather flexible reeds",
+          "score": 13.76,
+          "reasons": [
+            [
+              "curiosity",
+              5.76
+            ]
+          ]
+        },
+        {
+          "id": "gather_stones",
+          "label": "Gather loose stones",
+          "score": 12.76,
+          "reasons": [
+            [
+              "curiosity",
+              5.76
+            ]
+          ]
+        },
+        {
+          "id": "seek_other",
+          "label": "Look for Ivo",
+          "score": 10.46,
+          "reasons": [
+            [
+              "cooperation",
+              5.44
+            ]
+          ]
+        },
+        {
+          "id": "explore",
+          "label": "Explore beyond the known basin",
+          "score": 4.784,
+          "reasons": [
+            [
+              "curiosity",
+              9.36
+            ],
+            [
+              "novelty",
+              0
+            ]
+          ]
+        }
+      ],
+      "retrieved_memories": [
+        "M-M015",
+        "M-M026",
+        "M-M017",
+        "M-M007",
+        "M-M001",
+        "M-M011",
+        "M-M003",
+        "M-M019",
+        "M-M005",
+        "M-M020",
+        "M-M023",
+        "M-M025"
+      ],
+      "mind": {
+        "brain_mode": "ai",
+        "model": "gpt-5.6-luna",
+        "goal": "Secure enough dry wood to keep warm through the night.",
+        "intent": "Search the fallen log for dry, burnable wood.",
+        "confidence": 0.95,
+        "decision_summary": "Warmth and the overnight fuel goal make searching this nearby wood source the best next step.",
+        "referenced_memory_ids": [
+          "M-M026",
+          "M-M007",
+          "M-M005"
+        ],
+        "physical_proposal": {
+          "verb": "search",
+          "primaryObjectId": "place:fallen_log",
+          "secondaryObjectId": "none",
+          "configuration": "none",
+          "purpose": "Find additional dry branches or other usable fuel at the fallen log."
+        }
+      },
+      "physics": {
+        "version": "affordance-0.5",
+        "outcome": {
+          "physicalId": "P-00005",
+          "success": false,
+          "blocked": false,
+          "detail": "Mara tries to search fallen log. No stable new effect emerges yet.",
+          "proposal": {
+            "verb": "search",
+            "primaryObjectId": "place:fallen_log",
+            "secondaryObjectId": "none",
+            "configuration": "none",
+            "purpose": "Find additional dry branches or other usable fuel at the fallen log."
+          },
+          "primary": "place:fallen_log",
+          "secondary": null
+        }
+      },
+      "memory_counterfactuals": [
+        {
+          "removed_memory": "M-M026",
+          "memory_text": "Mara should prioritize finding and gathering dry wood for overnight warmth, because she remembers that dry wood catches flame and provides strong warmth.",
+          "original_action": "physical:search:place:fallen_log",
+          "counterfactual_action": "physical:search:place:fallen_log",
+          "action_changed": false,
+          "method": "model_replay",
+          "provisional": true,
+          "trials": 1
+        }
+      ]
+    },
+    {
+      "protocol": "Decision DNA 0.6-farm",
+      "decision_id": "D-00094",
+      "day": 3,
+      "hour": 4,
+      "agent_id": "agent-ivo",
+      "agent_name": "Ivo",
+      "observation": {
+        "time": "Day 3, 04:00",
+        "weather": "cloudy",
+        "temperature": 44,
+        "position": "camp",
+        "nearby": [],
+        "needs": {
+          "hydration": 67.5,
+          "satiety": 43.99999999999994,
+          "energy": 72.20000000000012,
+          "warmth": 50
+        },
+        "inventory": {
+          "berries": 3,
+          "dryWood": 0,
+          "wetWood": 2,
+          "stones": 1,
+          "clay": 0,
+          "reeds": 3,
+          "sharpStone": 1,
+          "rawClayVessel": 1,
+          "firedVessel": 0,
+          "cordage": 0,
+          "woodPole": 0,
+          "pointedPole": 0,
+          "boundSharpTool": 0,
+          "rawMeat": 0,
+          "cookedMeat": 0,
+          "tubers": 0
+        },
+        "skills": {
+          "sharp-edge": 1,
+          "clay-shaping": 1
+        },
+        "knownPeople": [
+          {
+            "name": "Mara",
+            "trust": 36,
+            "familiarity": 17,
+            "affinity": 51,
+            "nearby": true
+          }
+        ]
+      },
+      "action": "eat_berries",
+      "action_label": "Eat wild berries",
+      "winner_score": 71.75,
+      "baseline_policy_action": "eat_berries",
+      "deviated_from_policy": false,
+      "candidates": [
+        {
+          "id": "eat_berries",
+          "label": "Eat wild berries",
+          "score": 71.75,
+          "reasons": [
+            [
+              "hunger",
+              56.00000000000006
+            ]
+          ]
+        },
+        {
+          "id": "drink",
+          "label": "Drink from the creek",
+          "score": 56.573,
+          "reasons": [
+            [
+              "thirst",
+              32.5
+            ]
+          ]
+        },
+        {
+          "id": "share_food",
+          "label": "Share berries with Mara",
+          "score": 18.3,
+          "reasons": [
+            [
+              "cooperation",
+              9.120000000000001
+            ]
+          ]
+        },
+        {
+          "id": "talk",
+          "label": "Talk with Mara",
+          "score": 16.1,
+          "reasons": [
+            [
+              "cooperation",
+              6.08
+            ]
+          ]
+        },
+        {
+          "id": "gather_clay",
+          "label": "Gather sticky clay",
+          "score": 12.64,
+          "reasons": [
+            [
+              "curiosity",
+              4.64
+            ]
+          ]
+        },
+        {
+          "id": "gather_reeds",
+          "label": "Gather flexible reeds",
+          "score": 12.64,
+          "reasons": [
+            [
+              "curiosity",
+              4.64
+            ]
+          ]
+        },
+        {
+          "id": "gather_stones",
+          "label": "Gather loose stones",
+          "score": 11.64,
+          "reasons": [
+            [
+              "curiosity",
+              4.64
+            ]
+          ]
+        },
+        {
+          "id": "explore",
+          "label": "Explore beyond the known basin",
+          "score": 11.092,
+          "reasons": [
+            [
+              "curiosity",
+              7.539999999999999
+            ],
+            [
+              "novelty",
+              0
+            ]
+          ]
+        }
+      ],
+      "retrieved_memories": [
+        "M-I027",
+        "M-I018",
+        "M-I014",
+        "M-I022",
+        "M-I004",
+        "M-I002",
+        "M-I008",
+        "M-I016",
+        "M-I024",
+        "M-I006",
+        "M-I021",
+        "M-I013"
+      ],
+      "mind": {
+        "brain_mode": "ai",
+        "model": "gpt-5.6-luna",
+        "goal": "Maintain basic survival through the cold night.",
+        "intent": "Eat berries now to improve satiety while conserving energy at camp.",
+        "confidence": 0.98,
+        "decision_summary": "Hunger is the most immediate need, and the berries are a reliable known food source.",
+        "referenced_memory_ids": [
+          "M-I002",
+          "M-I027"
+        ],
+        "physical_proposal": null
+      },
+      "physics": {
+        "version": "affordance-0.5",
+        "outcome": {
+          "success": true,
+          "detail": "Ivo eats tart red berries.",
+          "actionId": "eat_berries"
+        }
+      },
+      "memory_counterfactuals": []
+    },
+    {
+      "protocol": "Decision DNA 0.6-farm",
+      "decision_id": "D-00093",
+      "day": 3,
+      "hour": 4,
+      "agent_id": "agent-mara",
+      "agent_name": "Mara",
+      "observation": {
+        "time": "Day 3, 04:00",
+        "weather": "cloudy",
+        "temperature": 44,
+        "position": "camp",
+        "nearby": [],
+        "needs": {
+          "hydration": 27,
+          "satiety": 49.599999999999966,
+          "energy": 27.2,
+          "warmth": 61
+        },
+        "inventory": {
+          "berries": 0,
+          "dryWood": 1,
+          "wetWood": 6,
+          "stones": 1,
+          "clay": 2,
+          "reeds": 3,
+          "sharpStone": 1,
+          "rawClayVessel": 0,
+          "firedVessel": 0,
+          "cordage": 0,
+          "woodPole": 0,
+          "pointedPole": 0,
+          "boundSharpTool": 0,
+          "rawMeat": 0,
+          "cookedMeat": 0,
+          "tubers": 0
+        },
+        "skills": {
+          "sharp-edge": 1
+        },
+        "knownPeople": [
+          {
+            "name": "Ivo",
+            "trust": 36,
+            "familiarity": 17,
+            "affinity": 51,
+            "nearby": true
+          }
+        ]
+      },
+      "action": "physical:move:place:fallen_log",
+      "action_label": "move fallen log",
+      "winner_score": null,
+      "baseline_policy_action": "drink",
+      "deviated_from_policy": true,
+      "candidates": [
+        {
+          "id": "drink",
+          "label": "Drink from the creek",
+          "score": 109.826,
+          "reasons": [
+            [
+              "thirst",
+              73
+            ]
+          ]
+        },
+        {
+          "id": "rest",
+          "label": "Rest in the shelter",
+          "score": 77.8,
+          "reasons": [
+            [
+              "fatigue",
+              72.8
+            ]
+          ]
+        },
+        {
+          "id": "talk",
+          "label": "Talk with Ivo",
+          "score": 15.46,
+          "reasons": [
+            [
+              "cooperation",
+              5.44
+            ]
+          ]
+        },
+        {
+          "id": "gather_clay",
+          "label": "Gather sticky clay",
+          "score": 13.76,
+          "reasons": [
+            [
+              "curiosity",
+              5.76
+            ]
+          ]
+        },
+        {
+          "id": "gather_reeds",
+          "label": "Gather flexible reeds",
+          "score": 13.76,
+          "reasons": [
+            [
+              "curiosity",
+              5.76
+            ]
+          ]
+        },
+        {
+          "id": "gather_stones",
+          "label": "Gather loose stones",
+          "score": 12.76,
+          "reasons": [
+            [
+              "curiosity",
+              5.76
+            ]
+          ]
+        },
+        {
+          "id": "explore",
+          "label": "Explore beyond the known basin",
+          "score": 5.712,
+          "reasons": [
+            [
+              "curiosity",
+              9.36
+            ],
+            [
+              "novelty",
+              0
+            ]
+          ]
+        }
+      ],
+      "retrieved_memories": [
+        "M-M015",
+        "M-M026",
+        "M-M017",
+        "M-M007",
+        "M-M001",
+        "M-M011",
+        "M-M003",
+        "M-M019",
+        "M-M005",
+        "M-M020",
+        "M-M023",
+        "M-M025"
+      ],
+      "mind": {
+        "brain_mode": "ai",
+        "model": "gpt-5.6-luna",
+        "goal": "Secure enough dry wood to keep warm through the night.",
+        "intent": "Move from camp to the fallen log and prepare to gather usable fuel.",
+        "confidence": 0.9,
+        "decision_summary": "Warmth is important and the fire has already faded; moving to the known wood source is the next step toward replenishing dry fuel.",
+        "referenced_memory_ids": [
+          "M-M026",
+          "M-M007",
+          "M-M005"
+        ],
+        "physical_proposal": {
+          "verb": "move",
+          "primaryObjectId": "place:fallen_log",
+          "secondaryObjectId": "none",
+          "configuration": "none",
+          "purpose": "Reach the known wood source to obtain more fuel for warmth."
+        }
+      },
+      "physics": {
+        "version": "affordance-0.5",
+        "outcome": {
+          "physicalId": "P-00004",
+          "success": true,
+          "blocked": false,
+          "detail": "Mara moves to the fallen log.",
+          "proposal": {
+            "verb": "move",
+            "primaryObjectId": "place:fallen_log",
+            "secondaryObjectId": "none",
+            "configuration": "none",
+            "purpose": "Reach the known wood source to obtain more fuel for warmth."
+          },
+          "primary": "place:fallen_log",
+          "secondary": null
+        }
+      },
+      "memory_counterfactuals": []
+    },
     {
       "protocol": "Decision DNA 0.5-farm",
       "decision_id": "D-00092",
@@ -28893,25 +29840,25 @@
     }
   ],
   "seq": {
-    "event": 129,
-    "memory": 28,
-    "decision": 93,
+    "event": 134,
+    "memory": 29,
+    "decision": 97,
     "discovery": 3,
-    "physical": 4
+    "physical": 6
   },
   "meta": {
     "canonical": true,
-    "lastAdvancedAt": "2026-09-15T23:09:19.694Z",
-    "tickNumber": 18,
+    "lastAdvancedAt": "2026-09-15T23:10:22.469Z",
+    "tickNumber": 19,
     "heartbeatMinutes": 5,
     "worldHoursPerHeartbeat": 2,
     "lastDecisionIds": [
-      "D-00091",
-      "D-00092"
+      "D-00095",
+      "D-00096"
     ],
     "pacing": "young world",
-    "aiDecisions": 31,
-    "fallbackDecisions": 49,
+    "aiDecisions": 34,
+    "fallbackDecisions": 50,
     "mindMode": "ai",
     "mindConfigured": true,
     "mindModel": "gpt-5.6-luna",
@@ -28949,8 +29896,141 @@
     "tubers": 8,
     "tubersEdible": true
   },
-  "liveThreads": [],
+  "liveThreads": [
+    {
+      "id": "dehydration",
+      "title": "Mara needs water",
+      "urgency": 92,
+      "summary": "Mara's hydration has fallen to 14%. The creek remains the known reliable water source.",
+      "kind": "survival",
+      "agentIds": [
+        "agent-mara"
+      ],
+      "placeIds": [
+        "creek"
+      ]
+    },
+    {
+      "id": "exhaustion",
+      "title": "Mara is running on fumes",
+      "urgency": 90,
+      "summary": "Mara's energy is 12%. Continuing strenuous work risks compounding the cold and hydration pressure.",
+      "kind": "survival",
+      "agentIds": [
+        "agent-mara"
+      ],
+      "placeIds": [
+        "log"
+      ]
+    },
+    {
+      "id": "tracks",
+      "title": "Animal tracks remain unresolved",
+      "urgency": 66,
+      "summary": "At least one agent knows about the marsh tracks, but nobody has yet converted that sign into a reliable trail.",
+      "kind": "mystery",
+      "agentIds": [
+        "agent-mara",
+        "agent-ivo"
+      ],
+      "placeIds": [
+        "reeds"
+      ]
+    },
+    {
+      "id": "clay-agent-ivo",
+      "title": "Ivo has an unfired clay vessel",
+      "urgency": 56,
+      "summary": "The shaped vessel persists, but its behavior under sustained heat is still unresolved.",
+      "kind": "experiment",
+      "agentIds": [
+        "agent-ivo"
+      ],
+      "placeIds": [
+        "camp"
+      ]
+    },
+    {
+      "id": "materials-agent-mara",
+      "title": "Mara is carrying unusually complementary materials",
+      "urgency": 52,
+      "summary": "Rigid material, a cutting edge, and flexible binding material are together. The world does not prescribe what to do with them.",
+      "kind": "opportunity",
+      "agentIds": [
+        "agent-mara"
+      ],
+      "placeIds": [
+        "log"
+      ]
+    },
+    {
+      "id": "knowledge-gap",
+      "title": "Knowledge is unevenly distributed",
+      "urgency": 48,
+      "summary": "clay-shaping is known by only one agent. A future conversation could matter.",
+      "kind": "social",
+      "agentIds": [
+        "agent-mara",
+        "agent-ivo"
+      ],
+      "placeIds": [
+        "log",
+        "creek"
+      ]
+    }
+  ],
   "spatial": {
-    "locations": {}
+    "locations": {
+      "camp": {
+        "id": "camp",
+        "x": 64,
+        "y": 34
+      },
+      "creek": {
+        "id": "creek",
+        "x": 48,
+        "y": 19
+      },
+      "berries": {
+        "id": "berries",
+        "x": 29,
+        "y": 31
+      },
+      "log": {
+        "id": "log",
+        "x": 59,
+        "y": 29
+      },
+      "meadow": {
+        "id": "meadow",
+        "x": 43,
+        "y": 31
+      },
+      "edge": {
+        "id": "edge",
+        "x": 78,
+        "y": 42
+      },
+      "forest": {
+        "id": "forest",
+        "x": 14,
+        "y": 38
+      },
+      "stones": {
+        "id": "stones",
+        "x": 73,
+        "y": 24
+      },
+      "clay": {
+        "id": "clay",
+        "x": 86,
+        "y": 21
+      },
+      "reeds": {
+        "id": "reeds",
+        "x": 10,
+        "y": 22
+      }
+    }
   }
 }
