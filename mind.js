@@ -109,14 +109,21 @@ async function callDecision(context, { replayNote = null } = {}) {
       reasoning: { effort: process.env.OPENAI_REASONING_EFFORT || "low" },
       instructions: SYSTEM,
       input: JSON.stringify(payload),
-      text: { format: { type: "json_schema", name: "chatgptfarm_decision_v05", strict: true, schema: decisionSchema(context) } },
-      max_output_tokens: 420
+      text: { format: { type: "json_schema", name: "chatgptfarm_decision_v06", strict: true, schema: decisionSchema(context) } },
+      max_output_tokens: 640
     })
   });
   if (!response.ok) throw new Error(`OpenAI ${response.status}: ${(await response.text()).slice(0, 220)}`);
   const data = await response.json(), text = outputText(data);
-  if (!text) throw new Error("OpenAI response contained no structured output text");
-  return parseDecision(JSON.parse(text), context, data);
+  if (!text) {
+    const reason = data?.incomplete_details?.reason ? ` (${data.incomplete_details.reason})` : '';
+    throw new Error(`OpenAI response contained no structured output text${reason}`);
+  }
+  try { return parseDecision(JSON.parse(text), context, data); }
+  catch (error) {
+    const reason = data?.incomplete_details?.reason ? `; incomplete=${data.incomplete_details.reason}` : '';
+    throw new Error(`Structured decision JSON could not be parsed${reason}: ${String(error?.message || error).slice(0, 120)}`);
+  }
 }
 
 const reflectionSchema = {
@@ -150,13 +157,13 @@ export function createOpenAIMind() {
           reasoning: { effort: "low" },
           instructions: `Create one concise explicit reflection for an autonomous person's persistent memory. Infer a useful belief from only the supplied experiences. Do not invent events, outcomes, recipes, or hidden facts. Do not output chain-of-thought.`,
           input: JSON.stringify({ name: agent.name, traits: agent.traits, current_goal: agent.mind?.currentGoal, recent_events: events, recent_memories: memories }),
-          text: { format: { type: "json_schema", name: "chatgptfarm_reflection_v05", strict: true, schema: reflectionSchema } },
-          max_output_tokens: 300
+          text: { format: { type: "json_schema", name: "chatgptfarm_reflection_v06", strict: true, schema: reflectionSchema } },
+          max_output_tokens: 360
         })
       });
       if (!response.ok) throw new Error(`Reflection API ${response.status}: ${(await response.text()).slice(0, 180)}`);
       const data = await response.json(), text = outputText(data);
-      if (!text) throw new Error("Reflection response contained no text");
+      if (!text) throw new Error(`Reflection response contained no text${data?.incomplete_details?.reason ? ` (${data.incomplete_details.reason})` : ''}`);
       return JSON.parse(text);
     }
   };
