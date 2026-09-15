@@ -1,11 +1,11 @@
 {
   "version": "0.2",
   "day": 1,
-  "hour": 7,
-  "temperature": 55,
+  "hour": 8,
+  "temperature": 57,
   "weather": "clear",
   "resources": {
-    "berries": 13,
+    "berries": 12,
     "dryWood": 8,
     "wetWood": 5,
     "stones": 18,
@@ -28,12 +28,12 @@
     {
       "id": "agent-mara",
       "name": "Mara",
-      "position": "creek",
+      "position": "berries",
       "needs": {
-        "hydration": 93.5,
-        "hunger": 67.8,
-        "energy": 79.2,
-        "warmth": 60
+        "hydration": 87,
+        "hunger": 91.6,
+        "energy": 76.4,
+        "warmth": 58
       },
       "inventory": {
         "berries": 0,
@@ -42,6 +42,18 @@
         "stones": 0
       },
       "memories": [
+        {
+          "id": "M-M003",
+          "text": "The red berries in the meadow are edible and reduce hunger.",
+          "importance": 7,
+          "tags": [
+            "berries",
+            "food"
+          ],
+          "source": "experience:1-7",
+          "confidence": 0.9,
+          "lastSeen": "1:7"
+        },
         {
           "id": "M-M001",
           "text": "The creek provides reliable drinking water.",
@@ -60,17 +72,17 @@
         "cooperation": 0.68,
         "caution": 0.56
       },
-      "currentAction": "Drink from the creek"
+      "currentAction": "Eat wild berries"
     },
     {
       "id": "agent-ivo",
       "name": "Ivo",
-      "position": "berries",
+      "position": "creek",
       "needs": {
-        "hydration": 67.5,
-        "hunger": 91.8,
-        "energy": 75.2,
-        "warmth": 56
+        "hydration": 93.5,
+        "hunger": 87.6,
+        "energy": 72.4,
+        "warmth": 54
       },
       "inventory": {
         "berries": 0,
@@ -79,6 +91,17 @@
         "stones": 0
       },
       "memories": [
+        {
+          "id": "M-I004",
+          "text": "The creek provides reliable drinking water.",
+          "importance": 8,
+          "tags": [
+            "water"
+          ],
+          "source": "experience:1-7",
+          "confidence": 0.96,
+          "lastSeen": "1:7"
+        },
         {
           "id": "M-I002",
           "text": "The red berries in the meadow are edible and reduce hunger.",
@@ -98,7 +121,7 @@
         "cooperation": 0.76,
         "caution": 0.48
       },
-      "currentAction": "Eat wild berries"
+      "currentAction": "Drink from the creek"
     }
   ],
   "relationships": {
@@ -111,6 +134,46 @@
     }
   },
   "history": [
+    {
+      "id": "E-00008",
+      "day": 1,
+      "hour": 7,
+      "type": "action",
+      "title": "Drink from the creek",
+      "detail": "Ivo drinks from the creek until the pressure of thirst eases.",
+      "agentId": "agent-ivo",
+      "actionId": "drink"
+    },
+    {
+      "id": "E-00007",
+      "day": 1,
+      "hour": 7,
+      "type": "learn",
+      "title": "Ivo formed a memory",
+      "detail": "The creek provides reliable drinking water.",
+      "agentId": "agent-ivo",
+      "memoryId": "M-I004"
+    },
+    {
+      "id": "E-00006",
+      "day": 1,
+      "hour": 7,
+      "type": "action",
+      "title": "Eat wild berries",
+      "detail": "Mara eats tart red berries and hunger recedes.",
+      "agentId": "agent-mara",
+      "actionId": "eat_berries"
+    },
+    {
+      "id": "E-00005",
+      "day": 1,
+      "hour": 7,
+      "type": "learn",
+      "title": "Mara formed a memory",
+      "detail": "The red berries in the meadow are edible and reduce hunger.",
+      "agentId": "agent-mara",
+      "memoryId": "M-M003"
+    },
     {
       "id": "E-00004",
       "day": 1,
@@ -153,6 +216,363 @@
     }
   ],
   "dna": [
+    {
+      "protocol": "Decision DNA 0.2-farm",
+      "decision_id": "D-00004",
+      "day": 1,
+      "hour": 7,
+      "agent_id": "agent-ivo",
+      "agent_name": "Ivo",
+      "observation": {
+        "time": "Day 1, 07:00",
+        "weather": "clear",
+        "temperature": 55,
+        "nearby": [
+          "creek with drinkable water",
+          "12 berry portions",
+          "dry branches",
+          "damp branches",
+          "loose stones",
+          "Mara nearby"
+        ],
+        "needs": {
+          "hydration": 67.5,
+          "hunger": 91.8,
+          "energy": 75.2,
+          "warmth": 56
+        },
+        "inventory": {
+          "berries": 0,
+          "dryWood": 0,
+          "wetWood": 0,
+          "stones": 0
+        },
+        "knownPeople": [
+          {
+            "name": "Mara",
+            "trust": 34,
+            "familiarity": 12,
+            "lastKnownPosition": "berries"
+          }
+        ]
+      },
+      "action": "drink",
+      "action_label": "Drink from the creek",
+      "winner_score": 47.125,
+      "candidates": [
+        {
+          "id": "drink",
+          "label": "Drink from the creek",
+          "score": 47.125,
+          "reasons": [
+            [
+              "thirst",
+              32.5
+            ],
+            [
+              "memory: water",
+              0
+            ]
+          ]
+        },
+        {
+          "id": "gather_dry_wood",
+          "label": "Gather dry branches",
+          "score": 30.44,
+          "reasons": [
+            [
+              "cold",
+              11.440000000000001
+            ],
+            [
+              "memory: dry wood",
+              0
+            ],
+            [
+              "no shelter",
+              6
+            ]
+          ]
+        },
+        {
+          "id": "gather_berries",
+          "label": "Gather berries",
+          "score": 17.804,
+          "reasons": [
+            [
+              "future hunger",
+              1.8040000000000007
+            ],
+            [
+              "memory: store food",
+              0
+            ]
+          ]
+        },
+        {
+          "id": "gather_wet_wood",
+          "label": "Gather damp branches",
+          "score": 16.92,
+          "reasons": [
+            [
+              "cold",
+              7.92
+            ],
+            [
+              "memory: wet wood",
+              0
+            ]
+          ]
+        },
+        {
+          "id": "talk",
+          "label": "Talk with Mara",
+          "score": 15.8,
+          "reasons": [
+            [
+              "cooperation",
+              6.08
+            ],
+            [
+              "familiarity",
+              0.72
+            ],
+            [
+              "social memory",
+              0
+            ]
+          ]
+        },
+        {
+          "id": "eat_berries",
+          "label": "Eat wild berries",
+          "score": 13.935,
+          "reasons": [
+            [
+              "hunger",
+              8.200000000000003
+            ],
+            [
+              "memory: berries",
+              6.3
+            ]
+          ]
+        },
+        {
+          "id": "explore",
+          "label": "Explore beyond the known basin",
+          "score": 11.572,
+          "reasons": [
+            [
+              "curiosity",
+              7.539999999999999
+            ],
+            [
+              "memory: exploration",
+              0
+            ],
+            [
+              "fatigue penalty",
+              -3.9679999999999995
+            ]
+          ]
+        }
+      ],
+      "factors": [
+        [
+          "thirst",
+          32.5
+        ]
+      ],
+      "memory_counterfactuals": [
+        {
+          "removed_memory": "M-I002",
+          "memory_text": "The red berries in the meadow are edible and reduce hunger.",
+          "original_action": "drink",
+          "counterfactual_action": "drink",
+          "action_changed": false,
+          "score_delta": 0
+        }
+      ]
+    },
+    {
+      "protocol": "Decision DNA 0.2-farm",
+      "decision_id": "D-00003",
+      "day": 1,
+      "hour": 7,
+      "agent_id": "agent-mara",
+      "agent_name": "Mara",
+      "observation": {
+        "time": "Day 1, 07:00",
+        "weather": "clear",
+        "temperature": 55,
+        "nearby": [
+          "creek with drinkable water",
+          "13 berry portions",
+          "dry branches",
+          "damp branches",
+          "loose stones"
+        ],
+        "needs": {
+          "hydration": 93.5,
+          "hunger": 67.8,
+          "energy": 79.2,
+          "warmth": 60
+        },
+        "inventory": {
+          "berries": 0,
+          "dryWood": 0,
+          "wetWood": 0,
+          "stones": 0
+        },
+        "knownPeople": [
+          {
+            "name": "Ivo",
+            "trust": 34,
+            "familiarity": 12,
+            "lastKnownPosition": "berries"
+          }
+        ]
+      },
+      "action": "eat_berries",
+      "action_label": "Eat wild berries",
+      "winner_score": 38.64,
+      "candidates": [
+        {
+          "id": "eat_berries",
+          "label": "Eat wild berries",
+          "score": 38.64,
+          "reasons": [
+            [
+              "hunger",
+              32.2
+            ],
+            [
+              "memory: berries",
+              0
+            ]
+          ]
+        },
+        {
+          "id": "gather_dry_wood",
+          "label": "Gather dry branches",
+          "score": 29.4,
+          "reasons": [
+            [
+              "cold",
+              10.4
+            ],
+            [
+              "memory: dry wood",
+              0
+            ],
+            [
+              "no shelter",
+              6
+            ]
+          ]
+        },
+        {
+          "id": "gather_berries",
+          "label": "Gather berries",
+          "score": 23.084,
+          "reasons": [
+            [
+              "future hunger",
+              7.0840000000000005
+            ],
+            [
+              "memory: store food",
+              0
+            ]
+          ]
+        },
+        {
+          "id": "gather_wet_wood",
+          "label": "Gather damp branches",
+          "score": 16.2,
+          "reasons": [
+            [
+              "cold",
+              7.199999999999999
+            ],
+            [
+              "memory: wet wood",
+              0
+            ]
+          ]
+        },
+        {
+          "id": "drink",
+          "label": "Drink from the creek",
+          "score": 15.569,
+          "reasons": [
+            [
+              "thirst",
+              6.5
+            ],
+            [
+              "memory: water",
+              7.68
+            ]
+          ]
+        },
+        {
+          "id": "explore",
+          "label": "Explore beyond the known basin",
+          "score": 14.032,
+          "reasons": [
+            [
+              "curiosity",
+              9.36
+            ],
+            [
+              "memory: exploration",
+              0
+            ],
+            [
+              "fatigue penalty",
+              -3.3279999999999994
+            ]
+          ]
+        },
+        {
+          "id": "seek_other",
+          "label": "Look for Ivo",
+          "score": 10.16,
+          "reasons": [
+            [
+              "cooperation",
+              5.44
+            ],
+            [
+              "familiarity",
+              0.72
+            ],
+            [
+              "social memory",
+              0
+            ]
+          ]
+        }
+      ],
+      "factors": [
+        [
+          "hunger",
+          32.2
+        ]
+      ],
+      "memory_counterfactuals": [
+        {
+          "removed_memory": "M-M001",
+          "memory_text": "The creek provides reliable drinking water.",
+          "original_action": "eat_berries",
+          "counterfactual_action": "eat_berries",
+          "action_changed": false,
+          "score_delta": 0
+        }
+      ]
+    },
     {
       "protocol": "Decision DNA 0.2-farm",
       "decision_id": "D-00002",
@@ -493,19 +913,19 @@
     }
   ],
   "seq": {
-    "event": 5,
-    "memory": 3,
-    "decision": 3
+    "event": 9,
+    "memory": 5,
+    "decision": 5
   },
   "meta": {
     "canonical": true,
-    "lastAdvancedAt": "2026-09-15T21:14:49.309Z",
-    "tickNumber": 1,
+    "lastAdvancedAt": "2026-09-15T21:15:49.481Z",
+    "tickNumber": 2,
     "heartbeatMinutes": 5,
     "worldHoursPerHeartbeat": 1,
     "lastDecisionIds": [
-      "D-00001",
-      "D-00002"
+      "D-00003",
+      "D-00004"
     ]
   }
 }
