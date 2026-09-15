@@ -2,56 +2,59 @@
 <html lang="en">
 <head>
   <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="theme-color" content="#101711">
-  <meta name="description" content="ChatGPTFarm — a persistent artificial world instrumented with Decision DNA.">
-  <title>ChatGPTFarm — A Living Agent World</title>
+  <meta name="description" content="ChatGPTFarm — a persistent AI world where experience, memory and physics determine what happens next.">
+  <title>ChatGPTFarm — The Living World</title>
   <link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="styles.css">
-  <style>
-    .culture-grid{display:grid;grid-template-columns:1.25fr .75fr;gap:18px;margin-bottom:18px}.discovery-panel,.frontier-panel{min-height:170px}.discovery-list{padding:12px 18px 18px;display:grid;gap:10px}.discovery-empty{padding:22px 18px;color:#839083;font-size:12px}.discovery{border:1px solid #344735;background:linear-gradient(135deg,#1a291d,#131c15);border-radius:10px;padding:13px 14px}.discovery header{display:flex;align-items:center;justify-content:space-between;gap:10px}.discovery h3{margin:0;font-size:14px;color:#dbe9c9}.discovery code{font:9px var(--mono);color:#a8b49f}.discovery p{margin:6px 0;color:#aeb9aa;font-size:12px;line-height:1.45}.discovery footer{display:flex;justify-content:space-between;gap:10px;font:9px var(--mono);color:#7e917d}.discovery-effect{color:#c9b77e}.frontier{padding:16px 18px}.frontier-row{display:flex;align-items:center;gap:10px;padding:9px 0;border-bottom:1px solid #223026}.frontier-row:last-child{border-bottom:0}.frontier-icon{width:28px;height:28px;border-radius:50%;border:1px solid #3b513d;display:grid;place-items:center;font-size:12px}.frontier-copy b{display:block;font-size:12px}.frontier-copy small{color:#879487}.frontier-row.unknown{opacity:.48}.skill-strip{display:flex;gap:5px;flex-wrap:wrap;margin-top:8px}.skill{font:9px var(--mono);padding:4px 6px;border:1px solid #405643;border-radius:99px;color:#c9dbbd;background:#1b281e}.experiment{color:#d6bc7a;border-color:#5a4b31}.world .clay-bank{position:absolute;right:7%;bottom:19%;width:80px;height:34px;border-radius:50%;background:#9a755b;opacity:.8}.world .reed-bed{position:absolute;left:7%;bottom:17%;width:90px;height:70px;background:repeating-linear-gradient(85deg,transparent 0 9px,#56734f 10px 12px,transparent 13px 19px)}.drying-rack{position:absolute;left:70%;bottom:31%;font-size:28px;color:#775a3e}.milestone-flash{animation:milestone 1.4s ease}@keyframes milestone{0%,100%{box-shadow:none}45%{box-shadow:0 0 0 4px #d8c16b24,0 0 45px #d8c16b22;border-color:#8c7a43}}.timeline .discovery-event{background:linear-gradient(90deg,#4b401d35,transparent)}.timeline .discovery-title{color:#e2c96f}.timeline .culture-title{color:#c7b6f0}@media(max-width:980px){.culture-grid{grid-template-columns:1fr}}@media(max-width:650px){.discovery footer{flex-direction:column}}
-  </style>
+  <link rel="stylesheet" href="styles.css"><link rel="stylesheet" href="living.css">
 </head>
 <body>
-<header class="topbar"><div class="brand"><span class="brand-seed">✦</span><div><b>ChatGPTFarm</b><small>WORLD 01 · DECISION DNA INSTRUMENTED</small></div></div><div class="top-actions"><span id="saveState" class="save-state">● CONNECTING TO WORLD</span></div></header>
+<header class="topbar"><div class="brand"><span class="brand-seed">✦</span><div><b>ChatGPTFarm</b><small>WORLD 01 · AUTONOMOUS · DECISION DNA</small></div></div><div class="top-actions"><span id="saveState" class="save-state">● CONNECTING TO WORLD</span></div></header>
 <main>
-  <section class="hero"><div><span class="kicker">A PERSISTENT ARTIFICIAL WORLD</span><h1>Don't script the story.<br><em>Let experience write it.</em></h1><p>Mara and Ivo perceive only their local world, retrieve their own memories, form goals, choose among physically valid actions, experiment, fail, teach, and accumulate a traceable behavioral history.</p></div><div class="world-clock"><span>PROJECTED WORLD TIME</span><strong id="dayLabel">Day 1 · 06:00</strong><small id="weatherLabel">Connecting…</small><small id="heartbeatLabel">Canonical heartbeat every ~5 minutes</small></div></section>
+  <section class="hero living-hero"><div><span class="kicker">THE LIVING WORLD · v0.6</span><h1>Something is happening<br><em>even when nobody is watching.</em></h1><p>Mara and Ivo perceive, remember, decide and act inside the same persistent world. The camera shows the execution of real canonical decisions; the world engine—not the model—decides what physically happens.</p></div><div class="world-clock"><span>PROJECTED WORLD TIME</span><strong id="dayLabel">Connecting…</strong><small id="weatherLabel">Loading weather</small><small id="heartbeatLabel">Waiting for heartbeat</small></div></section>
 
-  <section class="world-status"><div><span class="live-dot"></span><b>WORLD IS RUNNING</b><small id="lastAdvanced">Awaiting canonical heartbeat</small></div><div><b id="tickCount">0</b><small>canonical ticks</small></div><div><b id="worldAge">Day 1</b><small>world age</small></div><div><b id="relationshipSummary">Strangers</b><small>Mara ↔ Ivo</small></div></section>
+  <section class="world-status"><div><span class="live-dot"></span><b>WORLD IS RUNNING</b><small id="lastAdvanced">Awaiting canonical heartbeat</small></div><div><b id="tickCount">0</b><small>canonical heartbeats</small></div><div><b id="worldAge">Day 1</b><small>world age</small></div><div><b id="relationshipSummary">Strangers</b><small>Mara ↔ Ivo</small></div></section>
 
-  <section class="culture-grid">
-    <div id="discoveryPanel" class="panel discovery-panel"><div class="panel-title"><div><small>WORLD FIRSTS</small><h2>Discoveries that changed what is possible</h2></div><span id="discoveryCount" class="chip">0 discoveries</span></div><div id="discoveries" class="discovery-list"><div class="discovery-empty">Nothing has been invented yet. The first breakthrough must emerge from experimentation.</div></div></div>
-    <div class="panel frontier-panel"><div class="panel-title"><div><small>KNOWN WORLD</small><h2>The frontier</h2></div><span class="chip">FOG OF WAR</span></div><div id="frontier" class="frontier"></div></div>
-  </section>
-
-  <section class="workspace">
-    <div class="world-column">
-      <div class="panel world-panel">
-        <div class="panel-title"><div><small>THE WORLD</small><h2>Willow Basin</h2></div><span class="chip">ACCELERATED ORIGIN</span></div>
-        <div id="world" class="world">
-          <div class="sky"></div><div class="sun"></div><div class="cloud cloud-a"></div><div class="cloud cloud-b"></div><div class="ridge ridge-a"></div><div class="ridge ridge-b"></div><div class="creek"></div><div class="forest forest-a"></div><div class="forest forest-b"></div><div class="berry-patch"><span>● ● ●</span></div><div class="fallen-log"></div><div class="stone-field"></div>
-          <div id="clayBank" class="clay-bank hidden"></div><div id="reedBed" class="reed-bed hidden"></div>
-          <div id="shelter" class="shelter hidden"><span>⌂</span></div><div id="fire" class="fire hidden"><span>♨</span></div><div id="cache" class="cache hidden">▣</div><div id="dryingRack" class="drying-rack hidden">╫</div>
-          <div id="maraSprite" class="agent mara" title="Mara"><span class="name-tag">Mara</span><div class="head"></div><div class="body"></div></div>
-          <div id="ivoSprite" class="agent ivo" title="Ivo"><span class="name-tag">Ivo</span><div class="head"></div><div class="body"></div></div>
-          <div class="fog fog-1"></div><div class="fog fog-2"></div><div id="worldCaption" class="world-caption">The shared world is loading.</div>
+  <section class="live-stage">
+    <div class="panel world-panel">
+      <div class="panel-title"><div><small>LIVE WORLD</small><h2>Willow Basin</h2></div><div class="camera-controls"><button class="camera-btn active" data-camera="auto">AUTO</button><button class="camera-btn" data-camera="agent-mara">MARA</button><button class="camera-btn" data-camera="agent-ivo">IVO</button></div></div>
+      <div id="world" class="world">
+        <div id="worldScene" class="world-scene">
+          <div class="meadow-glow"></div><div class="grove grove-west"></div><div class="grove grove-east"></div><div class="terrain-creek"></div>
+          <div id="worldPlaces"></div><div id="worldObjects"></div>
+          <div id="shelter" class="world-structure structure-shelter hidden"></div><div id="fire" class="world-structure structure-fire hidden"></div><div id="cache" class="world-structure hidden"></div><div id="dryingRack" class="world-structure hidden"></div>
+          <div id="focusHalo" class="focus-halo"></div>
+          <div id="maraSprite" class="agent mara" title="Mara"><span class="name-tag">Mara</span><div class="head"></div><div class="body"></div><span class="agent-phase"></span></div>
+          <div id="ivoSprite" class="agent ivo" title="Ivo"><span class="name-tag">Ivo</span><div class="head"></div><div class="body"></div><span class="agent-phase"></span></div>
         </div>
-        <div class="legend"><span><i class="dot water"></i> creek</span><span><i class="dot food"></i> berries</span><span><i class="dot wood"></i> fallen wood</span><span><i class="dot unknown"></i> unexplored</span><span>Only canonical heartbeats alter history. Motion between them is visual continuity.</span></div>
+        <div id="weatherLayer" class="weather-layer"></div><div id="nightLayer" class="night-layer"></div>
+        <div class="world-hud"><span id="focusStatus" class="focus-status">AUTO · FINDING THE STORY</span><span id="worldMode" class="world-mode">CANONICAL</span></div>
+        <div id="worldCaption" class="world-caption">The shared world is loading.</div>
       </div>
-
-      <div class="panel timeline-panel"><div class="panel-title"><div><small>WORLD HISTORY</small><h2>What actually happened</h2></div><span id="eventCount" class="chip">0 events</span></div><div id="timeline" class="timeline"></div></div>
+      <div class="legend"><span><i class="dot water"></i> water</span><span><i class="dot food"></i> food</span><span><i class="dot wood"></i> materials</span><span><i class="dot unknown"></i> frontier</span><span>Motion between heartbeats replays the latest canonical action; it does not create new decisions.</span></div>
     </div>
 
-    <aside class="side-column">
+    <aside class="live-rail">
+      <div class="panel threads-panel"><div class="panel-title compact"><div><small>LIVE THREADS</small><h2>Why this moment matters</h2></div><span id="threadCount" class="chip">0 open</span></div><div id="nowStrip" class="now-strip">Reading the world…</div><div id="liveThreads" class="threads"></div></div>
       <div id="agentCards" class="agent-cards"></div>
-      <div class="panel relationship-panel"><div class="panel-title compact"><div><small>RELATIONSHIP / CULTURE</small><h2>Mara ↔ Ivo</h2></div><span id="relationshipChip" class="chip">NEW</span></div><div id="relationshipBody" class="relationship-body"></div></div>
-      <div class="panel memory-panel"><div class="panel-title compact"><div><small>PRIVATE MEMORY</small><h2 id="memoryTitle">What they remember</h2></div><div class="memory-tabs"><button id="memoryMara" class="memory-tab active">Mara</button><button id="memoryIvo" class="memory-tab">Ivo</button></div></div><div id="memories" class="memory-list"></div></div>
-      <div class="panel dna-panel"><div class="panel-title compact"><div><small>DECISION DNA</small><h2>Latest trace</h2></div><span class="dna-live">LIVE</span></div><div id="dnaInspector" class="dna-inspector"><div class="dna-empty">Waiting for a decision trace.</div></div></div>
     </aside>
   </section>
 
-  <section class="guardian"><div><span class="kicker">GUARDIAN · OBSERVABILITY AGENT</span><h2>Watch behavior acquire a history.</h2><p id="guardianStatus">Guardian is waiting for enough behavioral history to diagnose the agents.</p></div><div class="guardian-flow"><span>PERCEIVE</span><b>→</b><span>REMEMBER</span><b>→</b><span>INTEND</span><b>→</b><span>ACT</span><b>→</b><span>TRACE</span></div></section>
+  <section class="culture-grid">
+    <div id="discoveryPanel" class="panel discovery-panel"><div class="panel-title"><div><small>WORLD FIRSTS</small><h2>Discoveries that changed what is possible</h2></div><span id="discoveryCount" class="chip">0 discoveries</span></div><div id="discoveries" class="discovery-list"></div></div>
+    <div class="panel frontier-panel"><div class="panel-title"><div><small>KNOWN WORLD</small><h2>The frontier</h2></div><span class="chip">FOG OF WAR</span></div><div id="frontier" class="frontier"></div></div>
+  </section>
+
+  <section class="panel timeline-panel"><div class="panel-title"><div><small>LIVE HISTORY</small><h2>What actually happened</h2></div><span id="eventCount" class="chip">0 events</span></div><div id="timeline" class="timeline"></div></section>
+
+  <section class="analysis-grid">
+    <div class="panel relationship-panel"><div class="panel-title compact"><div><small>RELATIONSHIP / CULTURE</small><h2>Mara ↔ Ivo</h2></div><span id="relationshipChip" class="chip">NEW</span></div><div id="relationshipBody" class="relationship-body"></div></div>
+    <div class="panel memory-panel"><div class="panel-title compact"><div><small>PRIVATE MEMORY</small><h2 id="memoryTitle">What they remember</h2></div><div class="memory-tabs"><button id="memoryMara" class="memory-tab active">Mara</button><button id="memoryIvo" class="memory-tab">Ivo</button></div></div><div id="memories" class="memory-list"></div></div>
+    <div class="panel dna-panel"><div class="panel-title compact"><div><small>DECISION DNA</small><h2>Latest trace</h2></div><span class="dna-live">LIVE</span></div><div id="dnaInspector" class="dna-inspector"></div></div>
+  </section>
+
+  <section class="guardian"><div><span class="kicker">GUARDIAN · OBSERVABILITY</span><h2>Watch causes accumulate.</h2><p id="guardianStatus">Guardian is reading the current world.</p></div><div class="guardian-flow"><span>PERCEIVE</span><b>→</b><span>REMEMBER</span><b>→</b><span>INTEND</span><b>→</b><span>ACT</span><b>→</b><span>TRACE</span></div></section>
 </main>
-<footer><span>ChatGPTFarm v0.4</span><p>Canonical state is shared by every visitor and permanently versioned in GitHub.</p><span>Decision DNA living laboratory</span></footer>
+<footer><span>ChatGPTFarm v0.6</span><p>Canonical state is shared by every visitor and versioned in GitHub.</p><span>Decision DNA living laboratory</span></footer>
 <script src="app.js"></script>
-<script src="mind-ui.js"></script>
 </body></html>
