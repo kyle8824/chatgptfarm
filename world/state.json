@@ -1,8 +1,8 @@
 {
   "version": "0.6",
   "day": 3,
-  "hour": 8,
-  "temperature": 54,
+  "hour": 10,
+  "temperature": 58,
   "weather": "cloudy",
   "resources": {
     "berries": 0,
@@ -35,20 +35,20 @@
       "name": "Mara",
       "position": "creek",
       "needs": {
-        "hydration": 36,
-        "hunger": 32.799999999999955,
-        "energy": 36,
-        "warmth": 54
+        "hydration": 58,
+        "hunger": 24.399999999999956,
+        "energy": 25.400000000000002,
+        "warmth": 50
       },
       "inventory": {
         "berries": 0,
         "dryWood": 1,
         "wetWood": 6,
         "stones": 1,
-        "clay": 2,
+        "clay": 0,
         "reeds": 3,
         "sharpStone": 1,
-        "rawClayVessel": 0,
+        "rawClayVessel": 1,
         "firedVessel": 0,
         "cordage": 0,
         "woodPole": 0,
@@ -59,6 +59,18 @@
         "tubers": 0
       },
       "memories": [
+        {
+          "id": "M-M030",
+          "text": "Wet clay can be pinched and coiled into stable hollow shapes.",
+          "importance": 9,
+          "tags": [
+            "technique",
+            "clay-shaping"
+          ],
+          "source": "experience:3-9",
+          "confidence": 0.94,
+          "lastSeen": "3:9"
+        },
         {
           "id": "M-M028",
           "text": "Physical attempt 1: search fallen log produced no stable effect.",
@@ -226,7 +238,7 @@
           ],
           "source": "experience:1-6",
           "confidence": 1,
-          "lastSeen": "3:7"
+          "lastSeen": "3:8"
         },
         {
           "id": "M-M005",
@@ -248,23 +260,22 @@
         "cooperation": 0.68,
         "caution": 0.56
       },
-      "currentAction": "Drink from the creek",
+      "currentAction": "shape lump of wet clay",
       "skills": {
-        "sharp-edge": 1
+        "sharp-edge": 1,
+        "clay-shaping": 1
       },
       "experiments": {
         "stone-striking": 1
       },
       "mind": {
         "brainMode": "ai",
-        "currentGoal": "Maintain survival by improving hydration.",
-        "intent": "Drink from the creek before pursuing further gathering or exploration.",
-        "confidence": 0.98,
-        "decisionSummary": "Hydration is low, so Mara should use the known reliable water source now.",
+        "currentGoal": "Improve long-term hydration by developing a water container.",
+        "intent": "Use the known moldable, shape-holding clay for a cautious container experiment.",
+        "confidence": 0.84,
+        "decisionSummary": "Immediate thirst has recently been addressed, so Mara will invest effort in a plausible clay-container experiment for future hydration.",
         "model": "gpt-5.6-luna",
         "recentActions": [
-          "eat_berries",
-          "gather_reeds",
           "physical:follow:animal_tracks",
           "gather_dry_wood",
           "gather_wet_wood",
@@ -278,32 +289,42 @@
           "physical:move:place:fallen_log",
           "physical:search:place:fallen_log",
           "rest",
-          "drink"
+          "drink",
+          "drink",
+          "physical:shape:clay_lump"
         ],
         "lastReferencedMemoryIds": [
+          "M-M019",
           "M-M001"
         ],
-        "lastPhysicalProposal": null
+        "lastPhysicalProposal": {
+          "verb": "shape",
+          "primaryObjectId": "clay_lump",
+          "secondaryObjectId": "none",
+          "configuration": "hollow",
+          "purpose": "Experiment with shaping the wet clay into a hollow container that could later support carrying or storing water."
+        }
       },
       "affordanceAttempts": {
         "follow:animal_tracks:none:none": 1,
         "move:place:fallen_log:none:none": 1,
-        "search:place:fallen_log:none:none": 1
+        "search:place:fallen_log:none:none": 1,
+        "shape:clay_lump:none:hollow": 1
       },
       "coordinates": {
         "x": 48,
         "y": 19
       },
       "activeAction": {
-        "id": "A-D-00099",
-        "decisionId": "D-00099",
-        "label": "Drink from the creek",
-        "actionId": "drink",
+        "id": "A-D-00103",
+        "decisionId": "D-00103",
+        "label": "shape lump of wet clay",
+        "actionId": "physical:shape:clay_lump",
         "worldDay": 3,
-        "worldHour": 7,
+        "worldHour": 9,
         "from": {
-          "x": 64,
-          "y": 34
+          "x": 48,
+          "y": 19
         },
         "to": {
           "x": 48,
@@ -313,38 +334,38 @@
           "x": 48,
           "y": 19
         },
-        "moving": true,
+        "moving": false,
         "phases": [
           {
             "id": "decide",
             "label": "Deciding",
             "start": 0,
-            "end": 0.1
-          },
-          {
-            "id": "travel",
-            "label": "Traveling",
-            "start": 0.1,
-            "end": 0.58
+            "end": 0.12
           },
           {
             "id": "interact",
             "label": "Acting",
-            "start": 0.58,
-            "end": 0.86
+            "start": 0.12,
+            "end": 0.82
           },
           {
             "id": "resolve",
             "label": "Resolving",
-            "start": 0.86,
+            "start": 0.82,
             "end": 1
           }
         ],
         "outcome": {
           "success": true,
-          "detail": "Mara drinks from the creek."
+          "detail": "Mara pinches and coils the clay until a hollow form holds its walls."
         },
-        "physicalProposal": null
+        "physicalProposal": {
+          "verb": "shape",
+          "primaryObjectId": "clay_lump",
+          "secondaryObjectId": "none",
+          "configuration": "hollow",
+          "purpose": "Experiment with shaping the wet clay into a hollow container that could later support carrying or storing water."
+        }
       }
     },
     {
@@ -352,15 +373,15 @@
       "name": "Ivo",
       "position": "log",
       "needs": {
-        "hydration": 76.5,
-        "hunger": 83.19999999999993,
-        "energy": 58.00000000000013,
-        "warmth": 33
+        "hydration": 63.5,
+        "hunger": 74.79999999999993,
+        "energy": 39.400000000000134,
+        "warmth": 29
       },
       "inventory": {
         "berries": 1,
         "dryWood": 0,
-        "wetWood": 2,
+        "wetWood": 1,
         "stones": 1,
         "clay": 0,
         "reeds": 3,
@@ -368,7 +389,7 @@
         "rawClayVessel": 1,
         "firedVessel": 0,
         "cordage": 0,
-        "woodPole": 0,
+        "woodPole": 1,
         "pointedPole": 0,
         "boundSharpTool": 0,
         "rawMeat": 0,
@@ -376,6 +397,31 @@
         "tubers": 0
       },
       "memories": [
+        {
+          "id": "M-I031",
+          "text": "A sharp stone edge can turn a rough branch into a straighter, more controllable wooden pole.",
+          "importance": 7,
+          "tags": [
+            "wood",
+            "tool",
+            "cutting"
+          ],
+          "source": "experience:3-9",
+          "confidence": 0.88,
+          "lastSeen": "3:9"
+        },
+        {
+          "id": "M-I029",
+          "text": "Physical attempt 1: search fallen log produced no stable effect.",
+          "importance": 4,
+          "tags": [
+            "experiment",
+            "physical-attempt"
+          ],
+          "source": "experience:3-8",
+          "confidence": 0.64,
+          "lastSeen": "3:8"
+        },
         {
           "id": "M-I027",
           "text": "I can keep basic needs steadier by relying on the creek for water, the shelter for effective rest, and the known red berries for food; searching the berry patch has not yet produced a new stable result.",
@@ -544,7 +590,7 @@
         "cooperation": 0.76,
         "caution": 0.48
       },
-      "currentAction": "move fallen log",
+      "currentAction": "cut carried wet branch + sharp stone flake",
       "skills": {
         "sharp-edge": 1,
         "clay-shaping": 1
@@ -555,14 +601,12 @@
       },
       "mind": {
         "brainMode": "ai",
-        "currentGoal": "Improve warmth and prepare fuel for shelter.",
-        "intent": "Move from the berry patch to the fallen log.",
-        "confidence": 0.86,
-        "decisionSummary": "Basic hunger and hydration are stable, while warmth is low and there is no dry wood carried, so seeking the known wood source is the best survival step.",
+        "currentGoal": "Improve warmth by preparing reliable fuel for the shelter fire.",
+        "intent": "Use the sharp stone to process the carried wet branches into useful fuel.",
+        "confidence": 0.78,
+        "decisionSummary": "The fire has faded and no dry wood remains; cutting the available branches is a cautious preparation step toward restoring reliable heat.",
         "model": "gpt-5.6-luna",
         "recentActions": [
-          "physical:search:place:reed_bed",
-          "gather_reeds",
           "eat_berries",
           "rest",
           "gather_wet_wood",
@@ -576,39 +620,43 @@
           "eat_berries",
           "drink",
           "eat_berries",
-          "physical:move:place:fallen_log"
+          "physical:move:place:fallen_log",
+          "physical:search:place:fallen_log",
+          "physical:cut:carried_wet_branch"
         ],
         "lastReferencedMemoryIds": [
-          "M-I027",
-          "M-I006"
+          "M-I006",
+          "M-I014"
         ],
         "lastPhysicalProposal": {
-          "verb": "move",
-          "primaryObjectId": "place:fallen_log",
-          "secondaryObjectId": "none",
-          "configuration": "none",
-          "purpose": "Reach the fallen log to look for usable fuel or building material before the colder night."
+          "verb": "cut",
+          "primaryObjectId": "carried_wet_branch",
+          "secondaryObjectId": "sharp_stone",
+          "configuration": "straight",
+          "purpose": "Cut the wet branches into smaller, more manageable fuel pieces that may dry or burn more reliably."
         }
       },
       "affordanceAttempts": {
         "search:place:berry_patch:none:none": 1,
         "search:place:reed_bed:none:none": 1,
-        "move:place:fallen_log:none:none": 1
+        "move:place:fallen_log:none:none": 1,
+        "search:place:fallen_log:none:none": 1,
+        "cut:carried_wet_branch:sharp_stone:straight": 1
       },
       "coordinates": {
         "x": 59,
         "y": 29
       },
       "activeAction": {
-        "id": "A-D-00100",
-        "decisionId": "D-00100",
-        "label": "move fallen log",
-        "actionId": "physical:move:place:fallen_log",
+        "id": "A-D-00104",
+        "decisionId": "D-00104",
+        "label": "cut carried wet branch",
+        "actionId": "physical:cut:carried_wet_branch",
         "worldDay": 3,
-        "worldHour": 7,
+        "worldHour": 9,
         "from": {
-          "x": 29,
-          "y": 31
+          "x": 59,
+          "y": 29
         },
         "to": {
           "x": 59,
@@ -618,43 +666,37 @@
           "x": 59,
           "y": 29
         },
-        "moving": true,
+        "moving": false,
         "phases": [
           {
             "id": "decide",
             "label": "Deciding",
             "start": 0,
-            "end": 0.1
-          },
-          {
-            "id": "travel",
-            "label": "Traveling",
-            "start": 0.1,
-            "end": 0.58
+            "end": 0.12
           },
           {
             "id": "interact",
             "label": "Acting",
-            "start": 0.58,
-            "end": 0.86
+            "start": 0.12,
+            "end": 0.82
           },
           {
             "id": "resolve",
             "label": "Resolving",
-            "start": 0.86,
+            "start": 0.82,
             "end": 1
           }
         ],
         "outcome": {
           "success": true,
-          "detail": "Ivo moves to the fallen log."
+          "detail": "Ivo uses the sharp edge to turn a rough branch into a straighter wooden pole."
         },
         "physicalProposal": {
-          "verb": "move",
-          "primaryObjectId": "place:fallen_log",
-          "secondaryObjectId": "none",
-          "configuration": "none",
-          "purpose": "Reach the fallen log to look for usable fuel or building material before the colder night."
+          "verb": "cut",
+          "primaryObjectId": "carried_wet_branch",
+          "secondaryObjectId": "sharp_stone",
+          "configuration": "straight",
+          "purpose": "Cut the wet branches into smaller, more manageable fuel pieces that may dry or burn more reliably."
         }
       }
     }
@@ -670,6 +712,111 @@
     }
   },
   "history": [
+    {
+      "id": "E-00145",
+      "day": 3,
+      "hour": 9,
+      "type": "physical",
+      "title": "cut carried wet branch + sharp stone flake",
+      "detail": "Ivo uses the sharp edge to turn a rough branch into a straighter wooden pole.",
+      "agentId": "agent-ivo",
+      "physicalId": "P-00009",
+      "success": true,
+      "proposal": {
+        "verb": "cut",
+        "primaryObjectId": "carried_wet_branch",
+        "secondaryObjectId": "sharp_stone",
+        "configuration": "straight",
+        "purpose": "Cut the wet branches into smaller, more manageable fuel pieces that may dry or burn more reliably."
+      }
+    },
+    {
+      "id": "E-00144",
+      "day": 3,
+      "hour": 9,
+      "type": "discovery",
+      "title": "WORLD DISCOVERY · Worked wooden pole",
+      "detail": "Ivo is the first to discover: A rough branch was deliberately cut into a straighter form.",
+      "agentId": "agent-ivo",
+      "discoveryId": "DISC-003",
+      "discoveryKey": "worked-wood-pole"
+    },
+    {
+      "id": "E-00143",
+      "day": 3,
+      "hour": 9,
+      "type": "learn",
+      "title": "Ivo formed a memory",
+      "detail": "A sharp stone edge can turn a rough branch into a straighter, more controllable wooden pole.",
+      "agentId": "agent-ivo",
+      "memoryId": "M-I031"
+    },
+    {
+      "id": "E-00142",
+      "day": 3,
+      "hour": 9,
+      "type": "physical",
+      "title": "shape lump of wet clay",
+      "detail": "Mara pinches and coils the clay until a hollow form holds its walls.",
+      "agentId": "agent-mara",
+      "physicalId": "P-00008",
+      "success": true,
+      "proposal": {
+        "verb": "shape",
+        "primaryObjectId": "clay_lump",
+        "secondaryObjectId": "none",
+        "configuration": "hollow",
+        "purpose": "Experiment with shaping the wet clay into a hollow container that could later support carrying or storing water."
+      }
+    },
+    {
+      "id": "E-00141",
+      "day": 3,
+      "hour": 9,
+      "type": "learn",
+      "title": "Mara formed a memory",
+      "detail": "Wet clay can be pinched and coiled into stable hollow shapes.",
+      "agentId": "agent-mara",
+      "memoryId": "M-M030"
+    },
+    {
+      "id": "E-00140",
+      "day": 3,
+      "hour": 8,
+      "type": "attempt",
+      "title": "search fallen log",
+      "detail": "Ivo tries to search fallen log. No stable new effect emerges yet.",
+      "agentId": "agent-ivo",
+      "physicalId": "P-00007",
+      "success": false,
+      "proposal": {
+        "verb": "search",
+        "primaryObjectId": "place:fallen_log",
+        "secondaryObjectId": "none",
+        "configuration": "none",
+        "purpose": "Look for exposed dry wood or smaller combustible branches in the fallen log."
+      }
+    },
+    {
+      "id": "E-00139",
+      "day": 3,
+      "hour": 8,
+      "type": "learn",
+      "title": "Ivo formed a memory",
+      "detail": "Physical attempt 1: search fallen log produced no stable effect.",
+      "agentId": "agent-ivo",
+      "memoryId": "M-I029"
+    },
+    {
+      "id": "E-00138",
+      "day": 3,
+      "hour": 8,
+      "type": "action",
+      "title": "Drink from the creek",
+      "detail": "Mara drinks from the creek.",
+      "agentId": "agent-mara",
+      "actionId": "drink"
+    },
     {
       "id": "E-00137",
       "day": 3,
@@ -2134,6 +2281,782 @@
     }
   ],
   "dna": [
+    {
+      "protocol": "Decision DNA 0.6-farm",
+      "decision_id": "D-00104",
+      "day": 3,
+      "hour": 9,
+      "agent_id": "agent-ivo",
+      "agent_name": "Ivo",
+      "observation": {
+        "time": "Day 3, 09:00",
+        "weather": "cloudy",
+        "temperature": 56,
+        "position": "log",
+        "nearby": [],
+        "needs": {
+          "hydration": 70,
+          "satiety": 78.99999999999993,
+          "energy": 48.20000000000013,
+          "warmth": 31
+        },
+        "inventory": {
+          "berries": 1,
+          "dryWood": 0,
+          "wetWood": 2,
+          "stones": 1,
+          "clay": 0,
+          "reeds": 3,
+          "sharpStone": 1,
+          "rawClayVessel": 1,
+          "firedVessel": 0,
+          "cordage": 0,
+          "woodPole": 0,
+          "pointedPole": 0,
+          "boundSharpTool": 0,
+          "rawMeat": 0,
+          "cookedMeat": 0,
+          "tubers": 0
+        },
+        "skills": {
+          "sharp-edge": 1,
+          "clay-shaping": 1
+        },
+        "knownPeople": [
+          {
+            "name": "Mara",
+            "trust": 36,
+            "familiarity": 17,
+            "affinity": 51,
+            "nearby": false
+          }
+        ]
+      },
+      "action": "physical:cut:carried_wet_branch",
+      "action_label": "cut carried wet branch",
+      "winner_score": null,
+      "baseline_policy_action": "drink",
+      "deviated_from_policy": true,
+      "candidates": [
+        {
+          "id": "drink",
+          "label": "Drink from the creek",
+          "score": 52.948,
+          "reasons": [
+            [
+              "thirst",
+              30
+            ]
+          ]
+        },
+        {
+          "id": "eat_berries",
+          "label": "Eat wild berries",
+          "score": 21.35,
+          "reasons": [
+            [
+              "hunger",
+              21.00000000000007
+            ]
+          ]
+        },
+        {
+          "id": "gather_clay",
+          "label": "Gather sticky clay",
+          "score": 12.64,
+          "reasons": [
+            [
+              "curiosity",
+              4.64
+            ]
+          ]
+        },
+        {
+          "id": "gather_reeds",
+          "label": "Gather flexible reeds",
+          "score": 12.64,
+          "reasons": [
+            [
+              "curiosity",
+              4.64
+            ]
+          ]
+        },
+        {
+          "id": "gather_stones",
+          "label": "Gather loose stones",
+          "score": 11.64,
+          "reasons": [
+            [
+              "curiosity",
+              4.64
+            ]
+          ]
+        },
+        {
+          "id": "seek_other",
+          "label": "Look for Mara",
+          "score": 11.1,
+          "reasons": [
+            [
+              "cooperation",
+              6.08
+            ]
+          ]
+        },
+        {
+          "id": "explore",
+          "label": "Explore beyond the known basin",
+          "score": 7.252,
+          "reasons": [
+            [
+              "curiosity",
+              7.539999999999999
+            ],
+            [
+              "novelty",
+              0
+            ]
+          ]
+        }
+      ],
+      "retrieved_memories": [
+        "M-I027",
+        "M-I018",
+        "M-I014",
+        "M-I022",
+        "M-I004",
+        "M-I002",
+        "M-I008",
+        "M-I016",
+        "M-I024",
+        "M-I006",
+        "M-I021",
+        "M-I013"
+      ],
+      "mind": {
+        "brain_mode": "ai",
+        "model": "gpt-5.6-luna",
+        "goal": "Improve warmth by preparing reliable fuel for the shelter fire.",
+        "intent": "Use the sharp stone to process the carried wet branches into useful fuel.",
+        "confidence": 0.78,
+        "decision_summary": "The fire has faded and no dry wood remains; cutting the available branches is a cautious preparation step toward restoring reliable heat.",
+        "referenced_memory_ids": [
+          "M-I006",
+          "M-I014"
+        ],
+        "physical_proposal": {
+          "verb": "cut",
+          "primaryObjectId": "carried_wet_branch",
+          "secondaryObjectId": "sharp_stone",
+          "configuration": "straight",
+          "purpose": "Cut the wet branches into smaller, more manageable fuel pieces that may dry or burn more reliably."
+        }
+      },
+      "physics": {
+        "version": "affordance-0.5",
+        "outcome": {
+          "physicalId": "P-00009",
+          "success": true,
+          "blocked": false,
+          "detail": "Ivo uses the sharp edge to turn a rough branch into a straighter wooden pole.",
+          "proposal": {
+            "verb": "cut",
+            "primaryObjectId": "carried_wet_branch",
+            "secondaryObjectId": "sharp_stone",
+            "configuration": "straight",
+            "purpose": "Cut the wet branches into smaller, more manageable fuel pieces that may dry or burn more reliably."
+          },
+          "primary": "carried_wet_branch",
+          "secondary": "sharp_stone"
+        }
+      },
+      "memory_counterfactuals": [
+        {
+          "removed_memory": "M-I006",
+          "memory_text": "Dry branches are useful for heat and building.",
+          "original_action": "physical:cut:carried_wet_branch",
+          "counterfactual_action": "physical:cut:carried_wet_branch",
+          "action_changed": false,
+          "method": "model_replay",
+          "provisional": true,
+          "trials": 1
+        }
+      ]
+    },
+    {
+      "protocol": "Decision DNA 0.6-farm",
+      "decision_id": "D-00103",
+      "day": 3,
+      "hour": 9,
+      "agent_id": "agent-mara",
+      "agent_name": "Mara",
+      "observation": {
+        "time": "Day 3, 09:00",
+        "weather": "cloudy",
+        "temperature": 56,
+        "position": "creek",
+        "nearby": [
+          "creek water",
+          "sticky creek-bank clay"
+        ],
+        "needs": {
+          "hydration": 64.5,
+          "satiety": 28.599999999999955,
+          "energy": 33.2,
+          "warmth": 52
+        },
+        "inventory": {
+          "berries": 0,
+          "dryWood": 1,
+          "wetWood": 6,
+          "stones": 1,
+          "clay": 2,
+          "reeds": 3,
+          "sharpStone": 1,
+          "rawClayVessel": 0,
+          "firedVessel": 0,
+          "cordage": 0,
+          "woodPole": 0,
+          "pointedPole": 0,
+          "boundSharpTool": 0,
+          "rawMeat": 0,
+          "cookedMeat": 0,
+          "tubers": 0
+        },
+        "skills": {
+          "sharp-edge": 1
+        },
+        "knownPeople": [
+          {
+            "name": "Ivo",
+            "trust": 36,
+            "familiarity": 17,
+            "affinity": 51,
+            "nearby": false
+          }
+        ]
+      },
+      "action": "physical:shape:clay_lump",
+      "action_label": "shape lump of wet clay",
+      "winner_score": null,
+      "baseline_policy_action": "rest",
+      "deviated_from_policy": true,
+      "candidates": [
+        {
+          "id": "rest",
+          "label": "Rest in the shelter",
+          "score": 67,
+          "reasons": [
+            [
+              "fatigue",
+              66.8
+            ]
+          ]
+        },
+        {
+          "id": "drink",
+          "label": "Drink from the creek",
+          "score": 51.251,
+          "reasons": [
+            [
+              "thirst",
+              35.5
+            ]
+          ]
+        },
+        {
+          "id": "gather_clay",
+          "label": "Gather sticky clay",
+          "score": 13.76,
+          "reasons": [
+            [
+              "curiosity",
+              5.76
+            ]
+          ]
+        },
+        {
+          "id": "gather_reeds",
+          "label": "Gather flexible reeds",
+          "score": 13.76,
+          "reasons": [
+            [
+              "curiosity",
+              5.76
+            ]
+          ]
+        },
+        {
+          "id": "gather_stones",
+          "label": "Gather loose stones",
+          "score": 12.76,
+          "reasons": [
+            [
+              "curiosity",
+              5.76
+            ]
+          ]
+        },
+        {
+          "id": "seek_other",
+          "label": "Look for Ivo",
+          "score": 10.46,
+          "reasons": [
+            [
+              "cooperation",
+              5.44
+            ]
+          ]
+        },
+        {
+          "id": "explore",
+          "label": "Explore beyond the known basin",
+          "score": 6.672,
+          "reasons": [
+            [
+              "curiosity",
+              9.36
+            ],
+            [
+              "novelty",
+              0
+            ]
+          ]
+        }
+      ],
+      "retrieved_memories": [
+        "M-M015",
+        "M-M026",
+        "M-M017",
+        "M-M007",
+        "M-M001",
+        "M-M011",
+        "M-M003",
+        "M-M019",
+        "M-M005",
+        "M-M020",
+        "M-M023",
+        "M-M025"
+      ],
+      "mind": {
+        "brain_mode": "ai",
+        "model": "gpt-5.6-luna",
+        "goal": "Improve long-term hydration by developing a water container.",
+        "intent": "Use the known moldable, shape-holding clay for a cautious container experiment.",
+        "confidence": 0.84,
+        "decision_summary": "Immediate thirst has recently been addressed, so Mara will invest effort in a plausible clay-container experiment for future hydration.",
+        "referenced_memory_ids": [
+          "M-M019",
+          "M-M001"
+        ],
+        "physical_proposal": {
+          "verb": "shape",
+          "primaryObjectId": "clay_lump",
+          "secondaryObjectId": "none",
+          "configuration": "hollow",
+          "purpose": "Experiment with shaping the wet clay into a hollow container that could later support carrying or storing water."
+        }
+      },
+      "physics": {
+        "version": "affordance-0.5",
+        "outcome": {
+          "physicalId": "P-00008",
+          "success": true,
+          "blocked": false,
+          "detail": "Mara pinches and coils the clay until a hollow form holds its walls.",
+          "proposal": {
+            "verb": "shape",
+            "primaryObjectId": "clay_lump",
+            "secondaryObjectId": "none",
+            "configuration": "hollow",
+            "purpose": "Experiment with shaping the wet clay into a hollow container that could later support carrying or storing water."
+          },
+          "primary": "clay_lump",
+          "secondary": null
+        }
+      },
+      "memory_counterfactuals": [
+        {
+          "removed_memory": "M-M019",
+          "memory_text": "Wet creek-bank clay holds a shape when pressed.",
+          "original_action": "physical:shape:clay_lump",
+          "counterfactual_action": "physical:shape:clay_lump",
+          "action_changed": false,
+          "method": "model_replay",
+          "provisional": true,
+          "trials": 1
+        }
+      ]
+    },
+    {
+      "protocol": "Decision DNA 0.6-farm",
+      "decision_id": "D-00102",
+      "day": 3,
+      "hour": 8,
+      "agent_id": "agent-ivo",
+      "agent_name": "Ivo",
+      "observation": {
+        "time": "Day 3, 08:00",
+        "weather": "cloudy",
+        "temperature": 54,
+        "position": "log",
+        "nearby": [],
+        "needs": {
+          "hydration": 76.5,
+          "satiety": 83.19999999999993,
+          "energy": 58.00000000000013,
+          "warmth": 33
+        },
+        "inventory": {
+          "berries": 1,
+          "dryWood": 0,
+          "wetWood": 2,
+          "stones": 1,
+          "clay": 0,
+          "reeds": 3,
+          "sharpStone": 1,
+          "rawClayVessel": 1,
+          "firedVessel": 0,
+          "cordage": 0,
+          "woodPole": 0,
+          "pointedPole": 0,
+          "boundSharpTool": 0,
+          "rawMeat": 0,
+          "cookedMeat": 0,
+          "tubers": 0
+        },
+        "skills": {
+          "sharp-edge": 1,
+          "clay-shaping": 1
+        },
+        "knownPeople": [
+          {
+            "name": "Mara",
+            "trust": 36,
+            "familiarity": 17,
+            "affinity": 51,
+            "nearby": false
+          }
+        ]
+      },
+      "action": "physical:search:place:fallen_log",
+      "action_label": "search fallen log",
+      "winner_score": null,
+      "baseline_policy_action": "drink",
+      "deviated_from_policy": true,
+      "candidates": [
+        {
+          "id": "drink",
+          "label": "Drink from the creek",
+          "score": 43.523,
+          "reasons": [
+            [
+              "thirst",
+              23.5
+            ]
+          ]
+        },
+        {
+          "id": "eat_berries",
+          "label": "Eat wild berries",
+          "score": 16.31,
+          "reasons": [
+            [
+              "hunger",
+              16.800000000000068
+            ]
+          ]
+        },
+        {
+          "id": "gather_clay",
+          "label": "Gather sticky clay",
+          "score": 12.64,
+          "reasons": [
+            [
+              "curiosity",
+              4.64
+            ]
+          ]
+        },
+        {
+          "id": "gather_reeds",
+          "label": "Gather flexible reeds",
+          "score": 12.64,
+          "reasons": [
+            [
+              "curiosity",
+              4.64
+            ]
+          ]
+        },
+        {
+          "id": "gather_stones",
+          "label": "Gather loose stones",
+          "score": 11.64,
+          "reasons": [
+            [
+              "curiosity",
+              4.64
+            ]
+          ]
+        },
+        {
+          "id": "seek_other",
+          "label": "Look for Mara",
+          "score": 11.1,
+          "reasons": [
+            [
+              "cooperation",
+              6.08
+            ]
+          ]
+        },
+        {
+          "id": "explore",
+          "label": "Explore beyond the known basin",
+          "score": 8.82,
+          "reasons": [
+            [
+              "curiosity",
+              7.539999999999999
+            ],
+            [
+              "novelty",
+              0
+            ]
+          ]
+        }
+      ],
+      "retrieved_memories": [
+        "M-I027",
+        "M-I018",
+        "M-I014",
+        "M-I022",
+        "M-I004",
+        "M-I002",
+        "M-I008",
+        "M-I016",
+        "M-I024",
+        "M-I006",
+        "M-I021",
+        "M-I013"
+      ],
+      "mind": {
+        "brain_mode": "ai",
+        "model": "gpt-5.6-luna",
+        "goal": "Improve warmth by preparing reliable fuel for the shelter fire.",
+        "intent": "Search the fallen log for usable dry fuel before attempting to cut or carry it.",
+        "confidence": 0.86,
+        "decision_summary": "Warmth is low and the fire recently faded; searching the nearby wood source is a cautious next step toward gathering fuel.",
+        "referenced_memory_ids": [
+          "M-I006"
+        ],
+        "physical_proposal": {
+          "verb": "search",
+          "primaryObjectId": "place:fallen_log",
+          "secondaryObjectId": "none",
+          "configuration": "none",
+          "purpose": "Look for exposed dry wood or smaller combustible branches in the fallen log."
+        }
+      },
+      "physics": {
+        "version": "affordance-0.5",
+        "outcome": {
+          "physicalId": "P-00007",
+          "success": false,
+          "blocked": false,
+          "detail": "Ivo tries to search fallen log. No stable new effect emerges yet.",
+          "proposal": {
+            "verb": "search",
+            "primaryObjectId": "place:fallen_log",
+            "secondaryObjectId": "none",
+            "configuration": "none",
+            "purpose": "Look for exposed dry wood or smaller combustible branches in the fallen log."
+          },
+          "primary": "place:fallen_log",
+          "secondary": null
+        }
+      },
+      "memory_counterfactuals": []
+    },
+    {
+      "protocol": "Decision DNA 0.6-farm",
+      "decision_id": "D-00101",
+      "day": 3,
+      "hour": 8,
+      "agent_id": "agent-mara",
+      "agent_name": "Mara",
+      "observation": {
+        "time": "Day 3, 08:00",
+        "weather": "cloudy",
+        "temperature": 54,
+        "position": "creek",
+        "nearby": [
+          "creek water",
+          "sticky creek-bank clay"
+        ],
+        "needs": {
+          "hydration": 36,
+          "satiety": 32.799999999999955,
+          "energy": 36,
+          "warmth": 54
+        },
+        "inventory": {
+          "berries": 0,
+          "dryWood": 1,
+          "wetWood": 6,
+          "stones": 1,
+          "clay": 2,
+          "reeds": 3,
+          "sharpStone": 1,
+          "rawClayVessel": 0,
+          "firedVessel": 0,
+          "cordage": 0,
+          "woodPole": 0,
+          "pointedPole": 0,
+          "boundSharpTool": 0,
+          "rawMeat": 0,
+          "cookedMeat": 0,
+          "tubers": 0
+        },
+        "skills": {
+          "sharp-edge": 1
+        },
+        "knownPeople": [
+          {
+            "name": "Ivo",
+            "trust": 36,
+            "familiarity": 17,
+            "affinity": 51,
+            "nearby": false
+          }
+        ]
+      },
+      "action": "drink",
+      "action_label": "Drink from the creek",
+      "winner_score": 96.776,
+      "baseline_policy_action": "drink",
+      "deviated_from_policy": false,
+      "candidates": [
+        {
+          "id": "drink",
+          "label": "Drink from the creek",
+          "score": 96.776,
+          "reasons": [
+            [
+              "thirst",
+              64
+            ]
+          ]
+        },
+        {
+          "id": "rest",
+          "label": "Rest in the shelter",
+          "score": 63.92,
+          "reasons": [
+            [
+              "fatigue",
+              64
+            ]
+          ]
+        },
+        {
+          "id": "gather_clay",
+          "label": "Gather sticky clay",
+          "score": 13.76,
+          "reasons": [
+            [
+              "curiosity",
+              5.76
+            ]
+          ]
+        },
+        {
+          "id": "gather_reeds",
+          "label": "Gather flexible reeds",
+          "score": 13.76,
+          "reasons": [
+            [
+              "curiosity",
+              5.76
+            ]
+          ]
+        },
+        {
+          "id": "gather_stones",
+          "label": "Gather loose stones",
+          "score": 12.76,
+          "reasons": [
+            [
+              "curiosity",
+              5.76
+            ]
+          ]
+        },
+        {
+          "id": "seek_other",
+          "label": "Look for Ivo",
+          "score": 10.46,
+          "reasons": [
+            [
+              "cooperation",
+              5.44
+            ]
+          ]
+        },
+        {
+          "id": "explore",
+          "label": "Explore beyond the known basin",
+          "score": 7.12,
+          "reasons": [
+            [
+              "curiosity",
+              9.36
+            ],
+            [
+              "novelty",
+              0
+            ]
+          ]
+        }
+      ],
+      "retrieved_memories": [
+        "M-M015",
+        "M-M026",
+        "M-M017",
+        "M-M007",
+        "M-M001",
+        "M-M011",
+        "M-M003",
+        "M-M019",
+        "M-M005",
+        "M-M020",
+        "M-M023",
+        "M-M025"
+      ],
+      "mind": {
+        "brain_mode": "ai",
+        "model": "gpt-5.6-luna",
+        "goal": "Maintain survival by improving hydration.",
+        "intent": "Drink from the creek while it is immediately accessible.",
+        "confidence": 0.99,
+        "decision_summary": "Hydration is low, and the creek is a known reliable water source, so drinking is the safest priority.",
+        "referenced_memory_ids": [
+          "M-M001"
+        ],
+        "physical_proposal": null
+      },
+      "physics": {
+        "version": "affordance-0.5",
+        "outcome": {
+          "success": true,
+          "detail": "Mara drinks from the creek.",
+          "actionId": "drink"
+        }
+      },
+      "memory_counterfactuals": []
+    },
     {
       "protocol": "Decision DNA 0.6-farm",
       "decision_id": "D-00100",
@@ -30635,24 +31558,25 @@
     }
   ],
   "seq": {
-    "event": 138,
-    "memory": 29,
-    "decision": 101,
-    "discovery": 3,
-    "physical": 7
+    "event": 146,
+    "memory": 32,
+    "decision": 105,
+    "discovery": 4,
+    "physical": 10,
+    "artifact": 6
   },
   "meta": {
     "canonical": true,
-    "lastAdvancedAt": "2026-09-15T23:15:18.182Z",
-    "tickNumber": 20,
+    "lastAdvancedAt": "2026-09-15T23:20:18.253Z",
+    "tickNumber": 21,
     "heartbeatMinutes": 5,
     "worldHoursPerHeartbeat": 2,
     "lastDecisionIds": [
-      "D-00099",
-      "D-00100"
+      "D-00103",
+      "D-00104"
     ],
     "pacing": "young world",
-    "aiDecisions": 37,
+    "aiDecisions": 41,
     "fallbackDecisions": 51,
     "mindMode": "ai",
     "mindConfigured": true,
@@ -30660,6 +31584,17 @@
     "physicsVersion": "affordance-0.5"
   },
   "discoveries": [
+    {
+      "id": "DISC-003",
+      "key": "worked-wood-pole",
+      "title": "Worked wooden pole",
+      "detail": "A rough branch was deliberately cut into a straighter form.",
+      "effect": "Wood can be deliberately shaped as a component rather than only burned or stacked.",
+      "firstAgentId": "agent-ivo",
+      "firstAgentName": "Ivo",
+      "day": 3,
+      "hour": 9
+    },
     {
       "id": "DISC-002",
       "key": "clay-shaping",
@@ -30696,7 +31631,7 @@
       "id": "food-pressure",
       "title": "Easy food is becoming scarce",
       "urgency": 84,
-      "summary": "The lowest satiety is 33%, with only 1 obvious food portions in or near the group.",
+      "summary": "The lowest satiety is 24%, with only 1 obvious food portions in or near the group.",
       "kind": "survival",
       "agentIds": [
         "agent-mara",
@@ -30721,6 +31656,19 @@
       ]
     },
     {
+      "id": "clay-agent-mara",
+      "title": "Mara has an unfired clay vessel",
+      "urgency": 56,
+      "summary": "The shaped vessel persists, but its behavior under sustained heat is still unresolved.",
+      "kind": "experiment",
+      "agentIds": [
+        "agent-mara"
+      ],
+      "placeIds": [
+        "creek"
+      ]
+    },
+    {
       "id": "clay-agent-ivo",
       "title": "Ivo has an unfired clay vessel",
       "urgency": 56,
@@ -30730,7 +31678,7 @@
         "agent-ivo"
       ],
       "placeIds": [
-        "camp"
+        "log"
       ]
     },
     {
@@ -30747,31 +31695,16 @@
       ]
     },
     {
-      "id": "knowledge-gap",
-      "title": "Knowledge is unevenly distributed",
-      "urgency": 48,
-      "summary": "clay-shaping is known by only one agent. A future conversation could matter.",
-      "kind": "social",
+      "id": "materials-agent-ivo",
+      "title": "Ivo is carrying unusually complementary materials",
+      "urgency": 52,
+      "summary": "Rigid material, a cutting edge, and flexible binding material are together. The world does not prescribe what to do with them.",
+      "kind": "opportunity",
       "agentIds": [
-        "agent-mara",
         "agent-ivo"
       ],
       "placeIds": [
-        "creek",
         "log"
-      ]
-    },
-    {
-      "id": "attempt-agent-mara",
-      "title": "Mara has an unresolved physical experiment",
-      "urgency": 42,
-      "summary": "1 attempt at search place have become part of Mara's experience.",
-      "kind": "experiment",
-      "agentIds": [
-        "agent-mara"
-      ],
-      "placeIds": [
-        "creek"
       ]
     }
   ],
@@ -30828,5 +31761,128 @@
         "y": 22
       }
     }
-  }
+  },
+  "artifacts": [
+    {
+      "id": "ART-0001",
+      "type": "sharpStone",
+      "inventoryKey": "sharpStone",
+      "label": "sharp stone flake",
+      "glyph": "◆",
+      "properties": [
+        "legacy-or-untracked-origin"
+      ],
+      "status": "active",
+      "carrierId": "agent-mara",
+      "position": "creek",
+      "coordinates": {
+        "x": 48,
+        "y": 19
+      },
+      "created": {
+        "day": 3,
+        "hour": 8
+      },
+      "provenance": "backfilled from canonical inventory",
+      "ended": null
+    },
+    {
+      "id": "ART-0002",
+      "type": "sharpStone",
+      "inventoryKey": "sharpStone",
+      "label": "sharp stone flake",
+      "glyph": "◆",
+      "properties": [
+        "legacy-or-untracked-origin"
+      ],
+      "status": "active",
+      "carrierId": "agent-ivo",
+      "position": "log",
+      "coordinates": {
+        "x": 59,
+        "y": 29
+      },
+      "created": {
+        "day": 3,
+        "hour": 8
+      },
+      "provenance": "backfilled from canonical inventory",
+      "ended": null
+    },
+    {
+      "id": "ART-0003",
+      "type": "rawClayVessel",
+      "inventoryKey": "rawClayVessel",
+      "label": "unfired clay vessel",
+      "glyph": "◡",
+      "properties": [
+        "legacy-or-untracked-origin"
+      ],
+      "status": "active",
+      "carrierId": "agent-ivo",
+      "position": "log",
+      "coordinates": {
+        "x": 59,
+        "y": 29
+      },
+      "created": {
+        "day": 3,
+        "hour": 8
+      },
+      "provenance": "backfilled from canonical inventory",
+      "ended": null
+    },
+    {
+      "id": "ART-0004",
+      "type": "rawClayVessel",
+      "inventoryKey": "rawClayVessel",
+      "label": "unfired clay vessel",
+      "glyph": "◡",
+      "properties": [
+        "clay",
+        "hollow",
+        "unfired",
+        "fragile"
+      ],
+      "status": "active",
+      "carrierId": "agent-mara",
+      "position": "creek",
+      "coordinates": {
+        "x": 48,
+        "y": 19
+      },
+      "created": {
+        "day": 3,
+        "hour": 9
+      },
+      "provenance": "shaped by Mara on Day 3",
+      "ended": null
+    },
+    {
+      "id": "ART-0005",
+      "type": "woodPole",
+      "inventoryKey": "woodPole",
+      "label": "worked wooden pole",
+      "glyph": "╱",
+      "properties": [
+        "wood",
+        "rigid",
+        "long",
+        "worked"
+      ],
+      "status": "active",
+      "carrierId": "agent-ivo",
+      "position": "log",
+      "coordinates": {
+        "x": 59,
+        "y": 29
+      },
+      "created": {
+        "day": 3,
+        "hour": 9
+      },
+      "provenance": "cut from wetWood on Day 3",
+      "ended": null
+    }
+  ]
 }
