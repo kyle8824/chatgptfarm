@@ -1,16 +1,16 @@
 {
   "version": "0.4",
   "day": 2,
-  "hour": 3,
+  "hour": 6,
   "temperature": 45,
-  "weather": "clear",
+  "weather": "rain",
   "resources": {
     "berries": 5,
     "dryWood": 0,
     "wetWood": 10,
     "stones": 14,
     "creekWater": true,
-    "clay": 10,
+    "clay": 8,
     "reeds": 15
   },
   "structures": {
@@ -25,20 +25,20 @@
     "fallenLog": true,
     "stoneField": true,
     "east": true,
-    "west": false,
+    "west": true,
     "clayBank": true,
-    "reedBed": false
+    "reedBed": true
   },
   "agents": [
     {
       "id": "agent-mara",
       "name": "Mara",
-      "position": "berries",
+      "position": "edge",
       "needs": {
         "hydration": 80.5,
-        "hunger": 95.8,
-        "energy": 50.20000000000006,
-        "warmth": 100
+        "hunger": 83.19999999999999,
+        "energy": 59.80000000000007,
+        "warmth": 85
       },
       "inventory": {
         "berries": 0,
@@ -53,6 +53,19 @@
         "cordage": 0
       },
       "memories": [
+        {
+          "id": "M-M017",
+          "text": "West of camp is a marshy reed bed beside denser forest and animal tracks.",
+          "importance": 7,
+          "tags": [
+            "exploration",
+            "reeds",
+            "animals"
+          ],
+          "source": "experience:2-5",
+          "confidence": 0.88,
+          "lastSeen": "2:5"
+        },
         {
           "id": "M-M015",
           "text": "Striking certain stones together can knock off a thin sharp flake.",
@@ -97,8 +110,8 @@
             "rest"
           ],
           "source": "experience:1-14",
-          "confidence": 0.8400000000000001,
-          "lastSeen": "1:20"
+          "confidence": 0.8800000000000001,
+          "lastSeen": "2:4"
         },
         {
           "id": "M-M007",
@@ -133,7 +146,7 @@
           ],
           "source": "experience:1-6",
           "confidence": 1,
-          "lastSeen": "2:0"
+          "lastSeen": "2:3"
         },
         {
           "id": "M-M005",
@@ -153,7 +166,7 @@
         "cooperation": 0.68,
         "caution": 0.56
       },
-      "currentAction": "Eat wild berries",
+      "currentAction": "Explore beyond the known basin",
       "skills": {
         "sharp-edge": 1
       },
@@ -163,21 +176,21 @@
       "mind": {
         "brainMode": "fallback",
         "currentGoal": "Stay alive and understand the world",
-        "intent": "Eat wild berries",
+        "intent": "Explore beyond the known basin",
         "confidence": 0.62,
         "decisionSummary": "Fallback utility policy chose the highest-ranked valid action.",
         "model": null,
         "recentActions": [
-          "explore",
-          "drink",
-          "gather_stones",
           "rest",
           "drink",
           "eat_berries",
           "make_fire",
           "drink",
           "experiment_stones",
-          "eat_berries"
+          "eat_berries",
+          "drink",
+          "rest",
+          "explore"
         ],
         "lastReferencedMemoryIds": []
       }
@@ -185,19 +198,19 @@
     {
       "id": "agent-ivo",
       "name": "Ivo",
-      "position": "berries",
+      "position": "camp",
       "needs": {
         "hydration": 80.5,
-        "hunger": 95.8,
-        "energy": 62.20000000000006,
-        "warmth": 100
+        "hunger": 83.19999999999999,
+        "energy": 45.80000000000007,
+        "warmth": 82
       },
       "inventory": {
         "berries": 1,
         "dryWood": 0,
         "wetWood": 0,
         "stones": 1,
-        "clay": 0,
+        "clay": 2,
         "reeds": 0,
         "sharpStone": 1,
         "rawClayVessel": 0,
@@ -205,6 +218,30 @@
         "cordage": 0
       },
       "memories": [
+        {
+          "id": "M-I018",
+          "text": "Wet clay can be pinched and coiled into stable hollow shapes.",
+          "importance": 9,
+          "tags": [
+            "technique",
+            "clay-shaping"
+          ],
+          "source": "experience:2-5",
+          "confidence": 0.94,
+          "lastSeen": "2:5"
+        },
+        {
+          "id": "M-I016",
+          "text": "Wet creek-bank clay holds a shape when pressed.",
+          "importance": 5,
+          "tags": [
+            "clay",
+            "experiment"
+          ],
+          "source": "experience:2-4",
+          "confidence": 0.7,
+          "lastSeen": "2:4"
+        },
         {
           "id": "M-I014",
           "text": "Striking certain stones together can knock off a thin sharp flake.",
@@ -249,7 +286,7 @@
           ],
           "source": "experience:1-7",
           "confidence": 1,
-          "lastSeen": "2:0"
+          "lastSeen": "2:3"
         },
         {
           "id": "M-I002",
@@ -293,31 +330,33 @@
         "cooperation": 0.76,
         "caution": 0.48
       },
-      "currentAction": "Eat wild berries",
+      "currentAction": "Experiment with wet clay",
       "skills": {
-        "sharp-edge": 1
+        "sharp-edge": 1,
+        "clay-shaping": 1
       },
       "experiments": {
-        "stone-striking": 1
+        "stone-striking": 1,
+        "clay-shaping": 1
       },
       "mind": {
         "brainMode": "fallback",
         "currentGoal": "Stay alive and understand the world",
-        "intent": "Eat wild berries",
+        "intent": "Experiment with wet clay",
         "confidence": 0.62,
         "decisionSummary": "Fallback utility policy chose the highest-ranked valid action.",
         "model": null,
         "recentActions": [
-          "eat_berries",
-          "drink",
-          "gather_stones",
           "experiment_stones",
           "drink",
           "eat_berries",
           "rest",
           "drink",
           "gather_berries",
-          "eat_berries"
+          "eat_berries",
+          "drink",
+          "gather_clay",
+          "experiment_clay"
         ],
         "lastReferencedMemoryIds": []
       }
@@ -334,6 +373,122 @@
     }
   },
   "history": [
+    {
+      "id": "E-00072",
+      "day": 2,
+      "hour": 5,
+      "type": "action",
+      "title": "Experiment with wet clay",
+      "detail": "Ivo presses and coils the clay until a rough hollow cup finally holds its walls instead of slumping flat.",
+      "agentId": "agent-ivo",
+      "actionId": "experiment_clay",
+      "brainMode": "fallback"
+    },
+    {
+      "id": "E-00071",
+      "day": 2,
+      "hour": 5,
+      "type": "discovery",
+      "title": "WORLD DISCOVERY · Shaped clay",
+      "detail": "Ivo is the first to discover: After 1 attempt, Ivo learned to make wet clay hold a hollow form.",
+      "agentId": "agent-ivo",
+      "discoveryId": "DISC-002",
+      "discoveryKey": "clay-shaping"
+    },
+    {
+      "id": "E-00070",
+      "day": 2,
+      "hour": 5,
+      "type": "learn",
+      "title": "Ivo formed a memory",
+      "detail": "Wet clay can be pinched and coiled into stable hollow shapes.",
+      "agentId": "agent-ivo",
+      "memoryId": "M-I018"
+    },
+    {
+      "id": "E-00069",
+      "day": 2,
+      "hour": 5,
+      "type": "action",
+      "title": "Explore beyond the known basin",
+      "detail": "Mara scouts west and finds dense forest opening onto marshy ground filled with tall flexible reeds and animal tracks.",
+      "agentId": "agent-mara",
+      "actionId": "explore",
+      "brainMode": "fallback"
+    },
+    {
+      "id": "E-00068",
+      "day": 2,
+      "hour": 5,
+      "type": "world",
+      "title": "New place discovered · Reed marsh",
+      "detail": "Mara expanded the known world to the west.",
+      "agentId": "agent-mara"
+    },
+    {
+      "id": "E-00067",
+      "day": 2,
+      "hour": 5,
+      "type": "learn",
+      "title": "Mara formed a memory",
+      "detail": "West of camp is a marshy reed bed beside denser forest and animal tracks.",
+      "agentId": "agent-mara",
+      "memoryId": "M-M017"
+    },
+    {
+      "id": "E-00066",
+      "day": 2,
+      "hour": 4,
+      "type": "action",
+      "title": "Gather sticky clay",
+      "detail": "Ivo digs sticky clay from the creek bank and carries a heavy lump back.",
+      "agentId": "agent-ivo",
+      "actionId": "gather_clay",
+      "brainMode": "fallback"
+    },
+    {
+      "id": "E-00065",
+      "day": 2,
+      "hour": 4,
+      "type": "learn",
+      "title": "Ivo formed a memory",
+      "detail": "Wet creek-bank clay holds a shape when pressed.",
+      "agentId": "agent-ivo",
+      "memoryId": "M-I016"
+    },
+    {
+      "id": "E-00064",
+      "day": 2,
+      "hour": 4,
+      "type": "action",
+      "title": "Rest in the shelter",
+      "detail": "Mara rests beneath the shelter, protected from the wind.",
+      "agentId": "agent-mara",
+      "actionId": "rest",
+      "brainMode": "fallback"
+    },
+    {
+      "id": "E-00063",
+      "day": 2,
+      "hour": 3,
+      "type": "action",
+      "title": "Drink from the creek",
+      "detail": "Ivo drinks from the creek until the pressure of thirst eases.",
+      "agentId": "agent-ivo",
+      "actionId": "drink",
+      "brainMode": "fallback"
+    },
+    {
+      "id": "E-00062",
+      "day": 2,
+      "hour": 3,
+      "type": "action",
+      "title": "Drink from the creek",
+      "detail": "Mara drinks from the creek until the pressure of thirst eases.",
+      "agentId": "agent-mara",
+      "actionId": "drink",
+      "brainMode": "fallback"
+    },
     {
       "id": "E-00061",
       "day": 2,
@@ -972,6 +1127,2240 @@
     }
   ],
   "dna": [
+    {
+      "protocol": "Decision DNA 0.4-farm",
+      "decision_id": "D-00048",
+      "day": 2,
+      "hour": 5,
+      "agent_id": "agent-ivo",
+      "agent_name": "Ivo",
+      "observation": {
+        "time": "Day 2, 05:00",
+        "weather": "rain",
+        "temperature": 42,
+        "position": "clay",
+        "nearby": [
+          "creek with drinkable water",
+          "5 berry portions",
+          "damp branches",
+          "14 loose stones",
+          "a bank of sticky clay",
+          "tall flexible reeds",
+          "a crude shelter"
+        ],
+        "needs": {
+          "hydration": 87,
+          "hunger": 87.39999999999999,
+          "energy": 52.600000000000065,
+          "warmth": 88
+        },
+        "inventory": {
+          "berries": 1,
+          "dryWood": 0,
+          "wetWood": 0,
+          "stones": 1,
+          "clay": 2,
+          "reeds": 0,
+          "sharpStone": 1,
+          "rawClayVessel": 0,
+          "firedVessel": 0,
+          "cordage": 0
+        },
+        "skills": {
+          "sharp-edge": 1
+        },
+        "knownPeople": [
+          {
+            "name": "Mara",
+            "trust": 34,
+            "familiarity": 12,
+            "affinity": 50,
+            "lastKnownPosition": "edge"
+          }
+        ]
+      },
+      "retrieved_memories": [
+        {
+          "id": "M-I014",
+          "text": "Striking certain stones together can knock off a thin sharp flake.",
+          "importance": 9,
+          "confidence": 0.94,
+          "tags": [
+            "technique",
+            "sharp-edge"
+          ],
+          "source": "experience:1-20"
+        },
+        {
+          "id": "M-I016",
+          "text": "Wet creek-bank clay holds a shape when pressed.",
+          "importance": 5,
+          "confidence": 0.7,
+          "tags": [
+            "clay",
+            "experiment"
+          ],
+          "source": "experience:2-4"
+        },
+        {
+          "id": "M-I013",
+          "text": "Some stones fracture differently from others when struck.",
+          "importance": 4,
+          "confidence": 0.62,
+          "tags": [
+            "stone",
+            "experiment"
+          ],
+          "source": "experience:1-19"
+        },
+        {
+          "id": "M-I008",
+          "text": "A branch shelter reduces exposure and gives a safer place to rest.",
+          "importance": 9,
+          "confidence": 0.91,
+          "tags": [
+            "shelter",
+            "rest"
+          ],
+          "source": "experience:1-10"
+        },
+        {
+          "id": "M-I004",
+          "text": "The creek provides reliable drinking water.",
+          "importance": 8,
+          "confidence": 1,
+          "tags": [
+            "water"
+          ],
+          "source": "experience:1-7"
+        },
+        {
+          "id": "M-I002",
+          "text": "The red berries in the meadow are edible and reduce hunger.",
+          "importance": 7,
+          "confidence": 1,
+          "tags": [
+            "berries",
+            "food"
+          ],
+          "source": "experience:1-6"
+        },
+        {
+          "id": "M-I006",
+          "text": "Dry branches are useful for heat and building.",
+          "importance": 5,
+          "confidence": 0.78,
+          "tags": [
+            "dry-wood"
+          ],
+          "source": "experience:1-8"
+        },
+        {
+          "id": "M-I009",
+          "text": "Rest is more effective inside the shelter.",
+          "importance": 5,
+          "confidence": 0.8800000000000001,
+          "tags": [
+            "rest"
+          ],
+          "source": "experience:1-11"
+        }
+      ],
+      "action": "experiment_clay",
+      "action_label": "Experiment with wet clay",
+      "winner_score": 20.64,
+      "utility_rank": 1,
+      "candidates": [
+        {
+          "id": "experiment_clay",
+          "label": "Experiment with wet clay",
+          "score": 20.64,
+          "reasons": [
+            [
+              "curiosity",
+              5.8
+            ],
+            [
+              "novelty",
+              6.800000000000001
+            ],
+            [
+              "prior attempts",
+              0
+            ]
+          ]
+        },
+        {
+          "id": "drink",
+          "label": "Drink from the creek",
+          "score": 16.85,
+          "reasons": [
+            [
+              "thirst",
+              13
+            ],
+            [
+              "memory: water",
+              8
+            ]
+          ]
+        },
+        {
+          "id": "eat_berries",
+          "label": "Eat wild berries",
+          "score": 15.47,
+          "reasons": [
+            [
+              "hunger",
+              12.600000000000009
+            ],
+            [
+              "memory: berries",
+              7
+            ]
+          ]
+        },
+        {
+          "id": "gather_berries",
+          "label": "Gather berries",
+          "score": 14.572,
+          "reasons": [
+            [
+              "future hunger",
+              2.772000000000002
+            ],
+            [
+              "memory: store food",
+              0
+            ]
+          ]
+        },
+        {
+          "id": "gather_reeds",
+          "label": "Gather flexible reeds",
+          "score": 14.36,
+          "reasons": [
+            [
+              "curiosity",
+              4.64
+            ],
+            [
+              "novelty",
+              2.7200000000000006
+            ]
+          ]
+        },
+        {
+          "id": "explore",
+          "label": "Explore beyond the known basin",
+          "score": 13.396,
+          "reasons": [
+            [
+              "curiosity",
+              7.539999999999999
+            ],
+            [
+              "novelty",
+              5.440000000000001
+            ],
+            [
+              "fatigue penalty",
+              -7.58399999999999
+            ]
+          ]
+        },
+        {
+          "id": "seek_other",
+          "label": "Look for Mara",
+          "score": 12.5,
+          "reasons": [
+            [
+              "cooperation",
+              6.08
+            ],
+            [
+              "familiarity",
+              0.72
+            ]
+          ]
+        },
+        {
+          "id": "gather_clay",
+          "label": "Gather sticky clay",
+          "score": 11.74,
+          "reasons": [
+            [
+              "curiosity",
+              5.22
+            ],
+            [
+              "novelty",
+              2.7200000000000006
+            ]
+          ]
+        },
+        {
+          "id": "gather_wet_wood",
+          "label": "Gather damp branches",
+          "score": 11.16,
+          "reasons": [
+            [
+              "cold",
+              2.16
+            ],
+            [
+              "memory: wet wood",
+              0
+            ]
+          ]
+        },
+        {
+          "id": "gather_stones",
+          "label": "Gather loose stones",
+          "score": 9.7,
+          "reasons": [
+            [
+              "curiosity",
+              4.64
+            ],
+            [
+              "novelty",
+              3.0600000000000005
+            ]
+          ]
+        }
+      ],
+      "factors": [
+        [
+          "curiosity",
+          5.8
+        ],
+        [
+          "novelty",
+          6.800000000000001
+        ]
+      ],
+      "mind": {
+        "brain_mode": "fallback",
+        "model": null,
+        "goal": "Stay alive and understand the world",
+        "intent": "Experiment with wet clay",
+        "decision_summary": "Fallback utility policy chose the highest-ranked valid action.",
+        "confidence": 0.62,
+        "referenced_memory_ids": []
+      },
+      "memory_counterfactuals": [
+        {
+          "removed_memory": "M-I014",
+          "memory_text": "Striking certain stones together can knock off a thin sharp flake.",
+          "original_action": "experiment_clay",
+          "counterfactual_action": "experiment_clay",
+          "action_changed": false,
+          "score_delta": 0,
+          "method": "utility_replay",
+          "provisional": false
+        },
+        {
+          "removed_memory": "M-I016",
+          "memory_text": "Wet creek-bank clay holds a shape when pressed.",
+          "original_action": "experiment_clay",
+          "counterfactual_action": "experiment_clay",
+          "action_changed": false,
+          "score_delta": 0,
+          "method": "utility_replay",
+          "provisional": false
+        },
+        {
+          "removed_memory": "M-I013",
+          "memory_text": "Some stones fracture differently from others when struck.",
+          "original_action": "experiment_clay",
+          "counterfactual_action": "experiment_clay",
+          "action_changed": false,
+          "score_delta": 0,
+          "method": "utility_replay",
+          "provisional": false
+        },
+        {
+          "removed_memory": "M-I008",
+          "memory_text": "A branch shelter reduces exposure and gives a safer place to rest.",
+          "original_action": "experiment_clay",
+          "counterfactual_action": "experiment_clay",
+          "action_changed": false,
+          "score_delta": 0,
+          "method": "utility_replay",
+          "provisional": false
+        },
+        {
+          "removed_memory": "M-I004",
+          "memory_text": "The creek provides reliable drinking water.",
+          "original_action": "experiment_clay",
+          "counterfactual_action": "experiment_clay",
+          "action_changed": false,
+          "score_delta": 0,
+          "method": "utility_replay",
+          "provisional": false
+        },
+        {
+          "removed_memory": "M-I002",
+          "memory_text": "The red berries in the meadow are edible and reduce hunger.",
+          "original_action": "experiment_clay",
+          "counterfactual_action": "experiment_clay",
+          "action_changed": false,
+          "score_delta": 0,
+          "method": "utility_replay",
+          "provisional": false
+        },
+        {
+          "removed_memory": "M-I006",
+          "memory_text": "Dry branches are useful for heat and building.",
+          "original_action": "experiment_clay",
+          "counterfactual_action": "experiment_clay",
+          "action_changed": false,
+          "score_delta": 0,
+          "method": "utility_replay",
+          "provisional": false
+        },
+        {
+          "removed_memory": "M-I009",
+          "memory_text": "Rest is more effective inside the shelter.",
+          "original_action": "experiment_clay",
+          "counterfactual_action": "experiment_clay",
+          "action_changed": false,
+          "score_delta": 0,
+          "method": "utility_replay",
+          "provisional": false
+        }
+      ]
+    },
+    {
+      "protocol": "Decision DNA 0.4-farm",
+      "decision_id": "D-00047",
+      "day": 2,
+      "hour": 5,
+      "agent_id": "agent-mara",
+      "agent_name": "Mara",
+      "observation": {
+        "time": "Day 2, 05:00",
+        "weather": "rain",
+        "temperature": 42,
+        "position": "camp",
+        "nearby": [
+          "creek with drinkable water",
+          "5 berry portions",
+          "damp branches",
+          "14 loose stones",
+          "a bank of sticky clay",
+          "a crude shelter"
+        ],
+        "needs": {
+          "hydration": 87,
+          "hunger": 87.39999999999999,
+          "energy": 74.60000000000007,
+          "warmth": 91
+        },
+        "inventory": {
+          "berries": 0,
+          "dryWood": 0,
+          "wetWood": 0,
+          "stones": 1,
+          "clay": 0,
+          "reeds": 0,
+          "sharpStone": 1,
+          "rawClayVessel": 0,
+          "firedVessel": 0,
+          "cordage": 0
+        },
+        "skills": {
+          "sharp-edge": 1
+        },
+        "knownPeople": [
+          {
+            "name": "Ivo",
+            "trust": 34,
+            "familiarity": 12,
+            "affinity": 50,
+            "lastKnownPosition": "clay"
+          }
+        ]
+      },
+      "retrieved_memories": [
+        {
+          "id": "M-M015",
+          "text": "Striking certain stones together can knock off a thin sharp flake.",
+          "importance": 9,
+          "confidence": 0.94,
+          "tags": [
+            "technique",
+            "sharp-edge"
+          ],
+          "source": "experience:2-1"
+        },
+        {
+          "id": "M-M011",
+          "text": "East of the meadow, the creek exposes sticky clay-rich soil.",
+          "importance": 7,
+          "confidence": 0.9,
+          "tags": [
+            "exploration",
+            "clay"
+          ],
+          "source": "experience:1-17"
+        },
+        {
+          "id": "M-M007",
+          "text": "Dry wood catches flame and provides strong warmth.",
+          "importance": 9,
+          "confidence": 0.98,
+          "tags": [
+            "fire",
+            "dry-wood"
+          ],
+          "source": "experience:1-9"
+        },
+        {
+          "id": "M-M001",
+          "text": "The creek provides reliable drinking water.",
+          "importance": 8,
+          "confidence": 1,
+          "tags": [
+            "water"
+          ],
+          "source": "experience:1-6"
+        },
+        {
+          "id": "M-M003",
+          "text": "The red berries in the meadow are edible and reduce hunger.",
+          "importance": 7,
+          "confidence": 1,
+          "tags": [
+            "berries",
+            "food"
+          ],
+          "source": "experience:1-7"
+        },
+        {
+          "id": "M-M005",
+          "text": "Dry branches are useful for heat and building.",
+          "importance": 5,
+          "confidence": 0.78,
+          "tags": [
+            "dry-wood"
+          ],
+          "source": "experience:1-8"
+        },
+        {
+          "id": "M-M012",
+          "text": "Some stones fracture differently from others when struck.",
+          "importance": 4,
+          "confidence": 0.62,
+          "tags": [
+            "stone",
+            "experiment"
+          ],
+          "source": "experience:1-19"
+        },
+        {
+          "id": "M-M010",
+          "text": "Rest is more effective inside the shelter.",
+          "importance": 5,
+          "confidence": 0.8800000000000001,
+          "tags": [
+            "rest"
+          ],
+          "source": "experience:1-14"
+        }
+      ],
+      "action": "explore",
+      "action_label": "Explore beyond the known basin",
+      "winner_score": 21.242,
+      "utility_rank": 1,
+      "candidates": [
+        {
+          "id": "explore",
+          "label": "Explore beyond the known basin",
+          "score": 21.242,
+          "reasons": [
+            [
+              "curiosity",
+              9.36
+            ],
+            [
+              "novelty",
+              6.56
+            ],
+            [
+              "fatigue penalty",
+              -4.063999999999989
+            ]
+          ]
+        },
+        {
+          "id": "gather_berries",
+          "label": "Gather berries",
+          "score": 18.772,
+          "reasons": [
+            [
+              "future hunger",
+              2.772000000000002
+            ],
+            [
+              "memory: store food",
+              0
+            ]
+          ]
+        },
+        {
+          "id": "gather_clay",
+          "label": "Gather sticky clay",
+          "score": 17.76,
+          "reasons": [
+            [
+              "curiosity",
+              6.4799999999999995
+            ],
+            [
+              "novelty",
+              3.28
+            ]
+          ]
+        },
+        {
+          "id": "drink",
+          "label": "Drink from the creek",
+          "score": 16.85,
+          "reasons": [
+            [
+              "thirst",
+              13
+            ],
+            [
+              "memory: water",
+              8
+            ]
+          ]
+        },
+        {
+          "id": "eat_berries",
+          "label": "Eat wild berries",
+          "score": 15.47,
+          "reasons": [
+            [
+              "hunger",
+              12.600000000000009
+            ],
+            [
+              "memory: berries",
+              7
+            ]
+          ]
+        },
+        {
+          "id": "seek_other",
+          "label": "Look for Ivo",
+          "score": 12.21,
+          "reasons": [
+            [
+              "cooperation",
+              5.44
+            ],
+            [
+              "familiarity",
+              0.72
+            ]
+          ]
+        },
+        {
+          "id": "gather_stones",
+          "label": "Gather loose stones",
+          "score": 11.45,
+          "reasons": [
+            [
+              "curiosity",
+              5.76
+            ],
+            [
+              "novelty",
+              3.69
+            ]
+          ]
+        },
+        {
+          "id": "gather_wet_wood",
+          "label": "Gather damp branches",
+          "score": 10.62,
+          "reasons": [
+            [
+              "cold",
+              1.6199999999999999
+            ],
+            [
+              "memory: wet wood",
+              0
+            ]
+          ]
+        }
+      ],
+      "factors": [
+        [
+          "curiosity",
+          9.36
+        ],
+        [
+          "novelty",
+          6.56
+        ],
+        [
+          "fatigue penalty",
+          -4.063999999999989
+        ]
+      ],
+      "mind": {
+        "brain_mode": "fallback",
+        "model": null,
+        "goal": "Stay alive and understand the world",
+        "intent": "Explore beyond the known basin",
+        "decision_summary": "Fallback utility policy chose the highest-ranked valid action.",
+        "confidence": 0.62,
+        "referenced_memory_ids": []
+      },
+      "memory_counterfactuals": [
+        {
+          "removed_memory": "M-M015",
+          "memory_text": "Striking certain stones together can knock off a thin sharp flake.",
+          "original_action": "explore",
+          "counterfactual_action": "explore",
+          "action_changed": false,
+          "score_delta": 0,
+          "method": "utility_replay",
+          "provisional": false
+        },
+        {
+          "removed_memory": "M-M011",
+          "memory_text": "East of the meadow, the creek exposes sticky clay-rich soil.",
+          "original_action": "explore",
+          "counterfactual_action": "explore",
+          "action_changed": false,
+          "score_delta": 1.386,
+          "method": "utility_replay",
+          "provisional": false
+        },
+        {
+          "removed_memory": "M-M007",
+          "memory_text": "Dry wood catches flame and provides strong warmth.",
+          "original_action": "explore",
+          "counterfactual_action": "explore",
+          "action_changed": false,
+          "score_delta": 0,
+          "method": "utility_replay",
+          "provisional": false
+        },
+        {
+          "removed_memory": "M-M001",
+          "memory_text": "The creek provides reliable drinking water.",
+          "original_action": "explore",
+          "counterfactual_action": "explore",
+          "action_changed": false,
+          "score_delta": 0,
+          "method": "utility_replay",
+          "provisional": false
+        },
+        {
+          "removed_memory": "M-M003",
+          "memory_text": "The red berries in the meadow are edible and reduce hunger.",
+          "original_action": "explore",
+          "counterfactual_action": "explore",
+          "action_changed": false,
+          "score_delta": 0,
+          "method": "utility_replay",
+          "provisional": false
+        },
+        {
+          "removed_memory": "M-M005",
+          "memory_text": "Dry branches are useful for heat and building.",
+          "original_action": "explore",
+          "counterfactual_action": "explore",
+          "action_changed": false,
+          "score_delta": 0,
+          "method": "utility_replay",
+          "provisional": false
+        },
+        {
+          "removed_memory": "M-M012",
+          "memory_text": "Some stones fracture differently from others when struck.",
+          "original_action": "explore",
+          "counterfactual_action": "explore",
+          "action_changed": false,
+          "score_delta": 0,
+          "method": "utility_replay",
+          "provisional": false
+        },
+        {
+          "removed_memory": "M-M010",
+          "memory_text": "Rest is more effective inside the shelter.",
+          "original_action": "explore",
+          "counterfactual_action": "explore",
+          "action_changed": false,
+          "score_delta": 0,
+          "method": "utility_replay",
+          "provisional": false
+        }
+      ]
+    },
+    {
+      "protocol": "Decision DNA 0.4-farm",
+      "decision_id": "D-00046",
+      "day": 2,
+      "hour": 4,
+      "agent_id": "agent-ivo",
+      "agent_name": "Ivo",
+      "observation": {
+        "time": "Day 2, 04:00",
+        "weather": "clear",
+        "temperature": 47,
+        "position": "creek",
+        "nearby": [
+          "creek with drinkable water",
+          "5 berry portions",
+          "damp branches",
+          "14 loose stones",
+          "a bank of sticky clay",
+          "a crude shelter"
+        ],
+        "needs": {
+          "hydration": 93.5,
+          "hunger": 91.6,
+          "energy": 59.40000000000006,
+          "warmth": 97
+        },
+        "inventory": {
+          "berries": 1,
+          "dryWood": 0,
+          "wetWood": 0,
+          "stones": 1,
+          "clay": 0,
+          "reeds": 0,
+          "sharpStone": 1,
+          "rawClayVessel": 0,
+          "firedVessel": 0,
+          "cordage": 0
+        },
+        "skills": {
+          "sharp-edge": 1
+        },
+        "knownPeople": [
+          {
+            "name": "Mara",
+            "trust": 34,
+            "familiarity": 12,
+            "affinity": 50,
+            "lastKnownPosition": "camp"
+          }
+        ]
+      },
+      "retrieved_memories": [
+        {
+          "id": "M-I014",
+          "text": "Striking certain stones together can knock off a thin sharp flake.",
+          "importance": 9,
+          "confidence": 0.94,
+          "tags": [
+            "technique",
+            "sharp-edge"
+          ],
+          "source": "experience:1-20"
+        },
+        {
+          "id": "M-I008",
+          "text": "A branch shelter reduces exposure and gives a safer place to rest.",
+          "importance": 9,
+          "confidence": 0.91,
+          "tags": [
+            "shelter",
+            "rest"
+          ],
+          "source": "experience:1-10"
+        },
+        {
+          "id": "M-I004",
+          "text": "The creek provides reliable drinking water.",
+          "importance": 8,
+          "confidence": 1,
+          "tags": [
+            "water"
+          ],
+          "source": "experience:1-7"
+        },
+        {
+          "id": "M-I002",
+          "text": "The red berries in the meadow are edible and reduce hunger.",
+          "importance": 7,
+          "confidence": 1,
+          "tags": [
+            "berries",
+            "food"
+          ],
+          "source": "experience:1-6"
+        },
+        {
+          "id": "M-I006",
+          "text": "Dry branches are useful for heat and building.",
+          "importance": 5,
+          "confidence": 0.78,
+          "tags": [
+            "dry-wood"
+          ],
+          "source": "experience:1-8"
+        },
+        {
+          "id": "M-I013",
+          "text": "Some stones fracture differently from others when struck.",
+          "importance": 4,
+          "confidence": 0.62,
+          "tags": [
+            "stone",
+            "experiment"
+          ],
+          "source": "experience:1-19"
+        },
+        {
+          "id": "M-I009",
+          "text": "Rest is more effective inside the shelter.",
+          "importance": 5,
+          "confidence": 0.8800000000000001,
+          "tags": [
+            "rest"
+          ],
+          "source": "experience:1-11"
+        }
+      ],
+      "action": "gather_clay",
+      "action_label": "Gather sticky clay",
+      "winner_score": 16.54,
+      "utility_rank": 1,
+      "candidates": [
+        {
+          "id": "gather_clay",
+          "label": "Gather sticky clay",
+          "score": 16.54,
+          "reasons": [
+            [
+              "curiosity",
+              5.22
+            ],
+            [
+              "novelty",
+              3.3200000000000003
+            ]
+          ]
+        },
+        {
+          "id": "explore",
+          "label": "Explore beyond the known basin",
+          "score": 15.684,
+          "reasons": [
+            [
+              "curiosity",
+              7.539999999999999
+            ],
+            [
+              "novelty",
+              6.640000000000001
+            ],
+            [
+              "fatigue penalty",
+              -6.49599999999999
+            ]
+          ]
+        },
+        {
+          "id": "gather_berries",
+          "label": "Gather berries",
+          "score": 13.648,
+          "reasons": [
+            [
+              "future hunger",
+              1.8480000000000012
+            ],
+            [
+              "memory: store food",
+              0
+            ]
+          ]
+        },
+        {
+          "id": "seek_other",
+          "label": "Look for Mara",
+          "score": 12.875,
+          "reasons": [
+            [
+              "cooperation",
+              6.08
+            ],
+            [
+              "familiarity",
+              0.72
+            ]
+          ]
+        },
+        {
+          "id": "gather_stones",
+          "label": "Gather loose stones",
+          "score": 10.375,
+          "reasons": [
+            [
+              "curiosity",
+              4.64
+            ],
+            [
+              "novelty",
+              3.7350000000000003
+            ]
+          ]
+        },
+        {
+          "id": "gather_wet_wood",
+          "label": "Gather damp branches",
+          "score": 9.54,
+          "reasons": [
+            [
+              "cold",
+              0.54
+            ],
+            [
+              "memory: wet wood",
+              0
+            ]
+          ]
+        },
+        {
+          "id": "drink",
+          "label": "Drink from the creek",
+          "score": 7.425,
+          "reasons": [
+            [
+              "thirst",
+              6.5
+            ],
+            [
+              "memory: water",
+              8
+            ]
+          ]
+        },
+        {
+          "id": "eat_berries",
+          "label": "Eat wild berries",
+          "score": 6.23,
+          "reasons": [
+            [
+              "hunger",
+              8.400000000000006
+            ],
+            [
+              "memory: berries",
+              7
+            ]
+          ]
+        }
+      ],
+      "factors": [
+        [
+          "curiosity",
+          5.22
+        ],
+        [
+          "novelty",
+          3.3200000000000003
+        ]
+      ],
+      "mind": {
+        "brain_mode": "fallback",
+        "model": null,
+        "goal": "Stay alive and understand the world",
+        "intent": "Gather sticky clay",
+        "decision_summary": "Fallback utility policy chose the highest-ranked valid action.",
+        "confidence": 0.62,
+        "referenced_memory_ids": []
+      },
+      "memory_counterfactuals": [
+        {
+          "removed_memory": "M-I014",
+          "memory_text": "Striking certain stones together can knock off a thin sharp flake.",
+          "original_action": "gather_clay",
+          "counterfactual_action": "gather_clay",
+          "action_changed": false,
+          "score_delta": 0,
+          "method": "utility_replay",
+          "provisional": false
+        },
+        {
+          "removed_memory": "M-I008",
+          "memory_text": "A branch shelter reduces exposure and gives a safer place to rest.",
+          "original_action": "gather_clay",
+          "counterfactual_action": "gather_clay",
+          "action_changed": false,
+          "score_delta": 0,
+          "method": "utility_replay",
+          "provisional": false
+        },
+        {
+          "removed_memory": "M-I004",
+          "memory_text": "The creek provides reliable drinking water.",
+          "original_action": "gather_clay",
+          "counterfactual_action": "gather_clay",
+          "action_changed": false,
+          "score_delta": 0,
+          "method": "utility_replay",
+          "provisional": false
+        },
+        {
+          "removed_memory": "M-I002",
+          "memory_text": "The red berries in the meadow are edible and reduce hunger.",
+          "original_action": "gather_clay",
+          "counterfactual_action": "gather_clay",
+          "action_changed": false,
+          "score_delta": 0,
+          "method": "utility_replay",
+          "provisional": false
+        },
+        {
+          "removed_memory": "M-I006",
+          "memory_text": "Dry branches are useful for heat and building.",
+          "original_action": "gather_clay",
+          "counterfactual_action": "gather_clay",
+          "action_changed": false,
+          "score_delta": 0,
+          "method": "utility_replay",
+          "provisional": false
+        },
+        {
+          "removed_memory": "M-I013",
+          "memory_text": "Some stones fracture differently from others when struck.",
+          "original_action": "gather_clay",
+          "counterfactual_action": "gather_clay",
+          "action_changed": false,
+          "score_delta": 0,
+          "method": "utility_replay",
+          "provisional": false
+        },
+        {
+          "removed_memory": "M-I009",
+          "memory_text": "Rest is more effective inside the shelter.",
+          "original_action": "gather_clay",
+          "counterfactual_action": "gather_clay",
+          "action_changed": false,
+          "score_delta": 0,
+          "method": "utility_replay",
+          "provisional": false
+        }
+      ]
+    },
+    {
+      "protocol": "Decision DNA 0.4-farm",
+      "decision_id": "D-00045",
+      "day": 2,
+      "hour": 4,
+      "agent_id": "agent-mara",
+      "agent_name": "Mara",
+      "observation": {
+        "time": "Day 2, 04:00",
+        "weather": "clear",
+        "temperature": 47,
+        "position": "creek",
+        "nearby": [
+          "creek with drinkable water",
+          "5 berry portions",
+          "damp branches",
+          "14 loose stones",
+          "a bank of sticky clay",
+          "a crude shelter",
+          "Ivo nearby"
+        ],
+        "needs": {
+          "hydration": 93.5,
+          "hunger": 91.6,
+          "energy": 47.40000000000006,
+          "warmth": 97
+        },
+        "inventory": {
+          "berries": 0,
+          "dryWood": 0,
+          "wetWood": 0,
+          "stones": 1,
+          "clay": 0,
+          "reeds": 0,
+          "sharpStone": 1,
+          "rawClayVessel": 0,
+          "firedVessel": 0,
+          "cordage": 0
+        },
+        "skills": {
+          "sharp-edge": 1
+        },
+        "knownPeople": [
+          {
+            "name": "Ivo",
+            "trust": 34,
+            "familiarity": 12,
+            "affinity": 50,
+            "lastKnownPosition": "creek"
+          }
+        ]
+      },
+      "retrieved_memories": [
+        {
+          "id": "M-M015",
+          "text": "Striking certain stones together can knock off a thin sharp flake.",
+          "importance": 9,
+          "confidence": 0.94,
+          "tags": [
+            "technique",
+            "sharp-edge"
+          ],
+          "source": "experience:2-1"
+        },
+        {
+          "id": "M-M011",
+          "text": "East of the meadow, the creek exposes sticky clay-rich soil.",
+          "importance": 7,
+          "confidence": 0.9,
+          "tags": [
+            "exploration",
+            "clay"
+          ],
+          "source": "experience:1-17"
+        },
+        {
+          "id": "M-M007",
+          "text": "Dry wood catches flame and provides strong warmth.",
+          "importance": 9,
+          "confidence": 0.98,
+          "tags": [
+            "fire",
+            "dry-wood"
+          ],
+          "source": "experience:1-9"
+        },
+        {
+          "id": "M-M010",
+          "text": "Rest is more effective inside the shelter.",
+          "importance": 5,
+          "confidence": 0.8400000000000001,
+          "tags": [
+            "rest"
+          ],
+          "source": "experience:1-14"
+        },
+        {
+          "id": "M-M001",
+          "text": "The creek provides reliable drinking water.",
+          "importance": 8,
+          "confidence": 1,
+          "tags": [
+            "water"
+          ],
+          "source": "experience:1-6"
+        },
+        {
+          "id": "M-M003",
+          "text": "The red berries in the meadow are edible and reduce hunger.",
+          "importance": 7,
+          "confidence": 1,
+          "tags": [
+            "berries",
+            "food"
+          ],
+          "source": "experience:1-7"
+        },
+        {
+          "id": "M-M005",
+          "text": "Dry branches are useful for heat and building.",
+          "importance": 5,
+          "confidence": 0.78,
+          "tags": [
+            "dry-wood"
+          ],
+          "source": "experience:1-8"
+        },
+        {
+          "id": "M-M012",
+          "text": "Some stones fracture differently from others when struck.",
+          "importance": 4,
+          "confidence": 0.62,
+          "tags": [
+            "stone",
+            "experiment"
+          ],
+          "source": "experience:1-19"
+        }
+      ],
+      "action": "rest",
+      "action_label": "Rest in the shelter",
+      "winner_score": 59.54,
+      "utility_rank": 1,
+      "candidates": [
+        {
+          "id": "rest",
+          "label": "Rest in the shelter",
+          "score": 59.54,
+          "reasons": [
+            [
+              "fatigue",
+              52.59999999999994
+            ],
+            [
+              "memory: rest",
+              4.2
+            ]
+          ]
+        },
+        {
+          "id": "gather_berries",
+          "label": "Gather berries",
+          "score": 17.848,
+          "reasons": [
+            [
+              "future hunger",
+              1.8480000000000012
+            ],
+            [
+              "memory: store food",
+              0
+            ]
+          ]
+        },
+        {
+          "id": "talk",
+          "label": "Talk with Ivo",
+          "score": 15.16,
+          "reasons": [
+            [
+              "cooperation",
+              5.44
+            ],
+            [
+              "familiarity",
+              0.72
+            ]
+          ]
+        },
+        {
+          "id": "gather_clay",
+          "label": "Gather sticky clay",
+          "score": 14.48,
+          "reasons": [
+            [
+              "curiosity",
+              6.4799999999999995
+            ],
+            [
+              "novelty",
+              0
+            ]
+          ]
+        },
+        {
+          "id": "explore",
+          "label": "Explore beyond the known basin",
+          "score": 10.33,
+          "reasons": [
+            [
+              "curiosity",
+              9.36
+            ],
+            [
+              "novelty",
+              0
+            ],
+            [
+              "fatigue penalty",
+              -8.41599999999999
+            ]
+          ]
+        },
+        {
+          "id": "gather_wet_wood",
+          "label": "Gather damp branches",
+          "score": 9.54,
+          "reasons": [
+            [
+              "cold",
+              0.54
+            ],
+            [
+              "memory: wet wood",
+              0
+            ]
+          ]
+        },
+        {
+          "id": "gather_stones",
+          "label": "Gather loose stones",
+          "score": 7.76,
+          "reasons": [
+            [
+              "curiosity",
+              5.76
+            ],
+            [
+              "novelty",
+              0
+            ]
+          ]
+        },
+        {
+          "id": "drink",
+          "label": "Drink from the creek",
+          "score": 7.425,
+          "reasons": [
+            [
+              "thirst",
+              6.5
+            ],
+            [
+              "memory: water",
+              8
+            ]
+          ]
+        },
+        {
+          "id": "eat_berries",
+          "label": "Eat wild berries",
+          "score": 6.23,
+          "reasons": [
+            [
+              "hunger",
+              8.400000000000006
+            ],
+            [
+              "memory: berries",
+              7
+            ]
+          ]
+        }
+      ],
+      "factors": [
+        [
+          "fatigue",
+          52.59999999999994
+        ],
+        [
+          "memory: rest",
+          4.2
+        ]
+      ],
+      "mind": {
+        "brain_mode": "fallback",
+        "model": null,
+        "goal": "Stay alive and understand the world",
+        "intent": "Rest in the shelter",
+        "decision_summary": "Fallback utility policy chose the highest-ranked valid action.",
+        "confidence": 0.62,
+        "referenced_memory_ids": []
+      },
+      "memory_counterfactuals": [
+        {
+          "removed_memory": "M-M015",
+          "memory_text": "Striking certain stones together can knock off a thin sharp flake.",
+          "original_action": "rest",
+          "counterfactual_action": "rest",
+          "action_changed": false,
+          "score_delta": 0,
+          "method": "utility_replay",
+          "provisional": false
+        },
+        {
+          "removed_memory": "M-M011",
+          "memory_text": "East of the meadow, the creek exposes sticky clay-rich soil.",
+          "original_action": "rest",
+          "counterfactual_action": "rest",
+          "action_changed": false,
+          "score_delta": 0,
+          "method": "utility_replay",
+          "provisional": false
+        },
+        {
+          "removed_memory": "M-M007",
+          "memory_text": "Dry wood catches flame and provides strong warmth.",
+          "original_action": "rest",
+          "counterfactual_action": "rest",
+          "action_changed": false,
+          "score_delta": 0,
+          "method": "utility_replay",
+          "provisional": false
+        },
+        {
+          "removed_memory": "M-M010",
+          "memory_text": "Rest is more effective inside the shelter.",
+          "original_action": "rest",
+          "counterfactual_action": "rest",
+          "action_changed": false,
+          "score_delta": 1.68,
+          "method": "utility_replay",
+          "provisional": false
+        },
+        {
+          "removed_memory": "M-M001",
+          "memory_text": "The creek provides reliable drinking water.",
+          "original_action": "rest",
+          "counterfactual_action": "rest",
+          "action_changed": false,
+          "score_delta": 0,
+          "method": "utility_replay",
+          "provisional": false
+        },
+        {
+          "removed_memory": "M-M003",
+          "memory_text": "The red berries in the meadow are edible and reduce hunger.",
+          "original_action": "rest",
+          "counterfactual_action": "rest",
+          "action_changed": false,
+          "score_delta": 0,
+          "method": "utility_replay",
+          "provisional": false
+        },
+        {
+          "removed_memory": "M-M005",
+          "memory_text": "Dry branches are useful for heat and building.",
+          "original_action": "rest",
+          "counterfactual_action": "rest",
+          "action_changed": false,
+          "score_delta": 0,
+          "method": "utility_replay",
+          "provisional": false
+        },
+        {
+          "removed_memory": "M-M012",
+          "memory_text": "Some stones fracture differently from others when struck.",
+          "original_action": "rest",
+          "counterfactual_action": "rest",
+          "action_changed": false,
+          "score_delta": 0,
+          "method": "utility_replay",
+          "provisional": false
+        }
+      ]
+    },
+    {
+      "protocol": "Decision DNA 0.4-farm",
+      "decision_id": "D-00044",
+      "day": 2,
+      "hour": 3,
+      "agent_id": "agent-ivo",
+      "agent_name": "Ivo",
+      "observation": {
+        "time": "Day 2, 03:00",
+        "weather": "clear",
+        "temperature": 45,
+        "position": "berries",
+        "nearby": [
+          "creek with drinkable water",
+          "5 berry portions",
+          "damp branches",
+          "14 loose stones",
+          "a bank of sticky clay",
+          "a crude shelter"
+        ],
+        "needs": {
+          "hydration": 80.5,
+          "hunger": 95.8,
+          "energy": 62.20000000000006,
+          "warmth": 100
+        },
+        "inventory": {
+          "berries": 1,
+          "dryWood": 0,
+          "wetWood": 0,
+          "stones": 1,
+          "clay": 0,
+          "reeds": 0,
+          "sharpStone": 1,
+          "rawClayVessel": 0,
+          "firedVessel": 0,
+          "cordage": 0
+        },
+        "skills": {
+          "sharp-edge": 1
+        },
+        "knownPeople": [
+          {
+            "name": "Mara",
+            "trust": 34,
+            "familiarity": 12,
+            "affinity": 50,
+            "lastKnownPosition": "creek"
+          }
+        ]
+      },
+      "retrieved_memories": [
+        {
+          "id": "M-I014",
+          "text": "Striking certain stones together can knock off a thin sharp flake.",
+          "importance": 9,
+          "confidence": 0.94,
+          "tags": [
+            "technique",
+            "sharp-edge"
+          ],
+          "source": "experience:1-20"
+        },
+        {
+          "id": "M-I008",
+          "text": "A branch shelter reduces exposure and gives a safer place to rest.",
+          "importance": 9,
+          "confidence": 0.91,
+          "tags": [
+            "shelter",
+            "rest"
+          ],
+          "source": "experience:1-10"
+        },
+        {
+          "id": "M-I004",
+          "text": "The creek provides reliable drinking water.",
+          "importance": 8,
+          "confidence": 1,
+          "tags": [
+            "water"
+          ],
+          "source": "experience:1-7"
+        },
+        {
+          "id": "M-I002",
+          "text": "The red berries in the meadow are edible and reduce hunger.",
+          "importance": 7,
+          "confidence": 1,
+          "tags": [
+            "berries",
+            "food"
+          ],
+          "source": "experience:1-6"
+        },
+        {
+          "id": "M-I006",
+          "text": "Dry branches are useful for heat and building.",
+          "importance": 5,
+          "confidence": 0.78,
+          "tags": [
+            "dry-wood"
+          ],
+          "source": "experience:1-8"
+        },
+        {
+          "id": "M-I013",
+          "text": "Some stones fracture differently from others when struck.",
+          "importance": 4,
+          "confidence": 0.62,
+          "tags": [
+            "stone",
+            "experiment"
+          ],
+          "source": "experience:1-19"
+        },
+        {
+          "id": "M-I009",
+          "text": "Rest is more effective inside the shelter.",
+          "importance": 5,
+          "confidence": 0.8800000000000001,
+          "tags": [
+            "rest"
+          ],
+          "source": "experience:1-11"
+        }
+      ],
+      "action": "drink",
+      "action_label": "Drink from the creek",
+      "winner_score": 26.275,
+      "utility_rank": 1,
+      "candidates": [
+        {
+          "id": "drink",
+          "label": "Drink from the creek",
+          "score": 26.275,
+          "reasons": [
+            [
+              "thirst",
+              19.5
+            ],
+            [
+              "memory: water",
+              8
+            ]
+          ]
+        },
+        {
+          "id": "gather_clay",
+          "label": "Gather sticky clay",
+          "score": 15.94,
+          "reasons": [
+            [
+              "curiosity",
+              5.22
+            ],
+            [
+              "novelty",
+              2.7200000000000006
+            ]
+          ]
+        },
+        {
+          "id": "explore",
+          "label": "Explore beyond the known basin",
+          "score": 14.932,
+          "reasons": [
+            [
+              "curiosity",
+              7.539999999999999
+            ],
+            [
+              "novelty",
+              5.440000000000001
+            ],
+            [
+              "fatigue penalty",
+              -6.04799999999999
+            ]
+          ]
+        },
+        {
+          "id": "gather_berries",
+          "label": "Gather berries",
+          "score": 12.724,
+          "reasons": [
+            [
+              "future hunger",
+              0.9240000000000006
+            ],
+            [
+              "memory: store food",
+              0
+            ]
+          ]
+        },
+        {
+          "id": "seek_other",
+          "label": "Look for Mara",
+          "score": 12.5,
+          "reasons": [
+            [
+              "cooperation",
+              6.08
+            ],
+            [
+              "familiarity",
+              0.72
+            ]
+          ]
+        },
+        {
+          "id": "gather_stones",
+          "label": "Gather loose stones",
+          "score": 9.7,
+          "reasons": [
+            [
+              "curiosity",
+              4.64
+            ],
+            [
+              "novelty",
+              3.0600000000000005
+            ]
+          ]
+        },
+        {
+          "id": "gather_wet_wood",
+          "label": "Gather damp branches",
+          "score": 9,
+          "reasons": [
+            [
+              "cold",
+              0
+            ],
+            [
+              "memory: wet wood",
+              0
+            ]
+          ]
+        },
+        {
+          "id": "eat_berries",
+          "label": "Eat wild berries",
+          "score": 1.19,
+          "reasons": [
+            [
+              "hunger",
+              4.200000000000003
+            ],
+            [
+              "memory: berries",
+              7
+            ]
+          ]
+        }
+      ],
+      "factors": [
+        [
+          "thirst",
+          19.5
+        ],
+        [
+          "memory: water",
+          8
+        ]
+      ],
+      "mind": {
+        "brain_mode": "fallback",
+        "model": null,
+        "goal": "Stay alive and understand the world",
+        "intent": "Drink from the creek",
+        "decision_summary": "Fallback utility policy chose the highest-ranked valid action.",
+        "confidence": 0.62,
+        "referenced_memory_ids": []
+      },
+      "memory_counterfactuals": [
+        {
+          "removed_memory": "M-I014",
+          "memory_text": "Striking certain stones together can knock off a thin sharp flake.",
+          "original_action": "drink",
+          "counterfactual_action": "drink",
+          "action_changed": false,
+          "score_delta": 0,
+          "method": "utility_replay",
+          "provisional": false
+        },
+        {
+          "removed_memory": "M-I008",
+          "memory_text": "A branch shelter reduces exposure and gives a safer place to rest.",
+          "original_action": "drink",
+          "counterfactual_action": "drink",
+          "action_changed": false,
+          "score_delta": 0,
+          "method": "utility_replay",
+          "provisional": false
+        },
+        {
+          "removed_memory": "M-I004",
+          "memory_text": "The creek provides reliable drinking water.",
+          "original_action": "drink",
+          "counterfactual_action": "drink",
+          "action_changed": false,
+          "score_delta": 6.4,
+          "method": "utility_replay",
+          "provisional": false
+        },
+        {
+          "removed_memory": "M-I002",
+          "memory_text": "The red berries in the meadow are edible and reduce hunger.",
+          "original_action": "drink",
+          "counterfactual_action": "drink",
+          "action_changed": false,
+          "score_delta": 0,
+          "method": "utility_replay",
+          "provisional": false
+        },
+        {
+          "removed_memory": "M-I006",
+          "memory_text": "Dry branches are useful for heat and building.",
+          "original_action": "drink",
+          "counterfactual_action": "drink",
+          "action_changed": false,
+          "score_delta": 0,
+          "method": "utility_replay",
+          "provisional": false
+        },
+        {
+          "removed_memory": "M-I013",
+          "memory_text": "Some stones fracture differently from others when struck.",
+          "original_action": "drink",
+          "counterfactual_action": "drink",
+          "action_changed": false,
+          "score_delta": 0,
+          "method": "utility_replay",
+          "provisional": false
+        },
+        {
+          "removed_memory": "M-I009",
+          "memory_text": "Rest is more effective inside the shelter.",
+          "original_action": "drink",
+          "counterfactual_action": "drink",
+          "action_changed": false,
+          "score_delta": 0,
+          "method": "utility_replay",
+          "provisional": false
+        }
+      ]
+    },
+    {
+      "protocol": "Decision DNA 0.4-farm",
+      "decision_id": "D-00043",
+      "day": 2,
+      "hour": 3,
+      "agent_id": "agent-mara",
+      "agent_name": "Mara",
+      "observation": {
+        "time": "Day 2, 03:00",
+        "weather": "clear",
+        "temperature": 45,
+        "position": "berries",
+        "nearby": [
+          "creek with drinkable water",
+          "5 berry portions",
+          "damp branches",
+          "14 loose stones",
+          "a bank of sticky clay",
+          "a crude shelter",
+          "Ivo nearby"
+        ],
+        "needs": {
+          "hydration": 80.5,
+          "hunger": 95.8,
+          "energy": 50.20000000000006,
+          "warmth": 100
+        },
+        "inventory": {
+          "berries": 0,
+          "dryWood": 0,
+          "wetWood": 0,
+          "stones": 1,
+          "clay": 0,
+          "reeds": 0,
+          "sharpStone": 1,
+          "rawClayVessel": 0,
+          "firedVessel": 0,
+          "cordage": 0
+        },
+        "skills": {
+          "sharp-edge": 1
+        },
+        "knownPeople": [
+          {
+            "name": "Ivo",
+            "trust": 34,
+            "familiarity": 12,
+            "affinity": 50,
+            "lastKnownPosition": "berries"
+          }
+        ]
+      },
+      "retrieved_memories": [
+        {
+          "id": "M-M015",
+          "text": "Striking certain stones together can knock off a thin sharp flake.",
+          "importance": 9,
+          "confidence": 0.94,
+          "tags": [
+            "technique",
+            "sharp-edge"
+          ],
+          "source": "experience:2-1"
+        },
+        {
+          "id": "M-M011",
+          "text": "East of the meadow, the creek exposes sticky clay-rich soil.",
+          "importance": 7,
+          "confidence": 0.9,
+          "tags": [
+            "exploration",
+            "clay"
+          ],
+          "source": "experience:1-17"
+        },
+        {
+          "id": "M-M007",
+          "text": "Dry wood catches flame and provides strong warmth.",
+          "importance": 9,
+          "confidence": 0.98,
+          "tags": [
+            "fire",
+            "dry-wood"
+          ],
+          "source": "experience:1-9"
+        },
+        {
+          "id": "M-M001",
+          "text": "The creek provides reliable drinking water.",
+          "importance": 8,
+          "confidence": 1,
+          "tags": [
+            "water"
+          ],
+          "source": "experience:1-6"
+        },
+        {
+          "id": "M-M003",
+          "text": "The red berries in the meadow are edible and reduce hunger.",
+          "importance": 7,
+          "confidence": 1,
+          "tags": [
+            "berries",
+            "food"
+          ],
+          "source": "experience:1-7"
+        },
+        {
+          "id": "M-M005",
+          "text": "Dry branches are useful for heat and building.",
+          "importance": 5,
+          "confidence": 0.78,
+          "tags": [
+            "dry-wood"
+          ],
+          "source": "experience:1-8"
+        },
+        {
+          "id": "M-M012",
+          "text": "Some stones fracture differently from others when struck.",
+          "importance": 4,
+          "confidence": 0.62,
+          "tags": [
+            "stone",
+            "experiment"
+          ],
+          "source": "experience:1-19"
+        },
+        {
+          "id": "M-M010",
+          "text": "Rest is more effective inside the shelter.",
+          "importance": 5,
+          "confidence": 0.8400000000000001,
+          "tags": [
+            "rest"
+          ],
+          "source": "experience:1-14"
+        }
+      ],
+      "action": "drink",
+      "action_label": "Drink from the creek",
+      "winner_score": 26.275,
+      "utility_rank": 1,
+      "candidates": [
+        {
+          "id": "drink",
+          "label": "Drink from the creek",
+          "score": 26.275,
+          "reasons": [
+            [
+              "thirst",
+              19.5
+            ],
+            [
+              "memory: water",
+              8
+            ]
+          ]
+        },
+        {
+          "id": "gather_clay",
+          "label": "Gather sticky clay",
+          "score": 17.76,
+          "reasons": [
+            [
+              "curiosity",
+              6.4799999999999995
+            ],
+            [
+              "novelty",
+              3.28
+            ]
+          ]
+        },
+        {
+          "id": "explore",
+          "label": "Explore beyond the known basin",
+          "score": 17.338,
+          "reasons": [
+            [
+              "curiosity",
+              9.36
+            ],
+            [
+              "novelty",
+              6.56
+            ],
+            [
+              "fatigue penalty",
+              -7.96799999999999
+            ]
+          ]
+        },
+        {
+          "id": "talk",
+          "label": "Talk with Ivo",
+          "score": 17.21,
+          "reasons": [
+            [
+              "cooperation",
+              5.44
+            ],
+            [
+              "familiarity",
+              0.72
+            ]
+          ]
+        },
+        {
+          "id": "gather_berries",
+          "label": "Gather berries",
+          "score": 16.924,
+          "reasons": [
+            [
+              "future hunger",
+              0.9240000000000006
+            ],
+            [
+              "memory: store food",
+              0
+            ]
+          ]
+        },
+        {
+          "id": "gather_stones",
+          "label": "Gather loose stones",
+          "score": 11.45,
+          "reasons": [
+            [
+              "curiosity",
+              5.76
+            ],
+            [
+              "novelty",
+              3.69
+            ]
+          ]
+        },
+        {
+          "id": "gather_wet_wood",
+          "label": "Gather damp branches",
+          "score": 9,
+          "reasons": [
+            [
+              "cold",
+              0
+            ],
+            [
+              "memory: wet wood",
+              0
+            ]
+          ]
+        },
+        {
+          "id": "eat_berries",
+          "label": "Eat wild berries",
+          "score": 1.19,
+          "reasons": [
+            [
+              "hunger",
+              4.200000000000003
+            ],
+            [
+              "memory: berries",
+              7
+            ]
+          ]
+        }
+      ],
+      "factors": [
+        [
+          "thirst",
+          19.5
+        ],
+        [
+          "memory: water",
+          8
+        ]
+      ],
+      "mind": {
+        "brain_mode": "fallback",
+        "model": null,
+        "goal": "Stay alive and understand the world",
+        "intent": "Drink from the creek",
+        "decision_summary": "Fallback utility policy chose the highest-ranked valid action.",
+        "confidence": 0.62,
+        "referenced_memory_ids": []
+      },
+      "memory_counterfactuals": [
+        {
+          "removed_memory": "M-M015",
+          "memory_text": "Striking certain stones together can knock off a thin sharp flake.",
+          "original_action": "drink",
+          "counterfactual_action": "drink",
+          "action_changed": false,
+          "score_delta": 0,
+          "method": "utility_replay",
+          "provisional": false
+        },
+        {
+          "removed_memory": "M-M011",
+          "memory_text": "East of the meadow, the creek exposes sticky clay-rich soil.",
+          "original_action": "drink",
+          "counterfactual_action": "drink",
+          "action_changed": false,
+          "score_delta": 0,
+          "method": "utility_replay",
+          "provisional": false
+        },
+        {
+          "removed_memory": "M-M007",
+          "memory_text": "Dry wood catches flame and provides strong warmth.",
+          "original_action": "drink",
+          "counterfactual_action": "drink",
+          "action_changed": false,
+          "score_delta": 0,
+          "method": "utility_replay",
+          "provisional": false
+        },
+        {
+          "removed_memory": "M-M001",
+          "memory_text": "The creek provides reliable drinking water.",
+          "original_action": "drink",
+          "counterfactual_action": "drink",
+          "action_changed": false,
+          "score_delta": 6.4,
+          "method": "utility_replay",
+          "provisional": false
+        },
+        {
+          "removed_memory": "M-M003",
+          "memory_text": "The red berries in the meadow are edible and reduce hunger.",
+          "original_action": "drink",
+          "counterfactual_action": "drink",
+          "action_changed": false,
+          "score_delta": 0,
+          "method": "utility_replay",
+          "provisional": false
+        },
+        {
+          "removed_memory": "M-M005",
+          "memory_text": "Dry branches are useful for heat and building.",
+          "original_action": "drink",
+          "counterfactual_action": "drink",
+          "action_changed": false,
+          "score_delta": 0,
+          "method": "utility_replay",
+          "provisional": false
+        },
+        {
+          "removed_memory": "M-M012",
+          "memory_text": "Some stones fracture differently from others when struck.",
+          "original_action": "drink",
+          "counterfactual_action": "drink",
+          "action_changed": false,
+          "score_delta": 0,
+          "method": "utility_replay",
+          "provisional": false
+        },
+        {
+          "removed_memory": "M-M010",
+          "memory_text": "Rest is more effective inside the shelter.",
+          "original_action": "drink",
+          "counterfactual_action": "drink",
+          "action_changed": false,
+          "score_delta": 0,
+          "method": "utility_replay",
+          "provisional": false
+        }
+      ]
+    },
     {
       "protocol": "Decision DNA 0.4-farm",
       "decision_id": "D-00042",
@@ -13349,29 +15738,40 @@
     }
   ],
   "seq": {
-    "event": 62,
-    "memory": 16,
-    "decision": 43,
-    "discovery": 2
+    "event": 73,
+    "memory": 19,
+    "decision": 49,
+    "discovery": 3
   },
   "meta": {
     "canonical": true,
-    "lastAdvancedAt": "2026-09-15T21:52:47.655Z",
-    "tickNumber": 9,
+    "lastAdvancedAt": "2026-09-15T21:55:32.480Z",
+    "tickNumber": 10,
     "heartbeatMinutes": 5,
     "worldHoursPerHeartbeat": 3,
     "lastDecisionIds": [
-      "D-00041",
-      "D-00042"
+      "D-00047",
+      "D-00048"
     ],
     "pacing": "accelerated origin",
     "aiDecisions": 0,
-    "fallbackDecisions": 30,
+    "fallbackDecisions": 36,
     "mindMode": "fallback",
     "mindConfigured": false,
     "mindModel": null
   },
   "discoveries": [
+    {
+      "id": "DISC-002",
+      "key": "clay-shaping",
+      "title": "Shaped clay",
+      "detail": "After 1 attempt, Ivo learned to make wet clay hold a hollow form.",
+      "effect": "Raw clay vessels can now be formed for further experimentation.",
+      "firstAgentId": "agent-ivo",
+      "firstAgentName": "Ivo",
+      "day": 2,
+      "hour": 5
+    },
     {
       "id": "DISC-001",
       "key": "sharp-edge",
