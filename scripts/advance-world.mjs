@@ -3,7 +3,7 @@ import path from 'node:path';
 import { tickWithMind, migrateWorld, remember } from '../engine.js';
 import { createOpenAIMind } from '../mind.js';
 
-// This runner is safe to invoke for secret-activation checks; API failure falls back without stopping the world.
+// Safe to invoke after API billing changes; API failure falls back without stopping the world.
 const statePath = path.resolve('world/state.json');
 const world = migrateWorld(JSON.parse(fs.readFileSync(statePath, 'utf8')));
 const mind = createOpenAIMind();
