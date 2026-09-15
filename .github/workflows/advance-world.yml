@@ -8,6 +8,7 @@ on:
     branches: [main]
     paths:
       - 'engine.js'
+      - 'mind.js'
       - 'scripts/advance-world.mjs'
       - 'scripts/smoke-test.mjs'
       - 'package.json'
@@ -37,7 +38,11 @@ jobs:
       - name: Validate four simulated world-days
         run: npm test
 
-      - name: Advance one canonical world hour
+      - name: Advance canonical world through bounded mind
+        env:
+          OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+          OPENAI_MODEL: gpt-5.6-luna
+          OPENAI_REASONING_EFFORT: low
         run: npm run advance
 
       - name: Commit canonical state
@@ -51,5 +56,6 @@ jobs:
           fi
           DAY=$(node -e "const s=require('./world/state.json'); process.stdout.write(String(s.day))")
           HOUR=$(node -e "const s=require('./world/state.json'); process.stdout.write(String(s.hour).padStart(2,'0'))")
-          git commit -m "world: heartbeat day ${DAY} ${HOUR}:00"
+          MODE=$(node -e "const s=require('./world/state.json'); process.stdout.write(String(s.meta?.mindMode || 'fallback'))")
+          git commit -m "world: heartbeat day ${DAY} ${HOUR}:00 [${MODE}]"
           git push
