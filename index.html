@@ -1,46 +1,47 @@
 <!doctype html>
 <html lang="en">
 <head>
-  <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width,initial-scale=1">
-  <meta name="theme-color" content="#101711">
+  <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="theme-color" content="#101711">
   <meta name="description" content="ChatGPTFarm — a persistent artificial world instrumented with Decision DNA.">
   <title>ChatGPTFarm — A Living Agent World</title>
-  <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="styles.css">
 </head>
 <body>
-  <header class="topbar">
-    <div class="brand"><span class="brand-seed">✦</span><div><b>ChatGPTFarm</b><small>WORLD 01 · DECISION DNA INSTRUMENTED</small></div></div>
-    <div class="top-actions"><span id="saveState" class="save-state">● CONNECTING TO WORLD</span></div>
-  </header>
-  <main>
-    <section class="hero">
-      <div><span class="kicker">A PERSISTENT ARTIFICIAL WORLD</span><h1>Don't script the story.<br><em>Let experience write it.</em></h1><p>This is one shared world, not a browser demo. It advances automatically, keeps a permanent history, and records a Decision DNA trace behind every consequential choice.</p><small id="lastAdvanced" class="save-state">Awaiting first autonomous tick</small></div>
-      <div class="world-clock"><span>WORLD TIME</span><strong id="dayLabel">Day 1 · 06:00</strong><small id="weatherLabel">Cool · Clear</small></div>
-    </section>
-    <section class="workspace">
-      <div class="world-column">
-        <div class="panel world-panel">
-          <div class="panel-title"><div><small>THE CANONICAL WORLD</small><h2>Willow Basin</h2></div><span class="dna-live">AUTONOMOUS</span></div>
-          <div id="world" class="world">
-            <div class="sky"></div><div class="sun"></div><div class="cloud cloud-a"></div><div class="cloud cloud-b"></div><div class="ridge ridge-a"></div><div class="ridge ridge-b"></div><div class="creek"></div><div class="forest forest-a"></div><div class="forest forest-b"></div><div class="berry-patch"><span>● ● ●</span></div><div class="fallen-log"></div><div class="stone-field"></div><div id="shelter" class="shelter hidden"><span>⌂</span></div><div id="fire" class="fire hidden"><span>♨</span></div><div id="agentSprite" class="agent" title="Mara"><div class="head"></div><div class="body"></div></div><div class="fog fog-1"></div><div class="fog fog-2"></div><div id="worldCaption" class="world-caption">Mara wakes beside the creek with no shelter and no stored food.</div>
-          </div>
-          <div class="legend"><span><i class="dot water"></i> creek</span><span><i class="dot food"></i> berries</span><span><i class="dot wood"></i> fallen wood</span><span><i class="dot unknown"></i> unexplored</span></div>
+<header class="topbar"><div class="brand"><span class="brand-seed">✦</span><div><b>ChatGPTFarm</b><small>WORLD 01 · DECISION DNA INSTRUMENTED</small></div></div><div class="top-actions"><span id="saveState" class="save-state">● CONNECTING TO WORLD</span></div></header>
+<main>
+  <section class="hero"><div><span class="kicker">A PERSISTENT ARTIFICIAL WORLD</span><h1>Don't script the story.<br><em>Let experience write it.</em></h1><p>Two autonomous lives share one persistent world. They perceive, remember, act, meet, teach one another, and leave a Decision DNA trail behind consequential choices.</p></div><div class="world-clock"><span>PROJECTED WORLD TIME</span><strong id="dayLabel">Day 1 · 06:00</strong><small id="weatherLabel">Connecting…</small><small id="heartbeatLabel">Canonical heartbeat every ~5 minutes</small></div></section>
+
+  <section class="world-status"><div><span class="live-dot"></span><b>WORLD IS RUNNING</b><small id="lastAdvanced">Awaiting canonical heartbeat</small></div><div><b id="tickCount">0</b><small>canonical ticks</small></div><div><b id="worldAge">Day 1</b><small>world age</small></div><div><b id="relationshipSummary">Strangers</b><small>Mara ↔ Ivo</small></div></section>
+
+  <section class="workspace">
+    <div class="world-column">
+      <div class="panel world-panel">
+        <div class="panel-title"><div><small>THE WORLD</small><h2>Willow Basin</h2></div><span class="chip">12× REAL-TIME</span></div>
+        <div id="world" class="world">
+          <div class="sky"></div><div class="sun"></div><div class="cloud cloud-a"></div><div class="cloud cloud-b"></div><div class="ridge ridge-a"></div><div class="ridge ridge-b"></div><div class="creek"></div><div class="forest forest-a"></div><div class="forest forest-b"></div><div class="berry-patch"><span>● ● ●</span></div><div class="fallen-log"></div><div class="stone-field"></div>
+          <div id="shelter" class="shelter hidden"><span>⌂</span></div><div id="fire" class="fire hidden"><span>♨</span></div><div id="cache" class="cache hidden">▣</div>
+          <div id="maraSprite" class="agent mara" title="Mara"><span class="name-tag">Mara</span><div class="head"></div><div class="body"></div></div>
+          <div id="ivoSprite" class="agent ivo" title="Ivo"><span class="name-tag">Ivo</span><div class="head"></div><div class="body"></div></div>
+          <div class="fog fog-1"></div><div class="fog fog-2"></div><div id="worldCaption" class="world-caption">The shared world is loading.</div>
         </div>
-        <div class="panel timeline-panel"><div class="panel-title"><div><small>WORLD HISTORY</small><h2>What actually happened</h2></div><span id="eventCount" class="chip">0 events</span></div><div id="timeline" class="timeline"></div></div>
+        <div class="legend"><span><i class="dot water"></i> creek</span><span><i class="dot food"></i> berries</span><span><i class="dot wood"></i> fallen wood</span><span><i class="dot unknown"></i> unexplored</span><span>Canonical choices occur on each heartbeat; motion between heartbeats is visual continuity.</span></div>
       </div>
-      <aside class="side-column">
-        <div class="panel agent-panel"><div class="agent-head"><div class="portrait">M</div><div><small>AGENT 01</small><h2>Mara</h2><p id="currentAction">Waking up…</p></div></div><div class="needs" id="needs"></div><div class="inventory"><small>INVENTORY</small><div id="inventory"></div></div></div>
-        <div class="panel memory-panel"><div class="panel-title compact"><div><small>PERSISTENT MEMORY</small><h2>What Mara remembers</h2></div><span id="memoryCount" class="chip">0</span></div><div id="memories" class="memory-list"></div></div>
-        <div class="panel dna-panel"><div class="panel-title compact"><div><small>DECISION DNA</small><h2>Why this action won</h2></div><span class="dna-live">LIVE</span></div><div id="dnaEmpty" class="dna-empty">Awaiting the first autonomous decision trace.</div><div id="dnaInspector" class="dna-inspector hidden"><div class="dna-action"><small>DECISION</small><strong id="dnaAction"></strong><code id="dnaId"></code></div><div id="dnaFactors" class="dna-factors"></div><div class="cf-box"><small>COUNTERFACTUAL MEMORY TEST</small><div id="counterfactuals"></div></div></div></div>
-      </aside>
-    </section>
-    <section class="guardian"><div><span class="kicker">GUARDIAN · EARLY OBSERVER</span><h2>The world is beginning to debug itself.</h2><p>Guardian reads Decision DNA without controlling the story. Its job is to spot behavioral drift, identify unusually influential memories, and eventually test repairs in an isolated replay before anything is changed.</p><div id="guardianStatus" class="dna-empty"><b>Guardian is observing.</b><span>It needs behavioral history before it can diagnose drift.</span></div></div><div class="guardian-flow"><span>ACT</span><b>→</b><span>TRACE</span><b>→</b><span>DIAGNOSE</span><b>→</b><span>REPLAY</span><b>→</b><span>REPAIR</span></div></section>
-  </main>
-  <footer><span>ChatGPTFarm v0.2</span><p>One shared world. Git-backed persistence. Autonomous hourly simulation ticks.</p><span>Decision DNA live testbed</span></footer>
-  <script type="module" src="app.js"></script>
-</body>
-</html>
+
+      <div class="panel timeline-panel"><div class="panel-title"><div><small>WORLD HISTORY</small><h2>What actually happened</h2></div><span id="eventCount" class="chip">0 events</span></div><div id="timeline" class="timeline"></div></div>
+    </div>
+
+    <aside class="side-column">
+      <div id="agentCards" class="agent-cards"></div>
+      <div class="panel relationship-panel"><div class="panel-title compact"><div><small>RELATIONSHIP STATE</small><h2>Mara ↔ Ivo</h2></div><span id="relationshipChip" class="chip">NEW</span></div><div id="relationshipBody" class="relationship-body"></div></div>
+      <div class="panel memory-panel"><div class="panel-title compact"><div><small>PRIVATE MEMORY</small><h2 id="memoryTitle">What they remember</h2></div><div class="memory-tabs"><button id="memoryMara" class="memory-tab active">Mara</button><button id="memoryIvo" class="memory-tab">Ivo</button></div></div><div id="memories" class="memory-list"></div></div>
+      <div class="panel dna-panel"><div class="panel-title compact"><div><small>DECISION DNA</small><h2>Latest trace</h2></div><span class="dna-live">LIVE</span></div><div id="dnaInspector" class="dna-inspector"><div class="dna-empty">Waiting for a decision trace.</div></div></div>
+    </aside>
+  </section>
+
+  <section class="guardian"><div><span class="kicker">GUARDIAN · OBSERVABILITY AGENT</span><h2>The world is beginning to explain itself.</h2><p id="guardianStatus">Guardian is waiting for enough behavioral history to diagnose the agents.</p></div><div class="guardian-flow"><span>ACT</span><b>→</b><span>TRACE</span><b>→</b><span>DIAGNOSE</span><b>→</b><span>REPLAY</span><b>→</b><span>REPAIR</span></div></section>
+</main>
+<footer><span>ChatGPTFarm v0.2</span><p>Canonical state is shared by every visitor and permanently versioned in GitHub.</p><span>Decision DNA living laboratory</span></footer>
+<script src="app.js"></script>
+</body></html>
