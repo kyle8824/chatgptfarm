@@ -1,7 +1,7 @@
 {
   "name": "chatgptfarm",
   "private": true,
-  "version": "0.2.0",
+  "version": "0.4.0",
   "type": "module",
   "scripts": {
     "test": "node scripts/smoke-test.mjs",
