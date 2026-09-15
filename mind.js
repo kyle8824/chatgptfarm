@@ -4,6 +4,7 @@ const API_URL = "https://api.openai.com/v1/responses";
 const SYSTEM = `You are the bounded decision system for one autonomous person in ChatGPTFarm, a persistent artificial world.
 You are not a narrator and you do not control physics. You may choose exactly one action from the supplied available_actions.
 Use only the supplied perception, memories, beliefs, traits, current goal, recent history, and available actions. Never invent hidden places, resources, tools, skills, or facts.
+The context has already been filtered to this person's private knowledge. A fact known by the world or another agent is not known to you unless it appears here.
 Protect survival when a need is genuinely urgent, but do not behave like a repetitive utility bot. When immediate needs are stable, curiosity, experimentation, exploration, social learning, teaching, and long-term preparation are legitimate motives.
 Preserve coherent goals across decisions when they still make sense, but abandon them when the world gives a strong reason.
 A memory can influence you only if it appears in retrieved_memories. referenced_memory_ids must contain only memories that materially affected this choice.
@@ -31,7 +32,38 @@ function outputText(data) {
   return null;
 }
 
+function privateKnowledge(context) {
+  const memories = context.memories || [];
+  const memoryText = memories.map(m => `${m.text} ${(m.tags || []).join(" ")}`).join(" ").toLowerCase();
+  const inv = context.perception?.inventory || {};
+  const skills = context.perception?.skills || {};
+  const position = context.perception?.position || "";
+  const knowsClay = position === "clay" || /\bclay\b/.test(memoryText) || (inv.clay || 0) > 0 || (inv.rawClayVessel || 0) > 0 || (inv.firedVessel || 0) > 0 || !!skills["clay-shaping"] || !!skills["fired-clay"];
+  const knowsReeds = position === "reeds" || /\breeds?\b|cordage/.test(memoryText) || (inv.reeds || 0) > 0 || (inv.cordage || 0) > 0 || !!skills.cordage;
+
+  const hiddenAction = id => {
+    if (["gather_clay", "experiment_clay", "shape_clay_vessel", "experiment_fire_clay"].includes(id)) return !knowsClay;
+    if (["gather_reeds", "experiment_reeds", "make_cordage"].includes(id)) return !knowsReeds;
+    return false;
+  };
+
+  const perception = JSON.parse(JSON.stringify(context.perception || {}));
+  perception.nearby = (perception.nearby || []).filter(item => {
+    const t = String(item).toLowerCase();
+    if (t.includes("clay")) return knowsClay;
+    if (t.includes("reed")) return knowsReeds;
+    return true;
+  });
+
+  return {
+    perception,
+    actions: (context.candidates || []).filter(c => !hiddenAction(c.id)),
+    privateKnowledge: { clayBankKnown: knowsClay, reedBedKnown: knowsReeds }
+  };
+}
+
 function publicContext(context) {
+  const privateView = privateKnowledge(context);
   return {
     identity: {
       id: context.agent.id,
@@ -41,19 +73,20 @@ function publicContext(context) {
       current_goal: context.agent.currentGoal,
       recent_actions: context.agent.recentActions
     },
-    perception: context.perception,
+    perception: privateView.perception,
     retrieved_memories: context.memories,
     recent_events: context.recentEvents,
-    available_actions: context.candidates.map(c => ({ id: c.id, label: c.label }))
+    private_knowledge: privateView.privateKnowledge,
+    available_actions: privateView.actions.map(c => ({ id: c.id, label: c.label }))
   };
 }
 
 async function callDecision(context, { replayNote = null } = {}) {
   const key = process.env.OPENAI_API_KEY;
   if (!key) throw new Error("OPENAI_API_KEY is not configured");
-  const actionIds = context.candidates.map(c => c.id);
-  if (!actionIds.length) throw new Error("No valid actions available");
   const payload = publicContext(context);
+  const actionIds = payload.available_actions.map(a => a.id);
+  if (!actionIds.length) throw new Error("No privately-known valid actions available");
   if (replayNote) payload.counterfactual_replay = replayNote;
 
   const response = await fetch(API_URL, {
