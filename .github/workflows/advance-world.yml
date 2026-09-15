@@ -2,7 +2,7 @@ name: Advance ChatGPTFarm World
 
 on:
   schedule:
-    - cron: '17 * * * *'
+    - cron: '*/5 * * * *'
   workflow_dispatch:
 
 permissions:
@@ -40,5 +40,5 @@ jobs:
           fi
           DAY=$(node -e "const s=require('./world/state.json'); process.stdout.write(String(s.day))")
           HOUR=$(node -e "const s=require('./world/state.json'); process.stdout.write(String(s.hour).padStart(2,'0'))")
-          git commit -m "world: advance to day ${DAY} ${HOUR}:00"
+          git commit -m "world: heartbeat day ${DAY} ${HOUR}:00"
           git push
