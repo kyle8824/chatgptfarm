@@ -1,8 +1,8 @@
 {
   "version": "0.6",
   "day": 3,
-  "hour": 14,
-  "temperature": 54,
+  "hour": 16,
+  "temperature": 50,
   "weather": "rain",
   "resources": {
     "berries": 0,
@@ -35,10 +35,10 @@
       "name": "Mara",
       "position": "log",
       "needs": {
-        "hydration": 32,
-        "hunger": 7.599999999999958,
-        "energy": 33.20000000000001,
-        "warmth": 43
+        "hydration": 19,
+        "hunger": 0,
+        "energy": 14.600000000000009,
+        "warmth": 27
       },
       "inventory": {
         "berries": 0,
@@ -59,6 +59,30 @@
         "tubers": 0
       },
       "memories": [
+        {
+          "id": "M-M037",
+          "text": "Physical attempt 2: search fallen log produced no stable effect.",
+          "importance": 4,
+          "tags": [
+            "experiment",
+            "physical-attempt"
+          ],
+          "source": "experience:3-15",
+          "confidence": 0.64,
+          "lastSeen": "3:15"
+        },
+        {
+          "id": "M-M036",
+          "text": "Physical attempt 1: cut wet branches with sharp stone flake produced no stable effect.",
+          "importance": 4,
+          "tags": [
+            "experiment",
+            "physical-attempt"
+          ],
+          "source": "experience:3-14",
+          "confidence": 0.64,
+          "lastSeen": "3:14"
+        },
         {
           "id": "M-M032",
           "text": "Physical attempt 1: heat unfired hollow clay form with carried dry branch produced no stable effect.",
@@ -272,7 +296,7 @@
         "cooperation": 0.68,
         "caution": 0.56
       },
-      "currentAction": "Gather damp branches",
+      "currentAction": "search fallen log",
       "skills": {
         "sharp-edge": 1,
         "clay-shaping": 1
@@ -282,14 +306,12 @@
       },
       "mind": {
         "brainMode": "ai",
-        "currentGoal": "Prepare enough fuel to continue developing the clay vessel and maintain warmth.",
-        "intent": "Gather damp branches near the camp.",
-        "confidence": 0.74,
-        "decisionSummary": "The vessel remains unfired after the first heating attempt, and additional wood is needed before trying again.",
+        "currentGoal": "Prepare enough usable fuel for warmth.",
+        "intent": "Search the fallen log for dry branches or other accessible fuel.",
+        "confidence": 0.93,
+        "decisionSummary": "Dry wood is needed urgently for warmth, and the fallen log is the most plausible nearby wood source to inspect for it.",
         "model": "gpt-5.6-luna",
         "recentActions": [
-          "drink",
-          "gather_wet_wood",
           "gather_dry_wood",
           "make_fire",
           "gather_dry_wood",
@@ -303,36 +325,45 @@
           "physical:heat:raw_clay_vessel",
           "rest",
           "talk",
-          "gather_wet_wood"
+          "gather_wet_wood",
+          "physical:cut:wet_branches",
+          "physical:search:place:fallen_log"
         ],
         "lastReferencedMemoryIds": [
           "M-M026",
           "M-M007",
-          "M-M032"
+          "M-M005"
         ],
-        "lastPhysicalProposal": null
+        "lastPhysicalProposal": {
+          "verb": "search",
+          "primaryObjectId": "place:fallen_log",
+          "secondaryObjectId": "none",
+          "configuration": "none",
+          "purpose": "Look for additional dry wood suitable for warmth and continued vessel work."
+        }
       },
       "affordanceAttempts": {
         "follow:animal_tracks:none:none": 1,
         "move:place:fallen_log:none:none": 1,
-        "search:place:fallen_log:none:none": 1,
+        "search:place:fallen_log:none:none": 2,
         "shape:clay_lump:none:hollow": 1,
-        "heat:raw_clay_vessel:carried_dry_branch:none": 1
+        "heat:raw_clay_vessel:carried_dry_branch:none": 1,
+        "cut:wet_branches:sharp_stone:straight": 1
       },
       "coordinates": {
         "x": 59,
         "y": 29
       },
       "activeAction": {
-        "id": "A-D-00111",
-        "decisionId": "D-00111",
-        "label": "Gather damp branches",
-        "actionId": "gather_wet_wood",
+        "id": "A-D-00115",
+        "decisionId": "D-00115",
+        "label": "search fallen log",
+        "actionId": "physical:search:place:fallen_log",
         "worldDay": 3,
-        "worldHour": 13,
+        "worldHour": 15,
         "from": {
-          "x": 64,
-          "y": 34
+          "x": 59,
+          "y": 29
         },
         "to": {
           "x": 59,
@@ -342,54 +373,54 @@
           "x": 59,
           "y": 29
         },
-        "moving": true,
+        "moving": false,
         "phases": [
           {
             "id": "decide",
             "label": "Deciding",
             "start": 0,
-            "end": 0.1
-          },
-          {
-            "id": "travel",
-            "label": "Traveling",
-            "start": 0.1,
-            "end": 0.58
+            "end": 0.12
           },
           {
             "id": "interact",
             "label": "Acting",
-            "start": 0.58,
-            "end": 0.86
+            "start": 0.12,
+            "end": 0.82
           },
           {
             "id": "resolve",
             "label": "Resolving",
-            "start": 0.86,
+            "start": 0.82,
             "end": 1
           }
         ],
         "outcome": {
-          "success": true,
-          "detail": "Mara gathers damp branches."
+          "success": false,
+          "detail": "Mara tries to search fallen log. No stable new effect emerges yet."
         },
-        "physicalProposal": null
+        "physicalProposal": {
+          "verb": "search",
+          "primaryObjectId": "place:fallen_log",
+          "secondaryObjectId": "none",
+          "configuration": "none",
+          "purpose": "Look for additional dry wood suitable for warmth and continued vessel work."
+        }
       }
     },
     {
       "id": "agent-ivo",
       "name": "Ivo",
-      "position": "camp",
+      "position": "log",
       "needs": {
-        "hydration": 37.5,
-        "hunger": 57.999999999999915,
-        "energy": 49.20000000000014,
-        "warmth": 26
+        "hydration": 24.5,
+        "hunger": 49.59999999999991,
+        "energy": 29.60000000000014,
+        "warmth": 10
       },
       "inventory": {
         "berries": 1,
         "dryWood": 0,
-        "wetWood": 1,
+        "wetWood": 5,
         "stones": 1,
         "clay": 0,
         "reeds": 3,
@@ -638,7 +669,7 @@
         "cooperation": 0.76,
         "caution": 0.48
       },
-      "currentAction": "Rest in the shelter",
+      "currentAction": "Gather damp branches",
       "skills": {
         "sharp-edge": 1,
         "clay-shaping": 1
@@ -649,14 +680,12 @@
       },
       "mind": {
         "brainMode": "ai",
-        "currentGoal": "Restore enough energy and warmth to continue preparing fuel.",
-        "intent": "Prioritize immediate survival while preserving the longer-term fuel-preparation goal.",
-        "confidence": 0.9,
-        "decisionSummary": "Energy and warmth are low, and the shelter is a reliable place to recover; rest is safer than attempting another uncertain experiment now.",
+        "currentGoal": "Restore warmth by gathering additional wood for later use.",
+        "intent": "Continue collecting damp branches from the nearby wood source.",
+        "confidence": 0.86,
+        "decisionSummary": "Warmth is critically low, so I will gather more wet wood rather than spend time on exploration or experiments.",
         "model": "gpt-5.6-luna",
         "recentActions": [
-          "rest",
-          "drink",
           "gather_dry_wood",
           "gather_berries",
           "gather_dry_wood",
@@ -670,11 +699,12 @@
           "physical:move:place:camp",
           "physical:place:wood_pole",
           "physical:place:carried_wet_branch",
-          "rest"
+          "rest",
+          "gather_wet_wood",
+          "gather_wet_wood"
         ],
         "lastReferencedMemoryIds": [
-          "M-I008",
-          "M-I027"
+          "M-I034"
         ],
         "lastPhysicalProposal": null
       },
@@ -689,27 +719,27 @@
         "place:carried_wet_branch:place:camp:raised": 1
       },
       "coordinates": {
-        "x": 64,
-        "y": 34
+        "x": 59,
+        "y": 29
       },
       "activeAction": {
-        "id": "A-D-00112",
-        "decisionId": "D-00112",
-        "label": "Rest in the shelter",
-        "actionId": "rest",
+        "id": "A-D-00116",
+        "decisionId": "D-00116",
+        "label": "Gather damp branches",
+        "actionId": "gather_wet_wood",
         "worldDay": 3,
-        "worldHour": 13,
+        "worldHour": 15,
         "from": {
-          "x": 64,
-          "y": 34
+          "x": 59,
+          "y": 29
         },
         "to": {
-          "x": 64,
-          "y": 34
+          "x": 59,
+          "y": 29
         },
         "target": {
-          "x": 64,
-          "y": 34
+          "x": 59,
+          "y": 29
         },
         "moving": false,
         "phases": [
@@ -734,7 +764,7 @@
         ],
         "outcome": {
           "success": true,
-          "detail": "Ivo rests beneath the shelter."
+          "detail": "Ivo gathers damp branches."
         },
         "physicalProposal": null
       }
@@ -751,6 +781,82 @@
     }
   },
   "history": [
+    {
+      "id": "E-00163",
+      "day": 3,
+      "hour": 15,
+      "type": "action",
+      "title": "Gather damp branches",
+      "detail": "Ivo gathers damp branches.",
+      "agentId": "agent-ivo",
+      "actionId": "gather_wet_wood"
+    },
+    {
+      "id": "E-00162",
+      "day": 3,
+      "hour": 15,
+      "type": "attempt",
+      "title": "search fallen log",
+      "detail": "Mara tries to search fallen log. No stable new effect emerges yet.",
+      "agentId": "agent-mara",
+      "physicalId": "P-00015",
+      "success": false,
+      "proposal": {
+        "verb": "search",
+        "primaryObjectId": "place:fallen_log",
+        "secondaryObjectId": "none",
+        "configuration": "none",
+        "purpose": "Look for additional dry wood suitable for warmth and continued vessel work."
+      }
+    },
+    {
+      "id": "E-00161",
+      "day": 3,
+      "hour": 15,
+      "type": "learn",
+      "title": "Mara formed a memory",
+      "detail": "Physical attempt 2: search fallen log produced no stable effect.",
+      "agentId": "agent-mara",
+      "memoryId": "M-M037"
+    },
+    {
+      "id": "E-00160",
+      "day": 3,
+      "hour": 14,
+      "type": "action",
+      "title": "Gather damp branches",
+      "detail": "Ivo gathers damp branches.",
+      "agentId": "agent-ivo",
+      "actionId": "gather_wet_wood"
+    },
+    {
+      "id": "E-00159",
+      "day": 3,
+      "hour": 14,
+      "type": "attempt",
+      "title": "cut wet branches + sharp stone flake",
+      "detail": "Mara tries to cut wet branches with sharp stone flake. No stable new effect emerges yet.",
+      "agentId": "agent-mara",
+      "physicalId": "P-00014",
+      "success": false,
+      "proposal": {
+        "verb": "cut",
+        "primaryObjectId": "wet_branches",
+        "secondaryObjectId": "sharp_stone",
+        "configuration": "straight",
+        "purpose": "Prepare smaller pieces of wet wood that may be easier to dry or use as fuel while conserving the one dry branch."
+      }
+    },
+    {
+      "id": "E-00158",
+      "day": 3,
+      "hour": 14,
+      "type": "learn",
+      "title": "Mara formed a memory",
+      "detail": "Physical attempt 1: cut wet branches with sharp stone flake produced no stable effect.",
+      "agentId": "agent-mara",
+      "memoryId": "M-M036"
+    },
     {
       "id": "E-00157",
       "day": 3,
@@ -2472,6 +2578,826 @@
     }
   ],
   "dna": [
+    {
+      "protocol": "Decision DNA 0.6-farm",
+      "decision_id": "D-00116",
+      "day": 3,
+      "hour": 15,
+      "agent_id": "agent-ivo",
+      "agent_name": "Ivo",
+      "observation": {
+        "time": "Day 3, 15:00",
+        "weather": "rain",
+        "temperature": 52,
+        "position": "log",
+        "nearby": [
+          "wet branches"
+        ],
+        "needs": {
+          "hydration": 31,
+          "satiety": 53.79999999999991,
+          "energy": 39.40000000000014,
+          "warmth": 15
+        },
+        "inventory": {
+          "berries": 1,
+          "dryWood": 0,
+          "wetWood": 3,
+          "stones": 1,
+          "clay": 0,
+          "reeds": 3,
+          "sharpStone": 1,
+          "rawClayVessel": 1,
+          "firedVessel": 0,
+          "cordage": 0,
+          "woodPole": 1,
+          "pointedPole": 0,
+          "boundSharpTool": 0,
+          "rawMeat": 0,
+          "cookedMeat": 0,
+          "tubers": 0
+        },
+        "skills": {
+          "sharp-edge": 1,
+          "clay-shaping": 1
+        },
+        "knownPeople": [
+          {
+            "name": "Mara",
+            "trust": 38,
+            "familiarity": 22,
+            "affinity": 52,
+            "nearby": true
+          }
+        ]
+      },
+      "action": "gather_wet_wood",
+      "action_label": "Gather damp branches",
+      "winner_score": 15.7,
+      "baseline_policy_action": "drink",
+      "deviated_from_policy": true,
+      "candidates": [
+        {
+          "id": "drink",
+          "label": "Drink from the creek",
+          "score": 113.698,
+          "reasons": [
+            [
+              "thirst",
+              69
+            ]
+          ]
+        },
+        {
+          "id": "rest",
+          "label": "Rest in the shelter",
+          "score": 70.344,
+          "reasons": [
+            [
+              "fatigue",
+              60.59999999999986
+            ]
+          ]
+        },
+        {
+          "id": "eat_berries",
+          "label": "Eat wild berries",
+          "score": 59.99,
+          "reasons": [
+            [
+              "hunger",
+              46.20000000000009
+            ]
+          ]
+        },
+        {
+          "id": "talk",
+          "label": "Talk with Mara",
+          "score": 16.4,
+          "reasons": [
+            [
+              "cooperation",
+              6.08
+            ]
+          ]
+        },
+        {
+          "id": "gather_wet_wood",
+          "label": "Gather damp branches",
+          "score": 15.7,
+          "reasons": [
+            [
+              "cold",
+              11.9
+            ]
+          ]
+        },
+        {
+          "id": "gather_clay",
+          "label": "Gather sticky clay",
+          "score": 12.64,
+          "reasons": [
+            [
+              "curiosity",
+              4.64
+            ]
+          ]
+        },
+        {
+          "id": "gather_reeds",
+          "label": "Gather flexible reeds",
+          "score": 12.64,
+          "reasons": [
+            [
+              "curiosity",
+              4.64
+            ]
+          ]
+        },
+        {
+          "id": "gather_stones",
+          "label": "Gather loose stones",
+          "score": 11.64,
+          "reasons": [
+            [
+              "curiosity",
+              4.64
+            ]
+          ]
+        },
+        {
+          "id": "explore",
+          "label": "Explore beyond the known basin",
+          "score": 5.844,
+          "reasons": [
+            [
+              "curiosity",
+              7.539999999999999
+            ],
+            [
+              "novelty",
+              0
+            ]
+          ]
+        }
+      ],
+      "retrieved_memories": [
+        "M-I027",
+        "M-I034",
+        "M-I018",
+        "M-I031",
+        "M-I014",
+        "M-I022",
+        "M-I004",
+        "M-I002",
+        "M-I008",
+        "M-I033",
+        "M-I016",
+        "M-I024"
+      ],
+      "mind": {
+        "brain_mode": "ai",
+        "model": "gpt-5.6-luna",
+        "goal": "Restore warmth by gathering additional wood for later use.",
+        "intent": "Continue collecting damp branches from the nearby wood source.",
+        "confidence": 0.86,
+        "decision_summary": "Warmth is critically low, so I will gather more wet wood rather than spend time on exploration or experiments.",
+        "referenced_memory_ids": [
+          "M-I034"
+        ],
+        "physical_proposal": null
+      },
+      "physics": {
+        "version": "affordance-0.5",
+        "outcome": {
+          "success": true,
+          "detail": "Ivo gathers damp branches.",
+          "actionId": "gather_wet_wood"
+        }
+      },
+      "memory_counterfactuals": [
+        {
+          "removed_memory": "M-I034",
+          "memory_text": "Mara told me: Mara should prioritize finding and gathering dry wood for overnight warmth, because she remembers that dry wood catches flame and provides strong warmth.",
+          "original_action": "gather_wet_wood",
+          "counterfactual_action": "gather_wet_wood",
+          "action_changed": false,
+          "method": "model_replay",
+          "provisional": true,
+          "trials": 1
+        }
+      ]
+    },
+    {
+      "protocol": "Decision DNA 0.6-farm",
+      "decision_id": "D-00115",
+      "day": 3,
+      "hour": 15,
+      "agent_id": "agent-mara",
+      "agent_name": "Mara",
+      "observation": {
+        "time": "Day 3, 15:00",
+        "weather": "rain",
+        "temperature": 52,
+        "position": "log",
+        "nearby": [
+          "wet branches"
+        ],
+        "needs": {
+          "hydration": 25.5,
+          "satiety": 3.3999999999999577,
+          "energy": 24.40000000000001,
+          "warmth": 32
+        },
+        "inventory": {
+          "berries": 0,
+          "dryWood": 1,
+          "wetWood": 8,
+          "stones": 1,
+          "clay": 0,
+          "reeds": 3,
+          "sharpStone": 1,
+          "rawClayVessel": 1,
+          "firedVessel": 0,
+          "cordage": 0,
+          "woodPole": 0,
+          "pointedPole": 0,
+          "boundSharpTool": 0,
+          "rawMeat": 0,
+          "cookedMeat": 0,
+          "tubers": 0
+        },
+        "skills": {
+          "sharp-edge": 1,
+          "clay-shaping": 1
+        },
+        "knownPeople": [
+          {
+            "name": "Ivo",
+            "trust": 38,
+            "familiarity": 22,
+            "affinity": 52,
+            "nearby": true
+          }
+        ]
+      },
+      "action": "physical:search:place:fallen_log",
+      "action_label": "search fallen log",
+      "winner_score": null,
+      "baseline_policy_action": "drink",
+      "deviated_from_policy": true,
+      "candidates": [
+        {
+          "id": "drink",
+          "label": "Drink from the creek",
+          "score": 116.201,
+          "reasons": [
+            [
+              "thirst",
+              74.5
+            ]
+          ]
+        },
+        {
+          "id": "rest",
+          "label": "Rest in the shelter",
+          "score": 80.88,
+          "reasons": [
+            [
+              "fatigue",
+              75.6
+            ]
+          ]
+        },
+        {
+          "id": "gather_clay",
+          "label": "Gather sticky clay",
+          "score": 13.76,
+          "reasons": [
+            [
+              "curiosity",
+              5.76
+            ]
+          ]
+        },
+        {
+          "id": "gather_reeds",
+          "label": "Gather flexible reeds",
+          "score": 13.76,
+          "reasons": [
+            [
+              "curiosity",
+              5.76
+            ]
+          ]
+        },
+        {
+          "id": "gather_wet_wood",
+          "label": "Gather damp branches",
+          "score": 13.32,
+          "reasons": [
+            [
+              "cold",
+              9.520000000000001
+            ]
+          ]
+        },
+        {
+          "id": "gather_stones",
+          "label": "Gather loose stones",
+          "score": 12.76,
+          "reasons": [
+            [
+              "curiosity",
+              5.76
+            ]
+          ]
+        },
+        {
+          "id": "talk",
+          "label": "Talk with Ivo",
+          "score": 11.56,
+          "reasons": [
+            [
+              "cooperation",
+              5.44
+            ]
+          ]
+        },
+        {
+          "id": "explore",
+          "label": "Explore beyond the known basin",
+          "score": 5.264,
+          "reasons": [
+            [
+              "curiosity",
+              9.36
+            ],
+            [
+              "novelty",
+              0
+            ]
+          ]
+        }
+      ],
+      "retrieved_memories": [
+        "M-M026",
+        "M-M030",
+        "M-M007",
+        "M-M015",
+        "M-M017",
+        "M-M032",
+        "M-M001",
+        "M-M011",
+        "M-M003",
+        "M-M036",
+        "M-M019",
+        "M-M005"
+      ],
+      "mind": {
+        "brain_mode": "ai",
+        "model": "gpt-5.6-luna",
+        "goal": "Prepare enough usable fuel for warmth.",
+        "intent": "Search the fallen log for dry branches or other accessible fuel.",
+        "confidence": 0.93,
+        "decision_summary": "Dry wood is needed urgently for warmth, and the fallen log is the most plausible nearby wood source to inspect for it.",
+        "referenced_memory_ids": [
+          "M-M026",
+          "M-M007",
+          "M-M005"
+        ],
+        "physical_proposal": {
+          "verb": "search",
+          "primaryObjectId": "place:fallen_log",
+          "secondaryObjectId": "none",
+          "configuration": "none",
+          "purpose": "Look for additional dry wood suitable for warmth and continued vessel work."
+        }
+      },
+      "physics": {
+        "version": "affordance-0.5",
+        "outcome": {
+          "physicalId": "P-00015",
+          "success": false,
+          "blocked": false,
+          "detail": "Mara tries to search fallen log. No stable new effect emerges yet.",
+          "proposal": {
+            "verb": "search",
+            "primaryObjectId": "place:fallen_log",
+            "secondaryObjectId": "none",
+            "configuration": "none",
+            "purpose": "Look for additional dry wood suitable for warmth and continued vessel work."
+          },
+          "primary": "place:fallen_log",
+          "secondary": null
+        }
+      },
+      "memory_counterfactuals": [
+        {
+          "removed_memory": "M-M026",
+          "memory_text": "Mara should prioritize finding and gathering dry wood for overnight warmth, because she remembers that dry wood catches flame and provides strong warmth.",
+          "original_action": "physical:search:place:fallen_log",
+          "counterfactual_action": "physical:search:place:fallen_log",
+          "action_changed": false,
+          "method": "model_replay",
+          "provisional": true,
+          "trials": 1
+        }
+      ]
+    },
+    {
+      "protocol": "Decision DNA 0.6-farm",
+      "decision_id": "D-00114",
+      "day": 3,
+      "hour": 14,
+      "agent_id": "agent-ivo",
+      "agent_name": "Ivo",
+      "observation": {
+        "time": "Day 3, 14:00",
+        "weather": "rain",
+        "temperature": 54,
+        "position": "camp",
+        "nearby": [],
+        "needs": {
+          "hydration": 37.5,
+          "satiety": 57.999999999999915,
+          "energy": 49.20000000000014,
+          "warmth": 23
+        },
+        "inventory": {
+          "berries": 1,
+          "dryWood": 0,
+          "wetWood": 1,
+          "stones": 1,
+          "clay": 0,
+          "reeds": 3,
+          "sharpStone": 1,
+          "rawClayVessel": 1,
+          "firedVessel": 0,
+          "cordage": 0,
+          "woodPole": 1,
+          "pointedPole": 0,
+          "boundSharpTool": 0,
+          "rawMeat": 0,
+          "cookedMeat": 0,
+          "tubers": 0
+        },
+        "skills": {
+          "sharp-edge": 1,
+          "clay-shaping": 1
+        },
+        "knownPeople": [
+          {
+            "name": "Mara",
+            "trust": 38,
+            "familiarity": 22,
+            "affinity": 52,
+            "nearby": false
+          }
+        ]
+      },
+      "action": "gather_wet_wood",
+      "action_label": "Gather damp branches",
+      "winner_score": 18.78,
+      "baseline_policy_action": "drink",
+      "deviated_from_policy": true,
+      "candidates": [
+        {
+          "id": "drink",
+          "label": "Drink from the creek",
+          "score": 104.273,
+          "reasons": [
+            [
+              "thirst",
+              62.5
+            ]
+          ]
+        },
+        {
+          "id": "eat_berries",
+          "label": "Eat wild berries",
+          "score": 54.95,
+          "reasons": [
+            [
+              "hunger",
+              42.000000000000085
+            ]
+          ]
+        },
+        {
+          "id": "gather_wet_wood",
+          "label": "Gather damp branches",
+          "score": 18.78,
+          "reasons": [
+            [
+              "cold",
+              10.780000000000001
+            ]
+          ]
+        },
+        {
+          "id": "gather_clay",
+          "label": "Gather sticky clay",
+          "score": 12.64,
+          "reasons": [
+            [
+              "curiosity",
+              4.64
+            ]
+          ]
+        },
+        {
+          "id": "gather_reeds",
+          "label": "Gather flexible reeds",
+          "score": 12.64,
+          "reasons": [
+            [
+              "curiosity",
+              4.64
+            ]
+          ]
+        },
+        {
+          "id": "gather_stones",
+          "label": "Gather loose stones",
+          "score": 11.64,
+          "reasons": [
+            [
+              "curiosity",
+              4.64
+            ]
+          ]
+        },
+        {
+          "id": "seek_other",
+          "label": "Look for Mara",
+          "score": 11.4,
+          "reasons": [
+            [
+              "cooperation",
+              6.08
+            ]
+          ]
+        },
+        {
+          "id": "explore",
+          "label": "Explore beyond the known basin",
+          "score": 7.412,
+          "reasons": [
+            [
+              "curiosity",
+              7.539999999999999
+            ],
+            [
+              "novelty",
+              0
+            ]
+          ]
+        }
+      ],
+      "retrieved_memories": [
+        "M-I027",
+        "M-I034",
+        "M-I018",
+        "M-I031",
+        "M-I014",
+        "M-I022",
+        "M-I004",
+        "M-I002",
+        "M-I008",
+        "M-I033",
+        "M-I016",
+        "M-I024"
+      ],
+      "mind": {
+        "brain_mode": "ai",
+        "model": "gpt-5.6-luna",
+        "goal": "Restore warmth by accumulating usable fuel.",
+        "intent": "Prioritize fuel gathering while warmth is low and basic needs remain stable enough to continue.",
+        "confidence": 0.84,
+        "decision_summary": "I will gather damp branches because warmth is currently the most pressing need and no dry wood is available nearby.",
+        "referenced_memory_ids": [
+          "M-I034",
+          "M-I027"
+        ],
+        "physical_proposal": null
+      },
+      "physics": {
+        "version": "affordance-0.5",
+        "outcome": {
+          "success": true,
+          "detail": "Ivo gathers damp branches.",
+          "actionId": "gather_wet_wood"
+        }
+      },
+      "memory_counterfactuals": []
+    },
+    {
+      "protocol": "Decision DNA 0.6-farm",
+      "decision_id": "D-00113",
+      "day": 3,
+      "hour": 14,
+      "agent_id": "agent-mara",
+      "agent_name": "Mara",
+      "observation": {
+        "time": "Day 3, 14:00",
+        "weather": "rain",
+        "temperature": 54,
+        "position": "log",
+        "nearby": [
+          "wet branches"
+        ],
+        "needs": {
+          "hydration": 32,
+          "satiety": 7.599999999999958,
+          "energy": 33.20000000000001,
+          "warmth": 40
+        },
+        "inventory": {
+          "berries": 0,
+          "dryWood": 1,
+          "wetWood": 8,
+          "stones": 1,
+          "clay": 0,
+          "reeds": 3,
+          "sharpStone": 1,
+          "rawClayVessel": 1,
+          "firedVessel": 0,
+          "cordage": 0,
+          "woodPole": 0,
+          "pointedPole": 0,
+          "boundSharpTool": 0,
+          "rawMeat": 0,
+          "cookedMeat": 0,
+          "tubers": 0
+        },
+        "skills": {
+          "sharp-edge": 1,
+          "clay-shaping": 1
+        },
+        "knownPeople": [
+          {
+            "name": "Ivo",
+            "trust": 38,
+            "familiarity": 22,
+            "affinity": 52,
+            "nearby": false
+          }
+        ]
+      },
+      "action": "physical:cut:wet_branches",
+      "action_label": "cut wet branches",
+      "winner_score": null,
+      "baseline_policy_action": "drink",
+      "deviated_from_policy": true,
+      "candidates": [
+        {
+          "id": "drink",
+          "label": "Drink from the creek",
+          "score": 102.576,
+          "reasons": [
+            [
+              "thirst",
+              68
+            ]
+          ]
+        },
+        {
+          "id": "rest",
+          "label": "Rest in the shelter",
+          "score": 71.2,
+          "reasons": [
+            [
+              "fatigue",
+              66.79999999999998
+            ]
+          ]
+        },
+        {
+          "id": "gather_clay",
+          "label": "Gather sticky clay",
+          "score": 13.76,
+          "reasons": [
+            [
+              "curiosity",
+              5.76
+            ]
+          ]
+        },
+        {
+          "id": "gather_reeds",
+          "label": "Gather flexible reeds",
+          "score": 13.76,
+          "reasons": [
+            [
+              "curiosity",
+              5.76
+            ]
+          ]
+        },
+        {
+          "id": "gather_stones",
+          "label": "Gather loose stones",
+          "score": 12.76,
+          "reasons": [
+            [
+              "curiosity",
+              5.76
+            ]
+          ]
+        },
+        {
+          "id": "gather_wet_wood",
+          "label": "Gather damp branches",
+          "score": 12.2,
+          "reasons": [
+            [
+              "cold",
+              8.4
+            ]
+          ]
+        },
+        {
+          "id": "seek_other",
+          "label": "Look for Ivo",
+          "score": 10.76,
+          "reasons": [
+            [
+              "cooperation",
+              5.44
+            ]
+          ]
+        },
+        {
+          "id": "explore",
+          "label": "Explore beyond the known basin",
+          "score": 6.672,
+          "reasons": [
+            [
+              "curiosity",
+              9.36
+            ],
+            [
+              "novelty",
+              0
+            ]
+          ]
+        }
+      ],
+      "retrieved_memories": [
+        "M-M026",
+        "M-M030",
+        "M-M007",
+        "M-M015",
+        "M-M017",
+        "M-M032",
+        "M-M001",
+        "M-M011",
+        "M-M003",
+        "M-M019",
+        "M-M005",
+        "M-M023"
+      ],
+      "mind": {
+        "brain_mode": "ai",
+        "model": "gpt-5.6-luna",
+        "goal": "Prepare enough usable fuel for warmth and continued vessel work.",
+        "intent": "Cut the damp branches into smaller, more manageable fuel pieces.",
+        "confidence": 0.72,
+        "decision_summary": "Fuel is the current goal; with no dry-wood source accessible, Mara will try improving the gathered wet branches using her sharp stone.",
+        "referenced_memory_ids": [
+          "M-M026",
+          "M-M007",
+          "M-M005"
+        ],
+        "physical_proposal": {
+          "verb": "cut",
+          "primaryObjectId": "wet_branches",
+          "secondaryObjectId": "sharp_stone",
+          "configuration": "straight",
+          "purpose": "Prepare smaller pieces of wet wood that may be easier to dry or use as fuel while conserving the one dry branch."
+        }
+      },
+      "physics": {
+        "version": "affordance-0.5",
+        "outcome": {
+          "physicalId": "P-00014",
+          "success": false,
+          "blocked": false,
+          "detail": "Mara tries to cut wet branches with sharp stone flake. No stable new effect emerges yet.",
+          "proposal": {
+            "verb": "cut",
+            "primaryObjectId": "wet_branches",
+            "secondaryObjectId": "sharp_stone",
+            "configuration": "straight",
+            "purpose": "Prepare smaller pieces of wet wood that may be easier to dry or use as fuel while conserving the one dry branch."
+          },
+          "primary": "wet_branches",
+          "secondary": "sharp_stone"
+        }
+      },
+      "memory_counterfactuals": []
+    },
     {
       "protocol": "Decision DNA 0.6-farm",
       "decision_id": "D-00112",
@@ -33348,25 +34274,25 @@
     }
   ],
   "seq": {
-    "event": 158,
-    "memory": 36,
-    "decision": 113,
+    "event": 164,
+    "memory": 38,
+    "decision": 117,
     "discovery": 4,
-    "physical": 14,
+    "physical": 16,
     "artifact": 6
   },
   "meta": {
     "canonical": true,
-    "lastAdvancedAt": "2026-09-15T23:32:15.256Z",
-    "tickNumber": 23,
+    "lastAdvancedAt": "2026-09-15T23:55:06.021Z",
+    "tickNumber": 24,
     "heartbeatMinutes": 5,
     "worldHoursPerHeartbeat": 2,
     "lastDecisionIds": [
-      "D-00111",
-      "D-00112"
+      "D-00115",
+      "D-00116"
     ],
     "pacing": "young world",
-    "aiDecisions": 49,
+    "aiDecisions": 53,
     "fallbackDecisions": 51,
     "mindMode": "ai",
     "mindConfigured": true,
@@ -33421,7 +34347,7 @@
       "id": "dehydration",
       "title": "Mara needs water",
       "urgency": 92,
-      "summary": "Mara's hydration has fallen to 32%. The creek remains the known reliable water source.",
+      "summary": "Mara's hydration has fallen to 19%. The creek remains the known reliable water source.",
       "kind": "survival",
       "agentIds": [
         "agent-mara"
@@ -33431,10 +34357,23 @@
       ]
     },
     {
+      "id": "exhaustion",
+      "title": "Mara is running on fumes",
+      "urgency": 90,
+      "summary": "Mara's energy is 15%. Continuing strenuous work risks compounding the cold and hydration pressure.",
+      "kind": "survival",
+      "agentIds": [
+        "agent-mara"
+      ],
+      "placeIds": [
+        "log"
+      ]
+    },
+    {
       "id": "food-pressure",
       "title": "Easy food is becoming scarce",
       "urgency": 84,
-      "summary": "The lowest satiety is 8%, with only 1 obvious food portions in or near the group.",
+      "summary": "The lowest satiety is 0%, with only 1 obvious food portions in or near the group.",
       "kind": "survival",
       "agentIds": [
         "agent-mara",
@@ -33479,19 +34418,6 @@
       "kind": "experiment",
       "agentIds": [
         "agent-ivo"
-      ],
-      "placeIds": [
-        "camp"
-      ]
-    },
-    {
-      "id": "materials-agent-mara",
-      "title": "Mara is carrying unusually complementary materials",
-      "urgency": 52,
-      "summary": "Rigid material, a cutting edge, and flexible binding material are together. The world does not prescribe what to do with them.",
-      "kind": "opportunity",
-      "agentIds": [
-        "agent-mara"
       ],
       "placeIds": [
         "log"
@@ -33587,10 +34513,10 @@
       ],
       "status": "active",
       "carrierId": "agent-ivo",
-      "position": "camp",
+      "position": "log",
       "coordinates": {
-        "x": 64,
-        "y": 34
+        "x": 59,
+        "y": 29
       },
       "created": {
         "day": 3,
@@ -33610,10 +34536,10 @@
       ],
       "status": "active",
       "carrierId": "agent-ivo",
-      "position": "camp",
+      "position": "log",
       "coordinates": {
-        "x": 64,
-        "y": 34
+        "x": 59,
+        "y": 29
       },
       "created": {
         "day": 3,
@@ -33662,10 +34588,10 @@
       ],
       "status": "active",
       "carrierId": "agent-ivo",
-      "position": "camp",
+      "position": "log",
       "coordinates": {
-        "x": 64,
-        "y": 34
+        "x": 59,
+        "y": 29
       },
       "created": {
         "day": 3,
