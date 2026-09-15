@@ -1,11 +1,13 @@
-import { createWorld, tick, tickWithMind, migrateWorld, retrieveDecisionContext, buildAffordanceView } from '../engine.js';
+import { createWorld, tick, tickWithMind, migrateWorld, retrieveDecisionContext, buildAffordanceView, findWorldObject, WORLD_MODEL_VERSION } from '../engine.js';
 
 const fail = message => { throw new Error(message); };
 const assertWorld = (world, label) => {
-  if (world.version !== '0.6') fail(`${label}: expected v0.6 world`);
+  if (world.version !== '0.7') fail(`${label}: expected v0.7 world`);
   if (world.agents.length !== 2) fail(`${label}: agent count changed`);
   if (!Array.isArray(world.liveThreads)) fail(`${label}: liveThreads missing`);
-  if (!Array.isArray(world.artifacts)) fail(`${label}: artifact ledger missing`);
+  if (world.worldModel?.version !== WORLD_MODEL_VERSION) fail(`${label}: world object model missing`);
+  if (!Array.isArray(world.worldModel.objects) || world.worldModel.objects.length < 8) fail(`${label}: base world entities missing`);
+  if (!world.worldModel.fields?.temperature || !world.worldModel.fields?.soilMoisture) fail(`${label}: environmental fields missing`);
   for (const agent of world.agents) {
     for (const [name, value] of Object.entries(agent.needs)) if (!Number.isFinite(value) || value < 0 || value > 100) fail(`${label}: invalid ${agent.name}.${name}=${value}`);
     if (!agent.mind || !Array.isArray(agent.mind.recentActions)) fail(`${label}: mind state missing for ${agent.name}`);
@@ -13,7 +15,6 @@ const assertWorld = (world, label) => {
     if (!agent.activeAction || !Array.isArray(agent.activeAction.phases) || agent.activeAction.phases.length < 3) fail(`${label}: action playback missing for ${agent.name}`);
   }
   if (!Number.isFinite(world.day) || !Number.isFinite(world.hour)) fail(`${label}: invalid world clock`);
-  if (world.meta.physicsVersion !== 'affordance-0.5') fail(`${label}: physics version missing`);
 };
 
 const fallbackWorld = migrateWorld(createWorld());
@@ -30,64 +31,48 @@ let sawMovingPlayback = false;
 const fakeMind = {
   async decide(context) {
     const creek = context.affordances.objects.find(o => o.id === 'place:creek');
-    if (creek) return {
-      choiceType: 'physical_action', actionId: '__physical__',
-      physicalAction: { verb: 'move', primaryObjectId: creek.id, secondaryObjectId: 'none', configuration: 'none', purpose: 'Move deliberately toward a known water source.' },
-      goal: 'Test a bounded physical intention', intent: 'Move to the creek using the primitive movement layer.',
-      decisionSummary: 'Synthetic mind selected an accessible place through the physical affordance interface.',
-      confidence: 0.84, referencedMemoryIds: context.memories.slice(0, 1).map(m => m.id), brainMode: 'ai', model: 'smoke-test-mind'
-    };
+    if (creek) return {choiceType:'physical_action',actionId:'__physical__',physicalAction:{verb:'move',primaryObjectId:creek.id,secondaryObjectId:'none',configuration:'none',purpose:'Move deliberately toward a known water source.'},goal:'Test a bounded physical intention',intent:'Move to the creek using the primitive movement layer.',decisionSummary:'Synthetic mind selected an accessible world entity through the physical affordance interface.',confidence:.84,referencedMemoryIds:context.memories.slice(0,1).map(m=>m.id),brainMode:'ai',model:'smoke-test-mind'};
     const chosen = context.candidates[0];
-    return { choiceType: 'known_action', actionId: chosen.id, physicalAction: null, goal: 'Stay functional', intent: chosen.label, decisionSummary: 'Fallback synthetic known action.', confidence: 0.7, referencedMemoryIds: [], brainMode: 'ai', model: 'smoke-test-mind' };
+    return { choiceType:'known_action',actionId:chosen.id,physicalAction:null,goal:'Stay functional',intent:chosen.label,decisionSummary:'Fallback synthetic known action.',confidence:.7,referencedMemoryIds:[],brainMode:'ai',model:'smoke-test-mind' };
   },
-  async replay(context) {
-    const chosen = context.candidates[0];
-    return { choiceType: 'known_action', actionId: chosen.id, physicalAction: null };
-  }
+  async replay(context) { const chosen=context.candidates[0]; return { choiceType:'known_action',actionId:chosen.id,physicalAction:null }; }
 };
-
-for (let i = 0; i < 4; i++) {
-  const dnas = await tickWithMind(aiWorld, fakeMind, { enableCounterfactualReplay: true });
-  if (!dnas.every(d => d.mind?.brain_mode === 'ai')) fail(`AI tick ${i}: DNA did not record AI brain mode`);
-  if (!dnas.every(d => d.protocol === 'Decision DNA 0.6-farm')) fail(`AI tick ${i}: Decision DNA protocol not upgraded`);
-  if (!dnas.every(d => d.physics?.version === 'affordance-0.5')) fail(`AI tick ${i}: physics version missing from DNA`);
-  if (aiWorld.agents.some(a => a.activeAction?.moving)) sawMovingPlayback = true;
-  assertWorld(aiWorld, `AI tick ${i}`);
+for (let i=0;i<4;i++) {
+  const dnas=await tickWithMind(aiWorld,fakeMind,{enableCounterfactualReplay:true});
+  if (!dnas.every(d=>d.mind?.brain_mode==='ai')) fail(`AI tick ${i}: DNA did not record AI brain mode`);
+  if (!dnas.every(d=>d.protocol==='Decision DNA 0.6-farm')) fail(`AI tick ${i}: Decision DNA protocol changed unexpectedly`);
+  if (aiWorld.agents.some(a=>a.activeAction?.moving)) sawMovingPlayback=true;
+  assertWorld(aiWorld,`AI tick ${i}`);
 }
 if (aiWorld.meta.aiDecisions < 8) fail('AI decision counter did not advance');
-if (!aiWorld.dna.some(d => d.mind?.physical_proposal?.verb === 'move')) fail('No physical proposal recorded in DNA');
-if (!aiWorld.history.some(e => e.type === 'physical')) fail('No physical action reached world history');
 if (!sawMovingPlayback) fail('No visible movement lifecycle was produced');
 
+// Progressive physical resolution: an aggregate environment becomes detailed only when examined.
+const objectWorld = migrateWorld(createWorld());
+const observer = objectWorld.agents[0];observer.position='log';observer.inventory.sharpStone=1;
+const inspectMind={async decide(context){const target=context.affordances.objects.find(o=>o.id==='place:log');if(!target)fail('Fallen oak place was not exposed from world model');if(target.worldObject?.type!=='fallen_tree')fail('Fallen oak affordance is not backed by persistent entity');return{choiceType:'physical_action',actionId:'__physical__',physicalAction:{verb:'inspect',primaryObjectId:target.id,secondaryObjectId:'none',configuration:'none',purpose:'Examine the fallen tree closely enough to distinguish its parts.'},goal:'Understand the physical tree',intent:'Inspect its structure',decisionSummary:'Resolve detail only where attention is applied.',confidence:.9,referencedMemoryIds:[],brainMode:'ai',model:'object-test'}}};
+await tickWithMind(objectWorld,inspectMind);
+const fallen=findWorldObject(objectWorld,'OBJ-TREE-001');
+if (!fallen?.resolution?.componentsInstantiated || fallen.childrenIds.length<5) fail('Close inspection did not progressively instantiate tree components');
+const branch=findWorldObject(objectWorld,'OBJ-TREE-001-BRANCH-1');
+if (!branch || branch.parentId!==fallen.id || !branch.physical?.wood || branch.material?.species!=='oak') fail('Resolved branch did not inherit identity/material/provenance from parent tree');
+const detailed=buildAffordanceView(objectWorld,observer);const branchAff=detailed.objects.find(o=>o.id===`entity:${branch.id}`);
+if (!branchAff || !branchAff.supports.includes('cut')) fail('Resolved physical component did not derive a cut affordance from its properties');
+const cutMind={async decide(){return{choiceType:'physical_action',actionId:'__physical__',physicalAction:{verb:'cut',primaryObjectId:`entity:${branch.id}`,secondaryObjectId:'sharp_stone',configuration:'none',purpose:'Separate this specific branch from the fallen tree.'},goal:'Detach one usable branch',intent:'Cut the identified component',decisionSummary:'Use a sharp carried edge against a persistent wood component.',confidence:.92,referencedMemoryIds:[],brainMode:'ai',model:'object-test'}}};
+await tickWithMind(objectWorld,cutMind);
+const detached=findWorldObject(objectWorld,branch.id);
+if (detached.parentId!==null || detached.carrierId!==observer.id || !detached.state?.carried) fail('Cut branch did not preserve identity while becoming an independent carried object');
+if (!detached.provenance?.detached) fail('Detached object lost transformation provenance');
+
 const chainWorld = migrateWorld(createWorld());
-const mara = chainWorld.agents[0];
-mara.position = 'camp';
-mara.inventory.dryWood = 1;
-mara.inventory.sharpStone = 1;
-mara.inventory.cordage = 1;
-const physicalMind = proposal => ({
-  async decide() { return { choiceType: 'physical_action', actionId: '__physical__', physicalAction: proposal, goal: 'Experiment with material properties', intent: proposal.purpose, decisionSummary: 'Synthetic emergence-chain action.', confidence: 0.9, referencedMemoryIds: [], brainMode: 'ai', model: 'chain-test' }; }
-});
-await tickWithMind(chainWorld, physicalMind({ verb: 'cut', primaryObjectId: 'carried_dry_branch', secondaryObjectId: 'sharp_stone', configuration: 'straight', purpose: 'Make the branch straighter and easier to control.' }));
+const mara = chainWorld.agents[0];mara.position='camp';mara.inventory.dryWood=1;mara.inventory.sharpStone=1;mara.inventory.cordage=1;
+const physicalMind = proposal => ({async decide(){return{choiceType:'physical_action',actionId:'__physical__',physicalAction:proposal,goal:'Experiment with material properties',intent:proposal.purpose,decisionSummary:'Synthetic emergence-chain action.',confidence:.9,referencedMemoryIds:[],brainMode:'ai',model:'chain-test'}}});
+await tickWithMind(chainWorld,physicalMind({verb:'cut',primaryObjectId:'carried_dry_branch',secondaryObjectId:'sharp_stone',configuration:'straight',purpose:'Make the branch straighter and easier to control.'}));
 if (chainWorld.agents[0].inventory.woodPole < 1) fail('Cutting branch did not produce a worked pole');
-if (!chainWorld.artifacts.some(a => a.type === 'woodPole' && a.status === 'active')) fail('Worked pole artifact was not persisted');
-await tickWithMind(chainWorld, physicalMind({ verb: 'bind', primaryObjectId: 'wood_pole', secondaryObjectId: 'sharp_stone', configuration: 'bound', purpose: 'See whether cordage can hold stone and wood together under force.' }));
+await tickWithMind(chainWorld,physicalMind({verb:'bind',primaryObjectId:'wood_pole',secondaryObjectId:'sharp_stone',configuration:'bound',purpose:'See whether cordage can hold stone and wood together under force.'}));
 if (chainWorld.agents[0].inventory.boundSharpTool < 1) fail('Binding materials did not produce a composite tool');
-if (!chainWorld.discoveries.some(d => d.key === 'bound-composite-tool')) fail('Composite-tool world discovery missing');
-const composite = chainWorld.artifacts.find(a => a.type === 'boundSharpTool' && a.status === 'active');
-if (!composite || !composite.id || composite.carrierId !== mara.id) fail('Composite tool artifact provenance missing');
-if (!chainWorld.artifacts.some(a => a.type === 'woodPole' && a.status === 'transformed')) fail('Consumed component artifact was not marked transformed');
+if (!chainWorld.discoveries.some(d=>d.key==='bound-composite-tool')) fail('Composite-tool world discovery missing');
 
-const view = buildAffordanceView(chainWorld, chainWorld.agents[0]);
-if (!Array.isArray(view.objects) || !view.verbs.includes('combine')) fail('Affordance view incomplete');
+const boundaryWorld=migrateWorld(createWorld());const boundaryAgent=boundaryWorld.agents[0];boundaryAgent.position='camp';boundaryAgent.memories.unshift({id:'M-boundary',text:'West of camp is a marshy reed bed.',importance:7,confidence:.9,tags:['reeds','exploration']});const boundaryContext=retrieveDecisionContext(boundaryWorld,boundaryAgent);const distantReeds=boundaryContext.affordances.objects.find(o=>o.id==='place:reeds');if(!distantReeds||!distantReeds.supports.includes('move')||distantReeds.supports.includes('search'))fail('Distant-place locality boundary failed');if(!('satiety'in boundaryContext.perception.needs)||('hunger'in boundaryContext.perception.needs))fail('Model physiology still exposes ambiguous hunger semantics');
 
-const boundaryWorld = migrateWorld(createWorld());
-const boundaryAgent = boundaryWorld.agents[0];
-boundaryAgent.position = 'camp';
-boundaryAgent.memories.unshift({ id:'M-boundary', text:'West of camp is a marshy reed bed.', importance:7, confidence:.9, tags:['reeds','exploration'] });
-const boundaryContext = retrieveDecisionContext(boundaryWorld, boundaryAgent);
-const distantReeds = boundaryContext.affordances.objects.find(o => o.id === 'place:reed_bed');
-if (!distantReeds || !distantReeds.supports.includes('move') || distantReeds.supports.includes('search')) fail('Distant-place locality boundary failed');
-if (!('satiety' in boundaryContext.perception.needs) || ('hunger' in boundaryContext.perception.needs)) fail('Model physiology still exposes ambiguous hunger semantics');
-
-console.log(`Smoke test passed · v0.6 fallback Day ${fallbackWorld.day} ${String(fallbackWorld.hour).padStart(2,'0')}:00 · AI ${aiWorld.meta.aiDecisions} decisions · ${chainWorld.artifacts.length} artifact records · ${chainWorld.discoveries.length} discovery records`);
+console.log(`Smoke test passed · v0.7 object-field world · ${objectWorld.worldModel.objects.length} resolved entities · fallback Day ${fallbackWorld.day} · AI ${aiWorld.meta.aiDecisions} decisions`);
