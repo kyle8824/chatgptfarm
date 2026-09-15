@@ -2,68 +2,50 @@ const DEFAULT_MODEL = process.env.OPENAI_MODEL || "gpt-5.6-luna";
 const API_URL = "https://api.openai.com/v1/responses";
 
 const SYSTEM = `You are the bounded decision system for one autonomous person in ChatGPTFarm, a persistent artificial world.
-You are not a narrator and you do not control physics. You may choose exactly one action from the supplied available_actions.
-Use only the supplied perception, memories, beliefs, traits, current goal, recent history, and available actions. Never invent hidden places, resources, tools, skills, or facts.
-The context has already been filtered to this person's private knowledge. A fact known by the world or another agent is not known to you unless it appears here.
-Protect survival when a need is genuinely urgent, but do not behave like a repetitive utility bot. When immediate needs are stable, curiosity, experimentation, exploration, social learning, teaching, and long-term preparation are legitimate motives.
-Preserve coherent goals across decisions when they still make sense, but abandon them when the world gives a strong reason.
-A memory can influence you only if it appears in retrieved_memories. referenced_memory_ids must contain only memories that materially affected this choice.
-Return a short explicit goal, intent, and decision summary. Do not provide private chain-of-thought or hidden reasoning.`;
+You are not a narrator and you do not control physics. You can either choose one supplied known_action OR propose one bounded physical_action using only a supplied primitive verb, accessible object, optional second accessible object, and simple physical configuration.
+The physics engine, not you, decides whether a physical attempt works. A physical proposal is an intention, not a guaranteed result.
+Use only this person's perception, retrieved memories, beliefs, traits, recent history, known actions, and accessible affordance objects. Never invent hidden places, resources, tools, creatures, skills, or facts.
+Do not assume recipes or technologies that are not in memory. You may recombine observed material properties in a new way when it is a reasonable physical experiment.
+Protect survival when a need is genuinely urgent. When immediate needs are stable, curiosity, experimentation, exploration, social learning, teaching, tool use, and long-term preparation are legitimate motives.
+Preserve coherent goals when they still make sense, but abandon them when the environment gives a strong reason.
+A memory can influence you only if it appears in retrieved_memories. referenced_memory_ids must contain only memories that materially affected the choice.
+For known_action: set action_id to one supplied action id and set physical fields to none.
+For physical_action: set action_id to __physical__, choose a primitive verb, accessible primary object, optional accessible secondary object, and a simple configuration. Use purpose only to describe what you are trying to learn or accomplish; do not claim success.
+Return a short explicit goal, intent, and decision summary. Never provide private chain-of-thought or hidden reasoning.`;
 
-const schemaFor = actionIds => ({
-  type: "object",
-  additionalProperties: false,
-  properties: {
-    action_id: { type: "string", enum: actionIds },
-    goal: { type: "string", minLength: 1, maxLength: 180 },
-    intent: { type: "string", minLength: 1, maxLength: 220 },
-    decision_summary: { type: "string", minLength: 1, maxLength: 260 },
-    confidence: { type: "number", minimum: 0, maximum: 1 },
-    referenced_memory_ids: { type: "array", maxItems: 5, items: { type: "string" } }
-  },
-  required: ["action_id", "goal", "intent", "decision_summary", "confidence", "referenced_memory_ids"]
-});
+function decisionSchema(context) {
+  const actionIds = context.candidates.map(a => a.id);
+  const objectIds = context.affordances.objects.map(o => o.id);
+  const verbs = context.affordances.verbs;
+  const configurations = context.affordances.configurations;
+  return {
+    type: "object",
+    additionalProperties: false,
+    properties: {
+      choice_type: { type: "string", enum: ["known_action", "physical_action"] },
+      action_id: { type: "string", enum: [...actionIds, "__physical__"] },
+      physical_verb: { type: "string", enum: ["none", ...verbs] },
+      primary_object_id: { type: "string", enum: ["none", ...objectIds] },
+      secondary_object_id: { type: "string", enum: ["none", ...objectIds] },
+      configuration: { type: "string", enum: configurations },
+      purpose: { type: "string", maxLength: 180 },
+      goal: { type: "string", minLength: 1, maxLength: 180 },
+      intent: { type: "string", minLength: 1, maxLength: 220 },
+      decision_summary: { type: "string", minLength: 1, maxLength: 260 },
+      confidence: { type: "number", minimum: 0, maximum: 1 },
+      referenced_memory_ids: { type: "array", maxItems: 5, items: { type: "string" } }
+    },
+    required: ["choice_type", "action_id", "physical_verb", "primary_object_id", "secondary_object_id", "configuration", "purpose", "goal", "intent", "decision_summary", "confidence", "referenced_memory_ids"]
+  };
+}
 
 function outputText(data) {
   if (typeof data?.output_text === "string") return data.output_text;
-  for (const item of data?.output || []) {
-    for (const part of item?.content || []) if (part?.type === "output_text" && typeof part.text === "string") return part.text;
-  }
+  for (const item of data?.output || []) for (const part of item?.content || []) if (part?.type === "output_text" && typeof part.text === "string") return part.text;
   return null;
 }
 
-function privateKnowledge(context) {
-  const memories = context.memories || [];
-  const memoryText = memories.map(m => `${m.text} ${(m.tags || []).join(" ")}`).join(" ").toLowerCase();
-  const inv = context.perception?.inventory || {};
-  const skills = context.perception?.skills || {};
-  const position = context.perception?.position || "";
-  const knowsClay = position === "clay" || /\bclay\b/.test(memoryText) || (inv.clay || 0) > 0 || (inv.rawClayVessel || 0) > 0 || (inv.firedVessel || 0) > 0 || !!skills["clay-shaping"] || !!skills["fired-clay"];
-  const knowsReeds = position === "reeds" || /\breeds?\b|cordage/.test(memoryText) || (inv.reeds || 0) > 0 || (inv.cordage || 0) > 0 || !!skills.cordage;
-
-  const hiddenAction = id => {
-    if (["gather_clay", "experiment_clay", "shape_clay_vessel", "experiment_fire_clay"].includes(id)) return !knowsClay;
-    if (["gather_reeds", "experiment_reeds", "make_cordage"].includes(id)) return !knowsReeds;
-    return false;
-  };
-
-  const perception = JSON.parse(JSON.stringify(context.perception || {}));
-  perception.nearby = (perception.nearby || []).filter(item => {
-    const t = String(item).toLowerCase();
-    if (t.includes("clay")) return knowsClay;
-    if (t.includes("reed")) return knowsReeds;
-    return true;
-  });
-
-  return {
-    perception,
-    actions: (context.candidates || []).filter(c => !hiddenAction(c.id)),
-    privateKnowledge: { clayBankKnown: knowsClay, reedBedKnown: knowsReeds }
-  };
-}
-
 function publicContext(context) {
-  const privateView = privateKnowledge(context);
   return {
     identity: {
       id: context.agent.id,
@@ -73,53 +55,34 @@ function publicContext(context) {
       current_goal: context.agent.currentGoal,
       recent_actions: context.agent.recentActions
     },
-    perception: privateView.perception,
+    perception: context.perception,
     retrieved_memories: context.memories,
     recent_events: context.recentEvents,
-    private_knowledge: privateView.privateKnowledge,
-    available_actions: privateView.actions.map(c => ({ id: c.id, label: c.label }))
+    available_known_actions: context.candidates.map(c => ({ id: c.id, label: c.label })),
+    physical_affordances: {
+      primitive_verbs: context.affordances.verbs,
+      configurations: context.affordances.configurations,
+      accessible_objects: context.affordances.objects.map(o => ({
+        id: o.id, label: o.label, kind: o.kind, quantity: o.quantity,
+        properties: o.properties, supports: o.supports
+      }))
+    }
   };
 }
 
-async function callDecision(context, { replayNote = null } = {}) {
-  const key = process.env.OPENAI_API_KEY;
-  if (!key) throw new Error("OPENAI_API_KEY is not configured");
-  const payload = publicContext(context);
-  const actionIds = payload.available_actions.map(a => a.id);
-  if (!actionIds.length) throw new Error("No privately-known valid actions available");
-  if (replayNote) payload.counterfactual_replay = replayNote;
-
-  const response = await fetch(API_URL, {
-    method: "POST",
-    headers: { "Authorization": `Bearer ${key}`, "Content-Type": "application/json" },
-    body: JSON.stringify({
-      model: DEFAULT_MODEL,
-      reasoning: { effort: process.env.OPENAI_REASONING_EFFORT || "low" },
-      instructions: SYSTEM,
-      input: JSON.stringify(payload),
-      text: {
-        format: {
-          type: "json_schema",
-          name: "chatgptfarm_decision",
-          strict: true,
-          schema: schemaFor(actionIds)
-        }
-      },
-      max_output_tokens: 320
-    })
-  });
-
-  if (!response.ok) {
-    const body = await response.text();
-    throw new Error(`OpenAI ${response.status}: ${body.slice(0, 220)}`);
-  }
-  const data = await response.json();
-  const text = outputText(data);
-  if (!text) throw new Error("OpenAI response contained no structured output text");
-  const parsed = JSON.parse(text);
+function parseDecision(parsed, context, data) {
   const validMemoryIds = new Set(context.memories.map(m => m.id));
+  const choiceType = parsed.choice_type === "physical_action" ? "physical_action" : "known_action";
   return {
-    actionId: parsed.action_id,
+    choiceType,
+    actionId: choiceType === "physical_action" ? "__physical__" : parsed.action_id,
+    physicalAction: choiceType === "physical_action" ? {
+      verb: parsed.physical_verb,
+      primaryObjectId: parsed.primary_object_id,
+      secondaryObjectId: parsed.secondary_object_id,
+      configuration: parsed.configuration,
+      purpose: parsed.purpose || ""
+    } : null,
     goal: parsed.goal,
     intent: parsed.intent,
     decisionSummary: parsed.decision_summary,
@@ -131,9 +94,33 @@ async function callDecision(context, { replayNote = null } = {}) {
   };
 }
 
+async function callDecision(context, { replayNote = null } = {}) {
+  const key = process.env.OPENAI_API_KEY;
+  if (!key) throw new Error("OPENAI_API_KEY is not configured");
+  if (!context.candidates.length && !context.affordances.objects.length) throw new Error("No bounded actions or affordances available");
+  const payload = publicContext(context);
+  if (replayNote) payload.counterfactual_replay = replayNote;
+
+  const response = await fetch(API_URL, {
+    method: "POST",
+    headers: { "Authorization": `Bearer ${key}`, "Content-Type": "application/json" },
+    body: JSON.stringify({
+      model: DEFAULT_MODEL,
+      reasoning: { effort: process.env.OPENAI_REASONING_EFFORT || "low" },
+      instructions: SYSTEM,
+      input: JSON.stringify(payload),
+      text: { format: { type: "json_schema", name: "chatgptfarm_decision_v05", strict: true, schema: decisionSchema(context) } },
+      max_output_tokens: 420
+    })
+  });
+  if (!response.ok) throw new Error(`OpenAI ${response.status}: ${(await response.text()).slice(0, 220)}`);
+  const data = await response.json(), text = outputText(data);
+  if (!text) throw new Error("OpenAI response contained no structured output text");
+  return parseDecision(JSON.parse(text), context, data);
+}
+
 const reflectionSchema = {
-  type: "object",
-  additionalProperties: false,
+  type: "object", additionalProperties: false,
   properties: {
     reflection: { type: "string", minLength: 1, maxLength: 320 },
     belief_key: { type: "string", minLength: 1, maxLength: 48 },
@@ -151,7 +138,7 @@ export function createOpenAIMind() {
     model: DEFAULT_MODEL,
     async decide(context) { return callDecision(context); },
     async replay(context, { originalActionId, removedMemoryId }) {
-      return callDecision(context, { replayNote: `This is a Decision DNA replay of the same decision context with memory ${removedMemoryId} removed. Choose naturally from the remaining evidence. The original action was ${originalActionId}; do not preserve or change it intentionally.` });
+      return callDecision(context, { replayNote: `Decision DNA replay: the same decision is being reconsidered with memory ${removedMemoryId} removed. The original selected descriptor was ${originalActionId}. Choose naturally from the remaining evidence; do not intentionally preserve or change it.` });
     },
     async reflect({ agent, events, memories }) {
       if (!enabled) return null;
@@ -161,15 +148,14 @@ export function createOpenAIMind() {
         body: JSON.stringify({
           model: DEFAULT_MODEL,
           reasoning: { effort: "low" },
-          instructions: `You create one concise, explicit reflection for an autonomous person's persistent memory. Infer a useful belief from only the supplied experiences. Do not invent events. Do not output chain-of-thought.`,
+          instructions: `Create one concise explicit reflection for an autonomous person's persistent memory. Infer a useful belief from only the supplied experiences. Do not invent events, outcomes, recipes, or hidden facts. Do not output chain-of-thought.`,
           input: JSON.stringify({ name: agent.name, traits: agent.traits, current_goal: agent.mind?.currentGoal, recent_events: events, recent_memories: memories }),
-          text: { format: { type: "json_schema", name: "chatgptfarm_reflection", strict: true, schema: reflectionSchema } },
+          text: { format: { type: "json_schema", name: "chatgptfarm_reflection_v05", strict: true, schema: reflectionSchema } },
           max_output_tokens: 300
         })
       });
       if (!response.ok) throw new Error(`Reflection API ${response.status}: ${(await response.text()).slice(0, 180)}`);
-      const data = await response.json();
-      const text = outputText(data);
+      const data = await response.json(), text = outputText(data);
       if (!text) throw new Error("Reflection response contained no text");
       return JSON.parse(text);
     }
