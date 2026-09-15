@@ -68,4 +68,13 @@ if (!chainWorld.discoveries.some(d => d.key === 'bound-composite-tool')) fail('C
 const view = buildAffordanceView(chainWorld, chainWorld.agents[0]);
 if (!Array.isArray(view.objects) || !view.verbs.includes('combine')) fail('Affordance view incomplete');
 
+const boundaryWorld = migrateWorld(createWorld());
+const boundaryAgent = boundaryWorld.agents[0];
+boundaryAgent.position = 'camp';
+boundaryAgent.memories.unshift({ id:'M-boundary', text:'West of camp is a marshy reed bed.', importance:7, confidence:.9, tags:['reeds','exploration'] });
+const boundaryContext = retrieveDecisionContext(boundaryWorld, boundaryAgent);
+const distantReeds = boundaryContext.affordances.objects.find(o => o.id === 'place:reed_bed');
+if (!distantReeds || !distantReeds.supports.includes('move') || distantReeds.supports.includes('search')) fail('Distant-place locality boundary failed');
+if (!('satiety' in boundaryContext.perception.needs) || ('hunger' in boundaryContext.perception.needs)) fail('Model physiology still exposes ambiguous hunger semantics');
+
 console.log(`Smoke test passed · fallback Day ${fallbackWorld.day} ${String(fallbackWorld.hour).padStart(2,'0')}:00 · AI ${aiWorld.meta.aiDecisions} decisions · physical world ${chainWorld.discoveries.length} discovery records`);
