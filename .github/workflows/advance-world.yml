@@ -8,6 +8,7 @@ on:
     branches: [main]
     paths:
       - 'engine.js'
+      - 'engine/**'
       - 'mind.js'
       - 'scripts/advance-world.mjs'
       - 'scripts/smoke-test.mjs'
@@ -57,5 +58,6 @@ jobs:
           DAY=$(node -e "const s=require('./world/state.json'); process.stdout.write(String(s.day))")
           HOUR=$(node -e "const s=require('./world/state.json'); process.stdout.write(String(s.hour).padStart(2,'0'))")
           MODE=$(node -e "const s=require('./world/state.json'); process.stdout.write(String(s.meta?.mindMode || 'fallback'))")
-          git commit -m "world: heartbeat day ${DAY} ${HOUR}:00 [${MODE}]"
+          PHYSICS=$(node -e "const s=require('./world/state.json'); process.stdout.write(String(s.meta?.physicsVersion || 'legacy'))")
+          git commit -m "world: heartbeat day ${DAY} ${HOUR}:00 [${MODE}] [${PHYSICS}]"
           git push
