@@ -1,0 +1,58 @@
+{
+  "version": "0.1",
+  "day": 1,
+  "hour": 6,
+  "temperature": 49,
+  "weather": "clear",
+  "resources": {
+    "berries": 14,
+    "dryWood": 8,
+    "wetWood": 5,
+    "stones": 18,
+    "creekWater": true
+  },
+  "structures": {
+    "shelter": false,
+    "fire": false
+  },
+  "discovered": {
+    "creek": true,
+    "berries": true,
+    "fallenLog": true,
+    "stoneField": true,
+    "east": false,
+    "west": false
+  },
+  "agent": {
+    "id": "agent-mara",
+    "name": "Mara",
+    "position": "meadow",
+    "needs": {
+      "hydration": 66,
+      "hunger": 72,
+      "energy": 82,
+      "warmth": 62
+    },
+    "inventory": {
+      "berries": 0,
+      "dryWood": 0,
+      "wetWood": 0,
+      "stones": 0
+    },
+    "memories": [],
+    "beliefs": {},
+    "currentAction": "Waking up"
+  },
+  "history": [],
+  "dna": [],
+  "seq": {
+    "event": 1,
+    "memory": 1,
+    "decision": 1
+  },
+  "meta": {
+    "canonical": true,
+    "lastAdvancedAt": null,
+    "tickNumber": 0
+  }
+}
