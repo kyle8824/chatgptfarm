@@ -1,10 +1,10 @@
 {
   "name": "chatgptfarm",
   "private": true,
-  "version": "0.5.0",
+  "version": "0.6.0",
   "type": "module",
   "scripts": {
-    "test": "node scripts/smoke-test.mjs",
+    "test": "node --check app.js && node scripts/smoke-test.mjs",
     "advance": "node scripts/advance-world.mjs"
   }
 }
