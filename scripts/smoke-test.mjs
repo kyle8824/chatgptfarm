@@ -5,6 +5,7 @@ const assertWorld = (world, label) => {
   if (world.version !== '0.6') fail(`${label}: expected v0.6 world`);
   if (world.agents.length !== 2) fail(`${label}: agent count changed`);
   if (!Array.isArray(world.liveThreads)) fail(`${label}: liveThreads missing`);
+  if (!Array.isArray(world.artifacts)) fail(`${label}: artifact ledger missing`);
   for (const agent of world.agents) {
     for (const [name, value] of Object.entries(agent.needs)) if (!Number.isFinite(value) || value < 0 || value > 100) fail(`${label}: invalid ${agent.name}.${name}=${value}`);
     if (!agent.mind || !Array.isArray(agent.mind.recentActions)) fail(`${label}: mind state missing for ${agent.name}`);
@@ -69,9 +70,13 @@ const physicalMind = proposal => ({
 });
 await tickWithMind(chainWorld, physicalMind({ verb: 'cut', primaryObjectId: 'carried_dry_branch', secondaryObjectId: 'sharp_stone', configuration: 'straight', purpose: 'Make the branch straighter and easier to control.' }));
 if (chainWorld.agents[0].inventory.woodPole < 1) fail('Cutting branch did not produce a worked pole');
+if (!chainWorld.artifacts.some(a => a.type === 'woodPole' && a.status === 'active')) fail('Worked pole artifact was not persisted');
 await tickWithMind(chainWorld, physicalMind({ verb: 'bind', primaryObjectId: 'wood_pole', secondaryObjectId: 'sharp_stone', configuration: 'bound', purpose: 'See whether cordage can hold stone and wood together under force.' }));
 if (chainWorld.agents[0].inventory.boundSharpTool < 1) fail('Binding materials did not produce a composite tool');
 if (!chainWorld.discoveries.some(d => d.key === 'bound-composite-tool')) fail('Composite-tool world discovery missing');
+const composite = chainWorld.artifacts.find(a => a.type === 'boundSharpTool' && a.status === 'active');
+if (!composite || !composite.id || composite.carrierId !== mara.id) fail('Composite tool artifact provenance missing');
+if (!chainWorld.artifacts.some(a => a.type === 'woodPole' && a.status === 'transformed')) fail('Consumed component artifact was not marked transformed');
 
 const view = buildAffordanceView(chainWorld, chainWorld.agents[0]);
 if (!Array.isArray(view.objects) || !view.verbs.includes('combine')) fail('Affordance view incomplete');
@@ -85,4 +90,4 @@ const distantReeds = boundaryContext.affordances.objects.find(o => o.id === 'pla
 if (!distantReeds || !distantReeds.supports.includes('move') || distantReeds.supports.includes('search')) fail('Distant-place locality boundary failed');
 if (!('satiety' in boundaryContext.perception.needs) || ('hunger' in boundaryContext.perception.needs)) fail('Model physiology still exposes ambiguous hunger semantics');
 
-console.log(`Smoke test passed · v0.6 fallback Day ${fallbackWorld.day} ${String(fallbackWorld.hour).padStart(2,'0')}:00 · AI ${aiWorld.meta.aiDecisions} decisions · physical world ${chainWorld.discoveries.length} discovery records`);
+console.log(`Smoke test passed · v0.6 fallback Day ${fallbackWorld.day} ${String(fallbackWorld.hour).padStart(2,'0')}:00 · AI ${aiWorld.meta.aiDecisions} decisions · ${chainWorld.artifacts.length} artifact records · ${chainWorld.discoveries.length} discovery records`);
