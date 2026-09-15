@@ -1,0 +1,46 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <meta name="theme-color" content="#101711">
+  <meta name="description" content="ChatGPTFarm — a persistent artificial world instrumented with Decision DNA.">
+  <title>ChatGPTFarm — A Living Agent World</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <header class="topbar">
+    <div class="brand"><span class="brand-seed">✦</span><div><b>ChatGPTFarm</b><small>WORLD 01 · DECISION DNA INSTRUMENTED</small></div></div>
+    <div class="top-actions"><span id="saveState" class="save-state">● SAVED LOCALLY</span><button id="resetWorld" class="ghost danger">Reset world</button></div>
+  </header>
+  <main>
+    <section class="hero">
+      <div><span class="kicker">A PERSISTENT ARTIFICIAL WORLD</span><h1>Don't script the story.<br><em>Let experience write it.</em></h1><p>One agent. One small world. Needs, weather, memory, consequences, and a complete Decision DNA trail behind every consequential choice.</p></div>
+      <div class="world-clock"><span>WORLD TIME</span><strong id="dayLabel">Day 1 · 06:00</strong><small id="weatherLabel">Cool · Clear</small></div>
+    </section>
+    <section class="workspace">
+      <div class="world-column">
+        <div class="panel world-panel">
+          <div class="panel-title"><div><small>THE WORLD</small><h2>Willow Basin</h2></div><div class="sim-controls"><button id="stepHour" class="ghost">+1 hour</button><button id="runDay" class="primary">Run 1 day</button></div></div>
+          <div id="world" class="world">
+            <div class="sky"></div><div class="sun"></div><div class="cloud cloud-a"></div><div class="cloud cloud-b"></div><div class="ridge ridge-a"></div><div class="ridge ridge-b"></div><div class="creek"></div><div class="forest forest-a"></div><div class="forest forest-b"></div><div class="berry-patch"><span>● ● ●</span></div><div class="fallen-log"></div><div class="stone-field"></div><div id="shelter" class="shelter hidden"><span>⌂</span></div><div id="fire" class="fire hidden"><span>♨</span></div><div id="agentSprite" class="agent" title="Mara"><div class="head"></div><div class="body"></div></div><div class="fog fog-1"></div><div class="fog fog-2"></div><div id="worldCaption" class="world-caption">Mara wakes beside the creek with no shelter and no stored food.</div>
+          </div>
+          <div class="legend"><span><i class="dot water"></i> creek</span><span><i class="dot food"></i> berries</span><span><i class="dot wood"></i> fallen wood</span><span><i class="dot unknown"></i> unexplored</span></div>
+        </div>
+        <div class="panel timeline-panel"><div class="panel-title"><div><small>WORLD HISTORY</small><h2>What actually happened</h2></div><span id="eventCount" class="chip">0 events</span></div><div id="timeline" class="timeline"></div></div>
+      </div>
+      <aside class="side-column">
+        <div class="panel agent-panel"><div class="agent-head"><div class="portrait">M</div><div><small>AGENT 01</small><h2>Mara</h2><p id="currentAction">Waking up…</p></div></div><div class="needs" id="needs"></div><div class="inventory"><small>INVENTORY</small><div id="inventory"></div></div></div>
+        <div class="panel memory-panel"><div class="panel-title compact"><div><small>PERSISTENT MEMORY</small><h2>What Mara remembers</h2></div><span id="memoryCount" class="chip">0</span></div><div id="memories" class="memory-list"></div></div>
+        <div class="panel dna-panel"><div class="panel-title compact"><div><small>DECISION DNA</small><h2>Why this action won</h2></div><span class="dna-live">LIVE</span></div><div id="dnaEmpty" class="dna-empty">Advance the world to generate the first trace.</div><div id="dnaInspector" class="dna-inspector hidden"><div class="dna-action"><small>DECISION</small><strong id="dnaAction"></strong><code id="dnaId"></code></div><div id="dnaFactors" class="dna-factors"></div><div class="cf-box"><small>COUNTERFACTUAL MEMORY TEST</small><div id="counterfactuals"></div></div></div></div>
+      </aside>
+    </section>
+    <section class="guardian"><div><span class="kicker">COMING NEXT · GUARDIAN</span><h2>The world will eventually debug itself.</h2><p>Decision DNA captures the behavioral lineage. Guardian will use it to detect drift, trace suspicious memories, test counterfactual repairs in a sandbox, and explain what changed—without scripting Mara's story.</p></div><div class="guardian-flow"><span>ACT</span><b>→</b><span>TRACE</span><b>→</b><span>DIAGNOSE</span><b>→</b><span>REPLAY</span><b>→</b><span>REPAIR</span></div></section>
+  </main>
+  <footer><span>ChatGPTFarm v0.1</span><p>The world persists in your browser. Reset only if you want a new history.</p><span>Decision DNA protocol experiment</span></footer>
+  <script type="module" src="app.js"></script>
+</body>
+</html>
