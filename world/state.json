@@ -1,5 +1,5 @@
 {
-  "version": "0.1",
+  "version": "0.2",
   "day": 1,
   "hour": 6,
   "temperature": 49,
@@ -13,7 +13,8 @@
   },
   "structures": {
     "shelter": false,
-    "fire": false
+    "fire": false,
+    "cache": false
   },
   "discovered": {
     "creek": true,
@@ -23,36 +24,47 @@
     "east": false,
     "west": false
   },
-  "agent": {
-    "id": "agent-mara",
-    "name": "Mara",
-    "position": "meadow",
-    "needs": {
-      "hydration": 66,
-      "hunger": 72,
-      "energy": 82,
-      "warmth": 62
+  "agents": [
+    {
+      "id": "agent-mara",
+      "name": "Mara",
+      "position": "meadow",
+      "needs": {"hydration":66,"hunger":72,"energy":82,"warmth":62},
+      "inventory": {"berries":0,"dryWood":0,"wetWood":0,"stones":0},
+      "memories": [],
+      "beliefs": {},
+      "traits": {"curiosity":0.72,"cooperation":0.68,"caution":0.56},
+      "currentAction": "Taking in the meadow"
     },
-    "inventory": {
-      "berries": 0,
-      "dryWood": 0,
-      "wetWood": 0,
-      "stones": 0
-    },
-    "memories": [],
-    "beliefs": {},
-    "currentAction": "Waking up"
+    {
+      "id": "agent-ivo",
+      "name": "Ivo",
+      "position": "forest",
+      "needs": {"hydration":74,"hunger":68,"energy":78,"warmth":58},
+      "inventory": {"berries":0,"dryWood":0,"wetWood":0,"stones":0},
+      "memories": [],
+      "beliefs": {},
+      "traits": {"curiosity":0.58,"cooperation":0.76,"caution":0.48},
+      "currentAction": "Observing the forest edge"
+    }
+  ],
+  "relationships": {
+    "agent-ivo|agent-mara": {
+      "trust": 34,
+      "familiarity": 12,
+      "affinity": 50,
+      "lastInteraction": null,
+      "sharedMemories": 0
+    }
   },
   "history": [],
   "dna": [],
-  "seq": {
-    "event": 1,
-    "memory": 1,
-    "decision": 1
-  },
+  "seq": {"event":1,"memory":1,"decision":1},
   "meta": {
     "canonical": true,
     "lastAdvancedAt": null,
-    "tickNumber": 0
+    "tickNumber": 0,
+    "heartbeatMinutes": 5,
+    "worldHoursPerHeartbeat": 1
   }
 }
