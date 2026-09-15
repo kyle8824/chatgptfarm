@@ -2,10 +2,14 @@ import { createWorld, tick, tickWithMind, migrateWorld, retrieveDecisionContext,
 
 const fail = message => { throw new Error(message); };
 const assertWorld = (world, label) => {
+  if (world.version !== '0.6') fail(`${label}: expected v0.6 world`);
   if (world.agents.length !== 2) fail(`${label}: agent count changed`);
+  if (!Array.isArray(world.liveThreads)) fail(`${label}: liveThreads missing`);
   for (const agent of world.agents) {
     for (const [name, value] of Object.entries(agent.needs)) if (!Number.isFinite(value) || value < 0 || value > 100) fail(`${label}: invalid ${agent.name}.${name}=${value}`);
     if (!agent.mind || !Array.isArray(agent.mind.recentActions)) fail(`${label}: mind state missing for ${agent.name}`);
+    if (!Number.isFinite(agent.coordinates?.x) || !Number.isFinite(agent.coordinates?.y)) fail(`${label}: spatial coordinates missing for ${agent.name}`);
+    if (!agent.activeAction || !Array.isArray(agent.activeAction.phases) || agent.activeAction.phases.length < 3) fail(`${label}: action playback missing for ${agent.name}`);
   }
   if (!Number.isFinite(world.day) || !Number.isFinite(world.hour)) fail(`${label}: invalid world clock`);
   if (world.meta.physicsVersion !== 'affordance-0.5') fail(`${label}: physics version missing`);
@@ -21,6 +25,7 @@ if (fallbackWorld.day < 4) fail('Fallback simulation did not advance across mult
 if (!fallbackWorld.history.length || !fallbackWorld.dna.length) fail('Fallback history/DNA missing');
 
 const aiWorld = migrateWorld(createWorld());
+let sawMovingPlayback = false;
 const fakeMind = {
   async decide(context) {
     const creek = context.affordances.objects.find(o => o.id === 'place:creek');
@@ -43,12 +48,15 @@ const fakeMind = {
 for (let i = 0; i < 4; i++) {
   const dnas = await tickWithMind(aiWorld, fakeMind, { enableCounterfactualReplay: true });
   if (!dnas.every(d => d.mind?.brain_mode === 'ai')) fail(`AI tick ${i}: DNA did not record AI brain mode`);
+  if (!dnas.every(d => d.protocol === 'Decision DNA 0.6-farm')) fail(`AI tick ${i}: Decision DNA protocol not upgraded`);
   if (!dnas.every(d => d.physics?.version === 'affordance-0.5')) fail(`AI tick ${i}: physics version missing from DNA`);
+  if (aiWorld.agents.some(a => a.activeAction?.moving)) sawMovingPlayback = true;
   assertWorld(aiWorld, `AI tick ${i}`);
 }
 if (aiWorld.meta.aiDecisions < 8) fail('AI decision counter did not advance');
 if (!aiWorld.dna.some(d => d.mind?.physical_proposal?.verb === 'move')) fail('No physical proposal recorded in DNA');
 if (!aiWorld.history.some(e => e.type === 'physical')) fail('No physical action reached world history');
+if (!sawMovingPlayback) fail('No visible movement lifecycle was produced');
 
 const chainWorld = migrateWorld(createWorld());
 const mara = chainWorld.agents[0];
@@ -77,4 +85,4 @@ const distantReeds = boundaryContext.affordances.objects.find(o => o.id === 'pla
 if (!distantReeds || !distantReeds.supports.includes('move') || distantReeds.supports.includes('search')) fail('Distant-place locality boundary failed');
 if (!('satiety' in boundaryContext.perception.needs) || ('hunger' in boundaryContext.perception.needs)) fail('Model physiology still exposes ambiguous hunger semantics');
 
-console.log(`Smoke test passed · fallback Day ${fallbackWorld.day} ${String(fallbackWorld.hour).padStart(2,'0')}:00 · AI ${aiWorld.meta.aiDecisions} decisions · physical world ${chainWorld.discoveries.length} discovery records`);
+console.log(`Smoke test passed · v0.6 fallback Day ${fallbackWorld.day} ${String(fallbackWorld.hour).padStart(2,'0')}:00 · AI ${aiWorld.meta.aiDecisions} decisions · physical world ${chainWorld.discoveries.length} discovery records`);
