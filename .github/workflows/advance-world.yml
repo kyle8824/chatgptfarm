@@ -9,6 +9,8 @@ on:
     paths:
       - 'engine.js'
       - 'scripts/advance-world.mjs'
+      - 'scripts/smoke-test.mjs'
+      - 'package.json'
       - '.github/workflows/advance-world.yml'
 
 permissions:
@@ -32,7 +34,10 @@ jobs:
         with:
           node-version: '22'
 
-      - name: Advance one world hour
+      - name: Validate four simulated world-days
+        run: npm test
+
+      - name: Advance one canonical world hour
         run: npm run advance
 
       - name: Commit canonical state
