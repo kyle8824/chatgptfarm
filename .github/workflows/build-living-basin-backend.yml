@@ -22,10 +22,19 @@ jobs:
           node-version: 22
       - name: Sync latest main
         run: git pull --rebase origin main
-      - name: Build living basin backend
+      - name: Repair and build living basin backend
         shell: bash
         run: |
           set -o pipefail
+          python3 - <<'PY'
+          from pathlib import Path
+          p=Path('scripts/build-living-basin-backend.py')
+          s=p.read_text()
+          bad='b.reasoningTokens+=reason;};"\nif old not in src:'
+          good='b.reasoningTokens+=reason;};"""\nif old not in src:'
+          if bad not in s: raise SystemExit('builder repair anchor not found')
+          p.write_text(s.replace(bad,good,1))
+          PY
           python3 scripts/build-living-basin-backend.py 2>&1 | tee build-living-basin.log
       - name: Validate ecology, minds, physics and four-day world
         run: npm test
@@ -41,7 +50,7 @@ jobs:
         run: |
           git config user.name "ChatGPTFarm Guardian"
           git config user.email "actions@users.noreply.github.com"
-          git add engine.js engine/core.js engine/decision.js engine/runtime.js mind.js scripts/advance-world.mjs scripts/smoke-test.mjs world/control.json engine/ecology.js
+          git add engine.js engine/core.js engine/decision.js engine/runtime.js mind.js scripts/advance-world.mjs scripts/smoke-test.mjs scripts/build-living-basin-backend.py world/control.json engine/ecology.js
           git commit -m "v0.9: living basin ecology and AI controls" || exit 0
           git pull --rebase origin main
           git push origin main
