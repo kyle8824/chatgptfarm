@@ -1,5 +1,5 @@
 name: Phaser Living World QA
-# review target: v1.3 basin slice
+# review target: v1.3 basin slice after dynamics restoration
 on:
   push:
     branches: [main]
