@@ -1,60 +1,57 @@
 <!doctype html>
 <html lang="en">
 <head>
-  <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="theme-color" content="#101711">
-  <meta name="description" content="ChatGPTFarm — a persistent AI world where experience, memory and physics determine what happens next.">
-  <title>ChatGPTFarm — The Living World</title>
-  <link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="styles.css?v=071"><link rel="stylesheet" href="living.css?v=071"><link rel="stylesheet" href="panels.css?v=071"><link rel="stylesheet" href="artifacts.css?v=071"><link rel="stylesheet" href="world-model.css?v=0712">
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+  <meta name="theme-color" content="#08100b">
+  <meta name="description" content="ChatGPTFarm — a persistent autonomous AI world rendered directly from canonical simulation state.">
+  <title>ChatGPTFarm — Object World</title>
+  <link rel="stylesheet" href="world.css?v=0801">
 </head>
 <body>
-<header class="topbar"><div class="brand"><span class="brand-seed">✦</span><div><b>ChatGPTFarm</b><small>WORLD 01 · AUTONOMOUS · DECISION DNA</small></div></div><div class="top-actions"><span id="saveState" class="save-state">● CONNECTING TO WORLD</span></div></header>
-<main>
-  <section class="hero living-hero"><div><span class="kicker">THE LIVING WORLD · v0.7</span><h1>Something is happening<br><em>even when nobody is watching.</em></h1><p>Mara and Ivo perceive, remember, decide and act inside the same persistent object world. The environment exists as canonical simulation state first; this page is only a view of it.</p></div><div class="world-clock"><span>PROJECTED WORLD TIME</span><strong id="dayLabel">Connecting…</strong><small id="weatherLabel">Loading weather</small><small id="heartbeatLabel">Waiting for heartbeat</small></div></section>
+  <div id="appShell">
+    <div id="worldViewport" aria-label="Live ChatGPTFarm world"></div>
 
-  <section class="world-status"><div><span class="live-dot"></span><b>WORLD IS RUNNING</b><small id="lastAdvanced">Awaiting canonical heartbeat</small></div><div><b id="tickCount">0</b><small>canonical heartbeats</small></div><div><b id="worldAge">Day 1</b><small>world age</small></div><div><b id="relationshipSummary">Strangers</b><small>Mara ↔ Ivo</small></div></section>
-
-  <section class="live-stage">
-    <div class="panel world-panel">
-      <div class="panel-title"><div><small>LIVE WORLD</small><h2>Willow Basin</h2></div><div class="camera-controls"><button class="camera-btn active" data-camera="auto">AUTO</button><button class="camera-btn" data-camera="agent-mara">MARA</button><button class="camera-btn" data-camera="agent-ivo">IVO</button></div></div>
-      <div id="world" class="world">
-        <div id="worldScene" class="world-scene">
-          <div class="meadow-glow"></div><div class="grove grove-west"></div><div class="grove grove-east"></div><div class="terrain-creek"></div>
-          <div id="worldPlaces"></div><div id="worldObjects"></div>
-          <div id="shelter" class="world-structure structure-shelter hidden"></div><div id="fire" class="world-structure structure-fire hidden"></div><div id="cache" class="world-structure hidden"></div><div id="dryingRack" class="world-structure hidden"></div>
-          <div id="focusHalo" class="focus-halo"></div>
-          <div id="maraSprite" class="agent mara" title="Mara"><span class="name-tag">Mara</span><div class="head"></div><div class="body"></div><span class="agent-phase"></span></div>
-          <div id="ivoSprite" class="agent ivo" title="Ivo"><span class="name-tag">Ivo</span><div class="head"></div><div class="body"></div><span class="agent-phase"></span></div>
-        </div>
-        <div id="weatherLayer" class="weather-layer"></div><div id="nightLayer" class="night-layer"></div>
-        <div class="world-hud"><span id="focusStatus" class="focus-status">AUTO · FINDING THE STORY</span><span id="worldMode" class="world-mode">CANONICAL OBJECT WORLD</span></div>
-        <div id="worldCaption" class="world-caption">The shared world is loading.</div>
-      </div>
-      <div class="legend"><span><i class="dot water"></i> water</span><span><i class="dot food"></i> food</span><span><i class="dot wood"></i> materials</span><span><i class="dot unknown"></i> frontier</span><span>Consequential scenery is backed by canonical world entities. Detail increases when agents inspect and interact with it.</span></div>
+    <div class="hud topbar">
+      <div class="brand"><div class="brandMark"></div><div class="brandText"><strong>ChatGPTFarm</strong><span>PERSISTENT OBJECT WORLD</span></div></div>
+      <div id="worldStatus" class="worldStatus"><strong>● CONNECTING</strong><span>Reading canonical state…</span></div>
     </div>
 
-    <aside class="live-rail">
-      <div class="panel threads-panel"><div class="panel-title compact"><div><small>LIVE THREADS</small><h2>Why this moment matters</h2></div><span id="threadCount" class="chip">0 open</span></div><div id="nowStrip" class="now-strip">Reading the world…</div><div id="liveThreads" class="threads"></div></div>
-      <div id="agentCards" class="agent-cards"></div>
+    <a class="debugLink" href="/debug.html">DEBUG / DNA ↗</a>
+
+    <div class="hud controls">
+      <button data-camera="auto" class="active">AUTO</button>
+      <button data-camera="agent-mara">MARA</button>
+      <button data-camera="agent-ivo">IVO</button>
+    </div>
+
+    <div class="hud zoomControls">
+      <button id="zoomIn" class="iconButton" aria-label="Zoom in">+</button>
+      <button id="zoomOut" class="iconButton" aria-label="Zoom out">−</button>
+      <button id="fitWorld" class="iconButton" aria-label="Fit world">⌂</button>
+    </div>
+
+    <div id="focusCard" class="hud focusCard"></div>
+
+    <div class="hud threadBar">
+      <div class="threadPanel">
+        <div class="threadTop"><strong>What matters now</strong><span id="threadCount">0 active threads</span></div>
+        <div id="threads" class="threads"><article class="thread"><b>Reading world…</b><p>Waiting for canonical state.</p></article></div>
+      </div>
+    </div>
+
+    <div class="hud miniMap"><canvas id="miniMapCanvas"></canvas></div>
+
+    <aside id="inspector" class="inspector" aria-live="polite">
+      <div class="inspectorHead"><div><small id="inspectType">CANONICAL OBJECT</small><h2 id="inspectTitle">Object</h2></div><button id="closeInspector" class="closeInspector" aria-label="Close">×</button></div>
+      <div id="inspectBody" class="inspectorBody"></div>
     </aside>
-  </section>
 
-  <section class="culture-grid">
-    <div id="discoveryPanel" class="panel discovery-panel"><div class="panel-title"><div><small>WORLD FIRSTS</small><h2>Discoveries that changed what is possible</h2></div><span id="discoveryCount" class="chip">0 discoveries</span></div><div id="discoveries" class="discovery-list"></div></div>
-    <div class="panel frontier-panel"><div class="panel-title"><div><small>KNOWN WORLD</small><h2>The frontier</h2></div><span class="chip">FOG OF WAR</span></div><div id="frontier" class="frontier"></div></div>
-  </section>
+    <div id="toast" class="toast"></div>
+    <div id="loading" class="loading"><div class="loadingBox"><div class="loadingMark">✦</div><strong>Entering Willow Basin</strong><p>Building the viewport from canonical world state…</p></div></div>
+  </div>
 
-  <section class="panel timeline-panel"><div class="panel-title"><div><small>LIVE HISTORY</small><h2>What actually happened</h2></div><span id="eventCount" class="chip">0 events</span></div><div id="timeline" class="timeline"></div></section>
-
-  <section class="analysis-grid">
-    <div class="panel relationship-panel"><div class="panel-title compact"><div><small>RELATIONSHIP / CULTURE</small><h2>Mara ↔ Ivo</h2></div><span id="relationshipChip" class="chip">NEW</span></div><div id="relationshipBody" class="relationship-body"></div></div>
-    <div class="panel memory-panel"><div class="panel-title compact"><div><small>PRIVATE MEMORY</small><h2 id="memoryTitle">What they remember</h2></div><div class="memory-tabs"><button id="memoryMara" class="memory-tab active">Mara</button><button id="memoryIvo" class="memory-tab">Ivo</button></div></div><div id="memories" class="memory-list"></div></div>
-    <div class="panel dna-panel"><div class="panel-title compact"><div><small>DECISION DNA</small><h2>Latest trace</h2></div><span class="dna-live">LIVE</span></div><div id="dnaInspector" class="dna-inspector"></div></div>
-  </section>
-
-  <section class="guardian"><div><span class="kicker">GUARDIAN · OBSERVABILITY</span><h2>Watch causes accumulate.</h2><p id="guardianStatus">Guardian is reading the current world.</p></div><div class="guardian-flow"><span>PERCEIVE</span><b>→</b><span>REMEMBER</span><b>→</b><span>INTEND</span><b>→</b><span>ACT</span><b>→</b><span>TRACE</span></div></section>
-</main>
-<footer><span>ChatGPTFarm v0.7</span><p>The environment is canonical object state; rendering is only a view.</p><span>Decision DNA living laboratory</span></footer>
-<script src="app.js?v=0711"></script><script src="artifacts-ui.js?v=071"></script><script src="world-model-ui.js?v=0712"></script>
-</body></html>
+  <script src="https://cdn.jsdelivr.net/npm/pixi.js@7.4.3/dist/pixi.min.js"></script>
+  <script src="world-pixi.js?v=0801"></script>
+</body>
+</html>
