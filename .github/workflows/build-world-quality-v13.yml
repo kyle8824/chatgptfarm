@@ -19,7 +19,9 @@ jobs:
         with:
           node-version: 22
       - name: Apply world-quality patch
-        run: python3 scripts/apply-world-quality-v13.py
+        run: |
+          python3 scripts/apply-world-quality-v13.py
+          git checkout -- .github/workflows/visual-qa.yml
       - name: Validate renderer, QA and world
         run: |
           node --check world-pixi-v11.js
@@ -29,7 +31,7 @@ jobs:
         run: |
           git config user.name 'ChatGPTFarm Builder'
           git config user.email 'actions@users.noreply.github.com'
-          git add world-pixi-v11.js scripts/visual-qa.mjs index.html .github/workflows/visual-qa.yml
+          git add world-pixi-v11.js scripts/visual-qa.mjs index.html
           git commit -m 'v0.9.4: fix heartbeat camera, organic creek and visual QA' || exit 0
           git pull --rebase origin main
           git push origin HEAD:main
