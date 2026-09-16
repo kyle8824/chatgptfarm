@@ -1,0 +1,60 @@
+name: Fix Named Agent Camera Follow
+on:
+  push:
+    branches: [main]
+    paths:
+      - '.github/workflows/fix-agent-follow.yml'
+  workflow_dispatch:
+permissions:
+  contents: write
+jobs:
+  patch:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - name: Patch named-agent camera tracking
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+          files=['world-pixi-v10.js','world-pixi-v11.js']
+          new_update="function updateCamera(force){if(!root||!app)return;let target={x:camera.x,y:camera.y,scale:camera.scale};if(camera.mode==='auto'&&Date.now()>camera.manualUntil)target=actionFrame(autoAgent());else if(camera.mode.startsWith('agent-')){const a=current?.agents?.find(x=>x.id===camera.mode);if(a)target=agentFollowFrame(a)}const k=force?1:.065;camera.x+=(target.x-camera.x)*k;camera.y+=(target.y-camera.y)*k;camera.scale+=(target.scale-camera.scale)*(force?1:.045);const anchor=viewAnchor();root.scale.set(camera.scale);root.position.set(anchor.x-camera.x*camera.scale,anchor.y-camera.y*camera.scale)}"
+          helper="function agentFollowFrame(a){if(!a)return{x:camera.x,y:camera.y,scale:camera.scale};const sprite=agentSprites.get(a.id),fallback=wp(phase(a)),p=sprite?{x:sprite.x,y:sprite.y}:fallback,mobile=app.screen.width<650;return{x:p.x,y:p.y,scale:mobile?1.72:1.48}}"
+          for f in files:
+              p=Path(f)
+              src=p.read_text()
+              lines=src.splitlines()
+              out=[]
+              inserted=False
+              replaced=False
+              for line in lines:
+                  if line.startswith('function updateCamera(force){'):
+                      if not inserted:
+                          out.append(helper)
+                          inserted=True
+                      out.append(new_update)
+                      replaced=True
+                  elif line.startswith('function agentFollowFrame(a){'):
+                      if not inserted:
+                          out.append(helper)
+                          inserted=True
+                  else:
+                      out.append(line)
+              if not replaced:
+                  raise SystemExit(f'updateCamera anchor not found in {f}')
+              p.write_text('\n'.join(out)+'\n')
+          PY
+          node --check world-pixi-v10.js
+          node --check world-pixi-v11.js
+      - name: Commit camera fix
+        run: |
+          git config user.name 'ChatGPTFarm Builder'
+          git config user.email 'actions@users.noreply.github.com'
+          git add world-pixi-v10.js world-pixi-v11.js
+          git commit -m 'fix: follow current agent position from named camera' || exit 0
+          git pull --rebase origin main
+          git push origin HEAD:main
