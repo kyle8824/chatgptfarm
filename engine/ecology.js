@@ -1,3 +1,4 @@
+// Living Basin ecology is intentionally simulation-first; model escalation remains optional.
 export const ECOLOGY_VERSION='living-basin-0.9';
 
 const clamp=(n,a=0,b=100)=>Math.max(a,Math.min(b,n));
