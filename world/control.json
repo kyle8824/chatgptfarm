@@ -1,0 +1,16 @@
+{
+  "version": 1,
+  "ai": {
+    "people": {
+      "agent-mara": true,
+      "agent-ivo": true
+    },
+    "wildlife": {
+      "enabled": false,
+      "individuals": {}
+    },
+    "usage": {
+      "track": true
+    }
+  }
+}
