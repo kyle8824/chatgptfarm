@@ -9,6 +9,7 @@ on:
       - 'scripts/phaser-qa.mjs'
       - 'scripts/apply-phaser-v1_3_1-art-bridge.py'
       - 'scripts/apply-phaser-v1_3_1-camp-composition.py'
+      - 'scripts/apply-phaser-v1_3_1-visual-fixes.py'
       - '.github/workflows/phaser-v1_3_1-art-bridge.yml'
 permissions:
   contents: write
@@ -25,6 +26,9 @@ jobs:
       - name: Apply camp composition pass
         if: ${{ hashFiles('scripts/apply-phaser-v1_3_1-camp-composition.py') != '' }}
         run: python3 scripts/apply-phaser-v1_3_1-camp-composition.py
+      - name: Apply screenshot-driven visual fixes
+        if: ${{ hashFiles('scripts/apply-phaser-v1_3_1-visual-fixes.py') != '' }}
+        run: python3 scripts/apply-phaser-v1_3_1-visual-fixes.py
       - name: Syntax check renderer
         run: node --check phaser-world-v1.js
       - name: Install browser QA
