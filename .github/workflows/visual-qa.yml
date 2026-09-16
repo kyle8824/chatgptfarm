@@ -35,12 +35,14 @@ jobs:
           if [ -n "$expected" ] && printf '%s' "$html" | grep -Fq "$expected"; then
             echo "Visual QA: production is serving exact asset $expected"
             echo "BASE_URL=https://www.chatgptfarm.com/" >> "$GITHUB_ENV"
+            echo "QA_MODE=production-exact" >> "$GITHUB_ENV"
           else
             echo "Visual QA: production is not serving exact asset $expected; reviewing exact checkout locally"
             python3 -m http.server 4173 > /tmp/chatgptfarm-http.log 2>&1 &
             for i in {1..30}; do
               if curl -fsS http://127.0.0.1:4173/ >/dev/null; then
                 echo "BASE_URL=http://127.0.0.1:4173/" >> "$GITHUB_ENV"
+                echo "QA_MODE=local-exact" >> "$GITHUB_ENV"
                 exit 0
               fi
               sleep 1
