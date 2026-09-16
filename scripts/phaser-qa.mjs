@@ -19,7 +19,7 @@ await page.waitForFunction(()=>window.ChatGPTFarmPhaserDebug?.snapshot()?.ready=
 await page.waitForTimeout(1800);
 const snap=()=>page.evaluate(()=>window.ChatGPTFarmPhaserDebug.snapshot());
 let s=await snap();
-if(s.version!=='phaser-v1.2-living-world')failures.push(`wrong renderer: ${s.version}`);
+if(s.version!=='phaser-v1.3-basin-slice')failures.push(`wrong renderer: ${s.version}`);
 if(!String(s.phaser||'').startsWith('3.'))failures.push(`Phaser failed to initialize: ${s.phaser}`);
 if(s.agents!==2)failures.push(`expected 2 agents, got ${s.agents}`);
 if(s.wildlife<8)failures.push(`expected >=8 wildlife, got ${s.wildlife}`);
