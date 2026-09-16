@@ -1,0 +1,36 @@
+name: Build Living Basin Backend
+on:
+  push:
+    branches: [main]
+    paths:
+      - '.github/workflows/build-living-basin-backend.yml'
+  workflow_dispatch:
+permissions:
+  contents: write
+concurrency:
+  group: chatgptfarm-living-basin-backend
+  cancel-in-progress: false
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - name: Sync latest main
+        run: git pull --rebase origin main
+      - name: Build living basin backend
+        run: python3 scripts/build-living-basin-backend.py
+      - name: Validate ecology, minds, physics and four-day world
+        run: npm test
+      - name: Commit living basin backend
+        run: |
+          git config user.name "ChatGPTFarm Guardian"
+          git config user.email "actions@users.noreply.github.com"
+          git add engine.js engine/core.js engine/decision.js engine/runtime.js mind.js scripts/advance-world.mjs scripts/smoke-test.mjs world/control.json engine/ecology.js
+          git commit -m "v0.9: living basin ecology and AI controls" || exit 0
+          git pull --rebase origin main
+          git push origin main
