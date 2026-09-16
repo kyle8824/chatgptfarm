@@ -1,0 +1,36 @@
+name: Build renderer v10
+on:
+  push:
+    branches: [main]
+    paths:
+      - '.github/workflows/build-renderer-v10.yml'
+  workflow_dispatch:
+permissions:
+  contents: write
+concurrency:
+  group: chatgptfarm-renderer-v10
+  cancel-in-progress: false
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - name: Sync latest main
+        run: git pull --rebase origin main
+      - name: Build renderer v10
+        run: python3 scripts/build-renderer-v10.py
+      - name: Validate renderer and simulation
+        run: npm test
+      - name: Commit renderer v10
+        run: |
+          git config user.name "ChatGPTFarm Guardian"
+          git config user.email "actions@users.noreply.github.com"
+          git add world-pixi-v10.js action-visuals-v10.js index.html package.json
+          git commit -m "v0.8.6: polish labels props and environmental motion" || exit 0
+          git pull --rebase origin main
+          git push origin main
