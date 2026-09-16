@@ -1,4 +1,5 @@
 name: Advance ChatGPTFarm World
+# Canonical heartbeats also apply versioned world/ecology migrations before decisions.
 
 on:
   schedule:
