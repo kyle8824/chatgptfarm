@@ -1,9 +1,9 @@
 {
   "version": "0.7",
   "day": 4,
-  "hour": 4,
-  "temperature": 44,
-  "weather": "cloudy",
+  "hour": 6,
+  "temperature": 52,
+  "weather": "clear",
   "resources": {
     "berries": 2,
     "dryWood": 0,
@@ -15,7 +15,7 @@
   },
   "structures": {
     "shelter": true,
-    "fire": false,
+    "fire": true,
     "cache": false,
     "dryingRack": false
   },
@@ -33,20 +33,20 @@
     {
       "id": "agent-mara",
       "name": "Mara",
-      "position": "log",
+      "position": "camp",
       "needs": {
         "hydration": 0,
         "hunger": 0,
-        "energy": 59.00000000000003,
-        "warmth": 38
+        "energy": 48.400000000000034,
+        "warmth": 72
       },
       "inventory": {
         "berries": 0,
-        "dryWood": 2,
+        "dryWood": 0,
         "wetWood": 10,
         "stones": 1,
         "clay": 0,
-        "reeds": 3,
+        "reeds": 0,
         "sharpStone": 1,
         "rawClayVessel": 1,
         "firedVessel": 0,
@@ -291,7 +291,7 @@
           ],
           "source": "experience:1-9",
           "confidence": 1,
-          "lastSeen": "3:22"
+          "lastSeen": "4:4"
         },
         {
           "id": "M-M003",
@@ -337,7 +337,7 @@
         "cooperation": 0.68,
         "caution": 0.56
       },
-      "currentAction": "Cut dry branches with sharp stone",
+      "currentAction": "twist carried reeds",
       "skills": {
         "sharp-edge": 1,
         "clay-shaping": 1
@@ -347,14 +347,12 @@
       },
       "mind": {
         "brainMode": "ai",
-        "currentGoal": "Build a sufficient reserve of dry wood for overnight warmth.",
-        "intent": "Prioritize dry fuel while energy is adequate and the temperature is low.",
-        "confidence": 0.94,
-        "decisionSummary": "Dry wood is the strongest available preparation for warmth, and the fallen branch has recently dried.",
+        "currentGoal": "Prepare materials that may support overnight survival and practical tool use.",
+        "intent": "Experiment carefully with the carried reeds while warmth and immediate needs are stable.",
+        "confidence": 0.72,
+        "decisionSummary": "The fire is active and survival needs are currently stable, so Mara uses available flexible reeds to attempt making cordage rather than spending energy on an urgent need.",
         "model": "gpt-5.6-luna",
         "recentActions": [
-          "talk",
-          "gather_wet_wood",
           "physical:cut:wet_branches",
           "physical:search:place:fallen_log",
           "rest",
@@ -368,13 +366,18 @@
           "gather_dry_wood",
           "physical:heat:carried_dry_branch",
           "rest",
-          "gather_dry_wood"
+          "gather_dry_wood",
+          "make_fire",
+          "physical:twist:carried_reeds"
         ],
-        "lastReferencedMemoryIds": [
-          "M-M039",
-          "M-M007"
-        ],
-        "lastPhysicalProposal": null
+        "lastReferencedMemoryIds": [],
+        "lastPhysicalProposal": {
+          "verb": "twist",
+          "primaryObjectId": "carried_reeds",
+          "secondaryObjectId": "none",
+          "configuration": "twisted",
+          "purpose": "Test whether the flexible reeds can be twisted into usable cordage for future tool-making and shelter maintenance."
+        }
       },
       "affordanceAttempts": {
         "follow:animal_tracks:none:none": 1,
@@ -384,77 +387,78 @@
         "heat:raw_clay_vessel:carried_dry_branch:none": 1,
         "cut:wet_branches:sharp_stone:straight": 1,
         "search:place:edge:none:none": 1,
-        "heat:carried_dry_branch:none:none": 1
+        "heat:carried_dry_branch:none:none": 1,
+        "twist:carried_reeds:none:twisted": 1
       },
       "coordinates": {
-        "x": 59,
-        "y": 29
+        "x": 64,
+        "y": 34
       },
       "activeAction": {
-        "id": "A-D-00139",
-        "decisionId": "D-00139",
-        "label": "Cut dry branches with sharp stone",
-        "actionId": "gather_dry_wood",
+        "id": "A-D-00143",
+        "decisionId": "D-00143",
+        "label": "twist carried reeds",
+        "actionId": "physical:twist:carried_reeds",
         "worldDay": 4,
-        "worldHour": 3,
+        "worldHour": 5,
         "from": {
           "x": 64,
           "y": 34
         },
         "to": {
-          "x": 59,
-          "y": 29
+          "x": 64,
+          "y": 34
         },
         "target": {
-          "x": 59,
-          "y": 29
+          "x": 64,
+          "y": 34
         },
-        "moving": true,
+        "moving": false,
         "phases": [
           {
             "id": "decide",
             "label": "Deciding",
             "start": 0,
-            "end": 0.1
-          },
-          {
-            "id": "travel",
-            "label": "Traveling",
-            "start": 0.1,
-            "end": 0.58
+            "end": 0.12
           },
           {
             "id": "interact",
             "label": "Acting",
-            "start": 0.58,
-            "end": 0.86
+            "start": 0.12,
+            "end": 0.82
           },
           {
             "id": "resolve",
             "label": "Resolving",
-            "start": 0.86,
+            "start": 0.82,
             "end": 1
           }
         ],
         "outcome": {
-          "success": true,
-          "detail": "Mara gathers 1 dry branches."
+          "success": false,
+          "detail": "Mara twists the reeds, but the strand unravels when pulled."
         },
-        "physicalProposal": null
+        "physicalProposal": {
+          "verb": "twist",
+          "primaryObjectId": "carried_reeds",
+          "secondaryObjectId": "none",
+          "configuration": "twisted",
+          "purpose": "Test whether the flexible reeds can be twisted into usable cordage for future tool-making and shelter maintenance."
+        }
       }
     },
     {
       "id": "agent-ivo",
       "name": "Ivo",
-      "position": "edge",
+      "position": "berries",
       "needs": {
         "hydration": 0,
-        "hunger": 0,
-        "energy": 36.000000000000156,
-        "warmth": 0
+        "hunger": 23.8,
+        "energy": 60.40000000000016,
+        "warmth": 10
       },
       "inventory": {
-        "berries": 1,
+        "berries": 0,
         "dryWood": 0,
         "wetWood": 7,
         "stones": 1,
@@ -734,7 +738,7 @@
         "cooperation": 0.76,
         "caution": 0.48
       },
-      "currentAction": "Cut dry branches with sharp stone",
+      "currentAction": "Eat wild berries",
       "skills": {
         "sharp-edge": 1,
         "clay-shaping": 1
@@ -745,14 +749,12 @@
       },
       "mind": {
         "brainMode": "ai",
-        "currentGoal": "Gather dry wood before the temperature becomes more dangerous.",
-        "intent": "Cut and collect the available dry branch using the sharp stone.",
-        "confidence": 0.98,
-        "decisionSummary": "Dry wood is the current survival priority, and a fallen branch has recently dried enough to be useful fuel.",
+        "currentGoal": "Restore energy so I can continue preparing for overnight warmth.",
+        "intent": "Eat the carried berries now because satiety is depleted and they are a reliable food source.",
+        "confidence": 0.99,
+        "decisionSummary": "Basic needs are urgent enough to prioritize eating the known edible berries before further preparation.",
         "model": "gpt-5.6-luna",
         "recentActions": [
-          "physical:place:carried_wet_branch",
-          "rest",
           "gather_wet_wood",
           "gather_wet_wood",
           "explore",
@@ -766,11 +768,12 @@
           "gather_dry_wood",
           "explore",
           "physical:search:place:edge",
-          "gather_dry_wood"
+          "gather_dry_wood",
+          "rest",
+          "eat_berries"
         ],
         "lastReferencedMemoryIds": [
-          "M-I040",
-          "M-I034"
+          "M-I002"
         ],
         "lastPhysicalProposal": null
       },
@@ -786,52 +789,58 @@
         "search:place:edge:none:none": 1
       },
       "coordinates": {
-        "x": 78,
-        "y": 42
+        "x": 29,
+        "y": 31
       },
       "activeAction": {
-        "id": "A-D-00140",
-        "decisionId": "D-00140",
-        "label": "Cut dry branches with sharp stone",
-        "actionId": "gather_dry_wood",
+        "id": "A-D-00144",
+        "decisionId": "D-00144",
+        "label": "Eat wild berries",
+        "actionId": "eat_berries",
         "worldDay": 4,
-        "worldHour": 3,
+        "worldHour": 5,
         "from": {
-          "x": 78,
-          "y": 42
+          "x": 64,
+          "y": 34
         },
         "to": {
-          "x": 78,
-          "y": 42
+          "x": 29,
+          "y": 31
         },
         "target": {
-          "x": 78,
-          "y": 42
+          "x": 29,
+          "y": 31
         },
-        "moving": false,
+        "moving": true,
         "phases": [
           {
             "id": "decide",
             "label": "Deciding",
             "start": 0,
-            "end": 0.12
+            "end": 0.1
+          },
+          {
+            "id": "travel",
+            "label": "Traveling",
+            "start": 0.1,
+            "end": 0.58
           },
           {
             "id": "interact",
             "label": "Acting",
-            "start": 0.12,
-            "end": 0.82
+            "start": 0.58,
+            "end": 0.86
           },
           {
             "id": "resolve",
             "label": "Resolving",
-            "start": 0.82,
+            "start": 0.86,
             "end": 1
           }
         ],
         "outcome": {
-          "success": false,
-          "detail": ""
+          "success": true,
+          "detail": "Ivo eats tart red berries."
         },
         "physicalProposal": null
       }
@@ -848,6 +857,55 @@
     }
   },
   "history": [
+    {
+      "id": "E-00199",
+      "day": 4,
+      "hour": 5,
+      "type": "action",
+      "title": "Eat wild berries",
+      "detail": "Ivo eats tart red berries.",
+      "agentId": "agent-ivo",
+      "actionId": "eat_berries"
+    },
+    {
+      "id": "E-00198",
+      "day": 4,
+      "hour": 5,
+      "type": "attempt",
+      "title": "twist carried reeds",
+      "detail": "Mara twists the reeds, but the strand unravels when pulled.",
+      "agentId": "agent-mara",
+      "physicalId": "P-00019",
+      "success": false,
+      "proposal": {
+        "verb": "twist",
+        "primaryObjectId": "carried_reeds",
+        "secondaryObjectId": "none",
+        "configuration": "twisted",
+        "purpose": "Test whether the flexible reeds can be twisted into usable cordage for future tool-making and shelter maintenance."
+      },
+      "worldObjectId": null
+    },
+    {
+      "id": "E-00197",
+      "day": 4,
+      "hour": 4,
+      "type": "action",
+      "title": "Rest in the shelter",
+      "detail": "Ivo rests beneath the shelter.",
+      "agentId": "agent-ivo",
+      "actionId": "rest"
+    },
+    {
+      "id": "E-00196",
+      "day": 4,
+      "hour": 4,
+      "type": "action",
+      "title": "Try to make a fire",
+      "detail": "Mara establishes a small fire.",
+      "agentId": "agent-mara",
+      "actionId": "make_fire"
+    },
     {
       "id": "E-00195",
       "day": 4,
@@ -2986,6 +3044,809 @@
     }
   ],
   "dna": [
+    {
+      "protocol": "Decision DNA 0.6-farm",
+      "decision_id": "D-00144",
+      "day": 4,
+      "hour": 5,
+      "agent_id": "agent-ivo",
+      "agent_name": "Ivo",
+      "observation": {
+        "time": "Day 4, 05:00",
+        "weather": "clear",
+        "temperature": 49,
+        "position": "camp",
+        "nearby": [
+          "camp fire"
+        ],
+        "needs": {
+          "hydration": 0,
+          "satiety": 0,
+          "energy": 63.20000000000016,
+          "warmth": 10
+        },
+        "inventory": {
+          "berries": 1,
+          "dryWood": 0,
+          "wetWood": 7,
+          "stones": 1,
+          "clay": 0,
+          "reeds": 3,
+          "sharpStone": 1,
+          "rawClayVessel": 1,
+          "firedVessel": 0,
+          "cordage": 0,
+          "woodPole": 1,
+          "pointedPole": 0,
+          "boundSharpTool": 0,
+          "rawMeat": 0,
+          "cookedMeat": 0,
+          "tubers": 0
+        },
+        "skills": {
+          "sharp-edge": 1,
+          "clay-shaping": 1
+        },
+        "knownPeople": [
+          {
+            "name": "Mara",
+            "trust": 38,
+            "familiarity": 22,
+            "affinity": 52,
+            "nearby": true
+          }
+        ]
+      },
+      "action": "eat_berries",
+      "action_label": "Eat wild berries",
+      "winner_score": 124.55,
+      "baseline_policy_action": "drink",
+      "deviated_from_policy": true,
+      "candidates": [
+        {
+          "id": "drink",
+          "label": "Drink from the creek",
+          "score": 158.936,
+          "reasons": [
+            [
+              "thirst",
+              100
+            ]
+          ]
+        },
+        {
+          "id": "eat_berries",
+          "label": "Eat wild berries",
+          "score": 124.55,
+          "reasons": [
+            [
+              "hunger",
+              100
+            ]
+          ]
+        },
+        {
+          "id": "gather_berries",
+          "label": "Gather berries",
+          "score": 38,
+          "reasons": [
+            [
+              "future hunger",
+              22
+            ]
+          ]
+        },
+        {
+          "id": "talk",
+          "label": "Talk with Mara",
+          "score": 16.4,
+          "reasons": [
+            [
+              "cooperation",
+              6.08
+            ]
+          ]
+        },
+        {
+          "id": "gather_clay",
+          "label": "Gather sticky clay",
+          "score": 12.64,
+          "reasons": [
+            [
+              "curiosity",
+              4.64
+            ]
+          ]
+        },
+        {
+          "id": "gather_reeds",
+          "label": "Gather flexible reeds",
+          "score": 12.64,
+          "reasons": [
+            [
+              "curiosity",
+              4.64
+            ]
+          ]
+        },
+        {
+          "id": "gather_stones",
+          "label": "Gather loose stones",
+          "score": 11.64,
+          "reasons": [
+            [
+              "curiosity",
+              4.64
+            ]
+          ]
+        },
+        {
+          "id": "explore",
+          "label": "Explore beyond the known basin",
+          "score": 5.452,
+          "reasons": [
+            [
+              "curiosity",
+              7.539999999999999
+            ],
+            [
+              "novelty",
+              0
+            ]
+          ]
+        }
+      ],
+      "retrieved_memories": [
+        "M-I027",
+        "M-I040",
+        "M-I034",
+        "M-I018",
+        "M-I031",
+        "M-I014",
+        "M-I004",
+        "M-I002",
+        "M-I022",
+        "M-I008",
+        "M-I033",
+        "M-I016"
+      ],
+      "mind": {
+        "brain_mode": "ai",
+        "model": "gpt-5.6-luna",
+        "goal": "Restore energy so I can continue preparing for overnight warmth.",
+        "intent": "Eat the carried berries now because satiety is depleted and they are a reliable food source.",
+        "confidence": 0.99,
+        "decision_summary": "Basic needs are urgent enough to prioritize eating the known edible berries before further preparation.",
+        "referenced_memory_ids": [
+          "M-I002"
+        ],
+        "physical_proposal": null
+      },
+      "physics": {
+        "version": "affordance-0.5",
+        "outcome": {
+          "success": true,
+          "detail": "Ivo eats tart red berries.",
+          "actionId": "eat_berries"
+        }
+      },
+      "memory_counterfactuals": [
+        {
+          "removed_memory": "M-I002",
+          "memory_text": "The red berries in the meadow are edible and reduce hunger.",
+          "original_action": "eat_berries",
+          "counterfactual_action": "eat_berries",
+          "action_changed": false,
+          "method": "model_replay",
+          "provisional": true,
+          "trials": 1
+        }
+      ]
+    },
+    {
+      "protocol": "Decision DNA 0.6-farm",
+      "decision_id": "D-00143",
+      "day": 4,
+      "hour": 5,
+      "agent_id": "agent-mara",
+      "agent_name": "Mara",
+      "observation": {
+        "time": "Day 4, 05:00",
+        "weather": "clear",
+        "temperature": 49,
+        "position": "camp",
+        "nearby": [
+          "camp fire"
+        ],
+        "needs": {
+          "hydration": 0,
+          "satiety": 0,
+          "energy": 56.20000000000003,
+          "warmth": 70
+        },
+        "inventory": {
+          "berries": 0,
+          "dryWood": 0,
+          "wetWood": 10,
+          "stones": 1,
+          "clay": 0,
+          "reeds": 3,
+          "sharpStone": 1,
+          "rawClayVessel": 1,
+          "firedVessel": 0,
+          "cordage": 0,
+          "woodPole": 0,
+          "pointedPole": 0,
+          "boundSharpTool": 0,
+          "rawMeat": 0,
+          "cookedMeat": 0,
+          "tubers": 0
+        },
+        "skills": {
+          "sharp-edge": 1,
+          "clay-shaping": 1
+        },
+        "knownPeople": [
+          {
+            "name": "Ivo",
+            "trust": 38,
+            "familiarity": 22,
+            "affinity": 52,
+            "nearby": true
+          }
+        ]
+      },
+      "action": "physical:twist:carried_reeds",
+      "action_label": "twist carried reeds",
+      "winner_score": null,
+      "baseline_policy_action": "drink",
+      "deviated_from_policy": true,
+      "candidates": [
+        {
+          "id": "drink",
+          "label": "Drink from the creek",
+          "score": 153.272,
+          "reasons": [
+            [
+              "thirst",
+              100
+            ]
+          ]
+        },
+        {
+          "id": "eat_berries",
+          "label": "Eat wild berries",
+          "score": 124.55,
+          "reasons": [
+            [
+              "hunger",
+              100
+            ]
+          ]
+        },
+        {
+          "id": "gather_berries",
+          "label": "Gather berries",
+          "score": 38,
+          "reasons": [
+            [
+              "future hunger",
+              22
+            ]
+          ]
+        },
+        {
+          "id": "talk",
+          "label": "Talk with Ivo",
+          "score": 15.76,
+          "reasons": [
+            [
+              "cooperation",
+              5.44
+            ]
+          ]
+        },
+        {
+          "id": "gather_clay",
+          "label": "Gather sticky clay",
+          "score": 13.76,
+          "reasons": [
+            [
+              "curiosity",
+              5.76
+            ]
+          ]
+        },
+        {
+          "id": "gather_reeds",
+          "label": "Gather flexible reeds",
+          "score": 13.76,
+          "reasons": [
+            [
+              "curiosity",
+              5.76
+            ]
+          ]
+        },
+        {
+          "id": "gather_stones",
+          "label": "Gather loose stones",
+          "score": 12.76,
+          "reasons": [
+            [
+              "curiosity",
+              5.76
+            ]
+          ]
+        },
+        {
+          "id": "explore",
+          "label": "Explore beyond the known basin",
+          "score": 10.352,
+          "reasons": [
+            [
+              "curiosity",
+              9.36
+            ],
+            [
+              "novelty",
+              0
+            ]
+          ]
+        }
+      ],
+      "retrieved_memories": [
+        "M-M039",
+        "M-M026",
+        "M-M030",
+        "M-M007",
+        "M-M015",
+        "M-M001",
+        "M-M032",
+        "M-M017",
+        "M-M011",
+        "M-M036",
+        "M-M019",
+        "M-M003"
+      ],
+      "mind": {
+        "brain_mode": "ai",
+        "model": "gpt-5.6-luna",
+        "goal": "Prepare materials that may support overnight survival and practical tool use.",
+        "intent": "Experiment carefully with the carried reeds while warmth and immediate needs are stable.",
+        "confidence": 0.72,
+        "decision_summary": "The fire is active and survival needs are currently stable, so Mara uses available flexible reeds to attempt making cordage rather than spending energy on an urgent need.",
+        "referenced_memory_ids": [],
+        "physical_proposal": {
+          "verb": "twist",
+          "primaryObjectId": "carried_reeds",
+          "secondaryObjectId": "none",
+          "configuration": "twisted",
+          "purpose": "Test whether the flexible reeds can be twisted into usable cordage for future tool-making and shelter maintenance."
+        }
+      },
+      "physics": {
+        "version": "affordance-0.5",
+        "outcome": {
+          "physicalId": "P-00019",
+          "success": false,
+          "blocked": false,
+          "detail": "Mara twists the reeds, but the strand unravels when pulled.",
+          "proposal": {
+            "verb": "twist",
+            "primaryObjectId": "carried_reeds",
+            "secondaryObjectId": "none",
+            "configuration": "twisted",
+            "purpose": "Test whether the flexible reeds can be twisted into usable cordage for future tool-making and shelter maintenance."
+          },
+          "primary": "carried_reeds",
+          "secondary": null,
+          "worldObjectId": null,
+          "resolvedComponents": []
+        }
+      },
+      "memory_counterfactuals": []
+    },
+    {
+      "protocol": "Decision DNA 0.6-farm",
+      "decision_id": "D-00142",
+      "day": 4,
+      "hour": 4,
+      "agent_id": "agent-ivo",
+      "agent_name": "Ivo",
+      "observation": {
+        "time": "Day 4, 04:00",
+        "weather": "cloudy",
+        "temperature": 44,
+        "position": "edge",
+        "nearby": [
+          "flexible reed stalks",
+          "animal tracks"
+        ],
+        "needs": {
+          "hydration": 0,
+          "satiety": 0,
+          "energy": 36.000000000000156,
+          "warmth": 0
+        },
+        "inventory": {
+          "berries": 1,
+          "dryWood": 0,
+          "wetWood": 7,
+          "stones": 1,
+          "clay": 0,
+          "reeds": 3,
+          "sharpStone": 1,
+          "rawClayVessel": 1,
+          "firedVessel": 0,
+          "cordage": 0,
+          "woodPole": 1,
+          "pointedPole": 0,
+          "boundSharpTool": 0,
+          "rawMeat": 0,
+          "cookedMeat": 0,
+          "tubers": 0
+        },
+        "skills": {
+          "sharp-edge": 1,
+          "clay-shaping": 1
+        },
+        "knownPeople": [
+          {
+            "name": "Mara",
+            "trust": 38,
+            "familiarity": 22,
+            "affinity": 52,
+            "nearby": false
+          }
+        ]
+      },
+      "action": "rest",
+      "action_label": "Rest in the shelter",
+      "winner_score": 74.084,
+      "baseline_policy_action": "drink",
+      "deviated_from_policy": true,
+      "candidates": [
+        {
+          "id": "drink",
+          "label": "Drink from the creek",
+          "score": 158.936,
+          "reasons": [
+            [
+              "thirst",
+              100
+            ]
+          ]
+        },
+        {
+          "id": "eat_berries",
+          "label": "Eat wild berries",
+          "score": 124.55,
+          "reasons": [
+            [
+              "hunger",
+              100
+            ]
+          ]
+        },
+        {
+          "id": "rest",
+          "label": "Rest in the shelter",
+          "score": 74.084,
+          "reasons": [
+            [
+              "fatigue",
+              63.999999999999844
+            ]
+          ]
+        },
+        {
+          "id": "gather_berries",
+          "label": "Gather berries",
+          "score": 38,
+          "reasons": [
+            [
+              "future hunger",
+              22
+            ]
+          ]
+        },
+        {
+          "id": "gather_clay",
+          "label": "Gather sticky clay",
+          "score": 12.64,
+          "reasons": [
+            [
+              "curiosity",
+              4.64
+            ]
+          ]
+        },
+        {
+          "id": "gather_reeds",
+          "label": "Gather flexible reeds",
+          "score": 12.64,
+          "reasons": [
+            [
+              "curiosity",
+              4.64
+            ]
+          ]
+        },
+        {
+          "id": "gather_stones",
+          "label": "Gather loose stones",
+          "score": 11.64,
+          "reasons": [
+            [
+              "curiosity",
+              4.64
+            ]
+          ]
+        },
+        {
+          "id": "seek_other",
+          "label": "Look for Mara",
+          "score": 11.4,
+          "reasons": [
+            [
+              "cooperation",
+              6.08
+            ]
+          ]
+        },
+        {
+          "id": "explore",
+          "label": "Explore beyond the known basin",
+          "score": 1.1,
+          "reasons": [
+            [
+              "curiosity",
+              7.539999999999999
+            ],
+            [
+              "novelty",
+              0
+            ]
+          ]
+        }
+      ],
+      "retrieved_memories": [
+        "M-I027",
+        "M-I040",
+        "M-I034",
+        "M-I022",
+        "M-I018",
+        "M-I031",
+        "M-I014",
+        "M-I004",
+        "M-I002",
+        "M-I008",
+        "M-I033",
+        "M-I016"
+      ],
+      "mind": {
+        "brain_mode": "ai",
+        "model": "gpt-5.6-luna",
+        "goal": "Restore energy so I can continue preparing for overnight warmth.",
+        "intent": "Rest in the reliable shelter rather than spend limited energy searching again immediately.",
+        "confidence": 0.9,
+        "decision_summary": "Energy is low, the shelter reliably improves rest, and the current surroundings offer no confirmed dry-wood source.",
+        "referenced_memory_ids": [
+          "M-I008",
+          "M-I040"
+        ],
+        "physical_proposal": null
+      },
+      "physics": {
+        "version": "affordance-0.5",
+        "outcome": {
+          "success": true,
+          "detail": "Ivo rests beneath the shelter.",
+          "actionId": "rest"
+        }
+      },
+      "memory_counterfactuals": []
+    },
+    {
+      "protocol": "Decision DNA 0.6-farm",
+      "decision_id": "D-00141",
+      "day": 4,
+      "hour": 4,
+      "agent_id": "agent-mara",
+      "agent_name": "Mara",
+      "observation": {
+        "time": "Day 4, 04:00",
+        "weather": "cloudy",
+        "temperature": 44,
+        "position": "log",
+        "nearby": [],
+        "needs": {
+          "hydration": 0,
+          "satiety": 0,
+          "energy": 59.00000000000003,
+          "warmth": 38
+        },
+        "inventory": {
+          "berries": 0,
+          "dryWood": 2,
+          "wetWood": 10,
+          "stones": 1,
+          "clay": 0,
+          "reeds": 3,
+          "sharpStone": 1,
+          "rawClayVessel": 1,
+          "firedVessel": 0,
+          "cordage": 0,
+          "woodPole": 0,
+          "pointedPole": 0,
+          "boundSharpTool": 0,
+          "rawMeat": 0,
+          "cookedMeat": 0,
+          "tubers": 0
+        },
+        "skills": {
+          "sharp-edge": 1,
+          "clay-shaping": 1
+        },
+        "knownPeople": [
+          {
+            "name": "Ivo",
+            "trust": 38,
+            "familiarity": 22,
+            "affinity": 52,
+            "nearby": false
+          }
+        ]
+      },
+      "action": "make_fire",
+      "action_label": "Try to make a fire",
+      "winner_score": 79.864,
+      "baseline_policy_action": "drink",
+      "deviated_from_policy": true,
+      "candidates": [
+        {
+          "id": "drink",
+          "label": "Drink from the creek",
+          "score": 153.272,
+          "reasons": [
+            [
+              "thirst",
+              100
+            ]
+          ]
+        },
+        {
+          "id": "eat_berries",
+          "label": "Eat wild berries",
+          "score": 124.55,
+          "reasons": [
+            [
+              "hunger",
+              100
+            ]
+          ]
+        },
+        {
+          "id": "make_fire",
+          "label": "Try to make a fire",
+          "score": 79.864,
+          "reasons": [
+            [
+              "cold",
+              49.6
+            ]
+          ]
+        },
+        {
+          "id": "gather_berries",
+          "label": "Gather berries",
+          "score": 38,
+          "reasons": [
+            [
+              "future hunger",
+              22
+            ]
+          ]
+        },
+        {
+          "id": "gather_clay",
+          "label": "Gather sticky clay",
+          "score": 13.76,
+          "reasons": [
+            [
+              "curiosity",
+              5.76
+            ]
+          ]
+        },
+        {
+          "id": "gather_reeds",
+          "label": "Gather flexible reeds",
+          "score": 13.76,
+          "reasons": [
+            [
+              "curiosity",
+              5.76
+            ]
+          ]
+        },
+        {
+          "id": "gather_stones",
+          "label": "Gather loose stones",
+          "score": 12.76,
+          "reasons": [
+            [
+              "curiosity",
+              5.76
+            ]
+          ]
+        },
+        {
+          "id": "explore",
+          "label": "Explore beyond the known basin",
+          "score": 10.8,
+          "reasons": [
+            [
+              "curiosity",
+              9.36
+            ],
+            [
+              "novelty",
+              0
+            ]
+          ]
+        },
+        {
+          "id": "seek_other",
+          "label": "Look for Ivo",
+          "score": 10.76,
+          "reasons": [
+            [
+              "cooperation",
+              5.44
+            ]
+          ]
+        }
+      ],
+      "retrieved_memories": [
+        "M-M039",
+        "M-M026",
+        "M-M030",
+        "M-M007",
+        "M-M015",
+        "M-M001",
+        "M-M032",
+        "M-M017",
+        "M-M011",
+        "M-M036",
+        "M-M019",
+        "M-M003"
+      ],
+      "mind": {
+        "brain_mode": "ai",
+        "model": "gpt-5.6-luna",
+        "goal": "Maintain warmth and support overnight survival.",
+        "intent": "Try to establish a small fire using the dry fuel already carried.",
+        "confidence": 0.9,
+        "decision_summary": "Warmth is low at 38 in 44°F conditions, and prior experience shows dry wood is the reliable fuel for a fire.",
+        "referenced_memory_ids": [
+          "M-M039",
+          "M-M026",
+          "M-M007"
+        ],
+        "physical_proposal": null
+      },
+      "physics": {
+        "version": "affordance-0.5",
+        "outcome": {
+          "success": true,
+          "detail": "Mara establishes a small fire.",
+          "actionId": "make_fire"
+        }
+      },
+      "memory_counterfactuals": []
+    },
     {
       "protocol": "Decision DNA 0.6-farm",
       "decision_id": "D-00140",
@@ -39599,26 +40460,26 @@
     }
   ],
   "seq": {
-    "event": 196,
+    "event": 200,
     "memory": 43,
-    "decision": 141,
+    "decision": 145,
     "discovery": 4,
-    "physical": 19,
-    "artifact": 6,
+    "physical": 20,
+    "artifact": 7,
     "object": 1
   },
   "meta": {
     "canonical": true,
-    "lastAdvancedAt": "2026-09-16T06:40:33.033Z",
-    "tickNumber": 30,
+    "lastAdvancedAt": "2026-09-16T11:30:26.105Z",
+    "tickNumber": 31,
     "heartbeatMinutes": 5,
     "worldHoursPerHeartbeat": 2,
     "lastDecisionIds": [
-      "D-00139",
-      "D-00140"
+      "D-00143",
+      "D-00144"
     ],
     "pacing": "young world",
-    "aiDecisions": 77,
+    "aiDecisions": 81,
     "fallbackDecisions": 51,
     "mindMode": "ai",
     "mindConfigured": true,
@@ -39671,19 +40532,6 @@
   },
   "liveThreads": [
     {
-      "id": "cold-night",
-      "title": "Cold night, no fire",
-      "urgency": 95,
-      "summary": "It is 44°F and the fire is out. The coldest agent is at 0% warmth.",
-      "kind": "survival",
-      "agentIds": [
-        "agent-ivo"
-      ],
-      "placeIds": [
-        "camp"
-      ]
-    },
-    {
       "id": "dehydration",
       "title": "Mara needs water",
       "urgency": 92,
@@ -39700,7 +40548,7 @@
       "id": "food-pressure",
       "title": "Easy food is becoming scarce",
       "urgency": 84,
-      "summary": "The lowest satiety is 0%, with only 3 obvious food portions in or near the group.",
+      "summary": "The lowest satiety is 0%, with only 2 obvious food portions in or near the group.",
       "kind": "survival",
       "agentIds": [
         "agent-mara",
@@ -39734,7 +40582,7 @@
         "agent-mara"
       ],
       "placeIds": [
-        "log"
+        "camp"
       ]
     },
     {
@@ -39747,7 +40595,20 @@
         "agent-ivo"
       ],
       "placeIds": [
-        "edge"
+        "berries"
+      ]
+    },
+    {
+      "id": "materials-agent-ivo",
+      "title": "Ivo is carrying unusually complementary materials",
+      "urgency": 52,
+      "summary": "Rigid material, a cutting edge, and flexible binding material are together. The world does not prescribe what to do with them.",
+      "kind": "opportunity",
+      "agentIds": [
+        "agent-ivo"
+      ],
+      "placeIds": [
+        "berries"
       ]
     }
   ],
@@ -39817,10 +40678,10 @@
       ],
       "status": "active",
       "carrierId": "agent-mara",
-      "position": "log",
+      "position": "camp",
       "coordinates": {
-        "x": 59,
-        "y": 29
+        "x": 64,
+        "y": 34
       },
       "created": {
         "day": 3,
@@ -39840,10 +40701,10 @@
       ],
       "status": "active",
       "carrierId": "agent-ivo",
-      "position": "edge",
+      "position": "berries",
       "coordinates": {
-        "x": 78,
-        "y": 42
+        "x": 29,
+        "y": 31
       },
       "created": {
         "day": 3,
@@ -39863,10 +40724,10 @@
       ],
       "status": "active",
       "carrierId": "agent-ivo",
-      "position": "edge",
+      "position": "berries",
       "coordinates": {
-        "x": 78,
-        "y": 42
+        "x": 29,
+        "y": 31
       },
       "created": {
         "day": 3,
@@ -39889,10 +40750,10 @@
       ],
       "status": "active",
       "carrierId": "agent-mara",
-      "position": "log",
+      "position": "camp",
       "coordinates": {
-        "x": 59,
-        "y": 29
+        "x": 64,
+        "y": 34
       },
       "created": {
         "day": 3,
@@ -39915,16 +40776,41 @@
       ],
       "status": "active",
       "carrierId": "agent-ivo",
-      "position": "edge",
+      "position": "berries",
       "coordinates": {
-        "x": 78,
-        "y": 42
+        "x": 29,
+        "y": 31
       },
       "created": {
         "day": 3,
         "hour": 9
       },
       "provenance": "cut from wetWood on Day 3",
+      "ended": null
+    },
+    {
+      "id": "ART-0006",
+      "type": "looseReedTwist",
+      "inventoryKey": "looseReedTwist",
+      "label": "unraveled reed twist",
+      "glyph": "∿",
+      "properties": [
+        "reeds",
+        "failed-binding",
+        "remnant"
+      ],
+      "status": "remnant",
+      "carrierId": null,
+      "position": "camp",
+      "coordinates": {
+        "x": 64,
+        "y": 34
+      },
+      "created": {
+        "day": 4,
+        "hour": 5
+      },
+      "provenance": "failed cordage attempt 1",
       "ended": null
     }
   ],
@@ -40102,7 +40988,7 @@
           "species": "oak",
           "densityKgM3": 690,
           "hardness": 5.8,
-          "moisturePct": 28.2
+          "moisturePct": 26.2
         },
         "parentId": null,
         "childrenIds": [],
@@ -40306,7 +41192,7 @@
           "flammable": true
         },
         "material": {
-          "moisturePct": 66
+          "moisturePct": 54
         },
         "state": {
           "active": true
@@ -40346,7 +41232,7 @@
         },
         "material": {},
         "state": {
-          "active": false
+          "active": true
         },
         "parentId": null,
         "childrenIds": [],
@@ -40444,7 +41330,7 @@
       "temperature": {
         "type": "scalar",
         "unit": "F",
-        "global": 44
+        "global": 52
       },
       "precipitation": {
         "type": "scalar",
@@ -40455,7 +41341,7 @@
       "humidity": {
         "type": "scalar",
         "unit": "relative",
-        "global": 0.74
+        "global": 0.52
       },
       "light": {
         "type": "scalar",
@@ -40488,7 +41374,7 @@
       "wind": {
         "type": "scalar",
         "unit": "m/s",
-        "global": 2.4
+        "global": 1.5
       }
     },
     "terrain": [
