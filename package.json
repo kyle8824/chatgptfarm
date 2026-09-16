@@ -1,10 +1,10 @@
 {
   "name": "chatgptfarm",
   "private": true,
-  "version": "0.8.2",
+  "version": "0.8.3",
   "type": "module",
   "scripts": {
-    "test": "node --check world-pixi-v6.js && node --check app.js && node --check artifacts-ui.js && node --check world-model-ui.js && node scripts/smoke-test.mjs",
+    "test": "node --check world-pixi-v7.js && node --check app.js && node --check artifacts-ui.js && node --check world-model-ui.js && node scripts/smoke-test.mjs",
     "advance": "node scripts/advance-world.mjs"
   }
 }
