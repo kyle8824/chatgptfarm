@@ -21,6 +21,17 @@ jobs:
           node-version: 22
       - name: Sync latest main
         run: git pull --ff-only origin main
+      - name: Repair patch literal escaping
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+          p=Path('scripts/patch-phaser-v1_3.mjs')
+          s=p.read_text()
+          s=s.replace('const carto=\\`${ASSET_ROOT}/ui/cartography-pack/PNG/Default\\`;', 'const carto=\\`\\${ASSET_ROOT}/ui/cartography-pack/PNG/Default\\`;')
+          s=s.replace("this.load.image('camp-tent',\\`${carto}/tent.png\\`);", "this.load.image('camp-tent',\\`\\${carto}/tent.png\\`);")
+          s=s.replace("this.load.image('campfire-art',\\`${carto}/campfire.png\\`);", "this.load.image('campfire-art',\\`\\${carto}/campfire.png\\`);")
+          p.write_text(s)
+          PY
       - name: Apply Phaser v1.3 basin slice
         run: |
           node scripts/patch-phaser-v1_3.mjs
