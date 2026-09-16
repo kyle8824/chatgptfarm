@@ -1,0 +1,62 @@
+import { chromium } from 'playwright';
+import fs from 'node:fs';
+import { migrateWorld, advanceEcology } from '../engine.js';
+
+const base=process.env.BASE_URL||'http://127.0.0.1:4173/phaser.html';
+fs.mkdirSync('phaser-qa',{recursive:true});
+let state=migrateWorld(JSON.parse(fs.readFileSync('world/state.json','utf8')));
+advanceEcology(state);
+const browser=await chromium.launch({headless:true});
+const context=await browser.newContext({viewport:{width:412,height:915},deviceScaleFactor:1,isMobile:true,hasTouch:true});
+const page=await context.newPage();
+const errors=[],failures=[];
+page.on('pageerror',e=>errors.push(`pageerror: ${e.message}`));
+page.on('console',m=>{if(m.type()==='error')errors.push(`console: ${m.text()}`)});
+await page.route(/raw\.githubusercontent\.com\/kyle8824\/chatgptfarm\/main\/world\/state\.json.*/,route=>route.fulfill({status:200,contentType:'application/json',body:JSON.stringify(state)}));
+await page.goto(base,{waitUntil:'domcontentloaded',timeout:60000});
+await page.waitForFunction(()=>window.ChatGPTFarmPhaserDebug?.snapshot()?.ready===true,{timeout:60000});
+await page.waitForTimeout(1800);
+const snap=()=>page.evaluate(()=>window.ChatGPTFarmPhaserDebug.snapshot());
+let s=await snap();
+if(s.version!=='phaser-v1-living-world')failures.push(`wrong renderer: ${s.version}`);
+if(!String(s.phaser||'').startsWith('3.'))failures.push(`Phaser failed to initialize: ${s.phaser}`);
+if(s.agents!==2)failures.push(`expected 2 agents, got ${s.agents}`);
+if(s.wildlife<8)failures.push(`expected >=8 wildlife, got ${s.wildlife}`);
+if(s.trees<30)failures.push(`expected a forest, got ${s.trees} trees`);
+if(s.treeWaterCollisions!==0)failures.push(`trees spawned in canonical water: ${s.treeWaterCollisions}`);
+if((s.terrain?.water||0)<20||(s.terrain?.bank||0)<20||(s.terrain?.forest||0)<100)failures.push(`terrain occupancy is incomplete: ${JSON.stringify(s.terrain)}`);
+if(s.movingEntities<1)failures.push('no entity has visible interpolated movement');
+await page.screenshot({path:'phaser-qa/mobile-auto.png'});
+
+for(const [name,id] of [['MARA','agent-mara'],['IVO','agent-ivo']]){
+ await page.getByRole('button',{name,exact:true}).click();await page.waitForTimeout(600);s=await snap();if(s.camera.mode!==id)failures.push(`${name} camera did not enter follow mode`);await page.screenshot({path:`phaser-qa/mobile-${name.toLowerCase()}.png`});
+}
+await page.getByRole('button',{name:'AUTO',exact:true}).click();await page.waitForTimeout(350);
+
+// Movement contract: a visible entity must pass through an intermediate point, not teleport.
+let before=(await snap()).positions['W-DEER-001'];
+if(!before)failures.push('missing deer for movement QA');
+else{
+ const targetWorld={x:45,y:36};
+ const targetPx={x:targetWorld.x*24,y:(100-targetWorld.y)*24};
+ await page.evaluate(({to})=>window.ChatGPTFarmPhaserDebug.simulateMove('W-DEER-001',to,2400),{to:targetWorld});
+ await page.waitForTimeout(950);const mid=(await snap()).positions['W-DEER-001'];
+ await page.waitForTimeout(1900);const end=(await snap()).positions['W-DEER-001'];
+ const d0=Math.hypot(mid.x-before.x,mid.y-before.y),d1=Math.hypot(mid.x-targetPx.x,mid.y-targetPx.y),de=Math.hypot(end.x-targetPx.x,end.y-targetPx.y);
+ if(!(d0>5&&d1>5))failures.push(`deer did not visibly interpolate through a midpoint (${d0.toFixed(1)}, ${d1.toFixed(1)})`);
+ if(de>4)failures.push(`deer did not reach visible movement target (${de.toFixed(1)}px)`);
+ await page.evaluate(()=>window.ChatGPTFarmPhaserDebug.focusWorldUnit(45,36,.95));await page.waitForTimeout(250);await page.screenshot({path:'phaser-qa/mobile-wildlife.png'});
+}
+
+await page.evaluate(()=>window.ChatGPTFarmPhaserDebug.focusWorldUnit(50,19,.92));await page.waitForTimeout(300);await page.screenshot({path:'phaser-qa/mobile-creek.png'});
+await page.evaluate(()=>window.ChatGPTFarmPhaserDebug.focusWorldUnit(64,34,1.05));await page.waitForTimeout(300);await page.screenshot({path:'phaser-qa/mobile-camp.png'});
+
+// Same-page heartbeat contract: update canonical state and confirm visible movement starts without reload.
+state=JSON.parse(JSON.stringify(state));state.meta=state.meta||{};state.meta.tickNumber=Number(state.meta.tickNumber||0)+100;const rabbit=state.ecologySystem?.wildlife?.find(x=>x.id==='W-RABBIT-001');if(rabbit){rabbit.previousPosition={...rabbit.position};rabbit.movement={from:{...rabbit.position},to:{x:Math.min(95,rabbit.position.x+5),y:rabbit.position.y+2},goal:{x:Math.min(95,rabbit.position.x+7),y:rabbit.position.y+2},worldDay:state.day,worldHour:state.hour,speed:3};rabbit.position={...rabbit.movement.to}}
+await page.evaluate(()=>window.ChatGPTFarmPhaserDebug.reload());await page.waitForTimeout(800);s=await snap();if(!s.positions['W-RABBIT-001'])failures.push('same-page heartbeat lost rabbit');if(s.movingEntities<1)failures.push('heartbeat did not create visible movement');await page.screenshot({path:'phaser-qa/mobile-heartbeat.png'});
+
+fs.writeFileSync('phaser-qa/report.json',JSON.stringify({base,snapshot:s,errors,failures},null,2));
+await browser.close();
+if(errors.length)console.error(errors.join('\n'));
+if(failures.length){console.error(failures.join('\n'));process.exit(1)}
+console.log(`Phaser QA passed: ${s.trees} trees, ${s.wildlife} wildlife, ${s.movingEntities} moving entities, zero trees in water.`);
