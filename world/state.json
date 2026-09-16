@@ -1,17 +1,17 @@
 {
   "version": "0.7",
   "day": 4,
-  "hour": 10,
-  "temperature": 61,
-  "weather": "clear",
+  "hour": 12,
+  "temperature": 55,
+  "weather": "rain",
   "resources": {
     "berries": 0,
     "dryWood": 0,
-    "wetWood": 0,
+    "wetWood": 1,
     "stones": 12,
     "creekWater": true,
     "clay": 4,
-    "reeds": 8
+    "reeds": 5
   },
   "structures": {
     "shelter": true,
@@ -37,8 +37,8 @@
       "needs": {
         "hydration": 0,
         "hunger": 0,
-        "energy": 19.20000000000004,
-        "warmth": 71
+        "energy": 2.600000000000038,
+        "warmth": 68
       },
       "inventory": {
         "berries": 0,
@@ -59,6 +59,18 @@
         "tubers": 0
       },
       "memories": [
+        {
+          "id": "M-M043",
+          "text": "Physical attempt 1: shape carried wet branch produced no stable effect.",
+          "importance": 4,
+          "tags": [
+            "experiment",
+            "physical-attempt"
+          ],
+          "source": "experience:4-11",
+          "confidence": 0.64,
+          "lastSeen": "4:11"
+        },
         {
           "id": "M-M041",
           "text": "Physical attempt 1: heat carried dry branch produced no stable effect.",
@@ -337,7 +349,7 @@
         "cooperation": 0.68,
         "caution": 0.56
       },
-      "currentAction": "bind sharp stone flake + carried wet branch",
+      "currentAction": "shape carried wet branch",
       "skills": {
         "sharp-edge": 1,
         "clay-shaping": 1
@@ -347,14 +359,12 @@
       },
       "mind": {
         "brainMode": "ai",
-        "currentGoal": "Prepare a usable tool for overnight survival and future material gathering.",
-        "intent": "Improve tool-making capability using the sharp edge and available wood.",
-        "confidence": 0.78,
-        "decisionSummary": "Mara will attempt to bind the sharp stone to a branch, advancing the current tool-making goal without an urgent unmet need requiring rest or water.",
+        "currentGoal": "Prepare a usable tool for future material gathering.",
+        "intent": "Create a pointed wooden tool from an available branch.",
+        "confidence": 0.62,
+        "decisionSummary": "Binding the sharp stone to reeds or a branch has not produced a stable tool, so I will try a simpler pointed-branch form.",
         "model": "gpt-5.6-luna",
         "recentActions": [
-          "physical:search:place:edge",
-          "rest",
           "rest",
           "gather_dry_wood",
           "make_fire",
@@ -368,17 +378,19 @@
           "gather_stones",
           "gather_clay",
           "gather_reeds",
-          "physical:bind:sharp_stone"
+          "physical:bind:sharp_stone",
+          "physical:bind:sharp_stone",
+          "physical:shape:carried_wet_branch"
         ],
         "lastReferencedMemoryIds": [
-          "M-M015"
+          "M-M036"
         ],
         "lastPhysicalProposal": {
-          "verb": "bind",
-          "primaryObjectId": "sharp_stone",
-          "secondaryObjectId": "carried_wet_branch",
-          "configuration": "bound",
-          "purpose": "Bind the sharp stone to a branch to attempt making a handled cutting tool."
+          "verb": "shape",
+          "primaryObjectId": "carried_wet_branch",
+          "secondaryObjectId": "none",
+          "configuration": "pointed",
+          "purpose": "Try to shape a wet branch into a pointed implement for future gathering."
         }
       },
       "affordanceAttempts": {
@@ -391,19 +403,21 @@
         "search:place:edge:none:none": 1,
         "heat:carried_dry_branch:none:none": 1,
         "twist:carried_reeds:none:twisted": 1,
-        "bind:sharp_stone:carried_wet_branch:bound": 1
+        "bind:sharp_stone:carried_wet_branch:bound": 1,
+        "bind:sharp_stone:carried_reeds:bound": 1,
+        "shape:carried_wet_branch:none:pointed": 1
       },
       "coordinates": {
         "x": 10,
         "y": 22
       },
       "activeAction": {
-        "id": "A-D-00151",
-        "decisionId": "D-00151",
-        "label": "bind sharp stone flake",
-        "actionId": "physical:bind:sharp_stone",
+        "id": "A-D-00155",
+        "decisionId": "D-00155",
+        "label": "shape carried wet branch",
+        "actionId": "physical:shape:carried_wet_branch",
         "worldDay": 4,
-        "worldHour": 9,
+        "worldHour": 11,
         "from": {
           "x": 10,
           "y": 22
@@ -439,26 +453,26 @@
         ],
         "outcome": {
           "success": false,
-          "detail": "Mara binds the available objects, but no stable new function appears."
+          "detail": "Mara tries to shape carried wet branch. No stable new effect emerges yet."
         },
         "physicalProposal": {
-          "verb": "bind",
-          "primaryObjectId": "sharp_stone",
-          "secondaryObjectId": "carried_wet_branch",
-          "configuration": "bound",
-          "purpose": "Bind the sharp stone to a branch to attempt making a handled cutting tool."
+          "verb": "shape",
+          "primaryObjectId": "carried_wet_branch",
+          "secondaryObjectId": "none",
+          "configuration": "pointed",
+          "purpose": "Try to shape a wet branch into a pointed implement for future gathering."
         }
       }
     },
     {
       "id": "agent-ivo",
       "name": "Ivo",
-      "position": "edge",
+      "position": "reeds",
       "needs": {
         "hydration": 0,
-        "hunger": 63,
-        "energy": 33.20000000000017,
-        "warmth": 9
+        "hunger": 54.599999999999994,
+        "energy": 18.600000000000172,
+        "warmth": 6
       },
       "inventory": {
         "berries": 0,
@@ -741,7 +755,7 @@
         "cooperation": 0.76,
         "caution": 0.48
       },
-      "currentAction": "Explore beyond the known basin",
+      "currentAction": "twist carried reeds",
       "skills": {
         "sharp-edge": 1,
         "clay-shaping": 1
@@ -752,14 +766,12 @@
       },
       "mind": {
         "brainMode": "ai",
-        "currentGoal": "Find usable dry fuel while preserving enough energy to prepare for the night.",
-        "intent": "Explore for resources that can restore the failed warmth plan.",
-        "confidence": 0.69,
-        "decisionSummary": "Dry wood remains the strongest overnight priority, while current basic needs are stable; the known berry patch is exhausted and prior frontier searching found no stable result, but further exploration is still the best available route to fuel.",
+        "currentGoal": "Prepare useful materials without spending much energy before nightfall.",
+        "intent": "Twist the carried reeds into a more durable, cord-like form.",
+        "confidence": 0.74,
+        "decisionSummary": "I have enough reeds and energy is limited; making a binding material is a low-energy preparation step that may support later construction.",
         "model": "gpt-5.6-luna",
         "recentActions": [
-          "explore",
-          "talk",
           "rest",
           "gather_dry_wood",
           "gather_wet_wood",
@@ -773,14 +785,18 @@
           "gather_berries",
           "eat_berries",
           "eat_berries",
-          "explore"
+          "explore",
+          "gather_reeds",
+          "physical:twist:carried_reeds"
         ],
-        "lastReferencedMemoryIds": [
-          "M-I040",
-          "M-I034",
-          "M-I027"
-        ],
-        "lastPhysicalProposal": null
+        "lastReferencedMemoryIds": [],
+        "lastPhysicalProposal": {
+          "verb": "twist",
+          "primaryObjectId": "carried_reeds",
+          "secondaryObjectId": "none",
+          "configuration": "twisted",
+          "purpose": "Prepare flexible reeds into a stronger binding material for future tool-making or shelter work."
+        }
       },
       "affordanceAttempts": {
         "search:place:berry_patch:none:none": 1,
@@ -791,63 +807,64 @@
         "move:place:camp:none:none": 1,
         "place:wood_pole:place:camp:none": 1,
         "place:carried_wet_branch:place:camp:raised": 1,
-        "search:place:edge:none:none": 1
+        "search:place:edge:none:none": 1,
+        "twist:carried_reeds:none:twisted": 1
       },
       "coordinates": {
-        "x": 78,
-        "y": 42
+        "x": 10,
+        "y": 22
       },
       "activeAction": {
-        "id": "A-D-00152",
-        "decisionId": "D-00152",
-        "label": "Explore beyond the known basin",
-        "actionId": "explore",
+        "id": "A-D-00156",
+        "decisionId": "D-00156",
+        "label": "twist carried reeds",
+        "actionId": "physical:twist:carried_reeds",
         "worldDay": 4,
-        "worldHour": 9,
+        "worldHour": 11,
         "from": {
-          "x": 29,
-          "y": 31
+          "x": 10,
+          "y": 22
         },
         "to": {
-          "x": 78,
-          "y": 42
+          "x": 10,
+          "y": 22
         },
         "target": {
-          "x": 78,
-          "y": 42
+          "x": 10,
+          "y": 22
         },
-        "moving": true,
+        "moving": false,
         "phases": [
           {
             "id": "decide",
             "label": "Deciding",
             "start": 0,
-            "end": 0.1
-          },
-          {
-            "id": "travel",
-            "label": "Traveling",
-            "start": 0.1,
-            "end": 0.58
+            "end": 0.12
           },
           {
             "id": "interact",
             "label": "Acting",
-            "start": 0.58,
-            "end": 0.86
+            "start": 0.12,
+            "end": 0.82
           },
           {
             "id": "resolve",
             "label": "Resolving",
-            "start": 0.86,
+            "start": 0.82,
             "end": 1
           }
         ],
         "outcome": {
-          "success": true,
-          "detail": "Ivo explores the basin edge without finding an obvious new place."
+          "success": false,
+          "detail": "Ivo twists the reeds, but the strand unravels when pulled."
         },
-        "physicalProposal": null
+        "physicalProposal": {
+          "verb": "twist",
+          "primaryObjectId": "carried_reeds",
+          "secondaryObjectId": "none",
+          "configuration": "twisted",
+          "purpose": "Prepare flexible reeds into a stronger binding material for future tool-making or shelter work."
+        }
       }
     }
   ],
@@ -862,6 +879,83 @@
     }
   },
   "history": [
+    {
+      "id": "E-00213",
+      "day": 4,
+      "hour": 11,
+      "type": "attempt",
+      "title": "twist carried reeds",
+      "detail": "Ivo twists the reeds, but the strand unravels when pulled.",
+      "agentId": "agent-ivo",
+      "physicalId": "P-00023",
+      "success": false,
+      "proposal": {
+        "verb": "twist",
+        "primaryObjectId": "carried_reeds",
+        "secondaryObjectId": "none",
+        "configuration": "twisted",
+        "purpose": "Prepare flexible reeds into a stronger binding material for future tool-making or shelter work."
+      },
+      "worldObjectId": null
+    },
+    {
+      "id": "E-00212",
+      "day": 4,
+      "hour": 11,
+      "type": "attempt",
+      "title": "shape carried wet branch",
+      "detail": "Mara tries to shape carried wet branch. No stable new effect emerges yet.",
+      "agentId": "agent-mara",
+      "physicalId": "P-00022",
+      "success": false,
+      "proposal": {
+        "verb": "shape",
+        "primaryObjectId": "carried_wet_branch",
+        "secondaryObjectId": "none",
+        "configuration": "pointed",
+        "purpose": "Try to shape a wet branch into a pointed implement for future gathering."
+      },
+      "worldObjectId": null
+    },
+    {
+      "id": "E-00211",
+      "day": 4,
+      "hour": 11,
+      "type": "learn",
+      "title": "Mara formed a memory",
+      "detail": "Physical attempt 1: shape carried wet branch produced no stable effect.",
+      "agentId": "agent-mara",
+      "memoryId": "M-M043"
+    },
+    {
+      "id": "E-00210",
+      "day": 4,
+      "hour": 10,
+      "type": "action",
+      "title": "Gather flexible reeds",
+      "detail": "Ivo gathers flexible reeds.",
+      "agentId": "agent-ivo",
+      "actionId": "gather_reeds"
+    },
+    {
+      "id": "E-00209",
+      "day": 4,
+      "hour": 10,
+      "type": "attempt",
+      "title": "bind sharp stone flake + carried reeds",
+      "detail": "Mara binds the available objects, but no stable new function appears.",
+      "agentId": "agent-mara",
+      "physicalId": "P-00021",
+      "success": false,
+      "proposal": {
+        "verb": "bind",
+        "primaryObjectId": "sharp_stone",
+        "secondaryObjectId": "carried_reeds",
+        "configuration": "bound",
+        "purpose": "Create a more stable cutting tool by binding the sharp stone flake to flexible reeds rather than the wet branch."
+      },
+      "worldObjectId": null
+    },
     {
       "id": "E-00208",
       "day": 4,
@@ -3146,6 +3240,772 @@
     }
   ],
   "dna": [
+    {
+      "protocol": "Decision DNA 0.6-farm",
+      "decision_id": "D-00156",
+      "day": 4,
+      "hour": 11,
+      "agent_id": "agent-ivo",
+      "agent_name": "Ivo",
+      "observation": {
+        "time": "Day 4, 11:00",
+        "weather": "clear",
+        "temperature": 62,
+        "position": "reeds",
+        "nearby": [
+          "flexible reed stalks",
+          "animal tracks"
+        ],
+        "needs": {
+          "hydration": 0,
+          "satiety": 58.8,
+          "energy": 26.400000000000173,
+          "warmth": 9
+        },
+        "inventory": {
+          "berries": 0,
+          "dryWood": 0,
+          "wetWood": 7,
+          "stones": 1,
+          "clay": 0,
+          "reeds": 6,
+          "sharpStone": 1,
+          "rawClayVessel": 1,
+          "firedVessel": 0,
+          "cordage": 0,
+          "woodPole": 1,
+          "pointedPole": 0,
+          "boundSharpTool": 0,
+          "rawMeat": 0,
+          "cookedMeat": 0,
+          "tubers": 0
+        },
+        "skills": {
+          "sharp-edge": 1,
+          "clay-shaping": 1
+        },
+        "knownPeople": [
+          {
+            "name": "Mara",
+            "trust": 38,
+            "familiarity": 22,
+            "affinity": 52,
+            "nearby": true
+          }
+        ]
+      },
+      "action": "physical:twist:carried_reeds",
+      "action_label": "twist carried reeds",
+      "winner_score": null,
+      "baseline_policy_action": "drink",
+      "deviated_from_policy": true,
+      "candidates": [
+        {
+          "id": "drink",
+          "label": "Drink from the creek",
+          "score": 159.032,
+          "reasons": [
+            [
+              "thirst",
+              100
+            ]
+          ]
+        },
+        {
+          "id": "rest",
+          "label": "Rest in the shelter",
+          "score": 88.844,
+          "reasons": [
+            [
+              "fatigue",
+              73.59999999999982
+            ]
+          ]
+        },
+        {
+          "id": "talk",
+          "label": "Talk with Mara",
+          "score": 16.4,
+          "reasons": [
+            [
+              "cooperation",
+              6.08
+            ]
+          ]
+        },
+        {
+          "id": "gather_clay",
+          "label": "Gather sticky clay",
+          "score": 12.64,
+          "reasons": [
+            [
+              "curiosity",
+              4.64
+            ]
+          ]
+        },
+        {
+          "id": "gather_stones",
+          "label": "Gather loose stones",
+          "score": 11.64,
+          "reasons": [
+            [
+              "curiosity",
+              4.64
+            ]
+          ]
+        },
+        {
+          "id": "explore",
+          "label": "Explore beyond the known basin",
+          "score": -0.436,
+          "reasons": [
+            [
+              "curiosity",
+              7.539999999999999
+            ],
+            [
+              "novelty",
+              0
+            ]
+          ]
+        }
+      ],
+      "retrieved_memories": [
+        "M-I040",
+        "M-I027",
+        "M-I034",
+        "M-I022",
+        "M-I018",
+        "M-I031",
+        "M-I014",
+        "M-I004",
+        "M-I008",
+        "M-I033",
+        "M-I016",
+        "M-I002"
+      ],
+      "mind": {
+        "brain_mode": "ai",
+        "model": "gpt-5.6-luna",
+        "goal": "Prepare useful materials without spending much energy before nightfall.",
+        "intent": "Twist the carried reeds into a more durable, cord-like form.",
+        "confidence": 0.74,
+        "decision_summary": "I have enough reeds and energy is limited; making a binding material is a low-energy preparation step that may support later construction.",
+        "referenced_memory_ids": [],
+        "physical_proposal": {
+          "verb": "twist",
+          "primaryObjectId": "carried_reeds",
+          "secondaryObjectId": "none",
+          "configuration": "twisted",
+          "purpose": "Prepare flexible reeds into a stronger binding material for future tool-making or shelter work."
+        }
+      },
+      "physics": {
+        "version": "affordance-0.5",
+        "outcome": {
+          "physicalId": "P-00023",
+          "success": false,
+          "blocked": false,
+          "detail": "Ivo twists the reeds, but the strand unravels when pulled.",
+          "proposal": {
+            "verb": "twist",
+            "primaryObjectId": "carried_reeds",
+            "secondaryObjectId": "none",
+            "configuration": "twisted",
+            "purpose": "Prepare flexible reeds into a stronger binding material for future tool-making or shelter work."
+          },
+          "primary": "carried_reeds",
+          "secondary": null,
+          "worldObjectId": null,
+          "resolvedComponents": []
+        }
+      },
+      "memory_counterfactuals": []
+    },
+    {
+      "protocol": "Decision DNA 0.6-farm",
+      "decision_id": "D-00155",
+      "day": 4,
+      "hour": 11,
+      "agent_id": "agent-mara",
+      "agent_name": "Mara",
+      "observation": {
+        "time": "Day 4, 11:00",
+        "weather": "clear",
+        "temperature": 62,
+        "position": "reeds",
+        "nearby": [
+          "flexible reed stalks",
+          "animal tracks"
+        ],
+        "needs": {
+          "hydration": 0,
+          "satiety": 0,
+          "energy": 10.400000000000038,
+          "warmth": 71
+        },
+        "inventory": {
+          "berries": 0,
+          "dryWood": 0,
+          "wetWood": 10,
+          "stones": 3,
+          "clay": 2,
+          "reeds": 3,
+          "sharpStone": 1,
+          "rawClayVessel": 1,
+          "firedVessel": 0,
+          "cordage": 0,
+          "woodPole": 0,
+          "pointedPole": 0,
+          "boundSharpTool": 0,
+          "rawMeat": 0,
+          "cookedMeat": 0,
+          "tubers": 0
+        },
+        "skills": {
+          "sharp-edge": 1,
+          "clay-shaping": 1
+        },
+        "knownPeople": [
+          {
+            "name": "Ivo",
+            "trust": 38,
+            "familiarity": 22,
+            "affinity": 52,
+            "nearby": true
+          }
+        ]
+      },
+      "action": "physical:shape:carried_wet_branch",
+      "action_label": "shape carried wet branch",
+      "winner_score": null,
+      "baseline_policy_action": "drink",
+      "deviated_from_policy": true,
+      "candidates": [
+        {
+          "id": "drink",
+          "label": "Drink from the creek",
+          "score": 153.272,
+          "reasons": [
+            [
+              "thirst",
+              100
+            ]
+          ]
+        },
+        {
+          "id": "rest",
+          "label": "Rest in the shelter",
+          "score": 100.48,
+          "reasons": [
+            [
+              "fatigue",
+              89.59999999999997
+            ]
+          ]
+        },
+        {
+          "id": "talk",
+          "label": "Talk with Ivo",
+          "score": 15.76,
+          "reasons": [
+            [
+              "cooperation",
+              5.44
+            ]
+          ]
+        },
+        {
+          "id": "gather_clay",
+          "label": "Gather sticky clay",
+          "score": 9.56,
+          "reasons": [
+            [
+              "curiosity",
+              5.76
+            ]
+          ]
+        },
+        {
+          "id": "gather_reeds",
+          "label": "Gather flexible reeds",
+          "score": 9.56,
+          "reasons": [
+            [
+              "curiosity",
+              5.76
+            ]
+          ]
+        },
+        {
+          "id": "gather_stones",
+          "label": "Gather loose stones",
+          "score": 8.56,
+          "reasons": [
+            [
+              "curiosity",
+              5.76
+            ]
+          ]
+        },
+        {
+          "id": "explore",
+          "label": "Explore beyond the known basin",
+          "score": 3.024,
+          "reasons": [
+            [
+              "curiosity",
+              9.36
+            ],
+            [
+              "novelty",
+              0
+            ]
+          ]
+        }
+      ],
+      "retrieved_memories": [
+        "M-M039",
+        "M-M026",
+        "M-M030",
+        "M-M017",
+        "M-M007",
+        "M-M015",
+        "M-M001",
+        "M-M032",
+        "M-M011",
+        "M-M025",
+        "M-M036",
+        "M-M019"
+      ],
+      "mind": {
+        "brain_mode": "ai",
+        "model": "gpt-5.6-luna",
+        "goal": "Prepare a usable tool for future material gathering.",
+        "intent": "Create a pointed wooden tool from an available branch.",
+        "confidence": 0.62,
+        "decision_summary": "Binding the sharp stone to reeds or a branch has not produced a stable tool, so I will try a simpler pointed-branch form.",
+        "referenced_memory_ids": [
+          "M-M036"
+        ],
+        "physical_proposal": {
+          "verb": "shape",
+          "primaryObjectId": "carried_wet_branch",
+          "secondaryObjectId": "none",
+          "configuration": "pointed",
+          "purpose": "Try to shape a wet branch into a pointed implement for future gathering."
+        }
+      },
+      "physics": {
+        "version": "affordance-0.5",
+        "outcome": {
+          "physicalId": "P-00022",
+          "success": false,
+          "blocked": false,
+          "detail": "Mara tries to shape carried wet branch. No stable new effect emerges yet.",
+          "proposal": {
+            "verb": "shape",
+            "primaryObjectId": "carried_wet_branch",
+            "secondaryObjectId": "none",
+            "configuration": "pointed",
+            "purpose": "Try to shape a wet branch into a pointed implement for future gathering."
+          },
+          "primary": "carried_wet_branch",
+          "secondary": null,
+          "worldObjectId": null,
+          "resolvedComponents": []
+        }
+      },
+      "memory_counterfactuals": [
+        {
+          "removed_memory": "M-M036",
+          "memory_text": "Physical attempt 1: cut wet branches with sharp stone flake produced no stable effect.",
+          "original_action": "physical:shape:carried_wet_branch",
+          "counterfactual_action": "physical:shape:carried_wet_branch",
+          "action_changed": false,
+          "method": "model_replay",
+          "provisional": true,
+          "trials": 1
+        }
+      ]
+    },
+    {
+      "protocol": "Decision DNA 0.6-farm",
+      "decision_id": "D-00154",
+      "day": 4,
+      "hour": 10,
+      "agent_id": "agent-ivo",
+      "agent_name": "Ivo",
+      "observation": {
+        "time": "Day 4, 10:00",
+        "weather": "clear",
+        "temperature": 61,
+        "position": "edge",
+        "nearby": [
+          "flexible reed stalks",
+          "animal tracks"
+        ],
+        "needs": {
+          "hydration": 0,
+          "satiety": 63,
+          "energy": 33.20000000000017,
+          "warmth": 9
+        },
+        "inventory": {
+          "berries": 0,
+          "dryWood": 0,
+          "wetWood": 7,
+          "stones": 1,
+          "clay": 0,
+          "reeds": 3,
+          "sharpStone": 1,
+          "rawClayVessel": 1,
+          "firedVessel": 0,
+          "cordage": 0,
+          "woodPole": 1,
+          "pointedPole": 0,
+          "boundSharpTool": 0,
+          "rawMeat": 0,
+          "cookedMeat": 0,
+          "tubers": 0
+        },
+        "skills": {
+          "sharp-edge": 1,
+          "clay-shaping": 1
+        },
+        "knownPeople": [
+          {
+            "name": "Mara",
+            "trust": 38,
+            "familiarity": 22,
+            "affinity": 52,
+            "nearby": false
+          }
+        ]
+      },
+      "action": "gather_reeds",
+      "action_label": "Gather flexible reeds",
+      "winner_score": 12.64,
+      "baseline_policy_action": "drink",
+      "deviated_from_policy": true,
+      "candidates": [
+        {
+          "id": "drink",
+          "label": "Drink from the creek",
+          "score": 159.032,
+          "reasons": [
+            [
+              "thirst",
+              100
+            ]
+          ]
+        },
+        {
+          "id": "rest",
+          "label": "Rest in the shelter",
+          "score": 77.164,
+          "reasons": [
+            [
+              "fatigue",
+              66.79999999999983
+            ]
+          ]
+        },
+        {
+          "id": "gather_clay",
+          "label": "Gather sticky clay",
+          "score": 12.64,
+          "reasons": [
+            [
+              "curiosity",
+              4.64
+            ]
+          ]
+        },
+        {
+          "id": "gather_reeds",
+          "label": "Gather flexible reeds",
+          "score": 12.64,
+          "reasons": [
+            [
+              "curiosity",
+              4.64
+            ]
+          ]
+        },
+        {
+          "id": "gather_stones",
+          "label": "Gather loose stones",
+          "score": 11.64,
+          "reasons": [
+            [
+              "curiosity",
+              4.64
+            ]
+          ]
+        },
+        {
+          "id": "seek_other",
+          "label": "Look for Mara",
+          "score": 11.4,
+          "reasons": [
+            [
+              "cooperation",
+              6.08
+            ]
+          ]
+        },
+        {
+          "id": "explore",
+          "label": "Explore beyond the known basin",
+          "score": 0.652,
+          "reasons": [
+            [
+              "curiosity",
+              7.539999999999999
+            ],
+            [
+              "novelty",
+              0
+            ]
+          ]
+        }
+      ],
+      "retrieved_memories": [
+        "M-I040",
+        "M-I027",
+        "M-I034",
+        "M-I022",
+        "M-I018",
+        "M-I031",
+        "M-I014",
+        "M-I004",
+        "M-I008",
+        "M-I033",
+        "M-I016",
+        "M-I002"
+      ],
+      "mind": {
+        "brain_mode": "ai",
+        "model": "gpt-5.6-luna",
+        "goal": "Prepare useful materials without spending much energy before nightfall.",
+        "intent": "Harvest more reeds from the nearby marsh.",
+        "confidence": 0.67,
+        "decision_summary": "Dry fuel remains the main need, but no dry-wood action or accessible dry source is currently available. Gathering nearby reeds is a low-cost constructive step and may support later preparation.",
+        "referenced_memory_ids": [
+          "M-I040",
+          "M-I034"
+        ],
+        "physical_proposal": null
+      },
+      "physics": {
+        "version": "affordance-0.5",
+        "outcome": {
+          "success": true,
+          "detail": "Ivo gathers flexible reeds.",
+          "actionId": "gather_reeds"
+        }
+      },
+      "memory_counterfactuals": []
+    },
+    {
+      "protocol": "Decision DNA 0.6-farm",
+      "decision_id": "D-00153",
+      "day": 4,
+      "hour": 10,
+      "agent_id": "agent-mara",
+      "agent_name": "Mara",
+      "observation": {
+        "time": "Day 4, 10:00",
+        "weather": "clear",
+        "temperature": 61,
+        "position": "reeds",
+        "nearby": [
+          "flexible reed stalks",
+          "animal tracks"
+        ],
+        "needs": {
+          "hydration": 0,
+          "satiety": 0,
+          "energy": 19.20000000000004,
+          "warmth": 71
+        },
+        "inventory": {
+          "berries": 0,
+          "dryWood": 0,
+          "wetWood": 10,
+          "stones": 3,
+          "clay": 2,
+          "reeds": 3,
+          "sharpStone": 1,
+          "rawClayVessel": 1,
+          "firedVessel": 0,
+          "cordage": 0,
+          "woodPole": 0,
+          "pointedPole": 0,
+          "boundSharpTool": 0,
+          "rawMeat": 0,
+          "cookedMeat": 0,
+          "tubers": 0
+        },
+        "skills": {
+          "sharp-edge": 1,
+          "clay-shaping": 1
+        },
+        "knownPeople": [
+          {
+            "name": "Ivo",
+            "trust": 38,
+            "familiarity": 22,
+            "affinity": 52,
+            "nearby": false
+          }
+        ]
+      },
+      "action": "physical:bind:sharp_stone",
+      "action_label": "bind sharp stone flake",
+      "winner_score": null,
+      "baseline_policy_action": "drink",
+      "deviated_from_policy": true,
+      "candidates": [
+        {
+          "id": "drink",
+          "label": "Drink from the creek",
+          "score": 153.272,
+          "reasons": [
+            [
+              "thirst",
+              100
+            ]
+          ]
+        },
+        {
+          "id": "rest",
+          "label": "Rest in the shelter",
+          "score": 90.8,
+          "reasons": [
+            [
+              "fatigue",
+              80.79999999999995
+            ]
+          ]
+        },
+        {
+          "id": "seek_other",
+          "label": "Look for Ivo",
+          "score": 10.76,
+          "reasons": [
+            [
+              "cooperation",
+              5.44
+            ]
+          ]
+        },
+        {
+          "id": "gather_clay",
+          "label": "Gather sticky clay",
+          "score": 9.56,
+          "reasons": [
+            [
+              "curiosity",
+              5.76
+            ]
+          ]
+        },
+        {
+          "id": "gather_reeds",
+          "label": "Gather flexible reeds",
+          "score": 9.56,
+          "reasons": [
+            [
+              "curiosity",
+              5.76
+            ]
+          ]
+        },
+        {
+          "id": "gather_stones",
+          "label": "Gather loose stones",
+          "score": 8.56,
+          "reasons": [
+            [
+              "curiosity",
+              5.76
+            ]
+          ]
+        },
+        {
+          "id": "explore",
+          "label": "Explore beyond the known basin",
+          "score": 4.432,
+          "reasons": [
+            [
+              "curiosity",
+              9.36
+            ],
+            [
+              "novelty",
+              0
+            ]
+          ]
+        }
+      ],
+      "retrieved_memories": [
+        "M-M039",
+        "M-M026",
+        "M-M030",
+        "M-M017",
+        "M-M007",
+        "M-M015",
+        "M-M001",
+        "M-M032",
+        "M-M011",
+        "M-M025",
+        "M-M036",
+        "M-M019"
+      ],
+      "mind": {
+        "brain_mode": "ai",
+        "model": "gpt-5.6-luna",
+        "goal": "Prepare a usable tool for future material gathering.",
+        "intent": "Test whether reeds can secure the sharp stone into a functional hand tool.",
+        "confidence": 0.72,
+        "decision_summary": "The previous binding attempt with a wet branch produced no stable function; reeds are flexible and fibrous, making them a better material to test as binding for the sharp stone.",
+        "referenced_memory_ids": [
+          "M-M036",
+          "M-M015"
+        ],
+        "physical_proposal": {
+          "verb": "bind",
+          "primaryObjectId": "sharp_stone",
+          "secondaryObjectId": "carried_reeds",
+          "configuration": "bound",
+          "purpose": "Create a more stable cutting tool by binding the sharp stone flake to flexible reeds rather than the wet branch."
+        }
+      },
+      "physics": {
+        "version": "affordance-0.5",
+        "outcome": {
+          "physicalId": "P-00021",
+          "success": false,
+          "blocked": false,
+          "detail": "Mara binds the available objects, but no stable new function appears.",
+          "proposal": {
+            "verb": "bind",
+            "primaryObjectId": "sharp_stone",
+            "secondaryObjectId": "carried_reeds",
+            "configuration": "bound",
+            "purpose": "Create a more stable cutting tool by binding the sharp stone flake to flexible reeds rather than the wet branch."
+          },
+          "primary": "sharp_stone",
+          "secondary": "carried_reeds",
+          "worldObjectId": null,
+          "resolvedComponents": []
+        }
+      },
+      "memory_counterfactuals": []
+    },
     {
       "protocol": "Decision DNA 0.6-farm",
       "decision_id": "D-00152",
@@ -42052,26 +42912,26 @@
     }
   ],
   "seq": {
-    "event": 209,
-    "memory": 43,
-    "decision": 153,
+    "event": 214,
+    "memory": 44,
+    "decision": 157,
     "discovery": 4,
-    "physical": 21,
-    "artifact": 7,
+    "physical": 24,
+    "artifact": 8,
     "object": 1
   },
   "meta": {
     "canonical": true,
-    "lastAdvancedAt": "2026-09-16T12:06:33.868Z",
-    "tickNumber": 33,
+    "lastAdvancedAt": "2026-09-16T12:55:58.043Z",
+    "tickNumber": 34,
     "heartbeatMinutes": 5,
     "worldHoursPerHeartbeat": 2,
     "lastDecisionIds": [
-      "D-00151",
-      "D-00152"
+      "D-00155",
+      "D-00156"
     ],
     "pacing": "young world",
-    "aiDecisions": 89,
+    "aiDecisions": 93,
     "fallbackDecisions": 51,
     "mindMode": "ai",
     "mindConfigured": true,
@@ -42140,7 +43000,7 @@
       "id": "exhaustion",
       "title": "Mara is running on fumes",
       "urgency": 90,
-      "summary": "Mara's energy is 19%. Continuing strenuous work risks compounding the cold and hydration pressure.",
+      "summary": "Mara's energy is 3%. Continuing strenuous work risks compounding the cold and hydration pressure.",
       "kind": "survival",
       "agentIds": [
         "agent-mara"
@@ -42200,7 +43060,7 @@
         "agent-ivo"
       ],
       "placeIds": [
-        "edge"
+        "reeds"
       ]
     }
   ],
@@ -42293,10 +43153,10 @@
       ],
       "status": "active",
       "carrierId": "agent-ivo",
-      "position": "edge",
+      "position": "reeds",
       "coordinates": {
-        "x": 78,
-        "y": 42
+        "x": 10,
+        "y": 22
       },
       "created": {
         "day": 3,
@@ -42316,10 +43176,10 @@
       ],
       "status": "active",
       "carrierId": "agent-ivo",
-      "position": "edge",
+      "position": "reeds",
       "coordinates": {
-        "x": 78,
-        "y": 42
+        "x": 10,
+        "y": 22
       },
       "created": {
         "day": 3,
@@ -42368,10 +43228,10 @@
       ],
       "status": "active",
       "carrierId": "agent-ivo",
-      "position": "edge",
+      "position": "reeds",
       "coordinates": {
-        "x": 78,
-        "y": 42
+        "x": 10,
+        "y": 22
       },
       "created": {
         "day": 3,
@@ -42401,6 +43261,31 @@
       "created": {
         "day": 4,
         "hour": 5
+      },
+      "provenance": "failed cordage attempt 1",
+      "ended": null
+    },
+    {
+      "id": "ART-0007",
+      "type": "looseReedTwist",
+      "inventoryKey": "looseReedTwist",
+      "label": "unraveled reed twist",
+      "glyph": "∿",
+      "properties": [
+        "reeds",
+        "failed-binding",
+        "remnant"
+      ],
+      "status": "remnant",
+      "carrierId": null,
+      "position": "reeds",
+      "coordinates": {
+        "x": 10,
+        "y": 22
+      },
+      "created": {
+        "day": 4,
+        "hour": 11
       },
       "provenance": "failed cordage attempt 1",
       "ended": null
@@ -42580,7 +43465,7 @@
           "species": "oak",
           "densityKgM3": 690,
           "hardness": 5.8,
-          "moisturePct": 26.2
+          "moisturePct": 71
         },
         "parentId": null,
         "childrenIds": [],
@@ -42591,8 +43476,8 @@
         "state": {
           "active": true,
           "availableDryBranches": 0,
-          "availableWetBranches": 0,
-          "branchSupply": 0
+          "availableWetBranches": 1,
+          "branchSupply": 1
         },
         "provenance": {
           "created": {
@@ -42718,7 +43603,7 @@
         },
         "state": {
           "active": true,
-          "harvestableStalkBundles": 8
+          "harvestableStalkBundles": 5
         },
         "provenance": {
           "created": {
@@ -42784,7 +43669,7 @@
           "flammable": true
         },
         "material": {
-          "moisturePct": 19.8
+          "moisturePct": 16
         },
         "state": {
           "active": true
@@ -42900,7 +43785,7 @@
         "material": {},
         "state": {
           "active": true,
-          "clarity": 0.16
+          "clarity": 0.1
         },
         "parentId": null,
         "childrenIds": [],
@@ -42922,51 +43807,51 @@
       "temperature": {
         "type": "scalar",
         "unit": "F",
-        "global": 61
+        "global": 55
       },
       "precipitation": {
         "type": "scalar",
         "unit": "relative",
-        "global": 0,
-        "kind": "none"
+        "global": 0.78,
+        "kind": "rain"
       },
       "humidity": {
         "type": "scalar",
         "unit": "relative",
-        "global": 0.52
+        "global": 0.94
       },
       "light": {
         "type": "scalar",
         "unit": "relative",
-        "global": 0.87
+        "global": 1
       },
       "soilMoisture": {
         "type": "zonal",
         "unit": "relative",
         "zones": {
-          "camp": 0.36,
-          "meadow": 0.33,
-          "forest": 0.49,
+          "camp": 0.72,
+          "meadow": 0.7,
+          "forest": 0.78,
           "creek": 0.92,
           "clay": 0.88,
           "reeds": 0.96,
-          "berries": 0.39,
-          "stones": 0.2,
-          "log": 0.31,
-          "edge": 0.38
+          "berries": 0.68,
+          "stones": 0.43,
+          "log": 0.62,
+          "edge": 0.66
         }
       },
       "waterDepth": {
         "type": "object",
         "unit": "m",
         "objects": {
-          "OBJ-CREEK-001": 0.42
+          "OBJ-CREEK-001": 0.58
         }
       },
       "wind": {
         "type": "scalar",
         "unit": "m/s",
-        "global": 1.5
+        "global": 3.1
       }
     },
     "terrain": [
