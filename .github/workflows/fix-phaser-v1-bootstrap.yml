@@ -1,0 +1,29 @@
+name: Fix Phaser v1 Bootstrap
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'scripts/fix-phaser-v1-bootstrap.py'
+      - '.github/workflows/fix-phaser-v1-bootstrap.yml'
+  workflow_dispatch:
+permissions:
+  contents: write
+jobs:
+  fix:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - name: Apply correction
+        run: python3 scripts/fix-phaser-v1-bootstrap.py
+      - name: Validate
+        run: node --check phaser-world-v1.js
+      - name: Commit correction
+        run: |
+          git config user.name 'ChatGPTFarm Builder'
+          git config user.email 'actions@users.noreply.github.com'
+          git add phaser-world-v1.js
+          git commit -m 'phaser: fix v1 bootstrap syntax' || exit 0
+          git pull --rebase origin main
+          git push origin HEAD:main
