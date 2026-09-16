@@ -30,13 +30,13 @@ jobs:
       - name: Choose production or exact local build
         shell: bash
         run: |
-          expected=$(grep -oE 'world-pixi-v[0-9]+\.js' index.html | tail -1)
+          expected=$(grep -oE 'world-pixi-v[0-9]+\.js\?v=[0-9]+' index.html | tail -1)
           html=$(curl -fsSL --max-time 10 https://www.chatgptfarm.com/ || true)
-          if printf '%s' "$html" | grep -q "$expected"; then
-            echo "Visual QA: production is serving $expected"
+          if [ -n "$expected" ] && printf '%s' "$html" | grep -Fq "$expected"; then
+            echo "Visual QA: production is serving exact asset $expected"
             echo "BASE_URL=https://www.chatgptfarm.com/" >> "$GITHUB_ENV"
           else
-            echo "Visual QA: production is not serving $expected; reviewing exact checkout locally"
+            echo "Visual QA: production is not serving exact asset $expected; reviewing exact checkout locally"
             python3 -m http.server 4173 > /tmp/chatgptfarm-http.log 2>&1 &
             for i in {1..30}; do
               if curl -fsS http://127.0.0.1:4173/ >/dev/null; then
