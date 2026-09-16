@@ -6,6 +6,7 @@ on:
       - 'world-pixi-v*.js'
       - 'action-visuals-v*.js'
       - 'index.html'
+      - 'world-v*.css'
       - 'scripts/visual-qa.mjs'
       - '.github/workflows/visual-qa.yml'
   workflow_dispatch:
@@ -26,23 +27,28 @@ jobs:
         run: |
           npm install --no-save playwright@1.55.0
           npx playwright install --with-deps chromium
-      - name: Wait for this renderer on production
+      - name: Choose production or exact local build
+        shell: bash
         run: |
           expected=$(grep -oE 'world-pixi-v[0-9]+\.js' index.html | tail -1)
-          echo "Waiting for $expected on chatgptfarm.com"
-          for i in {1..60}; do
-            html=$(curl -fsSL --max-time 10 https://www.chatgptfarm.com/ || true)
-            if printf '%s' "$html" | grep -q "$expected"; then
-              echo "Production is serving $expected"
-              exit 0
-            fi
-            sleep 2
-          done
-          echo "Production did not reach $expected in time"
-          exit 1
-      - name: Run mobile visual review against production
-        env:
-          BASE_URL: https://www.chatgptfarm.com/
+          html=$(curl -fsSL --max-time 10 https://www.chatgptfarm.com/ || true)
+          if printf '%s' "$html" | grep -q "$expected"; then
+            echo "Visual QA: production is serving $expected"
+            echo "BASE_URL=https://www.chatgptfarm.com/" >> "$GITHUB_ENV"
+          else
+            echo "Visual QA: production is not serving $expected; reviewing exact checkout locally"
+            python3 -m http.server 4173 > /tmp/chatgptfarm-http.log 2>&1 &
+            for i in {1..30}; do
+              if curl -fsS http://127.0.0.1:4173/ >/dev/null; then
+                echo "BASE_URL=http://127.0.0.1:4173/" >> "$GITHUB_ENV"
+                exit 0
+              fi
+              sleep 1
+            done
+            cat /tmp/chatgptfarm-http.log
+            exit 1
+          fi
+      - name: Run mobile visual review
         run: node scripts/visual-qa.mjs
       - name: Upload visual review
         if: always()
