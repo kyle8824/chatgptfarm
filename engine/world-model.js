@@ -50,7 +50,7 @@ export function syncLegacyIntoWorldModel(w){
  structureEntity(w,'OBJ-SHELTER-001','branch_shelter','branch shelter',s.shelter,{x:64,y:34,zone:'camp'},{shelter:true,wood:true,flammable:true});
  structureEntity(w,'OBJ-FIRE-001','camp_fire','camp fire',s.fire,{x:61,y:33,zone:'camp'},{fire:true,heat:true,light:true});
  structureEntity(w,'OBJ-DRYING-001','drying_rack','drying rack',s.dryingRack,{x:68,y:34,zone:'camp'},{wood:true,dryingSurface:true});
- const tracks=findWorldObject(w,'OBJ-TRACKS-001');if(e.animalTracks&&!tracks)w.worldModel.objects.push({id:'OBJ-TRACKS-001',kind:'trace',type:'animal_tracks',label:'animal tracks',zone:'reeds',position:{x:14,y:25},geometry:{shape:'trail_marks',lengthM:9},physical:{tracks:true,directionalSign:true,weatherSensitive:true,inspectable:true},material:{},state:{active:true,clarity:.72},parentId:null,childrenIds:[],resolution:{level:'object',componentsInstantiated:true},provenance:{created:now(w),source:'ecology'},history:[]});
+ const tracks=findWorldObject(w,'OBJ-TRACKS-001');if(tracks){tracks.state.active=false;tracks.state.retiredReason='replaced by source-linked wildlife traces';}
  updateEnvironmentalModel(w);
 }
 

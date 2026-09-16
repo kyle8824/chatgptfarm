@@ -26,7 +26,7 @@ const snapshot=await page.evaluate(()=>window.ChatGPTFarmRendererDebug.snapshot(
 const items=snapshot.items||[],trees=items.filter(x=>x.kind==='tree'),reeds=items.filter(x=>x.kind==='reed-cluster'||x.kind==='reed_stand'),agents=items.filter(x=>x.kind==='agent'),wildlife=items.filter(x=>String(x.kind||'').startsWith('wildlife-')),raisedClay=items.filter(x=>x.kind==='clay_bank');
 if(trees.length<10)failures.push(`expected visible forest population, got ${trees.length} trees`);
 if(agents.length!==2)failures.push(`expected 2 agents, got ${agents.length}`);
-if(wildlife.length<8)failures.push(`expected living wildlife population, got ${wildlife.length}`);
+if(wildlife.length<8)failures.push(`expected living wildlife population, got ${wildlife.length}`);if((snapshot.ecology?.traceCount||0)<1)failures.push('expected at least one source-linked wildlife trace after QA ecology advance');if((snapshot.ecology?.ambient?.birds||0)<1)failures.push('ambient bird population is missing');
 if(raisedClay.length)failures.push('clay bank is incorrectly present in raised/depth-sorted layer');
 if(trees.length&&reeds.length){const minTree=Math.min(...trees.map(x=>Number(x.height)||0)),maxTree=Math.max(...trees.map(x=>Number(x.height)||0)),maxReed=Math.max(...reeds.map(x=>Number(x.height)||0));if(maxReed>=minTree*.72)failures.push(`reed/tree scale regression: max reed ${maxReed}px vs min tree ${minTree}px`);if(maxTree>84)failures.push(`forest dominance regression: max tree visual height ${maxTree}px`)}
 const giant=items.filter(x=>['low-vegetation','ground-object','shrub'].includes(x.tier)&&Number(x.height)>72);if(giant.length)failures.push(`oversized low-tier visuals: ${giant.map(x=>`${x.kind}:${x.height}`).join(', ')}`);
@@ -43,12 +43,15 @@ try{
     await shot(name);
   }
   await page.getByRole('button',{name:'AUTO',exact:true}).click();await page.waitForTimeout(400);
+  await page.evaluate(()=>window.ChatGPTFarmRendererDebug.focusWorldUnit(48,74,1.45));await page.waitForTimeout(250);await shot('mobile-creek');
+  if(!await page.evaluate(()=>window.ChatGPTFarmRendererDebug.focusWildlife('W-DEER-001',1.9)))failures.push('could not focus deer for visual QA');await page.waitForTimeout(250);await shot('mobile-deer');
+  if(!await page.evaluate(()=>window.ChatGPTFarmRendererDebug.focusWildlife('W-BEAR-001',1.75)))failures.push('could not focus bear for visual QA');await page.waitForTimeout(250);await shot('mobile-bear');
   await page.locator('#pulseButton').click();await page.waitForTimeout(350);await shot('mobile-world-pulse');
   if(!await page.locator('#pulseDrawer').evaluate(el=>el.classList.contains('open')))failures.push('World Pulse drawer did not open');
   for(const [tab,name] of [['relationship','mobile-relationship'],['dna','mobile-decision-dna'],['controls','mobile-ai-usage']]){await page.locator(`[data-pulse-tab="${tab}"]`).click();await page.waitForTimeout(160);await shot(name)}
   const toggles=await page.locator('#pulseControls input[data-ai]').count();if(toggles!==3)failures.push(`expected 3 AI controls, got ${toggles}`);
 }catch(e){failures.push(`interaction QA failed: ${String(e.message||e).slice(0,300)}`);try{await shot('mobile-interaction-error')}catch{}}
-fs.writeFileSync('visual-qa/report.json',JSON.stringify({base,snapshot,errors,failures,wildlifeCount:wildlife.length},null,2));
+fs.writeFileSync('visual-qa/report.json',JSON.stringify({base,snapshot,errors,failures,wildlifeCount:wildlife.length,traceCount:snapshot.ecology?.traceCount||0,ecologyEvents:snapshot.ecology?.eventCount||0},null,2));
 await browser.close();
 if(errors.length)console.error(errors.join('\n'));if(failures.length){console.error(failures.join('\n'));process.exit(1)}
 console.log(`Visual QA passed: ${trees.length} trees, ${reeds.length} raised reed clusters, ${agents.length} agents, ${wildlife.length} wildlife.`);
