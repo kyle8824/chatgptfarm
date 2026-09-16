@@ -1,0 +1,31 @@
+name: Tiny Farm Atlas Review
+on:
+  push:
+    paths:
+      - 'tiny-atlas.html'
+      - '.github/workflows/tiny-atlas-review.yml'
+permissions:
+  contents: read
+jobs:
+  review:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - run: |
+          npm install --no-save playwright@1.55.0
+          npx playwright install --with-deps chromium
+      - run: |
+          python3 -m http.server 4173 >/tmp/server.log 2>&1 &
+          for i in {1..30}; do curl -fsS http://127.0.0.1:4173/tiny-atlas.html >/dev/null && break; sleep 1; done
+      - run: |
+          node --input-type=module <<'NODE'
+          import { chromium } from 'playwright'; import fs from 'node:fs';fs.mkdirSync('atlas-review',{recursive:true});const b=await chromium.launch({headless:true});const p=await b.newPage({viewport:{width:980,height:1100}});await p.goto('http://127.0.0.1:4173/tiny-atlas.html',{waitUntil:'networkidle'});await p.screenshot({path:'atlas-review/tiny-farm-atlas.png',fullPage:true});await b.close();
+          NODE
+      - uses: actions/upload-artifact@v4
+        with:
+          name: tiny-farm-atlas-review
+          path: atlas-review/
+          retention-days: 2
