@@ -19,11 +19,11 @@ await page.waitForFunction(()=>window.ChatGPTFarmPhaserDebug?.snapshot()?.ready=
 await page.waitForTimeout(1800);
 const snap=()=>page.evaluate(()=>window.ChatGPTFarmPhaserDebug.snapshot());
 let s=await snap();
-if(s.version!=='phaser-v1-living-world')failures.push(`wrong renderer: ${s.version}`);
+if(s.version!=='phaser-v1.1-living-world')failures.push(`wrong renderer: ${s.version}`);
 if(!String(s.phaser||'').startsWith('3.'))failures.push(`Phaser failed to initialize: ${s.phaser}`);
 if(s.agents!==2)failures.push(`expected 2 agents, got ${s.agents}`);
 if(s.wildlife<8)failures.push(`expected >=8 wildlife, got ${s.wildlife}`);
-if(s.trees<30)failures.push(`expected a forest, got ${s.trees} trees`);
+if(s.trees<55)failures.push(`expected a forest, got ${s.trees} trees`);
 if(s.treeWaterCollisions!==0)failures.push(`trees spawned in canonical water: ${s.treeWaterCollisions}`);
 if((s.terrain?.water||0)<20||(s.terrain?.bank||0)<20||(s.terrain?.forest||0)<100)failures.push(`terrain occupancy is incomplete: ${JSON.stringify(s.terrain)}`);
 if(s.movingEntities<1)failures.push('no entity has visible interpolated movement');
@@ -51,6 +51,7 @@ else{
 
 await page.evaluate(()=>window.ChatGPTFarmPhaserDebug.focusWorldUnit(50,19,.92));await page.waitForTimeout(300);await page.screenshot({path:'phaser-qa/mobile-creek.png'});
 await page.evaluate(()=>window.ChatGPTFarmPhaserDebug.focusWorldUnit(64,34,1.05));await page.waitForTimeout(300);await page.screenshot({path:'phaser-qa/mobile-camp.png'});
+await page.evaluate(()=>window.ChatGPTFarmPhaserDebug.focusWorldUnit(14,29,1.0));await page.waitForTimeout(300);await page.screenshot({path:'phaser-qa/mobile-forest.png'});
 
 // Same-page heartbeat contract: update canonical state and confirm visible movement starts without reload.
 state=JSON.parse(JSON.stringify(state));state.meta=state.meta||{};state.meta.tickNumber=Number(state.meta.tickNumber||0)+100;const rabbit=state.ecologySystem?.wildlife?.find(x=>x.id==='W-RABBIT-001');if(rabbit){rabbit.previousPosition={...rabbit.position};rabbit.movement={from:{...rabbit.position},to:{x:Math.min(95,rabbit.position.x+5),y:rabbit.position.y+2},goal:{x:Math.min(95,rabbit.position.x+7),y:rabbit.position.y+2},worldDay:state.day,worldHour:state.hour,speed:3};rabbit.position={...rabbit.movement.to}}
