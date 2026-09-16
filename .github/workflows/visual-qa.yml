@@ -3,8 +3,8 @@ on:
   push:
     branches: [main]
     paths:
-      - 'world-pixi-v8.js'
-      - 'action-visuals-v8.js'
+      - 'world-pixi-v9.js'
+      - 'action-visuals-v9.js'
       - 'index.html'
       - 'scripts/visual-qa.mjs'
       - '.github/workflows/visual-qa.yml'
