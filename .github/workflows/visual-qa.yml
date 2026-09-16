@@ -3,14 +3,17 @@ on:
   push:
     branches: [main]
     paths:
-      - 'world-pixi-v9.js'
-      - 'action-visuals-v9.js'
+      - 'world-pixi-v*.js'
+      - 'action-visuals-v*.js'
       - 'index.html'
       - 'scripts/visual-qa.mjs'
       - '.github/workflows/visual-qa.yml'
   workflow_dispatch:
 permissions:
   contents: read
+concurrency:
+  group: chatgptfarm-visual-qa
+  cancel-in-progress: true
 jobs:
   visual:
     runs-on: ubuntu-latest
@@ -23,13 +26,23 @@ jobs:
         run: |
           npm install --no-save playwright@1.55.0
           npx playwright install --with-deps chromium
-      - name: Serve current build
+      - name: Wait for this renderer on production
         run: |
-          python3 -m http.server 4173 > /tmp/chatgptfarm-http.log 2>&1 &
-          for i in {1..30}; do curl -fsS http://127.0.0.1:4173/ >/dev/null && exit 0; sleep 1; done
-          cat /tmp/chatgptfarm-http.log
+          expected=$(grep -oE 'world-pixi-v[0-9]+\.js' index.html | tail -1)
+          echo "Waiting for $expected on chatgptfarm.com"
+          for i in {1..60}; do
+            html=$(curl -fsSL --max-time 10 https://www.chatgptfarm.com/ || true)
+            if printf '%s' "$html" | grep -q "$expected"; then
+              echo "Production is serving $expected"
+              exit 0
+            fi
+            sleep 2
+          done
+          echo "Production did not reach $expected in time"
           exit 1
-      - name: Run mobile visual review
+      - name: Run mobile visual review against production
+        env:
+          BASE_URL: https://www.chatgptfarm.com/
         run: node scripts/visual-qa.mjs
       - name: Upload visual review
         if: always()
