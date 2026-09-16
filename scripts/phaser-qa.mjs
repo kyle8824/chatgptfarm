@@ -1,4 +1,4 @@
-// Phaser Living World QA · v1.1 visual review
+// Phaser Living World QA · v1.3 diagnostic gate
 import { chromium } from 'playwright';
 import fs from 'node:fs';
 import { migrateWorld, advanceEcology } from '../engine.js';
@@ -11,12 +11,13 @@ const browser=await chromium.launch({headless:true});
 const context=await browser.newContext({viewport:{width:412,height:915},deviceScaleFactor:1,isMobile:true,hasTouch:true});
 const page=await context.newPage();
 const errors=[],failures=[];
-page.on('pageerror',e=>errors.push(`pageerror: ${e.message}`));
-page.on('console',m=>{if(m.type()==='error')errors.push(`console: ${m.text()}`)});
+page.on('pageerror',e=>{const v=`pageerror: ${e.message}`;errors.push(v);console.error(v)});
+page.on('console',m=>{if(m.type()==='error'){const v=`console: ${m.text()}`;errors.push(v);console.error(v)}});
 await page.route(/raw\.githubusercontent\.com\/kyle8824\/chatgptfarm\/main\/world\/state\.json.*/,route=>route.fulfill({status:200,contentType:'application/json',body:JSON.stringify(state)}));
 await page.goto(base,{waitUntil:'domcontentloaded',timeout:60000});
 await page.waitForFunction(()=>window.ChatGPTFarmPhaserDebug?.snapshot()?.ready===true,{timeout:60000});
-await page.waitForTimeout(1800);
+try{await page.waitForSelector('#phLoading.hidden',{state:'attached',timeout:10000})}catch(e){await page.screenshot({path:'phaser-qa/build-failure.png'});const snap=await page.evaluate(()=>window.ChatGPTFarmPhaserDebug?.snapshot?.()||null);fs.writeFileSync('phaser-qa/build-failure.json',JSON.stringify({snap,errors},null,2));await browser.close();throw new Error(`Phaser canonical state loaded but scene build never completed. ${errors.join(' | ')||'No browser error surfaced.'}`)}
+await page.waitForTimeout(1200);
 const snap=()=>page.evaluate(()=>window.ChatGPTFarmPhaserDebug.snapshot());
 let s=await snap();
 if(s.version!=='phaser-v1.3-basin-slice')failures.push(`wrong renderer: ${s.version}`);
@@ -34,12 +35,10 @@ for(const [name,id] of [['MARA','agent-mara'],['IVO','agent-ivo']]){
 }
 await page.getByRole('button',{name:'AUTO',exact:true}).click();await page.waitForTimeout(350);
 
-// Movement contract: a visible entity must pass through an intermediate point, not teleport.
 let before=(await snap()).positions['W-DEER-001'];
 if(!before)failures.push('missing deer for movement QA');
 else{
- const targetWorld={x:45,y:36};
- const targetPx={x:targetWorld.x*24,y:(100-targetWorld.y)*24};
+ const targetWorld={x:45,y:36},targetPx={x:targetWorld.x*24,y:(100-targetWorld.y)*24};
  await page.evaluate(({to})=>window.ChatGPTFarmPhaserDebug.simulateMove('W-DEER-001',to,2400),{to:targetWorld});
  await page.waitForTimeout(950);const mid=(await snap()).positions['W-DEER-001'];
  await page.waitForTimeout(1900);const end=(await snap()).positions['W-DEER-001'];
@@ -53,7 +52,6 @@ await page.evaluate(()=>window.ChatGPTFarmPhaserDebug.focusWorldUnit(50,19,.92))
 await page.evaluate(()=>window.ChatGPTFarmPhaserDebug.focusWorldUnit(64,34,1.05));await page.waitForTimeout(300);await page.screenshot({path:'phaser-qa/mobile-camp.png'});
 await page.evaluate(()=>window.ChatGPTFarmPhaserDebug.focusWorldUnit(14,29,1.0));await page.waitForTimeout(300);await page.screenshot({path:'phaser-qa/mobile-forest.png'});
 
-// Same-page heartbeat contract: update canonical state and confirm visible movement starts without reload.
 state=JSON.parse(JSON.stringify(state));state.meta=state.meta||{};state.meta.tickNumber=Number(state.meta.tickNumber||0)+100;const rabbit=state.ecologySystem?.wildlife?.find(x=>x.id==='W-RABBIT-001');if(rabbit){rabbit.previousPosition={...rabbit.position};rabbit.movement={from:{...rabbit.position},to:{x:Math.min(95,rabbit.position.x+5),y:rabbit.position.y+2},goal:{x:Math.min(95,rabbit.position.x+7),y:rabbit.position.y+2},worldDay:state.day,worldHour:state.hour,speed:3};rabbit.position={...rabbit.movement.to}}
 await page.evaluate(()=>window.ChatGPTFarmPhaserDebug.reload());await page.waitForTimeout(800);s=await snap();if(!s.positions['W-RABBIT-001'])failures.push('same-page heartbeat lost rabbit');if(s.movingEntities<1)failures.push('heartbeat did not create visible movement');await page.screenshot({path:'phaser-qa/mobile-heartbeat.png'});
 
