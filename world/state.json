@@ -1,13 +1,13 @@
 {
   "version": "0.7",
   "day": 3,
-  "hour": 20,
-  "temperature": 44,
+  "hour": 22,
+  "temperature": 40,
   "weather": "cloudy",
   "resources": {
     "berries": 0,
     "dryWood": 0,
-    "wetWood": 6,
+    "wetWood": 5,
     "stones": 14,
     "creekWater": true,
     "clay": 6,
@@ -33,16 +33,16 @@
     {
       "id": "agent-mara",
       "name": "Mara",
-      "position": "camp",
+      "position": "log",
       "needs": {
         "hydration": 0,
         "hunger": 0,
-        "energy": 44.40000000000001,
+        "energy": 64.80000000000001,
         "warmth": 21
       },
       "inventory": {
         "berries": 0,
-        "dryWood": 1,
+        "dryWood": 2,
         "wetWood": 8,
         "stones": 1,
         "clay": 0,
@@ -308,7 +308,7 @@
         "cooperation": 0.68,
         "caution": 0.56
       },
-      "currentAction": "Rest in the shelter",
+      "currentAction": "Cut dry branches with sharp stone",
       "skills": {
         "sharp-edge": 1,
         "clay-shaping": 1
@@ -318,14 +318,12 @@
       },
       "mind": {
         "brainMode": "ai",
-        "currentGoal": "Preserve enough energy to continue preparing fuel for overnight warmth.",
-        "intent": "Rest in the shelter rather than spend scarce energy on another uncertain search.",
-        "confidence": 0.72,
-        "decisionSummary": "Warmth is low and daylight has ended; with no reliable dry-wood source or fire action available, resting is the safest immediate choice.",
+        "currentGoal": "Increase dry-wood reserves while preserving enough energy for continued preparation.",
+        "intent": "Use the available dry branch supply and sharp stone to obtain more fuel.",
+        "confidence": 0.97,
+        "decisionSummary": "Warmth is low, night has arrived, and dry wood is known to provide strong warmth, so Mara prioritizes gathering dry branches.",
         "model": "gpt-5.6-luna",
         "recentActions": [
-          "physical:move:place:fallen_log",
-          "physical:search:place:fallen_log",
           "rest",
           "drink",
           "drink",
@@ -339,7 +337,9 @@
           "rest",
           "explore",
           "physical:search:place:edge",
-          "rest"
+          "rest",
+          "rest",
+          "gather_dry_wood"
         ],
         "lastReferencedMemoryIds": [
           "M-M026",
@@ -357,27 +357,27 @@
         "search:place:edge:none:none": 1
       },
       "coordinates": {
-        "x": 64,
-        "y": 34
+        "x": 59,
+        "y": 29
       },
       "activeAction": {
-        "id": "A-D-00123",
-        "decisionId": "D-00123",
-        "label": "Rest in the shelter",
-        "actionId": "rest",
+        "id": "A-D-00127",
+        "decisionId": "D-00127",
+        "label": "Cut dry branches with sharp stone",
+        "actionId": "gather_dry_wood",
         "worldDay": 3,
-        "worldHour": 19,
+        "worldHour": 21,
         "from": {
-          "x": 78,
-          "y": 42
+          "x": 64,
+          "y": 34
         },
         "to": {
-          "x": 64,
-          "y": 34
+          "x": 59,
+          "y": 29
         },
         "target": {
-          "x": 64,
-          "y": 34
+          "x": 59,
+          "y": 29
         },
         "moving": true,
         "phases": [
@@ -408,7 +408,7 @@
         ],
         "outcome": {
           "success": true,
-          "detail": "Mara rests beneath the shelter."
+          "detail": "Mara gathers 1 dry branches."
         },
         "physicalProposal": null
       }
@@ -416,12 +416,12 @@
     {
       "id": "agent-ivo",
       "name": "Ivo",
-      "position": "edge",
+      "position": "camp",
       "needs": {
         "hydration": 0,
-        "hunger": 32.7999999999999,
-        "energy": 24.40000000000014,
-        "warmth": 0
+        "hunger": 24.3999999999999,
+        "energy": 48.800000000000146,
+        "warmth": 2
       },
       "inventory": {
         "berries": 1,
@@ -675,7 +675,7 @@
         "cooperation": 0.76,
         "caution": 0.48
       },
-      "currentAction": "Talk with Mara",
+      "currentAction": "Cut dry branches with sharp stone",
       "skills": {
         "sharp-edge": 1,
         "clay-shaping": 1
@@ -686,14 +686,12 @@
       },
       "mind": {
         "brainMode": "ai",
-        "currentGoal": "Find effective fuel to improve warmth and conserve strength.",
-        "intent": "Use nearby social knowledge before spending more energy gathering damp branches.",
-        "confidence": 0.86,
-        "decisionSummary": "Mara is nearby and has emphasized the importance of dry wood; talking may provide a better fuel strategy than collecting more wet branches.",
+        "currentGoal": "Preserve warmth and survive overnight.",
+        "intent": "Cut the newly dried branch using the sharp stone.",
+        "confidence": 0.98,
+        "decisionSummary": "Warmth is critically low, and a dry branch has just become available; gathering dry wood is the safest urgent action.",
         "model": "gpt-5.6-luna",
         "recentActions": [
-          "eat_berries",
-          "drink",
           "eat_berries",
           "physical:move:place:fallen_log",
           "physical:search:place:fallen_log",
@@ -707,7 +705,9 @@
           "explore",
           "rest",
           "explore",
-          "talk"
+          "talk",
+          "rest",
+          "gather_dry_wood"
         ],
         "lastReferencedMemoryIds": [
           "M-I034"
@@ -725,27 +725,27 @@
         "place:carried_wet_branch:place:camp:raised": 1
       },
       "coordinates": {
-        "x": 78,
-        "y": 42
+        "x": 64,
+        "y": 34
       },
       "activeAction": {
-        "id": "A-D-00124",
-        "decisionId": "D-00124",
-        "label": "Talk with Mara",
-        "actionId": "talk",
+        "id": "A-D-00128",
+        "decisionId": "D-00128",
+        "label": "Cut dry branches with sharp stone",
+        "actionId": "gather_dry_wood",
         "worldDay": 3,
-        "worldHour": 19,
+        "worldHour": 21,
         "from": {
-          "x": 78,
-          "y": 42
+          "x": 64,
+          "y": 34
         },
         "to": {
-          "x": 78,
-          "y": 42
+          "x": 64,
+          "y": 34
         },
         "target": {
-          "x": 78,
-          "y": 42
+          "x": 64,
+          "y": 34
         },
         "moving": false,
         "phases": [
@@ -769,8 +769,8 @@
           }
         ],
         "outcome": {
-          "success": true,
-          "detail": "Ivo intended to talk, but the other person was no longer nearby."
+          "success": false,
+          "detail": ""
         },
         "physicalProposal": null
       }
@@ -787,6 +787,54 @@
     }
   },
   "history": [
+    {
+      "id": "E-00177",
+      "day": 3,
+      "hour": 21,
+      "type": "action",
+      "title": "Cut dry branches with sharp stone",
+      "detail": "",
+      "agentId": "agent-ivo",
+      "actionId": "gather_dry_wood"
+    },
+    {
+      "id": "E-00176",
+      "day": 3,
+      "hour": 21,
+      "type": "action",
+      "title": "Cut dry branches with sharp stone",
+      "detail": "Mara gathers 1 dry branches.",
+      "agentId": "agent-mara",
+      "actionId": "gather_dry_wood"
+    },
+    {
+      "id": "E-00175",
+      "day": 3,
+      "hour": 20,
+      "type": "world",
+      "title": "A fallen branch dried",
+      "detail": "Moving air and weather dried exposed wood enough to make it useful as dry fuel."
+    },
+    {
+      "id": "E-00174",
+      "day": 3,
+      "hour": 20,
+      "type": "action",
+      "title": "Rest in the shelter",
+      "detail": "Ivo rests beneath the shelter.",
+      "agentId": "agent-ivo",
+      "actionId": "rest"
+    },
+    {
+      "id": "E-00173",
+      "day": 3,
+      "hour": 20,
+      "type": "action",
+      "title": "Rest in the shelter",
+      "detail": "Mara rests beneath the shelter.",
+      "agentId": "agent-mara",
+      "actionId": "rest"
+    },
     {
       "id": "E-00172",
       "day": 3,
@@ -2683,6 +2731,801 @@
     }
   ],
   "dna": [
+    {
+      "protocol": "Decision DNA 0.6-farm",
+      "decision_id": "D-00128",
+      "day": 3,
+      "hour": 21,
+      "agent_id": "agent-ivo",
+      "agent_name": "Ivo",
+      "observation": {
+        "time": "Day 3, 21:00",
+        "weather": "cloudy",
+        "temperature": 42,
+        "position": "camp",
+        "nearby": [],
+        "needs": {
+          "hydration": 0,
+          "satiety": 28.5999999999999,
+          "energy": 51.60000000000014,
+          "warmth": 5
+        },
+        "inventory": {
+          "berries": 1,
+          "dryWood": 0,
+          "wetWood": 5,
+          "stones": 1,
+          "clay": 0,
+          "reeds": 3,
+          "sharpStone": 1,
+          "rawClayVessel": 1,
+          "firedVessel": 0,
+          "cordage": 0,
+          "woodPole": 1,
+          "pointedPole": 0,
+          "boundSharpTool": 0,
+          "rawMeat": 0,
+          "cookedMeat": 0,
+          "tubers": 0
+        },
+        "skills": {
+          "sharp-edge": 1,
+          "clay-shaping": 1
+        },
+        "knownPeople": [
+          {
+            "name": "Mara",
+            "trust": 38,
+            "familiarity": 22,
+            "affinity": 52,
+            "nearby": true
+          }
+        ]
+      },
+      "action": "gather_dry_wood",
+      "action_label": "Cut dry branches with sharp stone",
+      "winner_score": 37.7,
+      "baseline_policy_action": "drink",
+      "deviated_from_policy": true,
+      "candidates": [
+        {
+          "id": "drink",
+          "label": "Drink from the creek",
+          "score": 158.84,
+          "reasons": [
+            [
+              "thirst",
+              100
+            ]
+          ]
+        },
+        {
+          "id": "eat_berries",
+          "label": "Eat wild berries",
+          "score": 90.23,
+          "reasons": [
+            [
+              "hunger",
+              71.4000000000001
+            ]
+          ]
+        },
+        {
+          "id": "gather_dry_wood",
+          "label": "Cut dry branches with sharp stone",
+          "score": 37.7,
+          "reasons": [
+            [
+              "cold",
+              24.7
+            ]
+          ]
+        },
+        {
+          "id": "gather_wet_wood",
+          "label": "Gather damp branches",
+          "score": 17.1,
+          "reasons": [
+            [
+              "cold",
+              13.3
+            ]
+          ]
+        },
+        {
+          "id": "gather_clay",
+          "label": "Gather sticky clay",
+          "score": 12.64,
+          "reasons": [
+            [
+              "curiosity",
+              4.64
+            ]
+          ]
+        },
+        {
+          "id": "gather_reeds",
+          "label": "Gather flexible reeds",
+          "score": 12.64,
+          "reasons": [
+            [
+              "curiosity",
+              4.64
+            ]
+          ]
+        },
+        {
+          "id": "talk",
+          "label": "Talk with Mara",
+          "score": 12.2,
+          "reasons": [
+            [
+              "cooperation",
+              6.08
+            ]
+          ]
+        },
+        {
+          "id": "gather_stones",
+          "label": "Gather loose stones",
+          "score": 11.64,
+          "reasons": [
+            [
+              "curiosity",
+              4.64
+            ]
+          ]
+        },
+        {
+          "id": "explore",
+          "label": "Explore beyond the known basin",
+          "score": -0.604,
+          "reasons": [
+            [
+              "curiosity",
+              7.539999999999999
+            ],
+            [
+              "novelty",
+              0
+            ]
+          ]
+        }
+      ],
+      "retrieved_memories": [
+        "M-I027",
+        "M-I034",
+        "M-I018",
+        "M-I031",
+        "M-I014",
+        "M-I004",
+        "M-I002",
+        "M-I022",
+        "M-I008",
+        "M-I033",
+        "M-I016",
+        "M-I024"
+      ],
+      "mind": {
+        "brain_mode": "ai",
+        "model": "gpt-5.6-luna",
+        "goal": "Preserve warmth and survive overnight.",
+        "intent": "Cut the newly dried branch using the sharp stone.",
+        "confidence": 0.98,
+        "decision_summary": "Warmth is critically low, and a dry branch has just become available; gathering dry wood is the safest urgent action.",
+        "referenced_memory_ids": [
+          "M-I034"
+        ],
+        "physical_proposal": null
+      },
+      "physics": {
+        "version": "affordance-0.5",
+        "outcome": {
+          "success": false,
+          "detail": "",
+          "actionId": "gather_dry_wood"
+        }
+      },
+      "memory_counterfactuals": [
+        {
+          "removed_memory": "M-I034",
+          "memory_text": "Mara told me: Mara should prioritize finding and gathering dry wood for overnight warmth, because she remembers that dry wood catches flame and provides strong warmth.",
+          "original_action": "gather_dry_wood",
+          "counterfactual_action": "gather_dry_wood",
+          "action_changed": false,
+          "method": "model_replay",
+          "provisional": true,
+          "trials": 1
+        }
+      ]
+    },
+    {
+      "protocol": "Decision DNA 0.6-farm",
+      "decision_id": "D-00127",
+      "day": 3,
+      "hour": 21,
+      "agent_id": "agent-mara",
+      "agent_name": "Mara",
+      "observation": {
+        "time": "Day 3, 21:00",
+        "weather": "cloudy",
+        "temperature": 42,
+        "position": "camp",
+        "nearby": [],
+        "needs": {
+          "hydration": 0,
+          "satiety": 0,
+          "energy": 71.60000000000001,
+          "warmth": 26
+        },
+        "inventory": {
+          "berries": 0,
+          "dryWood": 1,
+          "wetWood": 8,
+          "stones": 1,
+          "clay": 0,
+          "reeds": 3,
+          "sharpStone": 1,
+          "rawClayVessel": 1,
+          "firedVessel": 0,
+          "cordage": 0,
+          "woodPole": 0,
+          "pointedPole": 0,
+          "boundSharpTool": 0,
+          "rawMeat": 0,
+          "cookedMeat": 0,
+          "tubers": 0
+        },
+        "skills": {
+          "sharp-edge": 1,
+          "clay-shaping": 1
+        },
+        "knownPeople": [
+          {
+            "name": "Ivo",
+            "trust": 38,
+            "familiarity": 22,
+            "affinity": 52,
+            "nearby": true
+          }
+        ]
+      },
+      "action": "gather_dry_wood",
+      "action_label": "Cut dry branches with sharp stone",
+      "winner_score": 32.24,
+      "baseline_policy_action": "drink",
+      "deviated_from_policy": true,
+      "candidates": [
+        {
+          "id": "drink",
+          "label": "Drink from the creek",
+          "score": 153.272,
+          "reasons": [
+            [
+              "thirst",
+              100
+            ]
+          ]
+        },
+        {
+          "id": "gather_dry_wood",
+          "label": "Cut dry branches with sharp stone",
+          "score": 32.24,
+          "reasons": [
+            [
+              "cold",
+              19.240000000000002
+            ]
+          ]
+        },
+        {
+          "id": "gather_wet_wood",
+          "label": "Gather damp branches",
+          "score": 18.36,
+          "reasons": [
+            [
+              "cold",
+              10.360000000000001
+            ]
+          ]
+        },
+        {
+          "id": "talk",
+          "label": "Talk with Ivo",
+          "score": 15.76,
+          "reasons": [
+            [
+              "cooperation",
+              5.44
+            ]
+          ]
+        },
+        {
+          "id": "gather_clay",
+          "label": "Gather sticky clay",
+          "score": 13.76,
+          "reasons": [
+            [
+              "curiosity",
+              5.76
+            ]
+          ]
+        },
+        {
+          "id": "gather_reeds",
+          "label": "Gather flexible reeds",
+          "score": 13.76,
+          "reasons": [
+            [
+              "curiosity",
+              5.76
+            ]
+          ]
+        },
+        {
+          "id": "gather_stones",
+          "label": "Gather loose stones",
+          "score": 12.76,
+          "reasons": [
+            [
+              "curiosity",
+              5.76
+            ]
+          ]
+        },
+        {
+          "id": "explore",
+          "label": "Explore beyond the known basin",
+          "score": 8.616,
+          "reasons": [
+            [
+              "curiosity",
+              9.36
+            ],
+            [
+              "novelty",
+              0
+            ]
+          ]
+        }
+      ],
+      "retrieved_memories": [
+        "M-M026",
+        "M-M030",
+        "M-M007",
+        "M-M015",
+        "M-M032",
+        "M-M001",
+        "M-M017",
+        "M-M011",
+        "M-M036",
+        "M-M019",
+        "M-M003",
+        "M-M005"
+      ],
+      "mind": {
+        "brain_mode": "ai",
+        "model": "gpt-5.6-luna",
+        "goal": "Increase dry-wood reserves while preserving enough energy for continued preparation.",
+        "intent": "Use the available dry branch supply and sharp stone to obtain more fuel.",
+        "confidence": 0.97,
+        "decision_summary": "Warmth is low, night has arrived, and dry wood is known to provide strong warmth, so Mara prioritizes gathering dry branches.",
+        "referenced_memory_ids": [
+          "M-M026",
+          "M-M007"
+        ],
+        "physical_proposal": null
+      },
+      "physics": {
+        "version": "affordance-0.5",
+        "outcome": {
+          "success": true,
+          "detail": "Mara gathers 1 dry branches.",
+          "actionId": "gather_dry_wood"
+        }
+      },
+      "memory_counterfactuals": [
+        {
+          "removed_memory": "M-M026",
+          "memory_text": "Mara should prioritize finding and gathering dry wood for overnight warmth, because she remembers that dry wood catches flame and provides strong warmth.",
+          "original_action": "gather_dry_wood",
+          "counterfactual_action": "gather_dry_wood",
+          "action_changed": false,
+          "method": "model_replay",
+          "provisional": true,
+          "trials": 1
+        }
+      ]
+    },
+    {
+      "protocol": "Decision DNA 0.6-farm",
+      "decision_id": "D-00126",
+      "day": 3,
+      "hour": 20,
+      "agent_id": "agent-ivo",
+      "agent_name": "Ivo",
+      "observation": {
+        "time": "Day 3, 20:00",
+        "weather": "cloudy",
+        "temperature": 44,
+        "position": "edge",
+        "nearby": [
+          "flexible reed stalks",
+          "animal tracks"
+        ],
+        "needs": {
+          "hydration": 0,
+          "satiety": 32.7999999999999,
+          "energy": 24.40000000000014,
+          "warmth": 0
+        },
+        "inventory": {
+          "berries": 1,
+          "dryWood": 0,
+          "wetWood": 5,
+          "stones": 1,
+          "clay": 0,
+          "reeds": 3,
+          "sharpStone": 1,
+          "rawClayVessel": 1,
+          "firedVessel": 0,
+          "cordage": 0,
+          "woodPole": 1,
+          "pointedPole": 0,
+          "boundSharpTool": 0,
+          "rawMeat": 0,
+          "cookedMeat": 0,
+          "tubers": 0
+        },
+        "skills": {
+          "sharp-edge": 1,
+          "clay-shaping": 1
+        },
+        "knownPeople": [
+          {
+            "name": "Mara",
+            "trust": 38,
+            "familiarity": 22,
+            "affinity": 52,
+            "nearby": false
+          }
+        ]
+      },
+      "action": "rest",
+      "action_label": "Rest in the shelter",
+      "winner_score": 86.844,
+      "baseline_policy_action": "drink",
+      "deviated_from_policy": true,
+      "candidates": [
+        {
+          "id": "drink",
+          "label": "Drink from the creek",
+          "score": 158.84,
+          "reasons": [
+            [
+              "thirst",
+              100
+            ]
+          ]
+        },
+        {
+          "id": "rest",
+          "label": "Rest in the shelter",
+          "score": 86.844,
+          "reasons": [
+            [
+              "fatigue",
+              75.59999999999985
+            ]
+          ]
+        },
+        {
+          "id": "eat_berries",
+          "label": "Eat wild berries",
+          "score": 85.19,
+          "reasons": [
+            [
+              "hunger",
+              67.2000000000001
+            ]
+          ]
+        },
+        {
+          "id": "gather_wet_wood",
+          "label": "Gather damp branches",
+          "score": 13.6,
+          "reasons": [
+            [
+              "cold",
+              14.000000000000002
+            ]
+          ]
+        },
+        {
+          "id": "gather_clay",
+          "label": "Gather sticky clay",
+          "score": 12.64,
+          "reasons": [
+            [
+              "curiosity",
+              4.64
+            ]
+          ]
+        },
+        {
+          "id": "gather_reeds",
+          "label": "Gather flexible reeds",
+          "score": 12.64,
+          "reasons": [
+            [
+              "curiosity",
+              4.64
+            ]
+          ]
+        },
+        {
+          "id": "gather_stones",
+          "label": "Gather loose stones",
+          "score": 11.64,
+          "reasons": [
+            [
+              "curiosity",
+              4.64
+            ]
+          ]
+        },
+        {
+          "id": "seek_other",
+          "label": "Look for Mara",
+          "score": 11.4,
+          "reasons": [
+            [
+              "cooperation",
+              6.08
+            ]
+          ]
+        },
+        {
+          "id": "explore",
+          "label": "Explore beyond the known basin",
+          "score": -4.956,
+          "reasons": [
+            [
+              "curiosity",
+              7.539999999999999
+            ],
+            [
+              "novelty",
+              0
+            ]
+          ]
+        }
+      ],
+      "retrieved_memories": [
+        "M-I027",
+        "M-I034",
+        "M-I022",
+        "M-I018",
+        "M-I031",
+        "M-I014",
+        "M-I004",
+        "M-I002",
+        "M-I008",
+        "M-I033",
+        "M-I016",
+        "M-I024"
+      ],
+      "mind": {
+        "brain_mode": "ai",
+        "model": "gpt-5.6-luna",
+        "goal": "Preserve strength and survive until conditions allow a safer search for dry wood.",
+        "intent": "Rest in the shelter rather than spend limited energy exploring again at night.",
+        "confidence": 0.84,
+        "decision_summary": "Warmth is absent and energy is low, but recent exploration found no new area and available branches are wet. Resting in the shelter is the safest immediate action while preserving the possibility of finding better fuel later.",
+        "referenced_memory_ids": [
+          "M-I008",
+          "M-I034"
+        ],
+        "physical_proposal": null
+      },
+      "physics": {
+        "version": "affordance-0.5",
+        "outcome": {
+          "success": true,
+          "detail": "Ivo rests beneath the shelter.",
+          "actionId": "rest"
+        }
+      },
+      "memory_counterfactuals": []
+    },
+    {
+      "protocol": "Decision DNA 0.6-farm",
+      "decision_id": "D-00125",
+      "day": 3,
+      "hour": 20,
+      "agent_id": "agent-mara",
+      "agent_name": "Mara",
+      "observation": {
+        "time": "Day 3, 20:00",
+        "weather": "cloudy",
+        "temperature": 44,
+        "position": "camp",
+        "nearby": [],
+        "needs": {
+          "hydration": 0,
+          "satiety": 0,
+          "energy": 44.40000000000001,
+          "warmth": 21
+        },
+        "inventory": {
+          "berries": 0,
+          "dryWood": 1,
+          "wetWood": 8,
+          "stones": 1,
+          "clay": 0,
+          "reeds": 3,
+          "sharpStone": 1,
+          "rawClayVessel": 1,
+          "firedVessel": 0,
+          "cordage": 0,
+          "woodPole": 0,
+          "pointedPole": 0,
+          "boundSharpTool": 0,
+          "rawMeat": 0,
+          "cookedMeat": 0,
+          "tubers": 0
+        },
+        "skills": {
+          "sharp-edge": 1,
+          "clay-shaping": 1
+        },
+        "knownPeople": [
+          {
+            "name": "Ivo",
+            "trust": 38,
+            "familiarity": 22,
+            "affinity": 52,
+            "nearby": false
+          }
+        ]
+      },
+      "action": "rest",
+      "action_label": "Rest in the shelter",
+      "winner_score": 54.68,
+      "baseline_policy_action": "drink",
+      "deviated_from_policy": true,
+      "candidates": [
+        {
+          "id": "drink",
+          "label": "Drink from the creek",
+          "score": 153.272,
+          "reasons": [
+            [
+              "thirst",
+              100
+            ]
+          ]
+        },
+        {
+          "id": "rest",
+          "label": "Rest in the shelter",
+          "score": 54.68,
+          "reasons": [
+            [
+              "fatigue",
+              55.59999999999999
+            ]
+          ]
+        },
+        {
+          "id": "gather_wet_wood",
+          "label": "Gather damp branches",
+          "score": 19.06,
+          "reasons": [
+            [
+              "cold",
+              11.06
+            ]
+          ]
+        },
+        {
+          "id": "gather_clay",
+          "label": "Gather sticky clay",
+          "score": 13.76,
+          "reasons": [
+            [
+              "curiosity",
+              5.76
+            ]
+          ]
+        },
+        {
+          "id": "gather_reeds",
+          "label": "Gather flexible reeds",
+          "score": 13.76,
+          "reasons": [
+            [
+              "curiosity",
+              5.76
+            ]
+          ]
+        },
+        {
+          "id": "gather_stones",
+          "label": "Gather loose stones",
+          "score": 12.76,
+          "reasons": [
+            [
+              "curiosity",
+              5.76
+            ]
+          ]
+        },
+        {
+          "id": "seek_other",
+          "label": "Look for Ivo",
+          "score": 10.76,
+          "reasons": [
+            [
+              "cooperation",
+              5.44
+            ]
+          ]
+        },
+        {
+          "id": "explore",
+          "label": "Explore beyond the known basin",
+          "score": 4.264,
+          "reasons": [
+            [
+              "curiosity",
+              9.36
+            ],
+            [
+              "novelty",
+              0
+            ]
+          ]
+        }
+      ],
+      "retrieved_memories": [
+        "M-M026",
+        "M-M030",
+        "M-M007",
+        "M-M015",
+        "M-M032",
+        "M-M001",
+        "M-M017",
+        "M-M011",
+        "M-M036",
+        "M-M019",
+        "M-M003",
+        "M-M005"
+      ],
+      "mind": {
+        "brain_mode": "ai",
+        "model": "gpt-5.6-luna",
+        "goal": "Preserve enough energy to continue preparing fuel for overnight warmth.",
+        "intent": "Rest at camp rather than spend energy traveling or experimenting in darkness.",
+        "confidence": 0.82,
+        "decision_summary": "Energy is only moderate, berries are exhausted, and no reliable dry-wood source is accessible now. Rest conserves strength while the single dry branch and gathered wet wood remain available.",
+        "referenced_memory_ids": [
+          "M-M026",
+          "M-M007",
+          "M-M005"
+        ],
+        "physical_proposal": null
+      },
+      "physics": {
+        "version": "affordance-0.5",
+        "outcome": {
+          "success": true,
+          "detail": "Mara rests beneath the shelter.",
+          "actionId": "rest"
+        }
+      },
+      "memory_counterfactuals": []
+    },
     {
       "protocol": "Decision DNA 0.6-farm",
       "decision_id": "D-00124",
@@ -35994,9 +36837,9 @@
     }
   ],
   "seq": {
-    "event": 173,
+    "event": 178,
     "memory": 39,
-    "decision": 125,
+    "decision": 129,
     "discovery": 4,
     "physical": 17,
     "artifact": 6,
@@ -36004,16 +36847,16 @@
   },
   "meta": {
     "canonical": true,
-    "lastAdvancedAt": "2026-09-16T00:02:10.483Z",
-    "tickNumber": 26,
+    "lastAdvancedAt": "2026-09-16T01:35:24.176Z",
+    "tickNumber": 27,
     "heartbeatMinutes": 5,
     "worldHoursPerHeartbeat": 2,
     "lastDecisionIds": [
-      "D-00123",
-      "D-00124"
+      "D-00127",
+      "D-00128"
     ],
     "pacing": "young world",
-    "aiDecisions": 61,
+    "aiDecisions": 65,
     "fallbackDecisions": 51,
     "mindMode": "ai",
     "mindConfigured": true,
@@ -36069,7 +36912,7 @@
       "id": "cold-night",
       "title": "Cold night, no fire",
       "urgency": 95,
-      "summary": "It is 44°F and the fire is out. The coldest agent is at 0% warmth.",
+      "summary": "It is 40°F and the fire is out. The coldest agent is at 2% warmth.",
       "kind": "survival",
       "agentIds": [
         "agent-ivo"
@@ -36089,19 +36932,6 @@
       ],
       "placeIds": [
         "creek"
-      ]
-    },
-    {
-      "id": "exhaustion",
-      "title": "Ivo is running on fumes",
-      "urgency": 90,
-      "summary": "Ivo's energy is 24%. Continuing strenuous work risks compounding the cold and hydration pressure.",
-      "kind": "survival",
-      "agentIds": [
-        "agent-ivo"
-      ],
-      "placeIds": [
-        "edge"
       ]
     },
     {
@@ -36140,6 +36970,19 @@
       "kind": "experiment",
       "agentIds": [
         "agent-mara"
+      ],
+      "placeIds": [
+        "log"
+      ]
+    },
+    {
+      "id": "clay-agent-ivo",
+      "title": "Ivo has an unfired clay vessel",
+      "urgency": 56,
+      "summary": "The shaped vessel persists, but its behavior under sustained heat is still unresolved.",
+      "kind": "experiment",
+      "agentIds": [
+        "agent-ivo"
       ],
       "placeIds": [
         "camp"
@@ -36212,10 +37055,10 @@
       ],
       "status": "active",
       "carrierId": "agent-mara",
-      "position": "camp",
+      "position": "log",
       "coordinates": {
-        "x": 64,
-        "y": 34
+        "x": 59,
+        "y": 29
       },
       "created": {
         "day": 3,
@@ -36235,10 +37078,10 @@
       ],
       "status": "active",
       "carrierId": "agent-ivo",
-      "position": "edge",
+      "position": "camp",
       "coordinates": {
-        "x": 78,
-        "y": 42
+        "x": 64,
+        "y": 34
       },
       "created": {
         "day": 3,
@@ -36258,10 +37101,10 @@
       ],
       "status": "active",
       "carrierId": "agent-ivo",
-      "position": "edge",
+      "position": "camp",
       "coordinates": {
-        "x": 78,
-        "y": 42
+        "x": 64,
+        "y": 34
       },
       "created": {
         "day": 3,
@@ -36284,10 +37127,10 @@
       ],
       "status": "active",
       "carrierId": "agent-mara",
-      "position": "camp",
+      "position": "log",
       "coordinates": {
-        "x": 64,
-        "y": 34
+        "x": 59,
+        "y": 29
       },
       "created": {
         "day": 3,
@@ -36310,10 +37153,10 @@
       ],
       "status": "active",
       "carrierId": "agent-ivo",
-      "position": "edge",
+      "position": "camp",
       "coordinates": {
-        "x": 78,
-        "y": 42
+        "x": 64,
+        "y": 34
       },
       "created": {
         "day": 3,
@@ -36508,8 +37351,8 @@
         "state": {
           "active": true,
           "availableDryBranches": 0,
-          "availableWetBranches": 6,
-          "branchSupply": 6
+          "availableWetBranches": 5,
+          "branchSupply": 5
         },
         "provenance": {
           "created": {
@@ -36701,7 +37544,7 @@
           "flammable": true
         },
         "material": {
-          "moisturePct": 58.4
+          "moisturePct": 60.2
         },
         "state": {
           "active": true
@@ -36839,7 +37682,7 @@
       "temperature": {
         "type": "scalar",
         "unit": "F",
-        "global": 44
+        "global": 40
       },
       "precipitation": {
         "type": "scalar",
