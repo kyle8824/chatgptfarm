@@ -34,7 +34,14 @@ if(agents.length===2&&agents.every(x=>Number.isFinite(x.screenX)&&Number.isFinit
 async function shot(name){await page.screenshot({path:`visual-qa/${name}.png`,fullPage:false});}
 try{
   await shot('mobile-auto');
-  for(const [button,name] of [['MARA','mobile-mara'],['IVO','mobile-ivo']]){await page.getByRole('button',{name:button,exact:true}).click();await page.waitForTimeout(700);await shot(name)}
+  for(const [button,name,id] of [['MARA','mobile-mara','agent-mara'],['IVO','mobile-ivo','agent-ivo']]){
+    await page.getByRole('button',{name:button,exact:true}).click();
+    await page.waitForTimeout(700);
+    const follow=await page.evaluate(agentId=>{const s=window.ChatGPTFarmRendererDebug.snapshot(),a=(s.items||[]).find(x=>x.kind==='agent'&&x.sourceId===agentId);return{camera:s.camera,agent:a||null}},id);
+    if(!follow.agent||!Number.isFinite(follow.agent.screenX)||!Number.isFinite(follow.agent.screenBaseY))failures.push(`${button} follow target is missing from renderer debug state`);
+    else{const d=Math.hypot(follow.camera.x-follow.agent.screenX,follow.camera.y-follow.agent.screenBaseY);if(d>14)failures.push(`${button} camera is not following the rendered agent: ${d.toFixed(1)}px off target`)}
+    await shot(name);
+  }
   await page.getByRole('button',{name:'AUTO',exact:true}).click();await page.waitForTimeout(400);
   await page.locator('#pulseButton').click();await page.waitForTimeout(350);await shot('mobile-world-pulse');
   if(!await page.locator('#pulseDrawer').evaluate(el=>el.classList.contains('open')))failures.push('World Pulse drawer did not open');
