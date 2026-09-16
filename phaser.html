@@ -1,0 +1,35 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover,user-scalable=no">
+  <meta name="theme-color" content="#0b120d">
+  <meta name="description" content="ChatGPTFarm Phaser world renderer preview.">
+  <title>ChatGPTFarm — Living World Preview</title>
+  <link rel="stylesheet" href="phaser-world.css?v=0010">
+</head>
+<body>
+  <main id="phaserShell">
+    <div id="phaserWorld" aria-label="Live ChatGPTFarm Phaser world"></div>
+    <header class="phHud phTop">
+      <div class="phBrand"><span class="phMark">✦</span><div><strong>ChatGPTFarm</strong><small>LIVING WORLD · PHASER PREVIEW</small></div></div>
+      <div id="phWorldStatus" class="phStatus"><b>CONNECTING</b><span>Reading canonical state…</span></div>
+    </header>
+    <nav class="phHud phCamera" aria-label="Camera controls">
+      <button type="button" data-camera="auto" class="active">AUTO</button>
+      <button type="button" data-camera="agent-mara">MARA</button>
+      <button type="button" data-camera="agent-ivo">IVO</button>
+    </nav>
+    <div class="phHud phZoom" aria-label="Zoom controls">
+      <button type="button" id="phZoomIn" aria-label="Zoom in">+</button>
+      <button type="button" id="phZoomOut" aria-label="Zoom out">−</button>
+      <button type="button" id="phHome" aria-label="Recenter">⌂</button>
+    </div>
+    <section id="phFocus" class="phHud phFocus" aria-live="polite"><small>READING WORLD</small><strong>Waiting for canonical activity…</strong></section>
+    <section id="phPulse" class="phHud phPulse"><div><b>WORLD PULSE</b><span id="phPulseText">Building the living basin…</span></div><span id="phLifeCount">—</span></section>
+    <div id="phLoading" class="phLoading"><div><span>✦</span><b>Entering Willow Basin</b><small>Building terrain from canonical state…</small></div></div>
+  </main>
+  <script src="https://cdn.jsdelivr.net/npm/phaser@3.90.0/dist/phaser.min.js"></script>
+  <script src="phaser-world-v1.js?v=0010"></script>
+</body>
+</html>
