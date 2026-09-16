@@ -6,12 +6,12 @@
   <title>ChatGPTFarm — The Living World</title>
   <link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="styles.css"><link rel="stylesheet" href="living.css"><link rel="stylesheet" href="panels.css"><link rel="stylesheet" href="artifacts.css">
+  <link rel="stylesheet" href="styles.css"><link rel="stylesheet" href="living.css"><link rel="stylesheet" href="panels.css"><link rel="stylesheet" href="artifacts.css"><link rel="stylesheet" href="world-model.css">
 </head>
 <body>
 <header class="topbar"><div class="brand"><span class="brand-seed">✦</span><div><b>ChatGPTFarm</b><small>WORLD 01 · AUTONOMOUS · DECISION DNA</small></div></div><div class="top-actions"><span id="saveState" class="save-state">● CONNECTING TO WORLD</span></div></header>
 <main>
-  <section class="hero living-hero"><div><span class="kicker">THE LIVING WORLD · v0.6</span><h1>Something is happening<br><em>even when nobody is watching.</em></h1><p>Mara and Ivo perceive, remember, decide and act inside the same persistent world. The camera shows the execution of real canonical decisions; the world engine—not the model—decides what physically happens.</p></div><div class="world-clock"><span>PROJECTED WORLD TIME</span><strong id="dayLabel">Connecting…</strong><small id="weatherLabel">Loading weather</small><small id="heartbeatLabel">Waiting for heartbeat</small></div></section>
+  <section class="hero living-hero"><div><span class="kicker">THE LIVING WORLD · v0.7</span><h1>Something is happening<br><em>even when nobody is watching.</em></h1><p>Mara and Ivo perceive, remember, decide and act inside the same persistent object world. The environment exists as canonical simulation state first; this page is only a view of it.</p></div><div class="world-clock"><span>PROJECTED WORLD TIME</span><strong id="dayLabel">Connecting…</strong><small id="weatherLabel">Loading weather</small><small id="heartbeatLabel">Waiting for heartbeat</small></div></section>
 
   <section class="world-status"><div><span class="live-dot"></span><b>WORLD IS RUNNING</b><small id="lastAdvanced">Awaiting canonical heartbeat</small></div><div><b id="tickCount">0</b><small>canonical heartbeats</small></div><div><b id="worldAge">Day 1</b><small>world age</small></div><div><b id="relationshipSummary">Strangers</b><small>Mara ↔ Ivo</small></div></section>
 
@@ -28,10 +28,10 @@
           <div id="ivoSprite" class="agent ivo" title="Ivo"><span class="name-tag">Ivo</span><div class="head"></div><div class="body"></div><span class="agent-phase"></span></div>
         </div>
         <div id="weatherLayer" class="weather-layer"></div><div id="nightLayer" class="night-layer"></div>
-        <div class="world-hud"><span id="focusStatus" class="focus-status">AUTO · FINDING THE STORY</span><span id="worldMode" class="world-mode">CANONICAL</span></div>
+        <div class="world-hud"><span id="focusStatus" class="focus-status">AUTO · FINDING THE STORY</span><span id="worldMode" class="world-mode">CANONICAL OBJECT WORLD</span></div>
         <div id="worldCaption" class="world-caption">The shared world is loading.</div>
       </div>
-      <div class="legend"><span><i class="dot water"></i> water</span><span><i class="dot food"></i> food</span><span><i class="dot wood"></i> materials</span><span><i class="dot unknown"></i> frontier</span><span>Meaningful artifacts persist. Motion between heartbeats replays the latest canonical action; it does not create new decisions.</span></div>
+      <div class="legend"><span><i class="dot water"></i> water</span><span><i class="dot food"></i> food</span><span><i class="dot wood"></i> materials</span><span><i class="dot unknown"></i> frontier</span><span>Consequential scenery is backed by canonical world entities. Detail increases when agents inspect and interact with it.</span></div>
     </div>
 
     <aside class="live-rail">
@@ -55,6 +55,6 @@
 
   <section class="guardian"><div><span class="kicker">GUARDIAN · OBSERVABILITY</span><h2>Watch causes accumulate.</h2><p id="guardianStatus">Guardian is reading the current world.</p></div><div class="guardian-flow"><span>PERCEIVE</span><b>→</b><span>REMEMBER</span><b>→</b><span>INTEND</span><b>→</b><span>ACT</span><b>→</b><span>TRACE</span></div></section>
 </main>
-<footer><span>ChatGPTFarm v0.6</span><p>Canonical state is shared by every visitor and versioned in GitHub.</p><span>Decision DNA living laboratory</span></footer>
-<script src="app.js"></script><script src="artifacts-ui.js"></script>
+<footer><span>ChatGPTFarm v0.7</span><p>The environment is canonical object state; rendering is only a view.</p><span>Decision DNA living laboratory</span></footer>
+<script src="app.js"></script><script src="artifacts-ui.js"></script><script src="world-model-ui.js"></script>
 </body></html>
