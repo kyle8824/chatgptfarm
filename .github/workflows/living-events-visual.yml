@@ -17,20 +17,17 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: 22
-      - name: Apply Living Events integration
-        run: python3 scripts/apply-living-events.py
+      - name: Apply Living Events spectator polish
+        run: python3 scripts/apply-living-events-polish.py
       - name: Validate
         run: |
-          node --check engine/runtime.js
-          node --check engine/world-model.js
           node --check world-pixi-v11.js
-          node --check scripts/visual-qa.mjs
           npm test
-      - name: Commit Living Events layer
+      - name: Commit Living Events polish
         run: |
           git config user.name 'ChatGPTFarm Builder'
           git config user.email 'actions@users.noreply.github.com'
-          git add engine/runtime.js engine/world-model.js world-pixi-v11.js scripts/visual-qa.mjs
-          git commit -m 'v0.9.1: render living events and animal traces' || exit 0
+          git add world-pixi-v11.js
+          git commit -m 'v0.9.1: polish wildlife visuals and spectator AUTO' || exit 0
           git pull --rebase origin main
           git push origin HEAD:main
