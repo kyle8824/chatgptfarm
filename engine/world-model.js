@@ -1,8 +1,8 @@
-export const WORLD_MODEL_VERSION='object-field-0.7';
+export const WORLD_MODEL_VERSION='object-field-0.8';
 
 const FIXED={
  camp:{id:'OBJ-CAMP-001',kind:'place',type:'camp_area',label:'camp',zone:'camp',position:{x:64,y:34},geometry:{shape:'ellipse',radiusM:11},physical:{navigable:true,ground:'meadow-soil'}},
- creek:{id:'OBJ-CREEK-001',kind:'feature',type:'creek_segment',label:'creek',zone:'creek',position:{x:48,y:19},geometry:{shape:'polyline',widthM:5,points:[[0,73],[28,66],[48,76],[70,71],[100,62]]},physical:{navigable:true,water:true,liquid:true,potable:true}},
+ creek:{id:'OBJ-CREEK-001',kind:'feature',type:'creek_segment',label:'creek',zone:'creek',position:{x:48,y:20},geometry:{shape:'polyline',widthM:5,points:[[0,18],[12,21],[27,18],[43,22],[58,19],[72,23],[86,21],[100,24]]},physical:{navigable:true,water:true,liquid:true,potable:true}},
  berries:{id:'OBJ-BERRIES-001',kind:'organism_group',type:'berry_patch',label:'berry patch',zone:'berries',position:{x:29,y:31},geometry:{shape:'ellipse',radiusM:7},physical:{navigable:true,biological:true,harvestable:true,edible:true,perishable:true}},
  log:{id:'OBJ-TREE-001',kind:'object',type:'fallen_tree',label:'fallen oak',zone:'log',position:{x:59,y:29},geometry:{shape:'capsule',lengthM:4.8,diameterM:.31,orientationDeg:81},physical:{wood:true,rigid:true,cuttable:true,flammable:true,heavy:true,inspectable:true},material:{species:'oak',densityKgM3:690,hardness:5.8}},
  stones:{id:'OBJ-STONES-001',kind:'object_group',type:'stone_field',label:'stone field',zone:'stones',position:{x:73,y:24},geometry:{shape:'ellipse',radiusM:8},physical:{navigable:true,stone:true,hard:true,fracturable:true,impact:true,harvestable:true}},
@@ -29,7 +29,15 @@ export function ensureWorldModel(w){
   {id:'TERRAIN-FOREST-E',type:'forest',center:{x:83,y:29},radiusM:22,properties:{canopy:.78,soil:'forest-loam',shade:.72}},
   {id:'TERRAIN-WETLAND',type:'wetland',center:{x:10,y:22},radiusM:15,properties:{soil:'saturated-organic',standingWater:true}}
  ];
- ensureBaseObjects(w);syncLegacyIntoWorldModel(w);return w.worldModel;
+ ensureBaseObjects(w);
+ // v0.8 geography migration: old renderer geometry placed the visible creek far north
+ // of its canonical zone. Only migrate the untouched world-origin creek shape.
+ const creek=w.worldModel.objects.find(o=>o.id==='OBJ-CREEK-001');
+ if(creek?.provenance?.source==='world-origin'&&Math.max(...(creek.geometry?.points||[]).map(q=>q[1]||0))>50){
+  creek.position=clone(FIXED.creek.position);creek.geometry=clone(FIXED.creek.geometry);
+  creek.history||=[];creek.history.push({day:w.day,hour:w.hour,type:'coordinate-migration',detail:'Unified the creek visual geometry with its canonical basin position.'});
+ }
+ syncLegacyIntoWorldModel(w);return w.worldModel;
 }
 
 export function findWorldObject(w,id){return w.worldModel?.objects?.find(o=>o.id===id)||null}

@@ -43,7 +43,7 @@ try{
     await shot(name);
   }
   await page.getByRole('button',{name:'AUTO',exact:true}).click();await page.waitForTimeout(400);
-  await page.evaluate(()=>window.ChatGPTFarmRendererDebug.focusWorldUnit(48,74,1.45));await page.waitForTimeout(250);await shot('mobile-creek');
+  await page.evaluate(()=>window.ChatGPTFarmRendererDebug.focusWorldUnit(48,20,1.45));await page.waitForTimeout(250);await shot('mobile-creek');
   if(!await page.evaluate(()=>window.ChatGPTFarmRendererDebug.focusWildlife('W-DEER-001',1.9)))failures.push('could not focus deer for visual QA');await page.waitForTimeout(250);await shot('mobile-deer');
   if(!await page.evaluate(()=>window.ChatGPTFarmRendererDebug.focusWildlife('W-BEAR-001',1.75)))failures.push('could not focus bear for visual QA');await page.waitForTimeout(250);await shot('mobile-bear');
   await page.locator('#pulseButton').click();await page.waitForTimeout(350);await shot('mobile-world-pulse');

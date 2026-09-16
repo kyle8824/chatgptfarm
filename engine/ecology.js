@@ -7,7 +7,7 @@ const unit=(w,salt)=>{const x=Math.sin((w.day*24+w.hour+hash(salt)%10000)*12.989
 const dist=(a,b)=>Math.hypot((a?.x||0)-(b?.x||0),(a?.y||0)-(b?.y||0));
 const bound=p=>({x:clamp(p.x,1,99),y:clamp(p.y,1,99)});
 const point=(x,y)=>({x,y});
-const creekPoints=[[2,72],[15,69],[28,66],[39,72],[48,76],[58,74],[70,71],[84,67],[98,62]].map(([x,y])=>({x,y}));
+const creekPoints=[[2,18.5],[12,21],[27,18],[43,22],[58,19],[72,23],[86,21],[98,23.7]].map(([x,y])=>({x,y}));
 const habitat={
  deer:[point(18,34),point(26,42),point(41,40),point(57,39),point(74,36),point(84,31)],
  rabbit:[point(28,30),point(38,34),point(52,31),point(68,34),point(78,28),point(20,27)],
@@ -32,7 +32,7 @@ export function ensureEcology(w){
   animal('W-BEAR-001','bear','black bear',91,50,{sex:'female',behavior:'wary'}),
   animal('W-FISH-001','fish','creek fish school',15,69,{ageClass:'school'}),animal('W-FISH-002','fish','creek fish school',67,72,{ageClass:'school'})
  ];}
- for(const x of w.ecologySystem.wildlife){x.previousPosition||={...x.position};x.target||={...x.position};x.movement||={from:{...x.position},to:{...x.position},worldDay:w.day,worldHour:w.hour};x.ai||={eligible:true,mode:'simulation',calls:0,lastDecisionAt:null};x.history||=[];}
+ for(const x of w.ecologySystem.wildlife){x.previousPosition||={...x.position};x.target||={...x.position};x.movement||={from:{...x.position},to:{...x.position},worldDay:w.day,worldHour:w.hour};x.ai||={eligible:true,mode:'simulation',calls:0,lastDecisionAt:null};x.history||=[];if(x.species==='fish'&&((x.position?.y||0)>50||(x.target?.y||0)>50||(x.movement?.to?.y||0)>50)){const q=creekPoints[hash(x.id)%creekPoints.length];x.position={...q};x.previousPosition={...q};x.target={...q};x.movement={from:{...q},to:{...q},goal:{...q},worldDay:w.day,worldHour:w.hour,speed:0};x.history.push({day:w.day,hour:w.hour,activity:'migration',behavior:'coordinate migration',from:null,to:{...q},goal:{...q}})}else if(x.behavior==='seeking water'&&(x.target?.y||0)>50){const q=nearestCreek(x.position);x.target={...q};x.movement={...x.movement,to:{...x.position},goal:{...q}}}}
  updateAmbient(w);return w.ecologySystem;
 }
 function nearestAgent(w,a){let best=null,d=Infinity;for(const p of w.agents||[]){const c=p.coordinates;if(!c)continue;const q=dist(a.position,c);if(q<d){d=q;best={agent:p,distance:q,position:c}}}return best}
