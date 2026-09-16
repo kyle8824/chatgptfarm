@@ -41,7 +41,6 @@ if(trees.length&&reeds.length){const minTree=Math.min(...trees.map(x=>Number(x.h
 const giant=items.filter(x=>['low-vegetation','ground-object','shrub'].includes(x.tier)&&Number(x.height)>72);
 if(giant.length)failures.push(`oversized low-tier visuals: ${giant.map(x=>`${x.kind}:${x.height}`).join(', ')}`);
 if(agents.length===2&&agents.every(x=>Number.isFinite(x.screenX)&&Number.isFinite(x.screenBaseY))){const d=Math.hypot(agents[0].screenX-agents[1].screenX,agents[0].screenBaseY-agents[1].screenBaseY);if(d<22)failures.push(`collocated agents are visually merged: ${d.toFixed(1)}px apart`)}
-if(!document){} // keeps this script intentionally browser-focused below
 
 async function shot(name){await page.screenshot({path:`visual-qa/${name}.png`,fullPage:false});}
 await shot('mobile-auto');
