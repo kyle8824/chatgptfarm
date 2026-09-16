@@ -1,0 +1,46 @@
+name: Phaser Living World QA
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'phaser.html'
+      - 'phaser-world.css'
+      - 'phaser-world-v1.js'
+      - 'scripts/phaser-qa.mjs'
+      - '.github/workflows/phaser-qa.yml'
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  visual:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - name: Validate renderer syntax and simulation
+        run: |
+          node --check phaser-world-v1.js
+          node --check scripts/phaser-qa.mjs
+          npm test
+      - name: Install browser harness
+        run: |
+          npm install --no-save playwright@1.55.0
+          npx playwright install --with-deps chromium
+      - name: Start exact local build
+        run: |
+          python3 -m http.server 4173 > /tmp/phaser-server.log 2>&1 &
+          echo $! > /tmp/phaser-server.pid
+          for i in {1..30}; do curl -fsS http://127.0.0.1:4173/phaser.html >/dev/null && break; sleep 1; done
+      - name: Run Phaser mobile visual QA
+        env:
+          BASE_URL: http://127.0.0.1:4173/phaser.html
+        run: node scripts/phaser-qa.mjs
+      - name: Upload Phaser review
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: chatgptfarm-phaser-qa
+          path: phaser-qa/
+          retention-days: 7
