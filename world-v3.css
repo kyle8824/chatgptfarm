@@ -1,0 +1,19 @@
+/* v0.8 renderer v3: preserve the world, reduce chrome */
+#worldViewport{background:#111a12}
+.inspector{transition:transform .22s ease,opacity .22s ease}
+@media(max-width:650px){
+  .topbar{height:60px;padding:8px 9px}
+  .brandMark{width:32px;height:32px}.brandText strong{font-size:16px}.brandText span{font-size:7px}
+  .controls{top:62px;left:6px}.controls button{padding:7px 9px;font-size:10px}
+  .zoomControls{top:62px;right:6px}.zoomControls #fitWorld{width:33px;height:33px}
+  .focusCard{left:6px;bottom:96px;max-width:calc(100vw - 12px)}
+  .focusInner{padding:7px 9px;background:rgba(5,12,8,.56)}
+  .focusInner p{display:none}.focusInner strong{font-size:10px}.focusInner small{font-size:7px}
+  .threadBar{left:6px;right:6px;bottom:6px}.threadPanel{max-height:84px}.threadPanel.expanded{max-height:238px}
+  .threadTop{padding:7px 9px}.threadTop strong{font-size:10px}.threadTop span{font-size:7px}
+  .threads{max-height:47px;padding:5px 7px 7px}.threadPanel.expanded .threads{max-height:190px}
+  .thread{min-width:166px;max-width:195px;padding:6px 8px}.thread b{font-size:9px}.thread p{font-size:8px}
+  .inspector{left:6px;right:6px;bottom:6px;width:auto;max-height:43dvh;border-radius:15px;background:rgba(7,15,10,.96)}
+  .inspectorHead{padding:10px 11px}.inspectorHead small{font-size:8px}.inspectorHead h2{font-size:16px;margin-top:2px}.closeInspector{font-size:22px}
+  .inspectorBody{padding:9px 11px 12px}.kv{grid-template-columns:92px 1fr;gap:5px 8px;font-size:10px;margin-bottom:5px}.pillRow{margin:6px 0 9px}.pill{font-size:8px;padding:3px 6px}.historyList{margin-top:8px;padding-top:8px}.historyList h3{font-size:9px}.historyItem{font-size:9px;padding:5px 0}
+}
