@@ -1,0 +1,96 @@
+name: Build renderer v6
+on:
+  push:
+    branches: [main]
+    paths:
+      - '.github/workflows/build-renderer-v6.yml'
+  workflow_dispatch:
+permissions:
+  contents: write
+concurrency:
+  group: chatgptfarm-renderer-v6
+  cancel-in-progress: false
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - name: Sync latest main
+        run: git pull --rebase origin main
+      - name: Build action-coherent renderer
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+          import json
+
+          src = Path('world-pixi-v5.js').read_text()
+          src = src.replace("rng(`${t.id}-v4`)", "rng(`${t.id}-v6`)")
+          src = src.replace("rng('creek-v4')", "rng('creek-v6')")
+
+          old_reeds = "else if(o.type==='reed_marsh'){for(let i=0;i<54;i++){const x=(R()-.5)*116,y=(R()-.5)*90,h=22+R()*42;g.lineStyle(2,C.reed,.92).moveTo(x,y+9).lineTo(x+(R()-.5)*5,y-h);if(i%3===0)g.beginFill(0x86663e,.84).drawEllipse(x,y-h,2,6).endFill()}}"
+          new_reeds = "else if(o.type==='reed_marsh'){g.beginFill(C.wet,.34).drawEllipse(0,9,102,60).endFill();for(let i=0;i<9;i++){const px=(R()-.5)*150,py=(R()-.5)*70;g.beginFill(C.waterDark,.12+R()*.08).drawEllipse(px,py+15,12+R()*24,4+R()*9).endFill()}for(let i=0;i<86;i++){const x=(R()-.5)*150,y=(R()-.5)*104,h=26+R()*52;g.lineStyle(2.4,C.reed,.94).moveTo(x,y+10).lineTo(x+(R()-.5)*6,y-h);if(i%3===0)g.beginFill(0x86623d,.9).drawEllipse(x,y-h,2.6,7).endFill()}for(let i=0;i<18;i++){const x=(R()-.5)*145,y=(R()-.5)*94;g.beginFill(0x49634c,.65).drawEllipse(x,y,9+R()*13,3+R()*6).endFill()}}"
+          if old_reeds not in src:
+              raise SystemExit('reed renderer anchor not found')
+          src = src.replace(old_reeds, new_reeds)
+
+          helper_anchor = "function makeAgent(a,i){"
+          helpers = r'''function actionInteraction(a){const plan=a.activeAction||{},stored=plan.interaction||{},pp=plan.physicalProposal||{},ids=`${stored.primaryAffordanceId||''} ${stored.secondaryAffordanceId||''} ${stored.worldObjectId||''} ${pp.primaryObjectId||''} ${pp.secondaryObjectId||''}`.toLowerCase(),text=`${plan.actionId||''} ${plan.label||''} ${a.currentAction||''} ${a.mind?.intent||''} ${stored.material||''} ${stored.verb||''} ${pp.verb||''} ${ids}`.toLowerCase();let kind=null,label='';if(/reed|cordage|twist/.test(text)){kind='reeds';label=/cordage|twist|bind/.test(text)?'working reeds':'reeds'}else if(/clay|vessel|mold|shape/.test(text)){kind='clay';label=/vessel|shape|mold/.test(text)?'shaping clay':'clay'}else if(/stone|sharp|strike|rock/.test(text)){kind='stone';label=/sharp|strike/.test(text)?'working stone':'stone'}else if(/water|drink|creek/.test(text)){kind='water';label='water'}else if(/berry|berries/.test(text)){kind='berries';label='berries'}else if(/track|trail|follow/.test(text)){kind='tracks';label='tracks'}else if(/fire|heat/.test(text)){kind='fire';label='fire'}else if(/wood|branch|pole|shelter|cut/.test(text)){kind='wood';label=/pole|cut|shape/.test(text)?'working wood':'wood'}const verb=stored.verb||pp.verb||plan.actionId||'';return kind?{kind,label,verb,ids}:null}
+function placeLabel(p){return({camp:'camp',creek:'creek',berries:'berry patch',log:'fallen oak',meadow:'meadow',edge:'frontier',forest:'forest',stones:'stone field',clay:'clay bank',reeds:'reed marsh'}[p]||p||'world')}
+function redrawActionProp(a,q,s,t){const d=actionInteraction(a),key=d?`${d.kind}:${d.verb}:${s.phase}`:'none';if(q.propKey!==key){q.prop.removeChildren().forEach(x=>x.destroy({children:true}));q.propKey=key;if(d){const g=new PIXI.Graphics();if(d.kind==='reeds'){for(let i=-3;i<=3;i++){g.lineStyle(2.2,C.reed,.98).moveTo(i*3,11).lineTo(i*2,-15-Math.abs(i)*2);if(i%2===0)g.beginFill(0x89633c,.95).drawEllipse(i*2,-16-Math.abs(i)*2,2.2,5.5).endFill()}if(/twist|bind/.test(String(d.verb)))g.lineStyle(2.5,0xc3aa70,.95).drawCircle(14,3,8)}else if(d.kind==='clay'){g.beginFill(C.clay,.98).drawEllipse(0,4,12,8).endFill();if(/shape|mold/.test(String(d.verb)))g.lineStyle(2,0xe4b28f,.92).drawEllipse(0,0,8,11)}else if(d.kind==='stone'){g.beginFill(C.rock,.98).drawPolygon([-10,7,-3,-9,8,5]).endFill();if(/strike|sharp/.test(String(d.verb)))g.beginFill(0xd4ddd7,.9).drawPolygon([8,3,18,-5,13,9]).endFill()}else if(d.kind==='wood'){g.lineStyle(6,C.wood,.98).moveTo(-14,8).lineTo(16,-6);if(/cut|shape/.test(String(d.verb)))g.lineStyle(3,0xbac3bb,.96).moveTo(5,-10).lineTo(13,-1)}else if(d.kind==='water'){g.beginFill(C.water,.95).drawCircle(0,4,8).endFill();g.beginFill(0xdaf3f6,.55).drawCircle(-3,1,3).endFill()}else if(d.kind==='berries'){g.beginFill(C.leaf,.95).drawCircle(0,3,9).endFill();g.beginFill(C.berry,.98).drawCircle(-4,0,3).drawCircle(3,4,3).drawCircle(2,-3,3).endFill()}else if(d.kind==='tracks'){for(let i=-1;i<=1;i++){g.beginFill(0x30251c,.75).drawEllipse(i*8,4+i*2,3,5).endFill()}}else if(d.kind==='fire'){g.beginFill(C.fire,.95).drawPolygon([-8,9,0,-12,8,9]).endFill();g.beginFill(C.fire2,.9).drawPolygon([-4,7,0,-5,4,7]).endFill()}q.prop.addChild(g)}}q.prop.visible=!!d&&(s.phase==='interact'||s.phase==='resolve');if(q.prop.visible){q.prop.rotation=Math.sin(t*5)*.05;q.prop.y=3+Math.sin(t*6)*1.2;q.prop.alpha=s.phase==='resolve'?.82:1}}
+'''
+          if helper_anchor not in src:
+              raise SystemExit('agent helper anchor not found')
+          src = src.replace(helper_anchor, helpers + helper_anchor)
+
+          src = src.replace("const name=new PIXI.Text(a.name", "const prop=new PIXI.Container();prop.position.set(20,4);const name=new PIXI.Text(a.name", 1)
+          src = src.replace("c.addChild(sh,legs,body,head,hair,arm,name,status);", "c.addChild(sh,legs,body,head,hair,arm,prop,name,status);", 1)
+          src = src.replace("c._p={legs,body,head,hair,arm,status};", "c._p={legs,body,head,hair,arm,prop,status,propKey:null};", 1)
+          tick_anchor = "const s=phase(a),p=wp(s),q=c._p;c.position.set(p.x,p.y);"
+          if tick_anchor not in src:
+              raise SystemExit('tick anchor not found')
+          src = src.replace(tick_anchor, "const s=phase(a),p=wp(s),q=c._p;redrawActionProp(a,q,s,t);c.position.set(p.x,p.y);", 1)
+
+          focus_old = "function updateFocus(){const a=autoAgent();if(!a)return;const s=phase(a);$('#focusCard').innerHTML=`<div class=\"focusInner\"><small>${esc(s.label).toUpperCase()} · ${esc(a.position).toUpperCase()}</small><strong>${esc(a.name)} — ${esc(a.mind?.currentGoal||a.currentAction||'Responding to the world')}</strong><p>${esc(a.mind?.intent||a.currentAction||'')}</p></div>`}"
+          focus_new = "function updateFocus(){const a=autoAgent();if(!a)return;const s=phase(a),ix=actionInteraction(a),where=placeLabel(a.position),what=ix?.label?` · ${ix.label}`:'';$('#focusCard').innerHTML=`<div class=\"focusInner\"><small>${esc(s.label).toUpperCase()} · ${esc(where).toUpperCase()}${esc(what).toUpperCase()}</small><strong>${esc(a.name)} — ${esc(a.mind?.currentGoal||a.currentAction||'Responding to the world')}</strong><p>${esc(a.mind?.intent||a.currentAction||'')}</p></div>`}"
+          if focus_old not in src:
+              raise SystemExit('focus anchor not found')
+          src = src.replace(focus_old, focus_new)
+          Path('world-pixi-v6.js').write_text(src)
+
+          spectator = Path('engine/spectator.js').read_text()
+          insert = "const ACTION_INTERACTIONS={drink:{worldObjectId:'OBJ-CREEK-001',material:'water'},eat_berries:{worldObjectId:'OBJ-BERRIES-001',material:'berries'},gather_berries:{worldObjectId:'OBJ-BERRIES-001',material:'berries'},gather_dry_wood:{worldObjectId:'OBJ-TREE-001',material:'wood'},gather_wet_wood:{worldObjectId:'OBJ-TREE-001',material:'wood'},gather_stones:{worldObjectId:'OBJ-STONES-001',material:'stone'},gather_clay:{worldObjectId:'OBJ-CLAY-001',material:'clay'},gather_reeds:{worldObjectId:'OBJ-REEDS-001',material:'reeds'},make_fire:{worldObjectId:'OBJ-FIRE-001',material:'fire'},build_shelter:{worldObjectId:'OBJ-SHELTER-001',material:'wood'},rest:{worldObjectId:'OBJ-SHELTER-001',material:'shelter'},explore:{worldObjectId:'OBJ-FRONTIER-001',material:'frontier'}};\nconst interactionFor=(actionId,physicalProposal)=>{const known=ACTION_INTERACTIONS[actionId]||{};return{verb:physicalProposal?.verb||actionId||null,primaryAffordanceId:physicalProposal?.primaryObjectId||null,secondaryAffordanceId:physicalProposal?.secondaryObjectId&&physicalProposal.secondaryObjectId!=='none'?physicalProposal.secondaryObjectId:null,worldObjectId:known.worldObjectId||null,material:known.material||null}};\n"
+          target = "const distance=(a,b)=>Math.hypot((a.x||0)-(b.x||0),(a.y||0)-(b.y||0));\n"
+          if target not in spectator:
+              raise SystemExit('spectator insertion anchor not found')
+          spectator = spectator.replace(target, target + insert)
+          old = "a.activeAction={id:`A-${decisionId}`,decisionId,label,actionId,worldDay:w.day,worldHour:w.hour,from:{...from},to:{...to},target:{...to},moving,phases,outcome:{success:outcome?.success!==false,detail:outcome?.detail||''},physicalProposal};"
+          new = "a.activeAction={id:`A-${decisionId}`,decisionId,label,actionId,worldDay:w.day,worldHour:w.hour,from:{...from},to:{...to},target:{...to},moving,phases,outcome:{success:outcome?.success!==false,detail:outcome?.detail||''},physicalProposal,interaction:interactionFor(actionId,physicalProposal)};"
+          if old not in spectator:
+              raise SystemExit('spectator playback anchor not found')
+          spectator = spectator.replace(old,new)
+          Path('engine/spectator.js').write_text(spectator)
+
+          index = Path('index.html').read_text()
+          index = index.replace('world-pixi-v5.js?v=0805','world-pixi-v6.js?v=0806')
+          Path('index.html').write_text(index)
+
+          pkg = json.loads(Path('package.json').read_text())
+          pkg['version']='0.8.2'
+          pkg['scripts']['test']=pkg['scripts']['test'].replace('world-pixi-v5.js','world-pixi-v6.js')
+          Path('package.json').write_text(json.dumps(pkg,indent=2)+'\n')
+          PY
+      - name: Validate renderer and simulation
+        run: npm test
+      - name: Commit renderer v6
+        run: |
+          git config user.name "ChatGPTFarm Guardian"
+          git config user.email "actions@users.noreply.github.com"
+          git add world-pixi-v6.js engine/spectator.js index.html package.json
+          git commit -m "v0.8.2: make active materials visible" || exit 0
+          git pull --rebase origin main
+          git push origin main
