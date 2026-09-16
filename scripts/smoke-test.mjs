@@ -1,4 +1,4 @@
-import { createWorld, tick, tickWithMind, migrateWorld, retrieveDecisionContext, buildAffordanceView, findWorldObject, WORLD_MODEL_VERSION } from '../engine.js';
+import { createWorld, tick, tickWithMind, migrateWorld, retrieveDecisionContext, buildAffordanceView, findWorldObject, WORLD_MODEL_VERSION, ensureEcology } from '../engine.js';
 
 const fail = message => { throw new Error(message); };
 const assertWorld = (world, label) => {
@@ -8,6 +8,7 @@ const assertWorld = (world, label) => {
   if (world.worldModel?.version !== WORLD_MODEL_VERSION) fail(`${label}: world object model missing`);
   if (!Array.isArray(world.worldModel.objects) || world.worldModel.objects.length < 8) fail(`${label}: base world entities missing`);
   if (!world.worldModel.fields?.temperature || !world.worldModel.fields?.soilMoisture) fail(`${label}: environmental fields missing`);
+  ensureEcology(world); if((world.ecologySystem?.wildlife||[]).length<8) fail(`${label}: living wildlife missing`); if(world.settings?.ai?.wildlife?.enabled!==false) fail(`${label}: wildlife AI should default off`);
   for (const agent of world.agents) {
     for (const [name, value] of Object.entries(agent.needs)) if (!Number.isFinite(value) || value < 0 || value > 100) fail(`${label}: invalid ${agent.name}.${name}=${value}`);
     if (!agent.mind || !Array.isArray(agent.mind.recentActions)) fail(`${label}: mind state missing for ${agent.name}`);
@@ -74,5 +75,8 @@ if (chainWorld.agents[0].inventory.boundSharpTool < 1) fail('Binding materials d
 if (!chainWorld.discoveries.some(d=>d.key==='bound-composite-tool')) fail('Composite-tool world discovery missing');
 
 const boundaryWorld=migrateWorld(createWorld());const boundaryAgent=boundaryWorld.agents[0];boundaryAgent.position='camp';boundaryAgent.memories.unshift({id:'M-boundary',text:'West of camp is a marshy reed bed.',importance:7,confidence:.9,tags:['reeds','exploration']});const boundaryContext=retrieveDecisionContext(boundaryWorld,boundaryAgent);const distantReeds=boundaryContext.affordances.objects.find(o=>o.id==='place:reeds');if(!distantReeds||!distantReeds.supports.includes('move')||distantReeds.supports.includes('search'))fail('Distant-place locality boundary failed');if(!('satiety'in boundaryContext.perception.needs)||('hunger'in boundaryContext.perception.needs))fail('Model physiology still exposes ambiguous hunger semantics');
+
+
+const toggleWorld=migrateWorld(createWorld());toggleWorld.settings.ai.people['agent-mara']=false;let toggleCalls=0;const toggleMind={async decide(context){toggleCalls++;const c=context.candidates[0];return{choiceType:'known_action',actionId:c.id,physicalAction:null,goal:'test',intent:c.label,decisionSummary:'toggle test',confidence:.7,referencedMemoryIds:[],brainMode:'ai',model:'toggle-test'}}};await tickWithMind(toggleWorld,toggleMind);if(toggleCalls!==1)fail(`Per-person AI toggle expected 1 model call, got ${toggleCalls}`);if(!toggleWorld.ecologySystem.wildlife.some(x=>x.movement&&x.movement.from&&x.movement.to))fail('Wildlife movement state missing');
 
 console.log(`Smoke test passed · v0.7 object-field world · ${objectWorld.worldModel.objects.length} resolved entities · fallback Day ${fallbackWorld.day} · AI ${aiWorld.meta.aiDecisions} decisions`);

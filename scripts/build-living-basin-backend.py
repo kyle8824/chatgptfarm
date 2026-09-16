@@ -69,7 +69,7 @@ if (fs.existsSync(controlPath)) {
 }
 const mind = createOpenAIMind();
 const usage = world.meta.aiUsage ||= {calls:0,inputTokens:0,outputTokens:0,reasoningTokens:0,byActor:{}};
-const addUsage=(actor,u)=>{if(!u)return;const input=Number(u.input_tokens||0),output=Number(u.output_tokens||0),reason=Number(u.output_tokens_details?.reasoning_tokens||0);usage.calls++;usage.inputTokens+=input;usage.outputTokens+=output;usage.reasoningTokens+=reason;const b=usage.byActor[actor]||={calls:0,inputTokens:0,outputTokens:0,reasoningTokens:0};b.calls++;b.inputTokens+=input;b.outputTokens+=output;b.reasoningTokens+=reason;};"
+const addUsage=(actor,u)=>{if(!u)return;const input=Number(u.input_tokens||0),output=Number(u.output_tokens||0),reason=Number(u.output_tokens_details?.reasoning_tokens||0);usage.calls++;usage.inputTokens+=input;usage.outputTokens+=output;usage.reasoningTokens+=reason;const b=usage.byActor[actor]||={calls:0,inputTokens:0,outputTokens:0,reasoningTokens:0};b.calls++;b.inputTokens+=input;b.outputTokens+=output;b.reasoningTokens+=reason;};"""
 if old not in src: raise SystemExit('advance control anchor not found')
 src=src.replace(old,new,1)
 old="allDnas.push(...dnas);\n}"
