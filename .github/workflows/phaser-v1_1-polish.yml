@@ -1,0 +1,32 @@
+name: Phaser v1.1 Polish
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'scripts/phaser-v1_1-polish.py'
+      - '.github/workflows/phaser-v1_1-polish.yml'
+  workflow_dispatch:
+permissions:
+  contents: write
+jobs:
+  polish:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - name: Apply Phaser v1.1 polish
+        run: python3 scripts/phaser-v1_1-polish.py
+      - name: Validate
+        run: |
+          node --check phaser-world-v1.js
+          node --check scripts/phaser-qa.mjs
+          npm test
+      - name: Commit Phaser v1.1
+        run: |
+          git config user.name 'ChatGPTFarm Builder'
+          git config user.email 'actions@users.noreply.github.com'
+          git add phaser-world-v1.js scripts/phaser-qa.mjs
+          git commit -m 'phaser: v1.1 denser terrain and organic movement scene' || exit 0
+          git pull --rebase origin main
+          git push origin HEAD:main
