@@ -1,0 +1,49 @@
+name: Phaser v1.3 Basin Slice
+
+on:
+  push:
+    paths:
+      - 'scripts/patch-phaser-v1_3.mjs'
+      - '.github/workflows/phaser-v1_3-basin-slice.yml'
+
+permissions:
+  contents: write
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - name: Sync latest main
+        run: git pull --ff-only origin main
+      - name: Apply Phaser v1.3 basin slice
+        run: |
+          node scripts/patch-phaser-v1_3.mjs
+          python3 - <<'PY'
+          from pathlib import Path
+          p=Path('scripts/phaser-qa.mjs')
+          s=p.read_text()
+          s=s.replace("phaser-v1.2-living-world","phaser-v1.3-basin-slice")
+          p.write_text(s)
+          p=Path('phaser.html')
+          s=p.read_text().replace('phaser-world-v1.js?v=0010','phaser-world-v1.js?v=0013').replace('phaser-world.css?v=0010','phaser-world.css?v=0013')
+          p.write_text(s)
+          PY
+      - name: Validate
+        run: |
+          node --check phaser-world-v1.js
+          node --check scripts/phaser-qa.mjs
+          npm test
+      - name: Commit Phaser v1.3
+        run: |
+          git config user.name github-actions[bot]
+          git config user.email 41898282+github-actions[bot]@users.noreply.github.com
+          git add phaser-world-v1.js phaser.html scripts/phaser-qa.mjs
+          git diff --cached --quiet && exit 0
+          git commit -m "phaser: build v1.3 basin vertical slice"
+          git push origin main
