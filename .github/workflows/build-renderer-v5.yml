@@ -1,0 +1,76 @@
+name: Build renderer v5
+on:
+  push:
+    branches: [main]
+    paths:
+      - '.github/workflows/build-renderer-v5.yml'
+permissions:
+  contents: write
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - name: Sync latest main
+        run: git pull --rebase origin main
+      - name: Build renderer v5
+        shell: bash
+        run: |
+          cp world-pixi-v4.js world-pixi-v5.js
+          python - <<'PY'
+          from pathlib import Path
+          import re
+
+          p=Path('world-pixi-v5.js')
+          s=p.read_text()
+
+          s=re.sub(r"function s2w\(s,z=camera\.scale\)\{.*?\}\nfunction dist",
+          """function viewAnchor(){const mobile=(app?.screen?.width||999)<650;return{x:app.screen.width/2,y:mobile?app.screen.height*.405:app.screen.height*.50}}\nfunction s2w(s,z=camera.scale){const a=viewAnchor();return{x:(s.x-a.x)/z+camera.x,y:(s.y-a.y)/z+camera.y}}\nfunction dist""",s,count=1)
+
+          s=re.sub(r"function drawGround\(\)\{.*?\nfunction drawTree",
+          """function drawGround(){const base=new PIXI.Graphics();base.beginFill(C.ground).drawRect(0,0,W,W).endFill();terrain.addChild(base);const R=rng('ground-v5'),patches=new PIXI.Graphics();for(let i=0;i<1450;i++){const x=R()*W,y=R()*W,f=field('forest',x,y),w=field('wetland',x,y),rx=22+R()*92,ry=10+R()*42;let col=C.ground2,a=.045+R()*.07;if(f>.08){col=mix(C.forestGround,C.ground,f*.26);a=.07+.13*f}else if(w>.08){col=mix(C.wet,C.mud,.10);a=.065+.12*w}else if(R()>.68){col=mix(C.ground2,0xa0a873,.18);a=.04+.04*R()}patches.beginFill(col,a).drawEllipse(x,y,rx,ry).endFill()}terrain.addChild(patches);const detail=new PIXI.Graphics();for(let i=0;i<2800;i++){const x=R()*W,y=R()*W,f=field('forest',x,y),w=field('wetland',x,y);if(w>.2&&R()<.62){detail.lineStyle(1.6,C.reed,.30+.22*w).moveTo(x,y+4).lineTo(x+(R()-.5)*4,y-8-R()*14)}else if(f>.2&&R()<.55){detail.beginFill(C.forestDark,.14+.13*f).drawEllipse(x,y,2+R()*6,1+R()*3).endFill();if(R()<.22)detail.beginFill(C.forestHi,.12).drawCircle(x+(R()-.5)*6,y+(R()-.5)*4,1.5+R()*2.5).endFill()}else if(R()<.68){detail.lineStyle(1.3,C.ground2,.20+R()*.10).moveTo(x,y+2).lineTo(x+(R()-.5)*4,y-5-R()*8);if(R()<.16)detail.beginFill(C.mud,.10).drawEllipse(x+3,y+3,3+R()*7,1+R()*3).endFill()}}terrain.addChild(detail);const micro=new PIXI.Graphics();for(let i=0;i<900;i++){const x=R()*W,y=R()*W,f=field('forest',x,y),w=field('wetland',x,y);if(f>.28){micro.beginFill(R()>.5?0x334c35:0x5b704f,.22).drawCircle(x,y,2+R()*4).endFill()}else if(w>.28){micro.beginFill(C.mud,.12).drawEllipse(x,y,5+R()*10,2+R()*4).endFill()}else if(R()<.34){micro.beginFill(0x929b78,.18).drawEllipse(x,y,2+R()*4,1+R()*2).endFill()}}terrain.addChild(micro)}\nfunction drawTree""",s,count=1,flags=re.S)
+
+          s=re.sub(r"function zoomAt\(pt,z\)\{.*?\}\nfunction wireCamera",
+          """function zoomAt(pt,z){const old=camera.scale,next=clamp(z,MIN,MAX),world=s2w(pt,old),a=viewAnchor();camera.scale=next;camera.x=world.x-(pt.x-a.x)/next;camera.y=world.y-(pt.y-a.y)/next;setFree();updateCamera(true)}\nfunction wireCamera""",s,count=1,flags=re.S)
+
+          s=re.sub(r"function autoAgent\(\)\{.*?\nfunction wireUI",
+          """function autoAgent(){const top=current?.liveThreads?.[0];if(top?.agentIds?.length){const a=current.agents.find(x=>x.id===top.agentIds[0]);if(a)return a}return current?.agents?.find(x=>x.activeAction?.moving)||current?.agents?.find(x=>phase(x).phase==='interact')||current?.agents?.[0]}\nfunction actionFrame(a){if(!a)return{x:W*.55,y:W*.62,scale:1.35};const s=phase(a),pts=[wp(s)],plan=a.activeAction||{};if(plan.to)pts.push(wp(plan.to));if(plan.moving&&plan.from)pts.push(wp(plan.from));const social=/talk|teach|share|speak/i.test(`${a.currentAction||''} ${a.mind?.intent||''}`);if(social){const other=current?.agents?.find(x=>x.id!==a.id);if(other)pts.push(wp(phase(other)))}let minX=Math.min(...pts.map(p=>p.x)),maxX=Math.max(...pts.map(p=>p.x)),minY=Math.min(...pts.map(p=>p.y)),maxY=Math.max(...pts.map(p=>p.y));const mobile=app.screen.width<650,safeW=app.screen.width*(mobile?.88:.76),safeH=app.screen.height*(mobile?.48:.70),spanX=Math.max(120,maxX-minX),spanY=Math.max(100,maxY-minY),pad=mobile?150:210;let scale=clamp(Math.min(safeW/(spanX+pad),safeH/(spanY+pad)),mobile?1.05:.82,mobile?1.95:1.65);if(pts.length===1||Math.max(spanX,spanY)<150)scale=mobile?1.72:1.42;return{x:(minX+maxX)/2,y:(minY+maxY)/2,scale}}\nfunction frameActivity(force){if(!current)return;const f=actionFrame(autoAgent());camera.x=f.x;camera.y=f.y;camera.scale=f.scale;camera.mode='auto';camera.manualUntil=0;camera.vx=camera.vy=0;syncButtons();updateCamera(force)}\nfunction updateCamera(force){if(!root||!app)return;let target={x:camera.x,y:camera.y,scale:camera.scale};if(camera.mode==='auto'&&Date.now()>camera.manualUntil)target=actionFrame(autoAgent());else if(camera.mode.startsWith('agent-')){const a=current?.agents?.find(x=>x.id===camera.mode);if(a)target=actionFrame(a)}const k=force?1:.065;camera.x+=(target.x-camera.x)*k;camera.y+=(target.y-camera.y)*k;camera.scale+=(target.scale-camera.scale)*(force?1:.045);const a=viewAnchor();root.scale.set(camera.scale);root.position.set(a.x-camera.x*camera.scale,a.y-camera.y*camera.scale)}\nfunction wireUI""",s,count=1,flags=re.S)
+
+          p.write_text(s)
+          PY
+
+          cat > world-v5.css <<'EOF'
+          /* v0.8 renderer v5 — action framing + denser world */
+          @media(max-width:650px){
+            .focusCard{left:6px;right:6px;bottom:49px;max-width:none}
+            .focusInner{padding:5px 8px;border-radius:10px;background:rgba(5,12,8,.48)}
+            .focusInner small{font-size:6px}.focusInner strong{font-size:8.5px;display:block;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.focusInner p{display:none}
+            .threadBar{left:6px;right:6px;bottom:6px}.threadPanel{max-height:37px;border-radius:11px;overflow:hidden}.threadPanel.expanded{max-height:192px}
+            .threadTop{padding:7px 9px;height:37px;box-sizing:border-box}.threadTop strong{font-size:8.5px}.threadTop span{font-size:6.5px}
+            .threads{display:none;padding:6px 7px 8px;max-height:148px}.threadPanel.expanded .threads{display:flex;max-height:148px;overflow-x:auto}
+            .thread{min-width:158px;max-width:184px;padding:6px 8px}.thread b{font-size:8px}.thread p{font-size:7px;-webkit-line-clamp:2}
+          }
+          EOF
+
+          python - <<'PY'
+          from pathlib import Path
+          p=Path('index.html');s=p.read_text()
+          if 'world-v5.css' not in s:s=s.replace('</head>','  <link rel="stylesheet" href="world-v5.css?v=0805">\n</head>')
+          s=s.replace('world-pixi-v4.js?v=0804','world-pixi-v5.js?v=0805')
+          p.write_text(s)
+          p=Path('package.json');s=p.read_text().replace('node --check world-pixi-v4.js','node --check world-pixi-v5.js');p.write_text(s)
+          PY
+          node --check world-pixi-v5.js
+      - name: Commit renderer v5
+        run: |
+          git config user.name "ChatGPTFarm Guardian"
+          git config user.email "actions@users.noreply.github.com"
+          git add world-pixi-v5.js world-v5.css index.html package.json
+          git commit -m "v0.8: context-aware camera and denser world" || exit 0
+          git pull --rebase origin main
+          git push origin main
