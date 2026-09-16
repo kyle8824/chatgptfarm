@@ -1,3 +1,4 @@
+// Phaser Living World QA · rerun 1
 import { chromium } from 'playwright';
 import fs from 'node:fs';
 import { migrateWorld, advanceEcology } from '../engine.js';
