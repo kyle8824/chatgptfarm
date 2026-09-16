@@ -1,0 +1,13 @@
+/* v0.8 renderer v4 — clearer world, lighter chrome */
+#worldViewport{background:#6f815c}
+.topbar{background:linear-gradient(180deg,rgba(7,15,10,.90),rgba(7,15,10,.48) 74%,transparent)}
+.focusInner{background:rgba(5,12,8,.50);border-color:rgba(172,214,160,.11)}
+.threadPanel{background:linear-gradient(180deg,rgba(8,18,12,.80),rgba(6,14,10,.90))}
+@media(max-width:650px){
+  .topbar{height:58px;padding:8px 8px}.brandMark{width:30px;height:30px}.brandText strong{font-size:15px}.brandText span{font-size:6.5px;letter-spacing:.10em}.worldStatus strong{font-size:8.5px}.worldStatus span{font-size:7.5px}
+  .controls{top:60px;left:6px;gap:4px}.controls button{padding:6px 9px;font-size:9px;border-radius:9px;background:rgba(8,18,12,.70)}
+  .zoomControls{top:60px;right:6px}.zoomControls #fitWorld{width:31px;height:31px;border-radius:9px;background:rgba(8,18,12,.70)}
+  .focusCard{left:6px;bottom:78px;max-width:calc(100vw - 12px)}.focusInner{padding:6px 8px;border-radius:11px}.focusInner small{font-size:6.5px}.focusInner strong{font-size:9px;line-height:1.2}.focusInner p{display:none}
+  .threadBar{left:6px;right:6px;bottom:6px}.threadPanel{max-height:67px;border-radius:12px}.threadPanel.expanded{max-height:220px}.threadTop{padding:6px 8px}.threadTop strong{font-size:9px}.threadTop span{font-size:6.5px}.threads{max-height:36px;padding:4px 6px 6px;gap:5px}.threadPanel.expanded .threads{max-height:175px}.thread{min-width:150px;max-width:176px;padding:5px 7px;border-radius:10px}.thread b{font-size:8px}.thread p{font-size:7px;line-height:1.2;-webkit-line-clamp:1}.thread small{display:none}
+  .inspector{left:8px;right:8px;bottom:8px;width:auto;max-height:34dvh;border-radius:14px;background:rgba(7,15,10,.96)}.inspectorHead{padding:9px 10px}.inspectorHead small{font-size:7px}.inspectorHead h2{font-size:14px}.inspectorBody{padding:8px 10px 10px}.kv{grid-template-columns:84px 1fr;gap:4px 7px;font-size:9px}.pill{font-size:7px;padding:3px 5px}.historyList{display:none}
+}
