@@ -1,0 +1,32 @@
+name: Phaser v1.2 Surface
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'scripts/phaser-v1_2-surface.py'
+      - '.github/workflows/phaser-v1_2-surface.yml'
+  workflow_dispatch:
+permissions:
+  contents: write
+jobs:
+  surface:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - name: Apply Phaser v1.2 surface patch
+        run: python3 scripts/phaser-v1_2-surface.py
+      - name: Validate
+        run: |
+          node --check phaser-world-v1.js
+          node --check scripts/phaser-qa.mjs
+          npm test
+      - name: Commit Phaser v1.2
+        run: |
+          git config user.name 'ChatGPTFarm Builder'
+          git config user.email 'actions@users.noreply.github.com'
+          git add phaser-world-v1.js scripts/phaser-qa.mjs
+          git commit -m 'phaser: v1.2 seamless terrain and smoother creek' || exit 0
+          git pull --rebase origin main
+          git push origin HEAD:main
