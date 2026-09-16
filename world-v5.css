@@ -1,0 +1,10 @@
+/* v0.8 renderer v5 — action framing + denser world */
+@media(max-width:650px){
+  .focusCard{left:6px;right:6px;bottom:49px;max-width:none}
+  .focusInner{padding:5px 8px;border-radius:10px;background:rgba(5,12,8,.48)}
+  .focusInner small{font-size:6px}.focusInner strong{font-size:8.5px;display:block;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.focusInner p{display:none}
+  .threadBar{left:6px;right:6px;bottom:6px}.threadPanel{max-height:37px;border-radius:11px;overflow:hidden}.threadPanel.expanded{max-height:192px}
+  .threadTop{padding:7px 9px;height:37px;box-sizing:border-box}.threadTop strong{font-size:8.5px}.threadTop span{font-size:6.5px}
+  .threads{display:none;padding:6px 7px 8px;max-height:148px}.threadPanel.expanded .threads{display:flex;max-height:148px;overflow-x:auto}
+  .thread{min-width:158px;max-width:184px;padding:6px 8px}.thread b{font-size:8px}.thread p{font-size:7px;-webkit-line-clamp:2}
+}
