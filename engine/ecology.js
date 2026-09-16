@@ -14,10 +14,10 @@ const habitat={
  bear:[point(8,46),point(12,55),point(24,52),point(82,49),point(91,42),point(88,56)]
 };
 const SPECIES={
- deer:{speed:.72,fearRadius:15,panicRadius:8,waterEvery:10},
- rabbit:{speed:1.05,fearRadius:9,panicRadius:5,waterEvery:16},
- bear:{speed:.58,fearRadius:6,panicRadius:3,waterEvery:12},
- fish:{speed:.9,fearRadius:0,panicRadius:0,waterEvery:0}
+ deer:{step:4.2,fearRadius:15,panicRadius:8},
+ rabbit:{step:3.1,fearRadius:9,panicRadius:5},
+ bear:{step:2.4,fearRadius:6,panicRadius:3},
+ fish:{step:4.6,fearRadius:0,panicRadius:0}
 };
 function animal(id,species,label,x,y,extra={}){return{id,species,label,position:{x,y},previousPosition:{x,y},target:{x,y},activity:'rest',behavior:'calm',fear:0,needs:{energy:80,hunger:72,thirst:75},active:true,ageClass:'adult',history:[],ai:{eligible:true,mode:'simulation',calls:0,lastDecisionAt:null},movement:{from:{x,y},to:{x,y},worldDay:1,worldHour:6},...extra}}
 export function ensureEcology(w){
@@ -39,6 +39,7 @@ function chooseHabitat(w,a){const choices=habitat[a.species]||[point(50,40)];ret
 function creekTarget(w,a){return creekPoints[Math.floor(unit(w,`${a.id}:creek`)*creekPoints.length)%creekPoints.length]}
 function fleeFrom(a,threat,amount){const dx=a.position.x-threat.x,dy=a.position.y-threat.y,m=Math.hypot(dx,dy)||1;return bound({x:a.position.x+dx/m*amount,y:a.position.y+dy/m*amount})}
 function jitter(w,a,p,scale=3){const ax=unit(w,`${a.id}:jx`)*2-1,ay=unit(w,`${a.id}:jy`)*2-1;return bound({x:p.x+ax*scale,y:p.y+ay*scale})}
+function moveToward(from,goal,maxStep){const dx=goal.x-from.x,dy=goal.y-from.y,d=Math.hypot(dx,dy);if(!d||d<=maxStep)return bound(goal);return bound({x:from.x+dx/d*maxStep,y:from.y+dy/d*maxStep})}
 function updateNeeds(a){a.needs.hunger=clamp(a.needs.hunger-2.2);a.needs.thirst=clamp(a.needs.thirst-1.7);a.needs.energy=clamp(a.needs.energy-(a.activity==='flee'?5:a.activity==='move'?2.3:.8));if(a.activity==='rest')a.needs.energy=clamp(a.needs.energy+5)}
 function decideAnimal(w,a){
  const s=SPECIES[a.species]||SPECIES.deer,near=nearestAgent(w,a);a.fear=clamp(a.fear-(a.species==='bear'?8:12));
@@ -52,6 +53,6 @@ function decideAnimal(w,a){
  a.activity='move';a.behavior='roaming';return jitter(w,a,chooseHabitat(w,a),a.species==='bear'?9:6)
 }
 function updateAmbient(w){const daylight=w.hour>=6&&w.hour<20?1:0,wet=w.weather==='rain'?1:0,twilight=(w.hour>=5&&w.hour<=8)||(w.hour>=18&&w.hour<=21);w.ecologySystem.ambient={birds:Math.round(clamp((daylight?55:12)+(twilight?28:0)-(wet?22:0)+unit(w,'birds')*18)),frogs:Math.round(clamp((!daylight?58:22)+(wet?26:0)+unit(w,'frogs')*14)),insects:Math.round(clamp((w.temperature-42)*1.9+(daylight?18:6)-(wet?8:0))),fishActivity:Math.round(clamp(42+(twilight?28:0)+(wet?14:0)+unit(w,'fish')*18))};}
-export function advanceEcology(w){ensureEcology(w);for(const a of w.ecologySystem.wildlife){if(!a.active)continue;updateNeeds(a);const from={...a.position},to=decideAnimal(w,a);a.previousPosition=from;a.target=to;a.position=to;a.movement={from,to,worldDay:w.day,worldHour:w.hour,speed:SPECIES[a.species]?.speed||.6};a.history.push({day:w.day,hour:w.hour,activity:a.activity,behavior:a.behavior,from,to});if(a.history.length>36)a.history=a.history.slice(-36);a.ai.mode=(w.settings.ai.wildlife.individuals?.[a.id]??w.settings.ai.wildlife.enabled)?'eligible-ai':'simulation'}updateAmbient(w);w.ecologySystem.lastAdvanced={day:w.day,hour:w.hour};return w.ecologySystem}
+export function advanceEcology(w){ensureEcology(w);for(const a of w.ecologySystem.wildlife){if(!a.active)continue;updateNeeds(a);const from={...a.position},goal=decideAnimal(w,a),base=SPECIES[a.species]?.step||3,mult=a.activity==='flee'?1.7:a.activity==='rest'?.28:a.activity==='graze'||a.activity==='forage'?.65:1,to=moveToward(from,goal,base*mult);a.previousPosition=from;a.target=goal;a.position=to;a.movement={from,to,goal,worldDay:w.day,worldHour:w.hour,speed:base*mult};a.history.push({day:w.day,hour:w.hour,activity:a.activity,behavior:a.behavior,from,to,goal});if(a.history.length>36)a.history=a.history.slice(-36);a.ai.mode=(w.settings.ai.wildlife.individuals?.[a.id]??w.settings.ai.wildlife.enabled)?'eligible-ai':'simulation'}updateAmbient(w);w.ecologySystem.lastAdvanced={day:w.day,hour:w.hour};return w.ecologySystem}
 export function visibleWildlifeForAgent(w,agent,radius=18){ensureEcology(w);const c=agent.coordinates;if(!c)return[];return w.ecologySystem.wildlife.filter(x=>x.active&&dist(c,x.position)<=radius).map(x=>({id:x.id,species:x.species,label:x.label,distance:Math.round(dist(c,x.position)*10)/10,behavior:x.behavior,activity:x.activity,fear:Math.round(x.fear)})).sort((a,b)=>a.distance-b.distance)}
 export function wildlifeAIEnabled(w,id=null){ensureEcology(w);if(id&&w.settings.ai.wildlife.individuals?.[id]!=null)return !!w.settings.ai.wildlife.individuals[id];return !!w.settings.ai.wildlife.enabled}
