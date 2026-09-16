@@ -1,5 +1,6 @@
 name: Advance ChatGPTFarm World
 # Canonical heartbeats also apply versioned world/ecology migrations before decisions.
+# object-field-0.9 realigns creek, stone field, clay bank, and depth-aware basin rendering.
 
 on:
   schedule:
