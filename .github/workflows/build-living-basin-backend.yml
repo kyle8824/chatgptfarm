@@ -23,9 +23,20 @@ jobs:
       - name: Sync latest main
         run: git pull --rebase origin main
       - name: Build living basin backend
-        run: python3 scripts/build-living-basin-backend.py
+        shell: bash
+        run: |
+          set -o pipefail
+          python3 scripts/build-living-basin-backend.py 2>&1 | tee build-living-basin.log
       - name: Validate ecology, minds, physics and four-day world
         run: npm test
+      - name: Upload build diagnostics
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: living-basin-build-log
+          path: build-living-basin.log
+          if-no-files-found: warn
+          retention-days: 2
       - name: Commit living basin backend
         run: |
           git config user.name "ChatGPTFarm Guardian"
