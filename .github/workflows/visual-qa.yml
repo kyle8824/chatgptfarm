@@ -1,0 +1,41 @@
+name: Visual QA
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'world-pixi-v8.js'
+      - 'action-visuals-v8.js'
+      - 'index.html'
+      - 'scripts/visual-qa.mjs'
+      - '.github/workflows/visual-qa.yml'
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  visual:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - name: Install browser harness
+        run: |
+          npm install --no-save playwright@1.55.0
+          npx playwright install --with-deps chromium
+      - name: Serve current build
+        run: |
+          python3 -m http.server 4173 > /tmp/chatgptfarm-http.log 2>&1 &
+          for i in {1..30}; do curl -fsS http://127.0.0.1:4173/ >/dev/null && exit 0; sleep 1; done
+          cat /tmp/chatgptfarm-http.log
+          exit 1
+      - name: Run mobile visual review
+        run: node scripts/visual-qa.mjs
+      - name: Upload visual review
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: chatgptfarm-visual-qa
+          path: visual-qa/
+          if-no-files-found: warn
+          retention-days: 7
