@@ -1,4 +1,4 @@
-// Phaser Living World QA · rerun 1
+// Phaser Living World QA · v1.1 visual review
 import { chromium } from 'playwright';
 import fs from 'node:fs';
 import { migrateWorld, advanceEcology } from '../engine.js';
