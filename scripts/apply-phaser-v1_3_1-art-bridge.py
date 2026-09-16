@@ -13,6 +13,10 @@ html_path = Path('phaser.html')
 qa_path = Path('scripts/phaser-qa.mjs')
 
 renderer = renderer_path.read_text()
+if "phaser-v1.3.1-art-bridge" in renderer:
+    print('Phaser v1.3.1 art bridge is already applied; leaving validated files intact.')
+    raise SystemExit(0)
+
 renderer = replace_once(
     renderer,
     "const ASSET_ROOT=`https://raw.githubusercontent.com/Tiddybub/2d-assets/${ASSET_REV}`;",
