@@ -1,6 +1,6 @@
 import{knows,knowsTracks,knowsGameTrail}from'./core.js';
 import{syncArtifactLocations}from'./artifacts.js';
-export const LOCATION_COORDS={camp:{x:64,y:34},creek:{x:48,y:19},berries:{x:29,y:31},log:{x:59,y:29},meadow:{x:43,y:31},edge:{x:78,y:42},forest:{x:14,y:38},stones:{x:73,y:24},clay:{x:86,y:21},reeds:{x:10,y:22}};
+export const LOCATION_COORDS={camp:{x:64,y:34},creek:{x:48,y:19},berries:{x:29,y:31},log:{x:59,y:29},meadow:{x:43,y:31},edge:{x:78,y:42},forest:{x:14,y:38},stones:{x:73,y:28},clay:{x:86,y:23},reeds:{x:10,y:22}};
 export const coordForPosition=p=>({...LOCATION_COORDS[p]||LOCATION_COORDS.meadow});
 export function syncSpatial(w){w.spatial||={};w.spatial.locations=Object.fromEntries(Object.entries(LOCATION_COORDS).map(([id,c])=>[id,{id,...c}]));for(const a of w.agents){a.coordinates=coordForPosition(a.position);a.activeAction??=null}syncArtifactLocations(w,coordForPosition);return w}
 const distance=(a,b)=>Math.hypot((a.x||0)-(b.x||0),(a.y||0)-(b.y||0));

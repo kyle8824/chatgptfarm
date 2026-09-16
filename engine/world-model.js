@@ -1,12 +1,12 @@
-export const WORLD_MODEL_VERSION='object-field-0.8';
+export const WORLD_MODEL_VERSION='object-field-0.9';
 
 const FIXED={
  camp:{id:'OBJ-CAMP-001',kind:'place',type:'camp_area',label:'camp',zone:'camp',position:{x:64,y:34},geometry:{shape:'ellipse',radiusM:11},physical:{navigable:true,ground:'meadow-soil'}},
- creek:{id:'OBJ-CREEK-001',kind:'feature',type:'creek_segment',label:'creek',zone:'creek',position:{x:48,y:20},geometry:{shape:'polyline',widthM:5,points:[[0,18],[12,21],[27,18],[43,22],[58,19],[72,23],[86,21],[100,24]]},physical:{navigable:true,water:true,liquid:true,potable:true}},
+ creek:{id:'OBJ-CREEK-001',kind:'feature',type:'creek_segment',label:'creek',zone:'creek',position:{x:48,y:19},geometry:{shape:'polyline',widthM:5,points:[[0,17.5],[12,19.2],[27,17.4],[43,19.6],[58,18.2],[72,19.4],[86,19.1],[100,21.2]]},physical:{navigable:true,water:true,liquid:true,potable:true}},
  berries:{id:'OBJ-BERRIES-001',kind:'organism_group',type:'berry_patch',label:'berry patch',zone:'berries',position:{x:29,y:31},geometry:{shape:'ellipse',radiusM:7},physical:{navigable:true,biological:true,harvestable:true,edible:true,perishable:true}},
  log:{id:'OBJ-TREE-001',kind:'object',type:'fallen_tree',label:'fallen oak',zone:'log',position:{x:59,y:29},geometry:{shape:'capsule',lengthM:4.8,diameterM:.31,orientationDeg:81},physical:{wood:true,rigid:true,cuttable:true,flammable:true,heavy:true,inspectable:true},material:{species:'oak',densityKgM3:690,hardness:5.8}},
- stones:{id:'OBJ-STONES-001',kind:'object_group',type:'stone_field',label:'stone field',zone:'stones',position:{x:73,y:24},geometry:{shape:'ellipse',radiusM:8},physical:{navigable:true,stone:true,hard:true,fracturable:true,impact:true,harvestable:true}},
- clay:{id:'OBJ-CLAY-001',kind:'terrain_feature',type:'clay_bank',label:'clay bank',zone:'clay',position:{x:86,y:21},geometry:{shape:'bank',lengthM:12,widthM:4},physical:{navigable:true,clay:true,plastic:true,moldable:true,harvestable:true,wet:true}},
+ stones:{id:'OBJ-STONES-001',kind:'object_group',type:'stone_field',label:'stone field',zone:'stones',position:{x:73,y:28},geometry:{shape:'ellipse',radiusM:8},physical:{navigable:true,stone:true,hard:true,fracturable:true,impact:true,harvestable:true}},
+ clay:{id:'OBJ-CLAY-001',kind:'terrain_feature',type:'clay_bank',label:'clay bank',zone:'clay',position:{x:86,y:23},geometry:{shape:'bank',lengthM:12,widthM:4,orientationDeg:8},physical:{navigable:true,clay:true,plastic:true,moldable:true,harvestable:true,wet:true}},
  reeds:{id:'OBJ-REEDS-001',kind:'organism_group',type:'reed_marsh',label:'reed marsh',zone:'reeds',position:{x:10,y:22},geometry:{shape:'wetland',radiusM:12},physical:{navigable:true,reeds:true,fibrous:true,flexible:true,cuttable:true,harvestable:true,wetland:true}},
  edge:{id:'OBJ-FRONTIER-001',kind:'place',type:'frontier',label:'unknown frontier',zone:'edge',position:{x:78,y:42},geometry:{shape:'boundary',lengthM:40},physical:{navigable:true,unknown:true}}
 };
@@ -33,10 +33,15 @@ export function ensureWorldModel(w){
  // v0.8 geography migration: old renderer geometry placed the visible creek far north
  // of its canonical zone. Only migrate the untouched world-origin creek shape.
  const creek=w.worldModel.objects.find(o=>o.id==='OBJ-CREEK-001');
- if(creek?.provenance?.source==='world-origin'&&Math.max(...(creek.geometry?.points||[]).map(q=>q[1]||0))>50){
+ const creekPoints=creek?.geometry?.points||[],v08Creek=JSON.stringify([[0,18],[12,21],[27,18],[43,22],[58,19],[72,23],[86,21],[100,24]]);
+ if(creek?.provenance?.source==='world-origin'&&(Math.max(...creekPoints.map(q=>q[1]||0))>50||JSON.stringify(creekPoints)===v08Creek)){
   creek.position=clone(FIXED.creek.position);creek.geometry=clone(FIXED.creek.geometry);
-  creek.history||=[];creek.history.push({day:w.day,hour:w.hour,type:'coordinate-migration',detail:'Unified the creek visual geometry with its canonical basin position.'});
+  creek.history||=[];creek.history.push({day:w.day,hour:w.hour,type:'coordinate-migration',detail:'Refined the creek into a continuous basin channel with solid-object clearance.'});
  }
+ const stones=w.worldModel.objects.find(o=>o.id==='OBJ-STONES-001');
+ if(stones?.provenance?.source==='world-origin'&&(stones.position?.y??0)<27){stones.position=clone(FIXED.stones.position);stones.history||=[];stones.history.push({day:w.day,hour:w.hour,type:'coordinate-migration',detail:'Moved the stone field clear of the creek channel and bank.'})}
+ const clay=w.worldModel.objects.find(o=>o.id==='OBJ-CLAY-001');
+ if(clay?.provenance?.source==='world-origin'&&(clay.position?.y??0)<22.5){clay.position=clone(FIXED.clay.position);clay.geometry=clone(FIXED.clay.geometry);clay.history||=[];clay.history.push({day:w.day,hour:w.hour,type:'coordinate-migration',detail:'Moved the clay exposure onto the north creek bank instead of inside the channel.'})}
  syncLegacyIntoWorldModel(w);return w.worldModel;
 }
 

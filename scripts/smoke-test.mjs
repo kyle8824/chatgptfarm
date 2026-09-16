@@ -18,6 +18,14 @@ const assertWorld = (world, label) => {
   if (!Number.isFinite(world.day) || !Number.isFinite(world.hour)) fail(`${label}: invalid world clock`);
 };
 
+const geometryWorld=migrateWorld(createWorld());
+const geoCreek=findWorldObject(geometryWorld,'OBJ-CREEK-001'),geoPts=geoCreek.geometry.points.map(([x,y])=>({x,y})),meters=geometryWorld.worldModel.bounds.metersPerUnit||2,waterHalf=(geoCreek.geometry.widthM||5)/(2*meters);
+const segDistance=(p,a,b)=>{const vx=b.x-a.x,vy=b.y-a.y,wx=p.x-a.x,wy=p.y-a.y,d=vx*vx+vy*vy||1,t=Math.max(0,Math.min(1,(wx*vx+wy*vy)/d)),x=a.x+t*vx,y=a.y+t*vy;return Math.hypot(p.x-x,p.y-y)};
+const pathDistance=p=>Math.min(...geoPts.slice(0,-1).map((a,i)=>segDistance(p,a,geoPts[i+1])));
+const radiusUnits=o=>{const g=o.geometry||{};if(Number.isFinite(g.radiusM))return g.radiusM/meters;if(Number.isFinite(g.widthM))return g.widthM/(2*meters);if(Number.isFinite(g.diameterM))return g.diameterM/(2*meters);return .7};
+for(const id of ['OBJ-CAMP-001','OBJ-BERRIES-001','OBJ-TREE-001','OBJ-STONES-001','OBJ-CLAY-001']){const o=findWorldObject(geometryWorld,id),clearance=pathDistance(o.position)-radiusUnits(o)-waterHalf;if(clearance<.3)fail(`Canonical river collision: ${o.label} overlaps the creek channel (${clearance.toFixed(2)} world units clearance)`)}
+for(let i=1;i<geoPts.length-1;i++){const a=geoPts[i-1],b=geoPts[i],c=geoPts[i+1],u={x:b.x-a.x,y:b.y-a.y},v={x:c.x-b.x,y:c.y-b.y},dot=u.x*v.x+u.y*v.y,mu=Math.hypot(u.x,u.y)||1,mv=Math.hypot(v.x,v.y)||1,turn=Math.acos(Math.max(-1,Math.min(1,dot/(mu*mv))))*180/Math.PI;if(turn>32)fail(`Canonical creek has an abrupt ${turn.toFixed(1)}° turn at control point ${i}`)}
+
 const fallbackWorld = migrateWorld(createWorld());
 for (let i = 0; i < 96; i++) {
   const dnas = tick(fallbackWorld);

@@ -23,6 +23,7 @@ await page.goto(base,{waitUntil:'domcontentloaded',timeout:60000});
 await page.waitForFunction(()=>document.querySelector('#loading')?.classList.contains('hidden')&&window.ChatGPTFarmRendererDebug?.snapshot().items?.length>0,{timeout:60000});
 await page.waitForTimeout(1400);
 const snapshot=await page.evaluate(()=>window.ChatGPTFarmRendererDebug.snapshot());
+if(snapshot.version!=='v12-depth-basin')failures.push(`expected v12-depth-basin renderer, got ${snapshot.version}`);if((snapshot.riverCollisions||[]).length)failures.push(`river/object collisions: ${snapshot.riverCollisions.map(x=>`${x.label}:${x.clearance}px`).join(', ')}`);if(!snapshot.layers||snapshot.layers.bank<1||snapshot.layers.water<1||snapshot.layers.shore<1||snapshot.layers.world<1)failures.push('depth layer stack is incomplete');
 const items=snapshot.items||[],trees=items.filter(x=>x.kind==='tree'),reeds=items.filter(x=>x.kind==='reed-cluster'||x.kind==='reed_stand'),agents=items.filter(x=>x.kind==='agent'),wildlife=items.filter(x=>String(x.kind||'').startsWith('wildlife-')),raisedClay=items.filter(x=>x.kind==='clay_bank');
 if(trees.length<10)failures.push(`expected visible forest population, got ${trees.length} trees`);
 if(agents.length!==2)failures.push(`expected 2 agents, got ${agents.length}`);
@@ -43,7 +44,7 @@ try{
     await shot(name);
   }
   await page.getByRole('button',{name:'AUTO',exact:true}).click();await page.waitForTimeout(400);
-  await page.evaluate(()=>window.ChatGPTFarmRendererDebug.focusWorldUnit(48,20,1.45));await page.waitForTimeout(250);await shot('mobile-creek');
+  await page.evaluate(()=>window.ChatGPTFarmRendererDebug.focusWorldUnit(48,19,1.45));await page.waitForTimeout(250);await shot('mobile-creek');await page.evaluate(()=>window.ChatGPTFarmRendererDebug.focusWorldUnit(86,21,1.55));await page.waitForTimeout(250);await shot('mobile-east-bank');await page.evaluate(()=>window.ChatGPTFarmRendererDebug.focusWorldUnit(73,24,1.5));await page.waitForTimeout(250);await shot('mobile-stone-bank');
   if(!await page.evaluate(()=>window.ChatGPTFarmRendererDebug.focusWildlife('W-DEER-001',1.9)))failures.push('could not focus deer for visual QA');await page.waitForTimeout(250);await shot('mobile-deer');
   if(!await page.evaluate(()=>window.ChatGPTFarmRendererDebug.focusWildlife('W-BEAR-001',1.75)))failures.push('could not focus bear for visual QA');await page.waitForTimeout(250);await shot('mobile-bear');
   await page.locator('#pulseButton').click();await page.waitForTimeout(350);await shot('mobile-world-pulse');
