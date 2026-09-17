@@ -1,4 +1,4 @@
-// Phaser Living World QA · v1.3 diagnostic gate
+// Phaser Living World QA · v1.4 world-evidence gate
 import { chromium } from 'playwright';
 import fs from 'node:fs';
 import { migrateWorld, advanceEcology } from '../engine.js';
@@ -20,7 +20,7 @@ try{await page.waitForSelector('#phLoading.hidden',{state:'attached',timeout:100
 await page.waitForTimeout(1200);
 const snap=()=>page.evaluate(()=>window.ChatGPTFarmPhaserDebug.snapshot());
 let s=await snap();
-if(s.version!=='phaser-v1.3.1-art-bridge')failures.push(`wrong renderer: ${s.version}`);
+if(s.version!=='phaser-v1.4-world-evidence')failures.push(`wrong renderer: ${s.version}`);
 if(!String(s.phaser||'').startsWith('3.'))failures.push(`Phaser failed to initialize: ${s.phaser}`);
 if(s.agents!==2)failures.push(`expected 2 agents, got ${s.agents}`);
 if(s.wildlife<8)failures.push(`expected >=8 wildlife, got ${s.wildlife}`);
@@ -28,7 +28,7 @@ if(s.trees<55)failures.push(`expected a forest, got ${s.trees} trees`);
 if(s.treeWaterCollisions!==0)failures.push(`trees spawned in canonical water: ${s.treeWaterCollisions}`);
 if((s.terrain?.water||0)<20||(s.terrain?.bank||0)<20||(s.terrain?.forest||0)<100)failures.push(`terrain occupancy is incomplete: ${JSON.stringify(s.terrain)}`);
 if(s.movingEntities<1)failures.push('no entity has visible interpolated movement');
-const expectedDNA=state.dna?.[0]?.decision_id||null;if(!String(s.decisionDNA?.protocol||'').startsWith('Decision DNA'))failures.push(`Decision DNA projection missing: ${JSON.stringify(s.decisionDNA)}`);if(expectedDNA&&s.decisionDNA?.decisionId!==expectedDNA)failures.push(`renderer DNA drifted from canonical state: ${s.decisionDNA?.decisionId} != ${expectedDNA}`);if((s.agentArtModes||[]).length!==2||(s.agentArtModes||[]).some(x=>x!=='tiny-farm'))failures.push(`Tiny Farm agent art failed to load: ${JSON.stringify(s.agentArtModes)}`);if(s.campVisualMode!=='canonical-branch-camp-v1')failures.push(`canonical camp visual mode missing: ${s.campVisualMode}`);
+const expectedDNA=state.dna?.[0]?.decision_id||null;if(!String(s.decisionDNA?.protocol||'').startsWith('Decision DNA'))failures.push(`Decision DNA projection missing: ${JSON.stringify(s.decisionDNA)}`);if(expectedDNA&&s.decisionDNA?.decisionId!==expectedDNA)failures.push(`renderer DNA drifted from canonical state: ${s.decisionDNA?.decisionId} != ${expectedDNA}`);if((s.agentArtModes||[]).length!==2||(s.agentArtModes||[]).some(x=>x!=='tiny-farm'))failures.push(`Tiny Farm agent art failed to load: ${JSON.stringify(s.agentArtModes)}`);if(s.campVisualMode!=='canonical-branch-camp-v1')failures.push(`canonical camp visual mode missing: ${s.campVisualMode}`);const expectedTracks=(state.ecologySystem?.traces||[]).filter(x=>x.active!==false&&x.position).length;if(s.evidence?.tracks!==expectedTracks)failures.push(`rendered wildlife evidence drifted from canonical ecology: ${s.evidence?.tracks} != ${expectedTracks}`);const expectedRemnants=(state.artifacts||[]).filter(a=>(a.status==='remnant'||(a.status==='active'&&!a.carrierId))&&a.coordinates&&Number.isFinite(a.coordinates.x)&&Number.isFinite(a.coordinates.y)).length;if(s.evidence?.remnants!==expectedRemnants)failures.push(`rendered artifact evidence drifted from canonical ledger: ${s.evidence?.remnants} != ${expectedRemnants}`);
 await page.screenshot({path:'phaser-qa/mobile-auto.png'});
 
 for(const [name,id] of [['MARA','agent-mara'],['IVO','agent-ivo']]){
@@ -49,6 +49,7 @@ else{
  await page.evaluate(()=>window.ChatGPTFarmPhaserDebug.focusWorldUnit(45,36,.95));await page.waitForTimeout(250);await page.screenshot({path:'phaser-qa/mobile-wildlife.png'});
 }
 
+const trace=(state.ecologySystem?.traces||[]).find(x=>x.active!==false&&x.position);if(trace){await page.evaluate(({x,y})=>window.ChatGPTFarmPhaserDebug.focusWorldUnit(x,y,1.25),trace.position);await page.waitForTimeout(300);await page.screenshot({path:'phaser-qa/mobile-evidence.png'});}
 await page.evaluate(()=>window.ChatGPTFarmPhaserDebug.focusWorldUnit(50,19,.92));await page.waitForTimeout(300);await page.screenshot({path:'phaser-qa/mobile-creek.png'});
 await page.evaluate(()=>window.ChatGPTFarmPhaserDebug.focusWorldUnit(64,34,1.05));await page.waitForTimeout(300);await page.screenshot({path:'phaser-qa/mobile-camp.png'});
 await page.evaluate(()=>window.ChatGPTFarmPhaserDebug.focusWorldUnit(14,29,1.0));await page.waitForTimeout(300);await page.screenshot({path:'phaser-qa/mobile-forest.png'});
