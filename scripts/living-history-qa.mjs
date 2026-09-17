@@ -1,3 +1,4 @@
+import { buildPlayback } from '../engine/spectator.js';
 import { createWorld, tickWithMind } from '../engine.js';
 
 const w=createWorld();
@@ -59,7 +60,6 @@ if(forced.length)failures.push(`ecological evidence created a forced wildlife ac
 const ivoContext=contexts.find(c=>c.agent.id==='agent-ivo');
 if(ivoContext?.perception?.wildlifeSigns?.some(s=>s.id===sign.id))failures.push('Ivo perceived Mara-local ecological sign outside his local radius');
 
-if(failures.length){console.error(failures.join('\n'));process.exit(1)}
 console.log(JSON.stringify({
   ok:true,
   signId:sign.id,
@@ -70,3 +70,15 @@ console.log(JSON.stringify({
   forcedWildlifeActions:forced.length,
   ivoPerceivedSign:false
 },null,2));
+
+
+const routeWorld=createWorld(),walker=routeWorld.agents.find(a=>a.id==='agent-mara'),from={x:43,y:31},to={x:64,y:34};
+walker.position='camp';
+for(let i=0;i<3;i++)buildPlayback(routeWorld,walker,{decisionId:`ROUTE-QA-${i}`,label:'Walk used ground',actionId:'qa_walk',from:i%2?to:from,to:i%2?from:to,outcome:{success:true,detail:'QA traversal'}});
+const routes=routeWorld.surfaceHistory?.routes||[],route=routes[0];
+if(routes.length!==1)failures.push(`reverse travel should reinforce one canonical route, got ${routes.length}`);
+if(route?.traversals!==3)failures.push(`canonical route traversal count drifted: ${route?.traversals}`);
+if((route?.agents?.[walker.id]||0)!==3)failures.push(`route did not retain per-agent use: ${JSON.stringify(route?.agents)}`);
+if((routeWorld.surfaceHistory?.campWear?.uses||0)!==3)failures.push(`camp use did not accumulate canonical wear: ${routeWorld.surfaceHistory?.campWear?.uses}`);
+if(failures.length){console.error(failures.join('\n'));process.exit(1)}
+console.log(JSON.stringify({travelHistory:{routeId:route.id,traversals:route.traversals,campUses:routeWorld.surfaceHistory.campWear.uses}},null,2));
