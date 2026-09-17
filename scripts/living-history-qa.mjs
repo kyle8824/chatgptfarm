@@ -1,6 +1,7 @@
 import { buildPlayback } from '../engine/spectator.js';
 import { createWorld, tickWithMind } from '../engine.js';
-import { candidateActions } from '../engine/decision.js';
+import { candidateActions, retrieveDecisionContext } from '../engine/decision.js';
+import { advanceWeatherMemory } from '../engine/core.js';
 
 const w=createWorld();
 const mara=w.agents.find(a=>a.id==='agent-mara');
@@ -72,6 +73,8 @@ console.log(JSON.stringify({
   ivoPerceivedSign:false
 },null,2));
 
+
+const weatherWorld=createWorld(),weatherMara=weatherWorld.agents.find(a=>a.id==='agent-mara');weatherMara.position='meadow';weatherWorld.weather='rain';weatherWorld.environmentState.surfaceWetness=.62;advanceWeatherMemory(weatherWorld);const weatherContext=retrieveDecisionContext(weatherWorld,weatherMara);if(!['wet','saturated'].includes(weatherContext.perception.groundCondition?.band))failures.push(`local rain aftermath missing from bounded ground perception: ${JSON.stringify(weatherContext.perception.groundCondition)}`);if('value' in (weatherContext.perception.groundCondition||{})||'moisture' in (weatherContext.perception.groundCondition||{}))failures.push('ground perception exposed exact environmental telemetry');
 
 const routeWorld=createWorld(),walker=routeWorld.agents.find(a=>a.id==='agent-mara'),from={x:43,y:31},to={x:64,y:34};
 walker.position='camp';

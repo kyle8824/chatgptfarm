@@ -1,4 +1,5 @@
 import { ensureEcology, advanceEcology } from '../engine/ecology.js';
+import { advanceWeatherMemory } from '../engine/core.js';
 
 const dist=(a,b)=>Math.hypot((a?.x||0)-(b?.x||0),(a?.y||0)-(b?.y||0));
 const panicRadius={deer:7.5,rabbit:4.2,bear:9};
@@ -43,7 +44,13 @@ const panicProbe=(species)=>{
   ensureEcology(pw);const a=pw.ecologySystem.wildlife.find(x=>x.species===species);const human={x:a.position.x+1,y:a.position.y};pw.agents[0].coordinates=human;pw.agents[1].coordinates={x:2,y:96};const before=dist(a.position,human);advanceEcology(pw);return{species,before,after:dist(a.position,human),goalDistance:dist(a.target,human),activity:a.activity,behavior:a.behavior};
 };
 const panicProbes=['rabbit','deer','bear'].map(panicProbe);
+const hydro={day:3,hour:10,weather:'rain',environmentState:{surfaceWetness:.3,creekLevel:.42,lastRainAt:null,hoursSinceRain:null}};
+advanceWeatherMemory(hydro);const rainWet=hydro.environmentState.surfaceWetness,rainLevel=hydro.environmentState.creekLevel;hydro.hour=11;hydro.weather='clear';advanceWeatherMemory(hydro);const afterClear=hydro.environmentState.surfaceWetness,afterLevel=hydro.environmentState.creekLevel;
 const failures=[];
+if(rainWet<=.3)failures.push(`rain failed to raise canonical surface wetness: ${rainWet}`);
+if(rainLevel<=.42)failures.push(`rain failed to raise canonical creek level: ${rainLevel}`);
+if(!(afterClear<rainWet&&afterClear>.3))failures.push(`rain aftermath did not persist while drying: rain=${rainWet} clear=${afterClear}`);
+if(!(afterLevel<rainLevel&&afterLevel>.42))failures.push(`creek level did not recede gradually after rain: rain=${rainLevel} clear=${afterLevel}`);
 if(stats.rabbitMaxHome>18)failures.push(`cottontail exceeded local home-range envelope: ${stats.rabbitMaxHome.toFixed(1)} world units`);
 if(stats.rabbitWaterSeeking!==0)failures.push(`cottontails sought open water ${stats.rabbitWaterSeeking} times`);
 if(stats.bearMinHuman<7)failures.push(`bear approached humans too closely in routine simulation: ${stats.bearMinHuman.toFixed(1)} world units`);
