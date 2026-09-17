@@ -42,13 +42,27 @@ jobs:
       - name: Apply v1.4.4 quiet-world pass
         run: python3 scripts/apply-phaser-v1_4_4-quiet-world.py
       - name: Apply v1.4.5 cover-seeking ecology
-        run: python3 scripts/apply-phaser-v1_4_5-cover-ecology.py
+        run: |
+          if grep -q "function escapeCover" engine/ecology.js; then
+            echo 'v1.4.5 cover ecology already present.'
+          else
+            python3 scripts/apply-phaser-v1_4_5-cover-ecology.py
+          fi
       - name: Apply v1.4.6 natural range presence
-        run: python3 scripts/apply-phaser-v1_4_6-range-presence.py
-      - name: Fix v1.4.6 initial range windows
-        run: python3 scripts/apply-phaser-v1_4_6_range-init-fix.py
+        run: |
+          if grep -q "function updateLocalPresence" engine/ecology.js; then
+            echo 'v1.4.6 range presence already present.'
+          else
+            python3 scripts/apply-phaser-v1_4_6-range-presence.py
+          fi
+          python3 scripts/apply-phaser-v1_4_6_range-init-fix.py
       - name: Apply v1.4.7 ecological activity signs
-        run: python3 scripts/apply-phaser-v1_4_7-ecological-signs.py
+        run: |
+          if grep -q "visibleWildlifeSignsForAgent" engine/ecology.js; then
+            echo 'v1.4.7 ecological signs already present.'
+          else
+            python3 scripts/apply-phaser-v1_4_7-ecological-signs.py
+          fi
       - name: Syntax check renderer, ecology and mind runtime
         run: |
           node --check phaser-world-v1.js
