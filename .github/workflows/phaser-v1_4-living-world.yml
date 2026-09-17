@@ -1,7 +1,7 @@
-name: Phaser v1.5 Living History
+name: Phaser v1.6 Weather Memory
 on:
   push:
-    branches: [phaser-v1-5-living-history]
+    branches: [phaser-v1-6-weather-memory]
     paths:
       - 'phaser-world-v1.js'
       - 'phaser-world.css'
@@ -13,9 +13,10 @@ on:
       - 'scripts/phaser-qa.mjs'
       - 'scripts/ecology-realism-qa.mjs'
       - 'scripts/living-history-qa.mjs'
+      - 'scripts/apply-v1_6-weather-memory.py'
       - '.github/workflows/phaser-v1_4-living-world.yml'
 permissions:
-  contents: read
+  contents: write
 jobs:
   validate:
     runs-on: ubuntu-latest
@@ -24,18 +25,23 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: 22
+      - name: Apply v1.6 Weather Memory
+        run: python3 scripts/apply-v1_6-weather-memory.py
       - name: Syntax check authoritative source
         run: |
           node --check phaser-world-v1.js
           node --check engine.js
+          node --check engine/core.js
           node --check engine/ecology.js
           node --check engine/runtime.js
           node --check engine/decision.js
           node --check engine/physics.js
           node --check engine/spectator.js
+          node --check engine/world-model.js
           node --check mind.js
           node --check scripts/ecology-realism-qa.mjs
           node --check scripts/living-history-qa.mjs
+          node --check scripts/phaser-qa.mjs
       - name: Run ecology realism invariants
         run: node scripts/ecology-realism-qa.mjs
       - name: Run living-history invariants
@@ -46,9 +52,9 @@ jobs:
           npx playwright install --with-deps chromium
       - name: Start local world
         run: |
-          python3 -m http.server 4173 >/tmp/chatgptfarm-phaser-v155.log 2>&1 &
+          python3 -m http.server 4173 >/tmp/chatgptfarm-phaser-v16.log 2>&1 &
           for i in {1..30}; do curl -fsS http://127.0.0.1:4173/phaser.html >/dev/null && exit 0; sleep 1; done
-          cat /tmp/chatgptfarm-phaser-v155.log
+          cat /tmp/chatgptfarm-phaser-v16.log
           exit 1
       - name: Run strict browser QA
         env:
@@ -58,6 +64,18 @@ jobs:
         if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: phaser-v1-5-5-authoritative-qa
+          name: phaser-v1-6-weather-memory-qa
           path: phaser-qa/
           retention-days: 7
+      - name: Commit validated v1.6 source
+        run: |
+          if git diff --quiet; then
+            echo 'No generated changes to commit.'
+            exit 0
+          fi
+          git config user.name 'ChatGPTFarm Builder'
+          git config user.email 'actions@users.noreply.github.com'
+          git add engine.js engine/core.js engine/world-model.js engine/ecology.js engine/decision.js phaser-world-v1.js phaser.html scripts/ecology-realism-qa.mjs scripts/living-history-qa.mjs scripts/phaser-qa.mjs
+          git commit -m 'world: apply v1.6 canonical weather memory'
+          git pull --rebase origin "$GITHUB_REF_NAME"
+          git push
