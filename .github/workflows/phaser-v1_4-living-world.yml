@@ -14,6 +14,7 @@ on:
       - 'scripts/ecology-realism-qa.mjs'
       - 'scripts/living-history-qa.mjs'
       - 'scripts/apply-v1_6_2-world-depth.py'
+      - 'scripts/apply-v1_6_2-phaser-curve-fix.py'
       - '.github/workflows/phaser-v1_4-living-world.yml'
 permissions:
   contents: write
@@ -27,6 +28,8 @@ jobs:
           node-version: 22
       - name: Apply v1.6.2 world-depth pass
         run: python3 scripts/apply-v1_6_2-world-depth.py
+      - name: Apply Phaser-native contour fix
+        run: python3 scripts/apply-v1_6_2-phaser-curve-fix.py
       - name: Syntax check authoritative source
         run: |
           node --check phaser-world-v1.js
