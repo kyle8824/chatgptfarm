@@ -1,6 +1,6 @@
 // Living Basin ecology is intentionally simulation-first; model escalation remains optional.
 // v1.0: persistent wild behavior, habitat/time/weather weighting, realistic avoidance, and substrate-aware sign.
-export const ECOLOGY_VERSION='living-basin-1.0.0';
+export const ECOLOGY_VERSION='living-basin-1.1.0';
 
 const clamp=(n,a=0,b=100)=>Math.max(a,Math.min(b,n));
 const hash=s=>{let h=2166136261;for(const c of String(s)){h^=c.charCodeAt(0);h=Math.imul(h,16777619)}return h>>>0};
@@ -29,6 +29,22 @@ function activityDrive(w,a){const seg=segmentOfDay(w),rain=w.weather==='rain';le
 function chooseHabitat(w,a){const all=habitat[a.species]||[a.home||point(50,40)],home=a.home||a.position;let choices=all;if(a.species==='rabbit')choices=[...all].sort((x,y)=>dist(x,home)-dist(y,home)).slice(0,2);else if(a.species==='deer')choices=[...all].sort((x,y)=>dist(x,home)-dist(y,home)).slice(0,4);const period=Math.floor(worldStamp(w)/6),i=hash(`${a.id}:${period}:habitat`)%choices.length;return choices[i]}
 function creekTarget(w,a){return creekPoints[hash(`${a.id}:${Math.floor(worldStamp(w)/5)}:creek`)%creekPoints.length]}
 function fleeFrom(a,threat,amount){const dx=a.position.x-threat.x,dy=a.position.y-threat.y,m=Math.hypot(dx,dy)||1;return bound({x:a.position.x+dx/m*amount,y:a.position.y+dy/m*amount})}
+function escapeCover(w,a,threat,amount){
+ const currentThreat=dist(a.position,threat),home=a.home||a.position,raw=habitat[a.species]||[];
+ let choices=raw;
+ if(a.species==='rabbit')choices=[...raw].sort((x,y)=>dist(x,home)-dist(y,home)).slice(0,3);
+ else if(a.species==='deer')choices=[...raw].sort((x,y)=>dist(x,a.position)-dist(y,a.position)).slice(0,5);
+ let best=null,bestScore=-Infinity;
+ for(const q of choices){
+  const threatD=dist(q,threat);if(threatD<currentThreat+1.5)continue;
+  const travel=dist(a.position,q),homeCost=a.species==='rabbit'?dist(q,home)*.55:a.species==='deer'?dist(q,home)*.12:0;
+  const score=threatD*1.2-travel*.7-homeCost;
+  if(score>bestScore){best=q;bestScore=score}
+ }
+ if(!best)return fleeFrom(a,threat,amount);
+ const scale=a.species==='rabbit'?.75:a.species==='deer'?1.8:3.4,covered=jitter(w,a,best,scale,'escape-cover');
+ return dist(covered,threat)>currentThreat+.75?covered:fleeFrom(a,threat,amount);
+}
 function jitter(w,a,p,scale=3,salt='jitter'){const ax=unit(w,`${a.id}:${salt}:x`)*2-1,ay=unit(w,`${a.id}:${salt}:y`)*2-1;return bound({x:p.x+ax*scale,y:p.y+ay*scale})}
 function moveToward(from,goal,maxStep){const dx=goal.x-from.x,dy=goal.y-from.y,d=Math.hypot(dx,dy);if(!d||d<=maxStep)return bound(goal);return bound({x:from.x+dx/d*maxStep,y:from.y+dy/d*maxStep})}
 function hold(w,a,{activity,behavior,goal=a.position,hours=2}){a.activity=activity;a.behavior=behavior;a.behaviorGoal=bound(goal);a.behaviorUntil=worldStamp(w)+Math.max(1,hours);return a.behaviorGoal}
@@ -44,8 +60,8 @@ function decideAnimal(w,a){
  const s=SPECIES[a.species]||SPECIES.deer,near=nearestAgent(w,a),drive=activityDrive(w,a);a.fear=clamp(a.fear-(a.species==='bear'?5:9));
  if(a.species==='fish'){const t=creekTarget(w,a);return hold(w,a,{activity:'swim',behavior:'schooling',goal:jitter(w,a,t,1.5,'fish'),hours:2})}
  // Wild animals should usually avoid people; only close approaches become encounter events.
- if(near&&near.distance<s.panicRadius){a.fear=100;const goal=fleeFrom(a,near.position,a.species==='rabbit'?11:a.species==='bear'?13:10);hold(w,a,{activity:'flee',behavior:a.species==='bear'?'withdrawing':'startled',goal,hours:a.species==='rabbit'?1:2});if(a.species!=='rabbit'||unit(w,`${a.id}:panic-event`)<.3)ecoEvent(w,{kind:a.species==='bear'?'bear-encounter':'wildlife-flight',title:a.species==='bear'?`${a.label} withdraws from ${near.agent.name}`:`${a.label} bolts from ${near.agent.name}`,detail:`${a.label} reacted at ${near.distance.toFixed(1)} world units and moved toward cover.`,animal:a,agent:near.agent,importance:a.species==='bear'?9:5,cooldown:a.species==='bear'?18:8});return goal}
- if(near&&near.distance<s.fearRadius){a.fear=Math.max(a.fear,a.species==='bear'?65:58);if(a.species==='rabbit'&&unit(w,`${a.id}:freeze`)<.72)return hold(w,a,{activity:'freeze',behavior:'motionless in cover',goal:a.position,hours:1});const goal=fleeFrom(a,near.position,a.species==='bear'?9:a.species==='deer'?5:6);return hold(w,a,{activity:'move',behavior:a.species==='bear'?'avoiding people':'wary',goal,hours:2})}
+ if(near&&near.distance<s.panicRadius){a.fear=100;const goal=escapeCover(w,a,near.position,a.species==='rabbit'?11:a.species==='bear'?13:10);hold(w,a,{activity:'flee',behavior:a.species==='bear'?'withdrawing to cover':'bolting to cover',goal,hours:a.species==='rabbit'?1:2});if(a.species!=='rabbit'||unit(w,`${a.id}:panic-event`)<.3)ecoEvent(w,{kind:a.species==='bear'?'bear-encounter':'wildlife-flight',title:a.species==='bear'?`${a.label} withdraws from ${near.agent.name}`:`${a.label} bolts from ${near.agent.name}`,detail:`${a.label} reacted at ${near.distance.toFixed(1)} world units and moved toward cover.`,animal:a,agent:near.agent,importance:a.species==='bear'?9:5,cooldown:a.species==='bear'?18:8});return goal}
+ if(near&&near.distance<s.fearRadius){a.fear=Math.max(a.fear,a.species==='bear'?65:58);if(a.species==='rabbit'&&unit(w,`${a.id}:freeze`)<.72)return hold(w,a,{activity:'freeze',behavior:'motionless in cover',goal:a.position,hours:1});const goal=escapeCover(w,a,near.position,a.species==='bear'?9:a.species==='deer'?5:6);return hold(w,a,{activity:'move',behavior:a.species==='bear'?'avoiding people via cover':a.species==='rabbit'?'moving to cover':'wary, moving to cover',goal,hours:2})}
  // Cottontails generally obtain much of their water from vegetation; do not make them march to open water every time thirst drops.
  if(a.species!=='rabbit'&&a.needs.thirst<38){const water=nearestCreek(a.position);if(dist(a.position,water)<2.6){a.needs.thirst=clamp(a.needs.thirst+26);return hold(w,a,{activity:'drink',behavior:'drinking',goal:a.position,hours:1})}return hold(w,a,{activity:'move',behavior:'seeking water',goal:jitter(w,a,water,1,'water'),hours:2})}
  const persisted=persistRoutine(w,a);if(persisted)return persisted;

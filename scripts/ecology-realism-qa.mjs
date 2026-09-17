@@ -34,6 +34,11 @@ for(let step=0;step<120;step++){
   stats.tracksMax=Math.max(stats.tracksMax,w.ecologySystem.traces.length);
   w.hour++;if(w.hour>=24){w.hour=0;w.day++}
 }
+const panicProbe=(species)=>{
+  const pw={day:2,hour:7,weather:'clear',temperature:61,settings:{ai:{people:{},wildlife:{enabled:false,individuals:{}},usage:{track:true}}},agents:[{id:'agent-mara',name:'Mara',coordinates:{x:1,y:1}},{id:'agent-ivo',name:'Ivo',coordinates:{x:2,y:2}}],ecologySystem:null};
+  ensureEcology(pw);const a=pw.ecologySystem.wildlife.find(x=>x.species===species);const human={x:a.position.x+1,y:a.position.y};pw.agents[0].coordinates=human;pw.agents[1].coordinates={x:2,y:96};const before=dist(a.position,human);advanceEcology(pw);return{species,before,after:dist(a.position,human),goalDistance:dist(a.target,human),activity:a.activity,behavior:a.behavior};
+};
+const panicProbes=['rabbit','deer','bear'].map(panicProbe);
 const failures=[];
 if(stats.rabbitMaxHome>18)failures.push(`cottontail exceeded local home-range envelope: ${stats.rabbitMaxHome.toFixed(1)} world units`);
 if(stats.rabbitWaterSeeking!==0)failures.push(`cottontails sought open water ${stats.rabbitWaterSeeking} times`);
@@ -46,5 +51,6 @@ if(stats.closeHumanHours>10)failures.push(`wildlife spent too many routine hours
 if(stats.bearCloseHumanHours>1)failures.push(`bear remained panic-close to people too often: ${stats.bearCloseHumanHours} hours`);
 if(stats.humanWildlifeEvents>6)failures.push(`human-wildlife encounter events are too frequent: ${stats.humanWildlifeEvents} in 120 hours`);
 if(stats.bearEncounterEvents>1)failures.push(`bear encounter events are too frequent: ${stats.bearEncounterEvents} in 120 hours`);
+for(const p of panicProbes){if(p.activity!=='flee')failures.push(`${p.species} did not flee at panic distance: ${JSON.stringify(p)}`);if(p.after<=p.before+.15)failures.push(`${p.species} failed to increase human distance while fleeing: ${JSON.stringify(p)}`);if(p.goalDistance<=p.before+.75)failures.push(`${p.species} escape goal did not create separation: ${JSON.stringify(p)}`);if(!String(p.behavior).includes('cover'))failures.push(`${p.species} panic behavior did not seek cover: ${JSON.stringify(p)}`)}
 if(failures.length){console.error(failures.join('\n'));process.exit(1)}
 console.log(JSON.stringify({ok:true,...stats,lastBehavior:undefined},null,2));
