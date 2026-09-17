@@ -43,9 +43,9 @@ second local writer. Do not run multiple replicas sharing separate disks.
 
 ## Known unfinished work
 
-The engine is still hourly and evaluates the next action at a transition boundary.
-AI planning can delay the next transition by up to ten seconds per person. Buffered
-planning and smaller physical simulation steps are needed for uninterrupted action.
+The engine is still hourly. Planning is buffered during the current transition;
+API calls are bounded, and long offline catch-up uses utility decisions. Smaller
+physical simulation steps are still needed for richer continuous behavior.
 Physiological action constraints, species-specific locomotion and task animations
 still need work. The viewer currently interpolates shared paths and tilts sprites
 for active tasks; this is not a finished natural-behavior renderer. Rest/hide/freeze
