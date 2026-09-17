@@ -6,6 +6,8 @@ on:
       - 'phaser-world-v1.js'
       - 'phaser-world.css'
       - 'phaser.html'
+      - 'engine.js'
+      - 'engine/runtime.js'
       - 'engine/ecology.js'
       - 'scripts/phaser-qa.mjs'
       - 'scripts/ecology-realism-qa.mjs'
@@ -17,6 +19,7 @@ on:
       - 'scripts/apply-phaser-v1_4_5-cover-ecology.py'
       - 'scripts/apply-phaser-v1_4_6-range-presence.py'
       - 'scripts/apply-phaser-v1_4_6_range-init-fix.py'
+      - 'scripts/apply-phaser-v1_4_7-ecological-signs.py'
       - '.github/workflows/phaser-v1_4-living-world.yml'
 permissions:
   contents: write
@@ -44,10 +47,14 @@ jobs:
         run: python3 scripts/apply-phaser-v1_4_6-range-presence.py
       - name: Fix v1.4.6 initial range windows
         run: python3 scripts/apply-phaser-v1_4_6_range-init-fix.py
-      - name: Syntax check renderer and ecology
+      - name: Apply v1.4.7 ecological activity signs
+        run: python3 scripts/apply-phaser-v1_4_7-ecological-signs.py
+      - name: Syntax check renderer, ecology and mind runtime
         run: |
           node --check phaser-world-v1.js
           node --check engine/ecology.js
+          node --check engine/runtime.js
+          node --check engine.js
           node --check scripts/ecology-realism-qa.mjs
       - name: Run ecology realism invariants
         run: node scripts/ecology-realism-qa.mjs
@@ -80,7 +87,7 @@ jobs:
           fi
           git config user.name 'ChatGPTFarm Builder'
           git config user.email 'actions@users.noreply.github.com'
-          git add phaser-world-v1.js phaser-world.css phaser.html engine/ecology.js scripts/phaser-qa.mjs scripts/ecology-realism-qa.mjs
-          git commit -m 'phaser: apply v1.4.6 natural range-presence pass'
+          git add phaser-world-v1.js phaser-world.css phaser.html engine.js engine/runtime.js engine/ecology.js scripts/phaser-qa.mjs scripts/ecology-realism-qa.mjs
+          git commit -m 'phaser: apply v1.4.7 ecological-signs pass'
           git pull --rebase origin "$GITHUB_REF_NAME"
           git push
