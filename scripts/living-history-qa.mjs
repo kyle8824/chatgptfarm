@@ -1,5 +1,6 @@
 import { buildPlayback } from '../engine/spectator.js';
 import { createWorld, tickWithMind } from '../engine.js';
+import { candidateActions } from '../engine/decision.js';
 
 const w=createWorld();
 const mara=w.agents.find(a=>a.id==='agent-mara');
@@ -94,5 +95,21 @@ if(!scarcityDNA?.observation?.localResources?.some(x=>x.key==='berries'&&x.band=
 if(scarcityContext?.candidates?.some(c=>c.id==='gather_berries'))failures.push('depleted berry patch still offered a gather_berries known action');
 scarcityMara.position='meadow';scarcityWorld.resources.berries=18;resourceContexts.length=0;await tickWithMind(scarcityWorld,resourceMind);const recoveryMemory=scarcityMara.memories.find(m=>(m.tags||[]).includes('resource-observation')&&(m.tags||[]).includes('berries')&&(m.tags||[]).includes('recovery'));
 if(!recoveryMemory)failures.push('resource recovery did not create a later private recovery memory');
+
+
+const hiddenFull=createWorld(),hiddenEmpty=createWorld(),ivoFull=hiddenFull.agents.find(a=>a.id==='agent-ivo'),ivoEmpty=hiddenEmpty.agents.find(a=>a.id==='agent-ivo');
+hiddenEmpty.resources.berries=0;
+const fullRemoteIds=candidateActions(hiddenFull,ivoFull).map(x=>x.id).sort(),emptyRemoteIds=candidateActions(hiddenEmpty,ivoEmpty).map(x=>x.id).sort();
+if(JSON.stringify(fullRemoteIds)!==JSON.stringify(emptyRemoteIds))failures.push(`remote hidden berry quantity leaked through candidate actions: ${JSON.stringify(fullRemoteIds)} vs ${JSON.stringify(emptyRemoteIds)}`);
+if(!emptyRemoteIds.includes('gather_berries'))failures.push('Ivo lost the gather_berries possibility before observing remote depletion');
+const arrivalWorld=createWorld(),arrivalIvo=arrivalWorld.agents.find(a=>a.id==='agent-ivo');arrivalWorld.resources.berries=0;const arrivalContexts=[];
+const arrivalMind={async decide(context){arrivalContexts.push(structuredClone(context));const action=context.agent.id==='agent-ivo'&&context.candidates.some(c=>c.id==='gather_berries')?context.candidates.find(c=>c.id==='gather_berries'):context.candidates[0];return{choiceType:'known_action',actionId:action.id,physicalAction:null,goal:'Test only what the agent currently believes is possible.',intent:action.label,decisionSummary:'EPISTEMIC-RESOURCE-QA chooses a bounded known action without hidden resource knowledge.',confidence:.72,referencedMemoryIds:[],brainMode:'ai',model:'EPISTEMIC-RESOURCE-QA'}}};
+let arrivalDNA=await tickWithMind(arrivalWorld,arrivalMind),ivoArrivalDNA=arrivalDNA.find(d=>d.agent_id==='agent-ivo');
+if(ivoArrivalDNA?.action!=='gather_berries')failures.push(`remote Ivo did not retain gather_berries before checking the patch: ${ivoArrivalDNA?.action}`);
+if(ivoArrivalDNA?.physics?.outcome?.success!==false)failures.push('empty remote berry patch did not resolve as a failed physical outcome after arrival');
+if(arrivalIvo.position!=='berries')failures.push(`Ivo did not physically arrive at the depleted berry patch: ${arrivalIvo.position}`);
+arrivalContexts.length=0;await tickWithMind(arrivalWorld,arrivalMind);const postArrivalContext=arrivalContexts.find(c=>c.agent.id==='agent-ivo'),arrivalMemory=arrivalIvo.memories.find(m=>(m.tags||[]).includes('resource-observation')&&(m.tags||[]).includes('berries')&&(m.tags||[]).includes('depleted'));
+if(!arrivalMemory)failures.push('Ivo did not privately learn depletion after physically checking the berry patch');
+if(postArrivalContext?.candidates?.some(c=>c.id==='gather_berries'))failures.push('gather_berries remained available after Ivo locally learned the patch was depleted');
 if(failures.length){console.error(failures.join('\n'));process.exit(1)}
 console.log(JSON.stringify({travelHistory:{routeId:route.id,traversals:route.traversals,campUses:routeWorld.surfaceHistory.campWear.uses}},null,2));
