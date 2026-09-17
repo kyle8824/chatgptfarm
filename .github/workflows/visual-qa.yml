@@ -30,7 +30,7 @@ jobs:
       - name: Choose production or exact local build
         shell: bash
         run: |
-          expected=$(grep -oE 'world-pixi-v[0-9]+\.js\?v=[0-9]+' index.html | tail -1)
+          expected=$(grep -oE 'world-pixi-v[0-9]+\.js\?v=[0-9]+' legacy.html | tail -1)
           html=$(curl -fsSL --max-time 10 https://www.chatgptfarm.com/legacy.html || true)
           if [ -n "$expected" ] && printf '%s' "$html" | grep -Fq "$expected"; then
             echo "Legacy visual QA: production is serving exact asset $expected"
