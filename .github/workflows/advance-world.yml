@@ -4,7 +4,7 @@ name: Advance ChatGPTFarm World
 
 on:
   schedule:
-    - cron: '*/5 * * * *'
+    - cron: '2-59/5 * * * *'
   workflow_dispatch:
   push:
     branches: [main]
@@ -22,16 +22,18 @@ permissions:
 
 concurrency:
   group: chatgptfarm-world
-  cancel-in-progress: true
+  cancel-in-progress: false
 
 jobs:
   advance:
     runs-on: ubuntu-latest
+    timeout-minutes: 10
     steps:
       - name: Check out world
         uses: actions/checkout@v4
         with:
           fetch-depth: 0
+          ref: main
 
       - name: Set up Node
         uses: actions/setup-node@v4
