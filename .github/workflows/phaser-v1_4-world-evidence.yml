@@ -4,6 +4,9 @@ on:
     branches: [phaser-v1-4-world-evidence]
     paths:
       - 'scripts/apply-phaser-v1_4-world-evidence.py'
+      - 'scripts/apply-phaser-v1_4-wildlife-coherence.py'
+      - 'scripts/apply-v1_4-living-director.py'
+      - 'scripts/v1_4-director-qa.mjs'
       - '.github/workflows/phaser-v1_4-world-evidence.yml'
 permissions:
   contents: write
@@ -17,8 +20,16 @@ jobs:
           node-version: 22
       - name: Apply v1.4 world evidence
         run: python3 scripts/apply-phaser-v1_4-world-evidence.py
-      - name: Syntax check renderer
-        run: node --check phaser-world-v1.js
+      - name: Apply wildlife coherence
+        run: python3 scripts/apply-phaser-v1_4-wildlife-coherence.py
+      - name: Apply real Living Director
+        run: python3 scripts/apply-v1_4-living-director.py
+      - name: Syntax checks
+        run: |
+          node --check phaser-world-v1.js
+          node --check engine/spectator.js
+      - name: Verify Living Director provenance
+        run: node scripts/v1_4-director-qa.mjs
       - name: Install browser QA
         run: |
           npm install --no-save playwright@1.55.0
@@ -48,6 +59,6 @@ jobs:
           fi
           git config user.name 'ChatGPTFarm Builder'
           git config user.email 'actions@users.noreply.github.com'
-          git add phaser-world-v1.js phaser.html scripts/phaser-qa.mjs
-          git commit -m 'phaser: apply v1.4 world evidence'
+          git add phaser-world-v1.js phaser.html scripts/phaser-qa.mjs engine/spectator.js
+          git commit -m 'phaser: apply v1.4 evidence and Living Director'
           git push
