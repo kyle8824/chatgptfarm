@@ -42,7 +42,7 @@ function currentPhase(a){const active=a?.activeAction;if(!active)return{phase:'i
 function focusAgent(w=canonical){const urgent=(w?.liveThreads||[]).slice().sort((a,b)=>(b.urgency||0)-(a.urgency||0))[0],id=urgent?.agentIds?.[0];return(w?.agents||[]).find(a=>a.id===id)||(w?.agents||[])[0]||null}
 
 class LivingWorld extends Phaser.Scene{
- constructor(){super('LivingWorld');this.entities=new Map();this.treeSprites=[];this.ambient=[];this.traceVisuals=[];this.decisionCue=null;this.lastDecisionCueId=null;this.lightOverlay=null;this.grid=null;this.drag=null;this.assetOk={};this.lastRenderedTick=null}
+ constructor(){super('LivingWorld');this.entities=new Map();this.treeSprites=[];this.ambient=[];this.traceVisuals=[];this.decisionCue=null;this.lastDecisionCueId=null;this.lightOverlay=null;this.nightLights=[];this.grid=null;this.drag=null;this.assetOk={};this.lastRenderedTick=null}
  preload(){
   this.load.on('loaderror',file=>assetErrors.push(file?.key||file?.src||'asset'));
   const foliage=`${ASSET_ROOT}/nature/foliage-pack/PNG/Default%20size`;
@@ -147,7 +147,7 @@ class LivingWorld extends Phaser.Scene{
    const g=this.add.graphics().setDepth(50+q.y*.01);
    const stems=nearForest?3+Math.floor(R()*5):2+Math.floor(R()*4);
    const base=nearForest?0x76865e:0x87946c;
-   const alpha=nearForest ? .28 : .18;
+   const alpha=nearForest ? .34 : .24;
    g.lineStyle(1,base,alpha);
    for(let k=0;k<stems;k++){
     const ox=(R()-.5)*(nearForest?15:11),hh=(nearForest?7:4)+R()*(nearForest?15:10);
@@ -173,16 +173,51 @@ class LivingWorld extends Phaser.Scene{
  moveEntity(e,to,duration){this.tweens.killTweensOf(e);const label=e.getData?.('label');if(!duration){e.setPosition(to.x,to.y);if(label)label.setPosition(to.x,to.y-59);e.setDepth(e.getData?.('species')==='fish'?25:1000+to.y+3);return}const start={x:e.x,y:e.y};this.tweens.add({targets:e,x:to.x,y:to.y,duration,ease:'Sine.InOut',onUpdate:()=>{const dx=e.x-start.x;if(e.setFlipX&&Math.abs(dx)>.4)e.setFlipX(dx<0);if(label)label.setPosition(e.x,e.y-59);if(e.getData?.('species')!=='fish')e.setDepth(1000+e.y+3)}})}
  spawnAmbientLife(){this.refreshAmbient(true)}
  refreshAmbient(force=false){const birds=canonical?.ecologySystem?.ambient?.birds||0,target=clamp(Math.round(birds/14),0,7);if(!force&&this.ambient.length===target)return;for(const x of this.ambient)x.destroy();this.ambient=[];const R=seeded(`birds:${canonical?.ecologySystem?.ambient?.seed||0}`);for(let i=0;i<target;i++){const b=this.add.image(R()*WORLD,R()*WORLD*.5+140,'ambient-bird').setScale(.55+R()*.35).setAlpha(.28+R()*.2).setDepth(8000);this.ambient.push(b);this.tweens.add({targets:b,x:b.x+(R()>.5?1:-1)*(260+R()*520),y:b.y+(R()-.5)*90,duration:10500+R()*11000,repeat:-1,yoyo:true,ease:'Sine.InOut'})}}
- renderLightCycle(refresh=false){if(refresh&&this.lightOverlay){this.lightOverlay.destroy();this.lightOverlay=null}const h=canonical?.hour??12,wet=canonical?.weather==='rain';let color=0x0c1620,alpha=0;if(h<5||h>=22)alpha=.34;else if(h<7){color=0x5d4939;alpha=.14}else if(h>=19&&h<22){color=0x5c4437;alpha=.17}else if(wet)alpha=.065;if(alpha>0)this.lightOverlay=this.add.rectangle(WORLD/2,WORLD/2,WORLD,WORLD,color,alpha).setDepth(8800);this.lightCycle={hour:h,alpha:+alpha.toFixed(3),weather:canonical?.weather||null}}
+ renderLightCycle(refresh=false){
+  if(refresh&&this.lightOverlay){this.lightOverlay.destroy();this.lightOverlay=null}
+  if(refresh&&this.nightLights?.length){for(const x of this.nightLights)x.destroy();this.nightLights=[]}
+  const h=canonical?.hour??12,wet=canonical?.weather==='rain';
+  let color=0x0b1722,alpha=0,tone='day';
+  if(h<5||h>=22){color=0x0b1826;alpha=.46;tone='night'}
+  else if(h<7){color=0x7b5b42;alpha=.16;tone='dawn'}
+  else if(h>=19&&h<22){color=0x4c3d42;alpha=.24;tone='dusk'}
+  else if(wet){color=0x26382f;alpha=.07;tone='rain'}
+  if(alpha>0)this.lightOverlay=this.add.rectangle(WORLD/2,WORLD/2,WORLD,WORLD,color,alpha).setDepth(8800);
+  const fire=(canonical?.worldModel?.objects||[]).find(o=>o.type==='camp_fire'&&o.state?.active);
+  if(fire&&(tone==='night'||tone==='dusk'||tone==='dawn')){
+   const p=worldToPx(fire.position);
+   const outer=this.add.circle(p.x,p.y,100,0xf6a94d,tone==='night' ? .055 : .035).setDepth(8801).setBlendMode(Phaser.BlendModes.ADD);
+   const inner=this.add.circle(p.x,p.y,52,0xffbd66,tone==='night' ? .10 : .065).setDepth(8802).setBlendMode(Phaser.BlendModes.ADD);
+   this.nightLights.push(outer,inner);
+   this.tweens.add({targets:[outer,inner],scale:1.08,alpha:'-=0.018',duration:900,yoyo:true,repeat:-1,ease:'Sine.InOut'});
+  }
+  this.lightCycle={hour:h,alpha:+alpha.toFixed(3),tone,weather:canonical?.weather||null,fireGlow:this.nightLights?.length||0};
+ }
  renderWeather(refresh=false){if(refresh&&this.rainGroup){this.rainGroup.clear(true,true);this.rainGroup=null}if(canonical?.weather!=='rain')return;this.rainGroup=this.add.group();const R=seeded(`rain:${canonical.day}:${canonical.hour}`);for(let i=0;i<55;i++){const x=R()*WORLD,y=R()*WORLD,line=this.add.rectangle(x,y,1,10,0xc6dbe0,.18).setDepth(9500);this.rainGroup.add(line);this.tweens.add({targets:line,x:x-140,y:y+340,duration:1700+R()*1000,repeat:-1})}}
- updateHud(){const s=$('#phWorldStatus'),v=String(canonical.worldModel?.version||'?').replace('object-field-','');s.innerHTML=`<b>● OBJECT WORLD · ${v}</b><span>Day ${canonical.day} · ${String(canonical.hour).padStart(2,'0')}:00 · ${Math.round(canonical.temperature)}°F · ${canonical.weather}</span>`;const a=focusAgent(),ph=currentPhase(a),place=String(a?.position||'world').replaceAll('_',' ').toUpperCase();$('#phFocus').innerHTML=`<small>${ph.label} · ${place}</small><strong>${a?.name||'World'} — ${a?.mind?.currentGoal||a?.currentAction||'Observing the basin.'}</strong>`;const wildlife=(canonical.ecologySystem?.wildlife||[]).filter(x=>x.active),ambient=canonical.ecologySystem?.ambient||{},events=canonical.ecologySystem?.events||[];$('#phLifeCount').textContent=`${wildlife.length} animals` ;$('#phPulseText').textContent=events[0]?.title||`${ambient.birds||0} bird activity · ${ambient.frogs||0} frog activity`}
+ updateHud(){
+  const s=$('#phWorldStatus'),v=String(canonical.worldModel?.version||'?').replace('object-field-','');
+  s.innerHTML=`<b>● OBJECT WORLD · ${v}</b><span>Day ${canonical.day} · ${String(canonical.hour).padStart(2,'0')}:00 · ${Math.round(canonical.temperature)}°F · ${canonical.weather}</span>`;
+  const a=focusAgent(),ph=currentPhase(a),place=String(a?.position||'world').replaceAll('_',' ').toUpperCase();
+  $('#phFocus').innerHTML=`<small>${ph.label} · ${place}</small><strong>${a?.name||'World'} — ${a?.mind?.currentGoal||a?.currentAction||'Observing the basin.'}</strong>`;
+  const wildlife=(canonical.ecologySystem?.wildlife||[]).filter(x=>x.active),ambient=canonical.ecologySystem?.ambient||{},events=canonical.ecologySystem?.events||[];
+  const currentEvent=events.find(e=>e.day===canonical.day&&e.hour===canonical.hour&&(e.importance??0)>=5);
+  const h=canonical.hour;
+  let pulse='';
+  if(currentEvent){pulse=currentEvent.title;this.pulseMode='current-event'}
+  else if(canonical.weather==='rain'){pulse=`Rain across the basin · ${ambient.frogs||0} frog activity`;this.pulseMode='ambient-rain'}
+  else if(h<5||h>=22){pulse=`Quiet night · ${ambient.frogs||0} frog activity · ${ambient.insects||0} insect activity`;this.pulseMode='ambient-night'}
+  else if((h>=5&&h<=8)||(h>=18&&h<=21)){pulse=`Twilight activity · ${ambient.birds||0} birds · ${ambient.frogs||0} frogs`;this.pulseMode='ambient-twilight'}
+  else{pulse=`Basin quiet · ${ambient.birds||0} bird activity`;this.pulseMode='ambient-day'}
+  $('#phLifeCount').textContent=`${wildlife.length} animals`;
+  $('#phPulseText').textContent=pulse;
+ }
  wireUI(){document.querySelectorAll('[data-camera]').forEach(b=>b.addEventListener('click',()=>{cameraMode=b.dataset.camera;this.applyCamera(true);this.syncButtons()}));$('#phZoomIn')?.addEventListener('click',()=>this.setZoom(this.cameras.main.zoom+.12));$('#phZoomOut')?.addEventListener('click',()=>this.setZoom(this.cameras.main.zoom-.12));$('#phHome')?.addEventListener('click',()=>{cameraMode='auto';this.applyCamera(true);this.syncButtons()})}
  syncButtons(){document.querySelectorAll('[data-camera]').forEach(b=>b.classList.toggle('active',b.dataset.camera===cameraMode))}
  applyCamera(immediate=false){let id=cameraMode;if(id==='auto')id=focusAgent()?.id||'agent-mara';const e=this.entities.get(id);if(!e)return;const cam=this.cameras.main;if(immediate){cam.stopFollow();cam.centerOn(e.x,e.y)}cam.startFollow(e,true,.075,.075,0,innerWidth<650?35:0)}
  setZoom(z){this.cameras.main.setZoom(clamp(z,.55,1.8))}
  wireInput(){const cam=this.cameras.main;this.input.on('pointerdown',p=>{if(p.primaryDown)this.drag={x:p.x,y:p.y,scrollX:cam.scrollX,scrollY:cam.scrollY}});this.input.on('pointermove',p=>{if(!this.drag||!p.isDown)return;const dx=(p.x-this.drag.x)/cam.zoom,dy=(p.y-this.drag.y)/cam.zoom;if(Math.abs(dx)+Math.abs(dy)>8){cameraMode='free';cam.stopFollow();cam.scrollX=this.drag.scrollX-dx;cam.scrollY=this.drag.scrollY-dy;this.syncButtons()}});this.input.on('pointerup',()=>this.drag=null);this.input.on('wheel',(_p,_go,_dx,dy)=>this.setZoom(cam.zoom+(dy>0?-.08:.08)))}
  update(){for(const [id,e] of this.entities){if(e.getData?.('kind')==='wildlife'&&e.getData('species')!=='fish')e.setDepth(1000+e.y+2)}if(this.decisionCue&&this.lastDecisionCueId){const dna=canonical?.dna?.[0],agent=dna?this.entities.get(dna.agent_id):null;if(agent)this.decisionCue.setPosition(agent.x,agent.y-92)} }
- snapshot(){const treeWater=this.treeSprites.filter(t=>terrainTypeAt(t.getData('worldPoint'))===TERRAIN.WATER).length,moving=[...this.entities.values()].filter(e=>this.tweens.getTweensOf(e).length>0).length;return{version:'phaser-v1.4-living-world',phaser:Phaser.VERSION,ready:!!canonical,worldModel:canonical?.worldModel?.version||null,terrain:this.grid?.counts||{},trees:this.treeSprites.length,treeWaterCollisions:treeWater,agents:[...this.entities.values()].filter(x=>x.getData?.('kind')==='agent').length,wildlife:[...this.entities.values()].filter(x=>x.getData?.('kind')==='wildlife').length,movingEntities:moving,assetErrors:[...assetErrors],decisionDNA:{protocol:canonical?.dna?.[0]?.protocol||null,decisionId:canonical?.dna?.[0]?.decision_id||null,action:canonical?.dna?.[0]?.action||null},agentArtModes:[...this.entities.values()].filter(x=>x.getData?.('kind')==='agent').map(x=>x.getData?.('artMode')||'unknown'),campVisualMode:this.campVisualMode||null,visualFixes:'visual-fixes-v1',naturalism:'naturalism-v1',embodiment:'embodiment-v1',habitatDepth:'habitat-depth-v1',habitatDetail:this.habitatDetail||null,lightCycle:this.lightCycle||null,livingWorld:{trackVisuals:this.traceVisuals.length,canonicalTracks:(canonical?.ecologySystem?.traces||[]).filter(t=>t.active&&(t.clarity??0)>.38&&(t.ageHours??0)<=14&&(t.species!=='rabbit'||(t.clarity??0)>.55)).length,decisionCueId:this.decisionCue?.getData?.('decisionId')||null},camera:{mode:cameraMode,zoom:this.cameras.main.zoom,scrollX:this.cameras.main.scrollX,scrollY:this.cameras.main.scrollY},positions:Object.fromEntries([...this.entities].map(([id,e])=>[id,{x:e.x,y:e.y,kind:e.getData?.('kind'),species:e.getData?.('species')||null}]))}}
+ snapshot(){const treeWater=this.treeSprites.filter(t=>terrainTypeAt(t.getData('worldPoint'))===TERRAIN.WATER).length,moving=[...this.entities.values()].filter(e=>this.tweens.getTweensOf(e).length>0).length;return{version:'phaser-v1.4-living-world',phaser:Phaser.VERSION,ready:!!canonical,worldModel:canonical?.worldModel?.version||null,terrain:this.grid?.counts||{},trees:this.treeSprites.length,treeWaterCollisions:treeWater,agents:[...this.entities.values()].filter(x=>x.getData?.('kind')==='agent').length,wildlife:[...this.entities.values()].filter(x=>x.getData?.('kind')==='wildlife').length,movingEntities:moving,assetErrors:[...assetErrors],decisionDNA:{protocol:canonical?.dna?.[0]?.protocol||null,decisionId:canonical?.dna?.[0]?.decision_id||null,action:canonical?.dna?.[0]?.action||null},agentArtModes:[...this.entities.values()].filter(x=>x.getData?.('kind')==='agent').map(x=>x.getData?.('artMode')||'unknown'),campVisualMode:this.campVisualMode||null,visualFixes:'visual-fixes-v1',naturalism:'naturalism-v1',embodiment:'embodiment-v1',habitatDepth:'habitat-depth-v1',quietWorld:'quiet-world-v1',pulseMode:this.pulseMode||null,habitatDetail:this.habitatDetail||null,lightCycle:this.lightCycle||null,livingWorld:{trackVisuals:this.traceVisuals.length,canonicalTracks:(canonical?.ecologySystem?.traces||[]).filter(t=>t.active&&(t.clarity??0)>.38&&(t.ageHours??0)<=14&&(t.species!=='rabbit'||(t.clarity??0)>.55)).length,decisionCueId:this.decisionCue?.getData?.('decisionId')||null},camera:{mode:cameraMode,zoom:this.cameras.main.zoom,scrollX:this.cameras.main.scrollX,scrollY:this.cameras.main.scrollY},positions:Object.fromEntries([...this.entities].map(([id,e])=>[id,{x:e.x,y:e.y,kind:e.getData?.('kind'),species:e.getData?.('species')||null}]))}}
 }
 
 const game=new Phaser.Game({type:Phaser.AUTO,parent:'phaserWorld',width:window.innerWidth,height:window.innerHeight,backgroundColor:COLORS.meadow,pixelArt:false,antialias:true,roundPixels:false,scale:{mode:Phaser.Scale.RESIZE,autoCenter:Phaser.Scale.CENTER_BOTH},render:{antialias:true,powerPreference:'high-performance'},scene:[LivingWorld]});
