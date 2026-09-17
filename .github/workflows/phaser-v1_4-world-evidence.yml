@@ -7,6 +7,7 @@ on:
       - 'scripts/apply-phaser-v1_4-wildlife-coherence.py'
       - 'scripts/apply-v1_4-living-director.py'
       - 'scripts/apply-phaser-v1_4-director-camera.py'
+      - 'scripts/apply-phaser-v1_4-director-hud.py'
       - 'scripts/v1_4-director-qa.mjs'
       - '.github/workflows/phaser-v1_4-world-evidence.yml'
 permissions:
@@ -27,6 +28,8 @@ jobs:
         run: python3 scripts/apply-v1_4-living-director.py
       - name: Apply Living Director camera
         run: python3 scripts/apply-phaser-v1_4-director-camera.py
+      - name: Apply Director-aware caption
+        run: python3 scripts/apply-phaser-v1_4-director-hud.py
       - name: Syntax checks
         run: |
           node --check phaser-world-v1.js
@@ -63,5 +66,5 @@ jobs:
           git config user.name 'ChatGPTFarm Builder'
           git config user.email 'actions@users.noreply.github.com'
           git add phaser-world-v1.js phaser.html scripts/phaser-qa.mjs engine/spectator.js
-          git commit -m 'phaser: apply v1.4 Living Director camera'
+          git commit -m 'phaser: finalize v1.4 Living Director presentation'
           git push
