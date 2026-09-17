@@ -1,107 +1,63 @@
-name: Phaser v1.4 Living World
+name: Phaser v1.5 Living History
 on:
   push:
-    branches: [phaser-v1-4-living-world]
+    branches: [phaser-v1-5-living-history]
     paths:
       - 'phaser-world-v1.js'
       - 'phaser-world.css'
       - 'phaser.html'
       - 'engine.js'
-      - 'engine/runtime.js'
-      - 'engine/ecology.js'
+      - 'engine/**'
+      - 'mind.js'
+      - 'world/**'
       - 'scripts/phaser-qa.mjs'
       - 'scripts/ecology-realism-qa.mjs'
-      - 'scripts/apply-phaser-v1_4-living-world.py'
-      - 'scripts/apply-phaser-v1_4_1-naturalism.py'
-      - 'scripts/apply-phaser-v1_4_2-embodiment.py'
-      - 'scripts/apply-phaser-v1_4_3-habitat-depth.py'
-      - 'scripts/apply-phaser-v1_4_4-quiet-world.py'
-      - 'scripts/apply-phaser-v1_4_5-cover-ecology.py'
-      - 'scripts/apply-phaser-v1_4_6-range-presence.py'
-      - 'scripts/apply-phaser-v1_4_6_range-init-fix.py'
-      - 'scripts/apply-phaser-v1_4_7-ecological-signs.py'
+      - 'scripts/living-history-qa.mjs'
       - '.github/workflows/phaser-v1_4-living-world.yml'
 permissions:
-  contents: write
+  contents: read
 jobs:
-  build-and-qa:
+  validate:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
         with:
           node-version: 22
-      - name: Apply v1.4 living-world pass
-        run: python3 scripts/apply-phaser-v1_4-living-world.py
-      - name: Apply v1.4.1 naturalism pass
-        run: python3 scripts/apply-phaser-v1_4_1-naturalism.py
-      - name: Apply v1.4.2 embodiment pass
-        run: python3 scripts/apply-phaser-v1_4_2-embodiment.py
-      - name: Apply v1.4.3 habitat depth pass
-        run: python3 scripts/apply-phaser-v1_4_3-habitat-depth.py
-      - name: Apply v1.4.4 quiet-world pass
-        run: python3 scripts/apply-phaser-v1_4_4-quiet-world.py
-      - name: Apply v1.4.5 cover-seeking ecology
-        run: |
-          if grep -q "function escapeCover" engine/ecology.js; then
-            echo 'v1.4.5 cover ecology already present.'
-          else
-            python3 scripts/apply-phaser-v1_4_5-cover-ecology.py
-          fi
-      - name: Apply v1.4.6 natural range presence
-        run: |
-          if grep -q "function updateLocalPresence" engine/ecology.js; then
-            echo 'v1.4.6 range presence already present.'
-          else
-            python3 scripts/apply-phaser-v1_4_6-range-presence.py
-          fi
-          python3 scripts/apply-phaser-v1_4_6_range-init-fix.py
-      - name: Apply v1.4.7 ecological activity signs
-        run: |
-          if grep -q "visibleWildlifeSignsForAgent" engine/ecology.js; then
-            echo 'v1.4.7 ecological signs already present.'
-          else
-            python3 scripts/apply-phaser-v1_4_7-ecological-signs.py
-          fi
-      - name: Syntax check renderer, ecology and mind runtime
+      - name: Syntax check authoritative source
         run: |
           node --check phaser-world-v1.js
+          node --check engine.js
           node --check engine/ecology.js
           node --check engine/runtime.js
-          node --check engine.js
+          node --check engine/decision.js
+          node --check engine/physics.js
+          node --check mind.js
           node --check scripts/ecology-realism-qa.mjs
+          if [ -f scripts/living-history-qa.mjs ]; then node --check scripts/living-history-qa.mjs; fi
       - name: Run ecology realism invariants
         run: node scripts/ecology-realism-qa.mjs
+      - name: Run living-history invariants
+        if: ${{ hashFiles('scripts/living-history-qa.mjs') != '' }}
+        run: node scripts/living-history-qa.mjs
       - name: Install browser QA
         run: |
           npm install --no-save playwright@1.55.0
           npx playwright install --with-deps chromium
       - name: Start local world
         run: |
-          python3 -m http.server 4173 >/tmp/chatgptfarm-phaser-v14.log 2>&1 &
+          python3 -m http.server 4173 >/tmp/chatgptfarm-phaser-v15.log 2>&1 &
           for i in {1..30}; do curl -fsS http://127.0.0.1:4173/phaser.html >/dev/null && exit 0; sleep 1; done
-          cat /tmp/chatgptfarm-phaser-v14.log
+          cat /tmp/chatgptfarm-phaser-v15.log
           exit 1
-      - name: Run strict Phaser QA
+      - name: Run strict browser QA
         env:
           BASE_URL: http://127.0.0.1:4173/phaser.html
         run: node scripts/phaser-qa.mjs
-      - name: Upload visual QA
+      - name: Upload focused visual QA
         if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: phaser-v1-4-living-world-qa
+          name: phaser-v1-5-living-history-qa
           path: phaser-qa/
           retention-days: 7
-      - name: Commit validated v1.4 output
-        run: |
-          if git diff --quiet; then
-            echo 'No generated changes to commit.'
-            exit 0
-          fi
-          git config user.name 'ChatGPTFarm Builder'
-          git config user.email 'actions@users.noreply.github.com'
-          git add phaser-world-v1.js phaser-world.css phaser.html engine.js engine/runtime.js engine/ecology.js scripts/phaser-qa.mjs scripts/ecology-realism-qa.mjs
-          git commit -m 'phaser: apply v1.4.7 ecological-signs pass'
-          git pull --rebase origin "$GITHUB_REF_NAME"
-          git push
