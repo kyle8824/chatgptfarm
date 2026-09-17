@@ -4,9 +4,13 @@ on:
     branches: [phaser-v1-4-living-world]
     paths:
       - 'phaser-world-v1.js'
+      - 'phaser-world.css'
       - 'phaser.html'
+      - 'engine/ecology.js'
       - 'scripts/phaser-qa.mjs'
+      - 'scripts/ecology-realism-qa.mjs'
       - 'scripts/apply-phaser-v1_4-living-world.py'
+      - 'scripts/apply-phaser-v1_4_1-naturalism.py'
       - '.github/workflows/phaser-v1_4-living-world.yml'
 permissions:
   contents: write
@@ -20,8 +24,14 @@ jobs:
           node-version: 22
       - name: Apply v1.4 living-world pass
         run: python3 scripts/apply-phaser-v1_4-living-world.py
-      - name: Syntax check renderer
-        run: node --check phaser-world-v1.js
+      - name: Apply v1.4.1 naturalism pass
+        run: python3 scripts/apply-phaser-v1_4_1-naturalism.py
+      - name: Syntax check renderer and ecology
+        run: |
+          node --check phaser-world-v1.js
+          node --check engine/ecology.js
+      - name: Run ecology realism invariants
+        run: node scripts/ecology-realism-qa.mjs
       - name: Install browser QA
         run: |
           npm install --no-save playwright@1.55.0
@@ -51,7 +61,7 @@ jobs:
           fi
           git config user.name 'ChatGPTFarm Builder'
           git config user.email 'actions@users.noreply.github.com'
-          git add phaser-world-v1.js phaser.html scripts/phaser-qa.mjs
-          git commit -m 'phaser: apply v1.4 canonical living-world pass'
+          git add phaser-world-v1.js phaser-world.css phaser.html engine/ecology.js scripts/phaser-qa.mjs
+          git commit -m 'phaser: apply v1.4.1 natural living-world pass'
           git pull --rebase origin "$GITHUB_REF_NAME"
           git push
