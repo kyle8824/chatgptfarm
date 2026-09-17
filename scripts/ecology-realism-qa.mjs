@@ -5,7 +5,7 @@ const panicRadius={deer:7.5,rabbit:4.2,bear:9};
 const w={day:1,hour:0,weather:'clear',temperature:58,settings:{ai:{people:{},wildlife:{enabled:false,individuals:{}},usage:{track:true}}},agents:[{id:'agent-mara',name:'Mara',coordinates:{x:50,y:50}},{id:'agent-ivo',name:'Ivo',coordinates:{x:53,y:49}}],ecologySystem:null};
 ensureEcology(w);
 const home=Object.fromEntries(w.ecologySystem.wildlife.map(a=>[a.id,{...a.home}]));
-const stats={rabbitMaxHome:0,bearMinHuman:Infinity,rabbitWaterSeeking:0,tracksMax:0,dayRabbitHidden:0,twilightRabbitActive:0,twilightSamples:0,persistence:0,closeHumanHours:0,bearCloseHumanHours:0,humanWildlifeEvents:0,bearEncounterEvents:0,rabbitAbsentHours:0,deerPresentHours:0,deerAbsentHours:0,bearPresentHours:0,bearAbsentHours:0,lastBehavior:new Map()};
+const stats={rabbitMaxHome:0,bearMinHuman:Infinity,rabbitWaterSeeking:0,tracksMax:0,dayRabbitHidden:0,twilightRabbitActive:0,twilightSamples:0,persistence:0,closeHumanHours:0,bearCloseHumanHours:0,humanWildlifeEvents:0,bearEncounterEvents:0,rabbitAbsentHours:0,deerPresentHours:0,deerAbsentHours:0,bearPresentHours:0,bearAbsentHours:0,signsMax:0,signsSeen:0,lastBehavior:new Map()};
 for(let step=0;step<120;step++){
   w.weather=(step%31>=27&&step%31<=29)?'rain':'clear';
   const beforeEvents=new Set((w.ecologySystem.events||[]).map(e=>e.id));
@@ -35,7 +35,7 @@ for(let step=0;step<120;step++){
     }
     if(a.species==='bear')stats.bearMinHuman=Math.min(stats.bearMinHuman,humanD);
   }
-  stats.tracksMax=Math.max(stats.tracksMax,w.ecologySystem.traces.length);
+  stats.tracksMax=Math.max(stats.tracksMax,w.ecologySystem.traces.length);stats.signsMax=Math.max(stats.signsMax,w.ecologySystem.signs.length);stats.signsSeen+=w.ecologySystem.signs.length;for(const s of w.ecologySystem.signs){if(s.species==='fish')throw new Error(`fish created terrestrial sign ${s.id}`);if(!w.ecologySystem.wildlife.some(a=>a.id===s.sourceId))throw new Error(`orphan ecological sign ${s.id}`)}
   w.hour++;if(w.hour>=24){w.hour=0;w.day++}
 }
 const panicProbe=(species)=>{
@@ -48,6 +48,8 @@ if(stats.rabbitMaxHome>18)failures.push(`cottontail exceeded local home-range en
 if(stats.rabbitWaterSeeking!==0)failures.push(`cottontails sought open water ${stats.rabbitWaterSeeking} times`);
 if(stats.bearMinHuman<7)failures.push(`bear approached humans too closely in routine simulation: ${stats.bearMinHuman.toFixed(1)} world units`);
 if(stats.tracksMax>24)failures.push(`trace cap exceeded: ${stats.tracksMax}`);
+if(stats.signsMax>18)failures.push(`ecological sign cap exceeded: ${stats.signsMax}`);
+if(stats.signsSeen<3)failures.push(`wildlife activity left too little persistent sign over 120 hours: ${stats.signsSeen}`);
 if(stats.dayRabbitHidden<8)failures.push(`cottontails did not spend enough daylight time in cover: ${stats.dayRabbitHidden}`);
 if(stats.twilightSamples&&stats.twilightRabbitActive/stats.twilightSamples<.18)failures.push(`cottontails were implausibly inactive at dawn/dusk: ${(stats.twilightRabbitActive/stats.twilightSamples).toFixed(2)}`);
 if(stats.persistence<80)failures.push(`wildlife behavior is changing too frequently; persistence count ${stats.persistence}`);
