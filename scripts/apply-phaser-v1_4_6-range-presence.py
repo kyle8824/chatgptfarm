@@ -25,12 +25,12 @@ if "living-basin-1.2.0" not in ecology:
     ecology=replace_once(ecology,old_migration,new_migration,'range state migration')
     anchor="function updateAmbient(w){"
     presence=r'''function updateLocalPresence(w,a){
- const stamp=worldStamp(w),seg=segmentOfDay(w);
+ const stamp=worldStamp(w),seg=segmentOfDay(w),twilight=seg==='dawn'||seg==='dusk';
  if(a.species==='rabbit'||a.species==='fish'){a.localPresence=true;a.rangeState='basin';a.rangeUntil=Math.max(a.rangeUntil||0,stamp+24);return true}
  if(a.rangeUntil==null||!Number.isFinite(a.rangeUntil))a.rangeUntil=stamp+(a.species==='bear'?4:6);
  if(a.localPresence===false){
   if(stamp<a.rangeUntil)return false;
-  const returnChance=a.species==='bear'?(seg==='dawn'||seg==='dusk'?.16:seg==='night'?.10:.035):(seg==='dawn'||seg==='dusk'?.62:seg==='night'?.18:.08);
+  const returnChance=a.species==='bear'?(twilight?.16:seg==='night'?.10:.035):(twilight?.62:seg==='night'?.18:.08);
   if(unit(w,`${a.id}:range-return:${Math.floor(stamp/3)}`)>returnChance){a.rangeUntil=stamp+(a.species==='bear'?8:3);return false}
   const entry=chooseHabitat(w,a),q=jitter(w,a,entry,a.species==='bear'?2.8:1.7,'range-entry');
   a.localPresence=true;a.rangeState='basin';a.position={...q};a.previousPosition={...q};a.target={...q};a.behaviorGoal={...q};a.activity='move';a.behavior='entering basin';a.behaviorUntil=stamp+1;
@@ -39,7 +39,7 @@ if "living-basin-1.2.0" not in ecology:
   a.history.push({day:w.day,hour:w.hour,activity:'range-entry',behavior:'entered basin',from:null,to:{...q},goal:{...q}});if(a.history.length>48)a.history=a.history.slice(-48);return true
  }
  if(stamp<a.rangeUntil)return true;
- const leaveChance=a.species==='bear'?.78:(seg==='dawn'||seg==='dusk'?.28:.62);
+ const leaveChance=a.species==='bear'?.78:(twilight?.28:.62);
  if(unit(w,`${a.id}:range-leave:${Math.floor(stamp/2)}`)>leaveChance){a.rangeUntil=stamp+2;return true}
  a.localPresence=false;a.rangeState='outside-basin';a.activity='range';a.behavior='outside basin';a.behaviorUntil=0;
  a.rangeUntil=stamp+(a.species==='bear'?48+Math.floor(unit(w,`${a.id}:range-absence`)*96):7+Math.floor(unit(w,`${a.id}:range-absence`)*17));
@@ -47,6 +47,7 @@ if "living-basin-1.2.0" not in ecology:
  a.history.push({day:w.day,hour:w.hour,activity:'range-exit',behavior:'left basin',from:{...a.position},to:null,goal:null});if(a.history.length>48)a.history=a.history.slice(-48);return false
 }
 '''
+    presence=presence.replace("twilight?.16","twilight ? .16").replace("seg==='night'?.10","seg==='night' ? .10").replace("twilight?.62","twilight ? .62").replace("seg==='night'?.18","seg==='night' ? .18").replace("a.species==='bear'?.78","a.species==='bear' ? .78").replace("twilight?.28","twilight ? .28")
     ecology=replace_once(ecology,anchor,presence+anchor,'local range presence')
     ecology=replace_once(ecology,"export function advanceEcology(w){ensureEcology(w);ageTraces(w);for(const a of w.ecologySystem.wildlife){if(!a.active)continue;updateNeeds(a);","export function advanceEcology(w){ensureEcology(w);ageTraces(w);for(const a of w.ecologySystem.wildlife){if(!a.active)continue;if(!updateLocalPresence(w,a))continue;updateNeeds(a);",'presence-aware ecology advance')
     ecology=replace_once(ecology,"return w.ecologySystem.wildlife.filter(x=>x.active&&dist(c,x.position)<=detectionRadius(w,x,radius))","return w.ecologySystem.wildlife.filter(x=>x.active&&x.localPresence!==false&&dist(c,x.position)<=detectionRadius(w,x,radius))",'presence-aware perception')
@@ -82,7 +83,10 @@ if "bearAbsentHours" not in qa:
     if(a.localPresence===false)continue;
     const humanD=Math.min(...w.agents.map(p=>dist(a.position,p.coordinates)));"""
     qa=replace_once(qa,old_loop,new_loop,'presence QA loop')
-    qa=replace_once(qa,"    const prev=stats.lastBehavior.get(a.id);if(prev===a.behavior)stats.persistence++;stats.lastBehavior.set(a.id,a.behavior);\n","",'remove duplicate persistence accounting')
+    duplicate="""    if(a.species==='bear')stats.bearMinHuman=Math.min(stats.bearMinHuman,humanD);
+    const prev=stats.lastBehavior.get(a.id);if(prev===a.behavior)stats.persistence++;stats.lastBehavior.set(a.id,a.behavior);
+"""
+    qa=replace_once(qa,duplicate,"    if(a.species==='bear')stats.bearMinHuman=Math.min(stats.bearMinHuman,humanD);\n",'remove later persistence accounting')
     tail="if(stats.bearEncounterEvents>1)failures.push(`bear encounter events are too frequent: ${stats.bearEncounterEvents} in 120 hours`);"
     range_assertions=tail+"\nif(stats.rabbitAbsentHours!==0)failures.push(`resident cottontails left the basin unexpectedly: ${stats.rabbitAbsentHours} rabbit-hours`);\nif(stats.deerAbsentHours<20||stats.deerPresentHours<20)failures.push(`deer range use lacks natural presence/absence variation: present=${stats.deerPresentHours}, absent=${stats.deerAbsentHours}`);\nif(stats.bearAbsentHours<60||stats.bearPresentHours<2)failures.push(`black bear should be an occasional basin visitor: present=${stats.bearPresentHours}, absent=${stats.bearAbsentHours}`);"
     qa=replace_once(qa,tail,range_assertions,'range presence assertions')
