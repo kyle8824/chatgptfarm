@@ -13,10 +13,9 @@ on:
       - 'scripts/phaser-qa.mjs'
       - 'scripts/ecology-realism-qa.mjs'
       - 'scripts/living-history-qa.mjs'
-      - 'scripts/apply-v1_5_5-resource-perception-uncertainty.py'
       - '.github/workflows/phaser-v1_4-living-world.yml'
 permissions:
-  contents: write
+  contents: read
 jobs:
   validate:
     runs-on: ubuntu-latest
@@ -25,8 +24,6 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: 22
-      - name: Apply v1.5.5 resource perception uncertainty
-        run: python3 scripts/apply-v1_5_5-resource-perception-uncertainty.py
       - name: Syntax check authoritative source
         run: |
           node --check phaser-world-v1.js
@@ -61,18 +58,6 @@ jobs:
         if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: phaser-v1-5-5-resource-perception-qa
+          name: phaser-v1-5-5-authoritative-qa
           path: phaser-qa/
           retention-days: 7
-      - name: Commit validated v1.5.5 source
-        run: |
-          if git diff --quiet; then
-            echo 'No generated changes to commit.'
-            exit 0
-          fi
-          git config user.name 'ChatGPTFarm Builder'
-          git config user.email 'actions@users.noreply.github.com'
-          git add engine/decision.js engine/runtime.js scripts/living-history-qa.mjs
-          git commit -m 'mind: apply v1.5.5 resource perception uncertainty'
-          git pull --rebase origin "$GITHUB_REF_NAME"
-          git push
