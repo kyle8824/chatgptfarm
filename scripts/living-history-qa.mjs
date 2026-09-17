@@ -80,5 +80,19 @@ if(routes.length!==1)failures.push(`reverse travel should reinforce one canonica
 if(route?.traversals!==3)failures.push(`canonical route traversal count drifted: ${route?.traversals}`);
 if((route?.agents?.[walker.id]||0)!==3)failures.push(`route did not retain per-agent use: ${JSON.stringify(route?.agents)}`);
 if((routeWorld.surfaceHistory?.campWear?.uses||0)!==3)failures.push(`camp use did not accumulate canonical wear: ${routeWorld.surfaceHistory?.campWear?.uses}`);
+
+
+const scarcityWorld=createWorld(),scarcityMara=scarcityWorld.agents.find(a=>a.id==='agent-mara');
+scarcityWorld.resources.berries=0;
+const resourceContexts=[];
+const resourceMind={async decide(context){resourceContexts.push(structuredClone(context));const action=context.candidates[0];return{choiceType:'known_action',actionId:action.id,physicalAction:null,goal:'Respond to locally observed resource conditions.',intent:action.label,decisionSummary:'QA mind uses only supplied bounded context.',confidence:.71,referencedMemoryIds:(context.memories.find(m=>(m.tags||[]).includes('resource-observation'))?[context.memories.find(m=>(m.tags||[]).includes('resource-observation')).id]:[]),brainMode:'ai',model:'LOCAL-RESOURCE-QA'}}};
+let resourceDNA=await tickWithMind(scarcityWorld,resourceMind),scarcityContext=resourceContexts.find(c=>c.agent.id==='agent-mara'),scarcityDNA=resourceDNA.find(d=>d.agent_id==='agent-mara'),scarcityMemory=scarcityMara.memories.find(m=>(m.tags||[]).includes('resource-observation')&&(m.tags||[]).includes('berries'));
+if(!scarcityContext?.perception?.localResources?.some(x=>x.key==='berries'&&x.band==='depleted'&&x.quantity===0))failures.push('Mara did not locally perceive the depleted berry patch');
+if(resourceContexts.find(c=>c.agent.id==='agent-ivo')?.perception?.localResources?.some(x=>x.key==='berries'))failures.push('Ivo received omniscient berry depletion outside his local resource view');
+if(!scarcityMemory)failures.push('depleted local resource did not become a private Mara memory');
+if(!scarcityDNA?.observation?.localResources?.some(x=>x.key==='berries'&&x.band==='depleted'))failures.push('local resource depletion was absent from Decision DNA observation');
+if(scarcityContext?.candidates?.some(c=>c.id==='gather_berries'))failures.push('depleted berry patch still offered a gather_berries known action');
+scarcityMara.position='meadow';scarcityWorld.resources.berries=18;resourceContexts.length=0;await tickWithMind(scarcityWorld,resourceMind);const recoveryMemory=scarcityMara.memories.find(m=>(m.tags||[]).includes('resource-observation')&&(m.tags||[]).includes('berries')&&(m.tags||[]).includes('recovery'));
+if(!recoveryMemory)failures.push('resource recovery did not create a later private recovery memory');
 if(failures.length){console.error(failures.join('\n'));process.exit(1)}
 console.log(JSON.stringify({travelHistory:{routeId:route.id,traversals:route.traversals,campUses:routeWorld.surfaceHistory.campWear.uses}},null,2));
