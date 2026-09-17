@@ -1,22 +1,24 @@
-name: Phaser v1.6.3 Embodiment
+name: Production Living World Validation
 on:
   push:
-    branches: [phaser-v1-6-3-embodiment]
+    branches: [ops-production-architecture-repair, main]
     paths:
+      - 'index.html'
+      - 'legacy.html'
       - 'phaser-world-v1.js'
       - 'phaser-world.css'
       - 'phaser.html'
       - 'engine.js'
       - 'engine/**'
       - 'mind.js'
-      - 'world/**'
+      - 'package.json'
+      - 'vercel.json'
       - 'scripts/phaser-qa.mjs'
       - 'scripts/ecology-realism-qa.mjs'
       - 'scripts/living-history-qa.mjs'
-      - 'scripts/apply-v1_6_3-embodiment.py'
       - '.github/workflows/phaser-v1_4-living-world.yml'
 permissions:
-  contents: write
+  contents: read
 jobs:
   validate:
     runs-on: ubuntu-latest
@@ -25,11 +27,9 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: 22
-      - name: Apply v1.6.3 embodiment pass
-        run: python3 scripts/apply-v1_6_3-embodiment.py
-      - name: Syntax check authoritative source
+      - name: Validate committed source
         run: |
-          node --check phaser-world-v1.js
+          npm test
           node --check engine.js
           node --check engine/core.js
           node --check engine/ecology.js
@@ -42,6 +42,16 @@ jobs:
           node --check scripts/ecology-realism-qa.mjs
           node --check scripts/living-history-qa.mjs
           node --check scripts/phaser-qa.mjs
+      - name: Verify production renderer cutover
+        run: |
+          grep -q 'phaser@3.90.0' index.html
+          grep -q 'phaser-world-v1.js' index.html
+          grep -q 'LIVING WORLD · v1.6.3' index.html
+          grep -q 'pixi.js@7.4.3' legacy.html
+          if grep -q 'world-pixi-v11.js' index.html; then
+            echo 'Production root still references legacy Pixi renderer.'
+            exit 1
+          fi
       - name: Run ecology realism invariants
         run: node scripts/ecology-realism-qa.mjs
       - name: Run living-history invariants
@@ -52,30 +62,18 @@ jobs:
           npx playwright install --with-deps chromium
       - name: Start local world
         run: |
-          python3 -m http.server 4173 >/tmp/chatgptfarm-phaser-v163.log 2>&1 &
-          for i in {1..30}; do curl -fsS http://127.0.0.1:4173/phaser.html >/dev/null && exit 0; sleep 1; done
-          cat /tmp/chatgptfarm-phaser-v163.log
+          python3 -m http.server 4173 >/tmp/chatgptfarm-production.log 2>&1 &
+          for i in {1..30}; do curl -fsS http://127.0.0.1:4173/ >/dev/null && curl -fsS http://127.0.0.1:4173/legacy.html >/dev/null && exit 0; sleep 1; done
+          cat /tmp/chatgptfarm-production.log
           exit 1
-      - name: Run strict browser QA
+      - name: Run strict browser QA against production root
         env:
-          BASE_URL: http://127.0.0.1:4173/phaser.html
+          BASE_URL: http://127.0.0.1:4173/
         run: node scripts/phaser-qa.mjs
       - name: Upload focused visual QA
         if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: phaser-v1-6-3-embodiment-qa
+          name: production-v1-6-3-qa
           path: phaser-qa/
           retention-days: 7
-      - name: Commit validated v1.6.3 source
-        run: |
-          if git diff --quiet; then
-            echo 'No generated changes to commit.'
-            exit 0
-          fi
-          git config user.name 'ChatGPTFarm Builder'
-          git config user.email 'actions@users.noreply.github.com'
-          git add phaser-world-v1.js phaser.html scripts/phaser-qa.mjs
-          git commit -m 'phaser: apply v1.6.3 embodiment pass'
-          git pull --rebase origin "$GITHUB_REF_NAME"
-          git push
