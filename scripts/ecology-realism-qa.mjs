@@ -5,7 +5,7 @@ const panicRadius={deer:7.5,rabbit:4.2,bear:9};
 const w={day:1,hour:0,weather:'clear',temperature:58,settings:{ai:{people:{},wildlife:{enabled:false,individuals:{}},usage:{track:true}}},agents:[{id:'agent-mara',name:'Mara',coordinates:{x:50,y:50}},{id:'agent-ivo',name:'Ivo',coordinates:{x:53,y:49}}],ecologySystem:null};
 ensureEcology(w);
 const home=Object.fromEntries(w.ecologySystem.wildlife.map(a=>[a.id,{...a.home}]));
-const stats={rabbitMaxHome:0,bearMinHuman:Infinity,rabbitWaterSeeking:0,tracksMax:0,dayRabbitHidden:0,twilightRabbitActive:0,twilightSamples:0,persistence:0,closeHumanHours:0,bearCloseHumanHours:0,humanWildlifeEvents:0,bearEncounterEvents:0,lastBehavior:new Map()};
+const stats={rabbitMaxHome:0,bearMinHuman:Infinity,rabbitWaterSeeking:0,tracksMax:0,dayRabbitHidden:0,twilightRabbitActive:0,twilightSamples:0,persistence:0,closeHumanHours:0,bearCloseHumanHours:0,humanWildlifeEvents:0,bearEncounterEvents:0,rabbitAbsentHours:0,deerPresentHours:0,deerAbsentHours:0,bearPresentHours:0,bearAbsentHours:0,lastBehavior:new Map()};
 for(let step=0;step<120;step++){
   w.weather=(step%31>=27&&step%31<=29)?'rain':'clear';
   const beforeEvents=new Set((w.ecologySystem.events||[]).map(e=>e.id));
@@ -17,6 +17,11 @@ for(let step=0;step<120;step++){
   }
   for(const a of w.ecologySystem.wildlife){
     if(!Number.isFinite(a.position?.x)||!Number.isFinite(a.position?.y)||a.position.x<0||a.position.x>100||a.position.y<0||a.position.y>100)throw new Error(`invalid wildlife position ${a.id}: ${JSON.stringify(a.position)}`);
+    if(a.species==='rabbit'&&a.localPresence===false)stats.rabbitAbsentHours++;
+    if(a.species==='deer'){if(a.localPresence===false)stats.deerAbsentHours++;else stats.deerPresentHours++}
+    if(a.species==='bear'){if(a.localPresence===false)stats.bearAbsentHours++;else stats.bearPresentHours++}
+    const prev=stats.lastBehavior.get(a.id);if(prev===a.behavior)stats.persistence++;stats.lastBehavior.set(a.id,a.behavior);
+    if(a.localPresence===false)continue;
     const humanD=Math.min(...w.agents.map(p=>dist(a.position,p.coordinates)));
     if(panicRadius[a.species]&&humanD<panicRadius[a.species]){
       stats.closeHumanHours++;
@@ -29,7 +34,6 @@ for(let step=0;step<120;step++){
       if((w.hour>=5&&w.hour<=8)||(w.hour>=17&&w.hour<=21)){stats.twilightSamples++;if(!['hide','freeze','rest'].includes(a.activity))stats.twilightRabbitActive++}
     }
     if(a.species==='bear')stats.bearMinHuman=Math.min(stats.bearMinHuman,humanD);
-    const prev=stats.lastBehavior.get(a.id);if(prev===a.behavior)stats.persistence++;stats.lastBehavior.set(a.id,a.behavior);
   }
   stats.tracksMax=Math.max(stats.tracksMax,w.ecologySystem.traces.length);
   w.hour++;if(w.hour>=24){w.hour=0;w.day++}
@@ -51,6 +55,9 @@ if(stats.closeHumanHours>10)failures.push(`wildlife spent too many routine hours
 if(stats.bearCloseHumanHours>1)failures.push(`bear remained panic-close to people too often: ${stats.bearCloseHumanHours} hours`);
 if(stats.humanWildlifeEvents>6)failures.push(`human-wildlife encounter events are too frequent: ${stats.humanWildlifeEvents} in 120 hours`);
 if(stats.bearEncounterEvents>1)failures.push(`bear encounter events are too frequent: ${stats.bearEncounterEvents} in 120 hours`);
+if(stats.rabbitAbsentHours!==0)failures.push(`resident cottontails left the basin unexpectedly: ${stats.rabbitAbsentHours} rabbit-hours`);
+if(stats.deerAbsentHours<20||stats.deerPresentHours<20)failures.push(`deer range use lacks natural presence/absence variation: present=${stats.deerPresentHours}, absent=${stats.deerAbsentHours}`);
+if(stats.bearAbsentHours<60||stats.bearPresentHours<2)failures.push(`black bear should be an occasional basin visitor: present=${stats.bearPresentHours}, absent=${stats.bearAbsentHours}`);
 for(const p of panicProbes){if(p.activity!=='flee')failures.push(`${p.species} did not flee at panic distance: ${JSON.stringify(p)}`);if(p.after<=p.before+.15)failures.push(`${p.species} failed to increase human distance while fleeing: ${JSON.stringify(p)}`);if(p.goalDistance<=p.before+.75)failures.push(`${p.species} escape goal did not create separation: ${JSON.stringify(p)}`);if(!String(p.behavior).includes('cover'))failures.push(`${p.species} panic behavior did not seek cover: ${JSON.stringify(p)}`)}
 if(failures.length){console.error(failures.join('\n'));process.exit(1)}
 console.log(JSON.stringify({ok:true,...stats,lastBehavior:undefined},null,2));

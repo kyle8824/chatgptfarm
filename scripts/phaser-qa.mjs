@@ -23,11 +23,11 @@ let s=await snap();
 if(s.version!=='phaser-v1.4-living-world')failures.push(`wrong renderer: ${s.version}`);
 if(!String(s.phaser||'').startsWith('3.'))failures.push(`Phaser failed to initialize: ${s.phaser}`);
 if(s.agents!==2)failures.push(`expected 2 agents, got ${s.agents}`);
-if(s.wildlife<8)failures.push(`expected >=8 wildlife, got ${s.wildlife}`);
+const expectedPresentWildlife=(state.ecologySystem?.wildlife||[]).filter(x=>x.active&&x.localPresence!==false).length;if(s.wildlife!==expectedPresentWildlife)failures.push(`renderer wildlife count drift: ${s.wildlife} != canonical ${expectedPresentWildlife}`);
 if(s.trees<55)failures.push(`expected a forest, got ${s.trees} trees`);
 if(s.treeWaterCollisions!==0)failures.push(`trees spawned in canonical water: ${s.treeWaterCollisions}`);
 if((s.terrain?.water||0)<20||(s.terrain?.bank||0)<20||(s.terrain?.forest||0)<100)failures.push(`terrain occupancy is incomplete: ${JSON.stringify(s.terrain)}`);
-if(s.movingEntities<1)failures.push('no entity has visible interpolated movement');if(!Number.isFinite(s.concealedWildlife))failures.push(`wildlife concealment state missing: ${s.concealedWildlife}`);
+if(s.movingEntities<1)failures.push('no entity has visible interpolated movement');if(!Number.isFinite(s.concealedWildlife))failures.push(`wildlife concealment state missing: ${s.concealedWildlife}`);if(!s.rangePresenceCounts||s.rangePresenceCounts.present!==expectedPresentWildlife)failures.push(`range presence projection missing or stale: ${JSON.stringify(s.rangePresenceCounts)}`);
 const expectedDNA=state.dna?.[0]?.decision_id||null;if(!String(s.decisionDNA?.protocol||'').startsWith('Decision DNA'))failures.push(`Decision DNA projection missing: ${JSON.stringify(s.decisionDNA)}`);if(expectedDNA&&s.decisionDNA?.decisionId!==expectedDNA)failures.push(`renderer DNA drifted from canonical state: ${s.decisionDNA?.decisionId} != ${expectedDNA}`);if((s.agentArtModes||[]).length!==2||(s.agentArtModes||[]).some(x=>x!=='natural-procedural'))failures.push(`natural agent embodiment failed: ${JSON.stringify(s.agentArtModes)}`);if(s.campVisualMode!=='canonical-branch-camp-v1')failures.push(`canonical camp visual mode missing: ${s.campVisualMode}`);if(!s.lightCycle||s.lightCycle.hour!==state.hour)failures.push(`light cycle state missing or stale: ${JSON.stringify(s.lightCycle)}`);if(!s.habitatDetail||s.habitatDetail.meadow<100||s.habitatDetail.forest<20)failures.push(`habitat detail missing: ${JSON.stringify(s.habitatDetail)}`);const expectedTracks=(state.ecologySystem?.traces||[]).filter(t=>t.active&&(t.clarity??0)>.38&&(t.ageHours??0)<=14&&(t.species!=='rabbit'||(t.clarity??0)>.55)).length;if(s.livingWorld?.trackVisuals!==expectedTracks||s.livingWorld?.canonicalTracks!==expectedTracks)failures.push(`wildlife trace projection drift: rendered=${s.livingWorld?.trackVisuals} canonical=${expectedTracks}`);const expectedCue=state.dna?.[0]?.decision_id||null;if(expectedCue&&s.livingWorld?.decisionCueId!==expectedCue)failures.push(`Decision DNA world cue drift: ${s.livingWorld?.decisionCueId} != ${expectedCue}`);
 await page.screenshot({path:'phaser-qa/mobile-auto.png'});
 
@@ -35,7 +35,7 @@ for(const [name,id] of [['MARA','agent-mara'],['IVO','agent-ivo']]){
  await page.getByRole('button',{name,exact:true}).click();await page.waitForTimeout(600);s=await snap();if(s.camera.mode!==id)failures.push(`${name} camera did not enter follow mode`);await page.screenshot({path:`phaser-qa/mobile-${name.toLowerCase()}.png`});
 }
 await page.getByRole('button',{name:'AUTO',exact:true}).click();await page.waitForTimeout(350);
-const habitatDeer=state.ecologySystem?.wildlife?.find(x=>x.active&&x.species==='deer');if(habitatDeer){await page.evaluate(({x,y})=>window.ChatGPTFarmPhaserDebug.focusWorldUnit(x,y,.95),habitatDeer.position);await page.waitForTimeout(250);await page.screenshot({path:'phaser-qa/mobile-wildlife-habitat.png'});}
+const habitatDeer=state.ecologySystem?.wildlife?.find(x=>x.active&&x.localPresence!==false&&x.species==='deer');if(habitatDeer){await page.evaluate(({x,y})=>window.ChatGPTFarmPhaserDebug.focusWorldUnit(x,y,.95),habitatDeer.position);await page.waitForTimeout(250);await page.screenshot({path:'phaser-qa/mobile-wildlife-habitat.png'});}
 
 let before=(await snap()).positions['W-DEER-001'];
 if(!before)failures.push('missing deer for movement QA');
