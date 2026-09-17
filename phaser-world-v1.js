@@ -76,7 +76,7 @@ class LivingWorld extends Phaser.Scene{
  async loadState(first){try{const w=await this.fetchState(),changed=lastTick!==w.meta?.tickNumber;canonical=w;lastTick=w.meta?.tickNumber;if(first){this.buildWorld();this.renderEntities(true);this.updateHud();this.applyCamera(true);$('#phLoading')?.classList.add('hidden')}else if(changed){this.refreshDynamicWorld();this.updateHud();if(cameraMode==='auto')this.applyCamera(false)}}catch(e){console.error('Phaser world state load failed',e);$('#phWorldStatus').innerHTML='<b>WORLD OFFLINE</b><span>Could not read canonical state</span>'}}
  buildWorld(){
   this.grid=buildTerrainGrid(canonical);const map=this.make.tilemap({width:UNITS,height:UNITS,tileWidth:TILE,tileHeight:TILE}),tiles=map.addTilesetImage('terrain-sheet','terrain-sheet',TILE,TILE,0,0,0),layer=map.createBlankLayer('Canonical occupancy',tiles,0,0);for(let row=0;row<UNITS;row++)for(let col=0;col<UNITS;col++)layer.putTileAt(this.grid.rows[row][col],col,row);layer.setDepth(-100).setVisible(false);this.terrainLayer=layer;
-  this.drawOrganicSurface();this.drawBiomeUnderlays();this.drawCreekDetails();this.spawnGroundDetail();this.spawnForest();this.drawCanonicalObjects();this.renderCanonicalTraces();this.renderEntities(true);this.updateDecisionCue(true);this.spawnAmbientLife();this.renderLightCycle();this.renderWeather();
+  this.drawOrganicSurface();this.drawBiomeUnderlays();this.drawMeadowMosaic();this.drawCreekDetails();this.spawnGroundDetail();this.spawnForest();this.drawCanonicalObjects();this.renderCanonicalTraces();this.renderEntities(true);this.updateDecisionCue(true);this.spawnAmbientLife();this.renderLightCycle();this.renderWeather();
  }
  drawOrganicSurface(){
   if(this.textures.exists('organic-surface'))this.textures.remove('organic-surface');const c=this.textures.createCanvas('organic-surface',SURFACE,SURFACE),ctx=c.getContext(),img=ctx.createImageData(SURFACE,SURFACE),data=img.data,terr=canonical.worldModel?.terrain||[];
@@ -84,6 +84,15 @@ class LivingWorld extends Phaser.Scene{
   ctx.putImageData(img,0,0);c.refresh();c.setFilter(Phaser.Textures.FilterMode.LINEAR);this.add.image(WORLD/2,WORLD/2,'organic-surface').setDisplaySize(WORLD,WORLD).setDepth(-20)
  }
  drawBiomeUnderlays(){const m=canonical.worldModel?.bounds?.metersPerUnit||2,R=seeded('biome-floor-v1_3');for(const t of canonical.worldModel?.terrain||[]){if(!['forest','wetland'].includes(t.type))continue;const p=worldToPx(t.center),r=(t.radiusM||20)/m*TILE,col=t.type==='forest'?0x263d2d:0x445f54;for(let i=0;i<(t.type==='forest'?18:12);i++){const a=R()*Math.PI*2,rr=Math.sqrt(R())*r*.72,x=p.x+Math.cos(a)*rr,y=p.y+Math.sin(a)*rr*.72,w=35+R()*95,h=18+R()*48;this.add.ellipse(x,y,w,h,col,.045+R()*.045).setDepth(-5)}}}
+ drawMeadowMosaic(){
+  const R=seeded('meadow-mosaic-v1_4_3');
+  for(let i=0;i<46;i++){
+   const p={x:3+R()*94,y:3+R()*94};
+   if(terrainTypeAt(p)!==TERRAIN.MEADOW)continue;
+   const q=worldToPx(p),w=90+R()*220,h=42+R()*120,col=R()<.5?0x617754:0x80916b;
+   this.add.ellipse(q.x,q.y,w,h,col,.025+R()*.035).setRotation((R()-.5)*.7).setDepth(-8);
+  }
+ }
  drawCreekDetails(){
   const src=creekPoints().map(worldToPx);if(src.length<2)return;const curve=new Phaser.Curves.Spline(src),sample=curve.getSpacedPoints(190),R=seeded('creek-ribbon-v1_3');
   const ribbon=(pad,scale=1)=>{const L=[],RR=[];for(let i=0;i<sample.length;i++){const p=sample[i],a=sample[Math.max(0,i-2)],b=sample[Math.min(sample.length-1,i+2)],dx=b.x-a.x,dy=b.y-a.y,m=Math.hypot(dx,dy)||1,nx=-dy/m,ny=dx/m,t=i/(sample.length-1),w=(29+5*Math.sin(t*11.7+1.2)+3.5*Math.sin(t*25.1+.3))*scale+pad;L.push({x:p.x+nx*w,y:p.y+ny*w});RR.push({x:p.x-nx*w,y:p.y-ny*w})}return L.concat(RR.reverse())};
@@ -92,7 +101,62 @@ class LivingWorld extends Phaser.Scene{
   const details=this.add.graphics().setDepth(10);details.lineStyle(1.2,0xd8eef0,.24);for(let i=10;i<sample.length-10;i+=18){const p=sample[i],p2=sample[i+2],dx=p2.x-p.x,dy=p2.y-p.y,m=Math.hypot(dx,dy)||1,nx=-dy/m,ny=dx/m,len=9+R()*17,off=(R()-.5)*16;details.beginPath();details.moveTo(p.x+nx*off-dx/m*len,p.y+ny*off-dy/m*len);details.lineTo(p.x+nx*off+dx/m*len,p.y+ny*off+dy/m*len);details.strokePath()}
   for(let i=7;i<sample.length-7;i+=7+Math.floor(R()*9)){const p=sample[i],p2=sample[Math.min(sample.length-1,i+2)],dx=p2.x-p.x,dy=p2.y-p.y,m=Math.hypot(dx,dy)||1,nx=-dy/m,ny=dx/m,side=R()<.5?-1:1,d=42+R()*16,q={x:p.x+nx*side*d,y:p.y+ny*side*d};if(R()<.6)this.add.ellipse(q.x,q.y,10+R()*22,5+R()*9,R()<.55?0x6c5b43:0x7e8360,.28+R()*.24).setDepth(12);if(R()<.44){const rr=this.add.image(q.x+(R()-.5)*9,q.y+(R()-.5)*6,'reeds').setOrigin(.5,1).setScale(.16+.11*R()).setAlpha(.75).setDepth(1000+q.y);this.tweens.add({targets:rr,angle:side*(.8+R()*1.4),duration:1700+R()*1100,yoyo:true,repeat:-1,ease:'Sine.InOut'})}if(R()<.22)this.add.ellipse(q.x+(R()-.5)*14,q.y+(R()-.5)*8,5+R()*9,3+R()*5,0x90968d,.8).setDepth(1000+q.y)}this.riverCurve=curve
  }
- spawnGroundDetail(){const R=seeded('ground-life-v1_3');for(let i=0;i<430;i++){const p={x:1+R()*98,y:1+R()*98},t=terrainTypeAt(p);if(t===TERRAIN.WATER||t===TERRAIN.BANK)continue;const q=worldToPx(p);if(t===TERRAIN.FOREST&&R()<.48){const key='shrub-00'+(1+Math.floor(R()*3));if(this.textures.exists(key)){const b=this.add.image(q.x,q.y,key).setOrigin(.5,1).setScale(.18+.14*R()).setAlpha(.45+.3*R()).setDepth(900+q.y);if(R()<.12)this.tweens.add({targets:b,angle:(R()-.5)*1.6,duration:2400+R()*1200,yoyo:true,repeat:-1,ease:'Sine.InOut'});continue}}const tuft=this.add.image(q.x,q.y,'reeds').setOrigin(.5,1).setScale(t===TERRAIN.WETLAND?.11:.045+R()*.04).setAlpha(t===TERRAIN.FOREST?.24:t===TERRAIN.WETLAND?.38:.18).setTint(t===TERRAIN.WETLAND?0x91a45e:t===TERRAIN.FOREST?0x4b6745:0x8d9d70).setDepth(45+q.y*.01);if(R()<.11)this.tweens.add({targets:tuft,angle:(R()-.5)*2,duration:1900+R()*1500,yoyo:true,repeat:-1,ease:'Sine.InOut'})}}
+ spawnGroundDetail(){
+  const R=seeded('ground-life-v1_4_3');
+  this.habitatDetail={meadow:0,edge:0,forest:0,wetland:0};
+  const edgeOffsets=[[2,0],[-2,0],[0,2],[0,-2],[1.5,1.5],[-1.5,-1.5]];
+  for(let i=0;i<980;i++){
+   const p={x:1+R()*98,y:1+R()*98};
+   const t=terrainTypeAt(p);
+   if(t===TERRAIN.WATER||t===TERRAIN.BANK)continue;
+   const q=worldToPx(p);
+   let nearForest=false;
+   if(t===TERRAIN.MEADOW){
+    nearForest=edgeOffsets.some(([dx,dy])=>terrainTypeAt({x:clamp(p.x+dx,0,100),y:clamp(p.y+dy,0,100)})===TERRAIN.FOREST);
+   }
+   if(t===TERRAIN.FOREST){
+    this.habitatDetail.forest++;
+    if(R()<.57){
+     const key='shrub-00'+(1+Math.floor(R()*3));
+     if(this.textures.exists(key)){
+      const b=this.add.image(q.x,q.y,key).setOrigin(.5,1).setScale(.12+.16*R()).setTint(R()<.5?0x62775b:0x52684f).setAlpha(.38+.32*R()).setDepth(900+q.y);
+      if(R()<.1)this.tweens.add({targets:b,angle:(R()-.5)*1.2,duration:2600+R()*1500,yoyo:true,repeat:-1,ease:'Sine.InOut'});
+      continue;
+     }
+    }
+    this.add.ellipse(q.x,q.y,5+R()*13,2+R()*5,R()<.55?0x4f5b43:0x675d45,.15+R()*.14).setDepth(40+q.y*.01);
+    continue;
+   }
+   if(t===TERRAIN.WETLAND){
+    this.habitatDetail.wetland++;
+    const tuft=this.add.image(q.x,q.y,'reeds').setOrigin(.5,1).setScale(.07+.09*R()).setAlpha(.3+.24*R()).setTint(R()<.5?0x82975c:0x6e8a5f).setDepth(920+q.y);
+    if(R()<.18)this.tweens.add({targets:tuft,angle:(R()-.5)*2.2,duration:1800+R()*1600,yoyo:true,repeat:-1,ease:'Sine.InOut'});
+    continue;
+   }
+   this.habitatDetail.meadow++;
+   if(nearForest&&R()<.48){
+    this.habitatDetail.edge++;
+    if(R()<.42){
+     const key='shrub-00'+(1+Math.floor(R()*3));
+     if(this.textures.exists(key)){
+      this.add.image(q.x,q.y,key).setOrigin(.5,1).setScale(.08+.10*R()).setTint(0x70805f).setAlpha(.28+.22*R()).setDepth(880+q.y);
+      continue;
+     }
+    }
+   }
+   const g=this.add.graphics().setDepth(50+q.y*.01);
+   const stems=nearForest?3+Math.floor(R()*5):2+Math.floor(R()*4);
+   const base=nearForest?0x76865e:0x87946c;
+   const alpha=nearForest ? .28 : .18;
+   g.lineStyle(1,base,alpha);
+   for(let k=0;k<stems;k++){
+    const ox=(R()-.5)*(nearForest?15:11),hh=(nearForest?7:4)+R()*(nearForest?15:10);
+    g.lineBetween(q.x+ox,q.y,q.x+ox+(R()-.5)*4,q.y-hh);
+   }
+   if(R()<.08&&!nearForest)this.add.ellipse(q.x+(R()-.5)*10,q.y+(R()-.5)*5,10+R()*18,4+R()*8,0x657857,.08).setDepth(35);
+  }
+ }
+
  spawnForest(){
   const R=seeded('canonical-forest-v1_3'),spots=[];for(let tries=0;tries<6200&&spots.length<112;tries++){const p={x:2+R()*96,y:2+R()*96};if(terrainTypeAt(p)!==TERRAIN.FOREST||blocksTree(p))continue;if(spots.some(q=>dist(p,q)<1.42))continue;spots.push(p)}
   const keys=['tree-004','tree-005','tree-006','tree-007','tree-008','tree-009'];for(let i=0;i<spots.length;i++){const p=worldToPx(spots[i]),key=this.textures.exists(keys[i%keys.length])?keys[i%keys.length]:'fallback-tree';this.add.ellipse(p.x+3,p.y+2,50+R()*28,14+R()*8,0x17251b,.16).setDepth(992+p.y);const img=this.add.image(p.x,p.y,key).setOrigin(.5,1),targetH=78+R()*36,tints=[0x83936f,0x718364,0x62785a,0x7c8b69,0x596f53,0x6d805f];img.setDisplaySize(Math.max(42,targetH*(img.width/Math.max(1,img.height))),targetH);img.setTint(tints[i%tints.length]).setAlpha(.96);img.setDepth(1000+p.y);img.setData('worldPoint',spots[i]);img.setData('kind','tree');this.treeSprites.push(img);if(R()<.72)this.tweens.add({targets:img,angle:(R()-.5)*1.65,duration:2800+R()*2100,yoyo:true,repeat:-1,ease:'Sine.InOut'})}
@@ -118,7 +182,7 @@ class LivingWorld extends Phaser.Scene{
  setZoom(z){this.cameras.main.setZoom(clamp(z,.55,1.8))}
  wireInput(){const cam=this.cameras.main;this.input.on('pointerdown',p=>{if(p.primaryDown)this.drag={x:p.x,y:p.y,scrollX:cam.scrollX,scrollY:cam.scrollY}});this.input.on('pointermove',p=>{if(!this.drag||!p.isDown)return;const dx=(p.x-this.drag.x)/cam.zoom,dy=(p.y-this.drag.y)/cam.zoom;if(Math.abs(dx)+Math.abs(dy)>8){cameraMode='free';cam.stopFollow();cam.scrollX=this.drag.scrollX-dx;cam.scrollY=this.drag.scrollY-dy;this.syncButtons()}});this.input.on('pointerup',()=>this.drag=null);this.input.on('wheel',(_p,_go,_dx,dy)=>this.setZoom(cam.zoom+(dy>0?-.08:.08)))}
  update(){for(const [id,e] of this.entities){if(e.getData?.('kind')==='wildlife'&&e.getData('species')!=='fish')e.setDepth(1000+e.y+2)}if(this.decisionCue&&this.lastDecisionCueId){const dna=canonical?.dna?.[0],agent=dna?this.entities.get(dna.agent_id):null;if(agent)this.decisionCue.setPosition(agent.x,agent.y-92)} }
- snapshot(){const treeWater=this.treeSprites.filter(t=>terrainTypeAt(t.getData('worldPoint'))===TERRAIN.WATER).length,moving=[...this.entities.values()].filter(e=>this.tweens.getTweensOf(e).length>0).length;return{version:'phaser-v1.4-living-world',phaser:Phaser.VERSION,ready:!!canonical,worldModel:canonical?.worldModel?.version||null,terrain:this.grid?.counts||{},trees:this.treeSprites.length,treeWaterCollisions:treeWater,agents:[...this.entities.values()].filter(x=>x.getData?.('kind')==='agent').length,wildlife:[...this.entities.values()].filter(x=>x.getData?.('kind')==='wildlife').length,movingEntities:moving,assetErrors:[...assetErrors],decisionDNA:{protocol:canonical?.dna?.[0]?.protocol||null,decisionId:canonical?.dna?.[0]?.decision_id||null,action:canonical?.dna?.[0]?.action||null},agentArtModes:[...this.entities.values()].filter(x=>x.getData?.('kind')==='agent').map(x=>x.getData?.('artMode')||'unknown'),campVisualMode:this.campVisualMode||null,visualFixes:'visual-fixes-v1',naturalism:'naturalism-v1',embodiment:'embodiment-v1',lightCycle:this.lightCycle||null,livingWorld:{trackVisuals:this.traceVisuals.length,canonicalTracks:(canonical?.ecologySystem?.traces||[]).filter(t=>t.active&&(t.clarity??0)>.38&&(t.ageHours??0)<=14&&(t.species!=='rabbit'||(t.clarity??0)>.55)).length,decisionCueId:this.decisionCue?.getData?.('decisionId')||null},camera:{mode:cameraMode,zoom:this.cameras.main.zoom,scrollX:this.cameras.main.scrollX,scrollY:this.cameras.main.scrollY},positions:Object.fromEntries([...this.entities].map(([id,e])=>[id,{x:e.x,y:e.y,kind:e.getData?.('kind'),species:e.getData?.('species')||null}]))}}
+ snapshot(){const treeWater=this.treeSprites.filter(t=>terrainTypeAt(t.getData('worldPoint'))===TERRAIN.WATER).length,moving=[...this.entities.values()].filter(e=>this.tweens.getTweensOf(e).length>0).length;return{version:'phaser-v1.4-living-world',phaser:Phaser.VERSION,ready:!!canonical,worldModel:canonical?.worldModel?.version||null,terrain:this.grid?.counts||{},trees:this.treeSprites.length,treeWaterCollisions:treeWater,agents:[...this.entities.values()].filter(x=>x.getData?.('kind')==='agent').length,wildlife:[...this.entities.values()].filter(x=>x.getData?.('kind')==='wildlife').length,movingEntities:moving,assetErrors:[...assetErrors],decisionDNA:{protocol:canonical?.dna?.[0]?.protocol||null,decisionId:canonical?.dna?.[0]?.decision_id||null,action:canonical?.dna?.[0]?.action||null},agentArtModes:[...this.entities.values()].filter(x=>x.getData?.('kind')==='agent').map(x=>x.getData?.('artMode')||'unknown'),campVisualMode:this.campVisualMode||null,visualFixes:'visual-fixes-v1',naturalism:'naturalism-v1',embodiment:'embodiment-v1',habitatDepth:'habitat-depth-v1',habitatDetail:this.habitatDetail||null,lightCycle:this.lightCycle||null,livingWorld:{trackVisuals:this.traceVisuals.length,canonicalTracks:(canonical?.ecologySystem?.traces||[]).filter(t=>t.active&&(t.clarity??0)>.38&&(t.ageHours??0)<=14&&(t.species!=='rabbit'||(t.clarity??0)>.55)).length,decisionCueId:this.decisionCue?.getData?.('decisionId')||null},camera:{mode:cameraMode,zoom:this.cameras.main.zoom,scrollX:this.cameras.main.scrollX,scrollY:this.cameras.main.scrollY},positions:Object.fromEntries([...this.entities].map(([id,e])=>[id,{x:e.x,y:e.y,kind:e.getData?.('kind'),species:e.getData?.('species')||null}]))}}
 }
 
 const game=new Phaser.Game({type:Phaser.AUTO,parent:'phaserWorld',width:window.innerWidth,height:window.innerHeight,backgroundColor:COLORS.meadow,pixelArt:false,antialias:true,roundPixels:false,scale:{mode:Phaser.Scale.RESIZE,autoCenter:Phaser.Scale.CENTER_BOTH},render:{antialias:true,powerPreference:'high-performance'},scene:[LivingWorld]});
