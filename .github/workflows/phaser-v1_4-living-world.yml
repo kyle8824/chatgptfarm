@@ -16,6 +16,7 @@ on:
       - 'scripts/apply-phaser-v1_4_4-quiet-world.py'
       - 'scripts/apply-phaser-v1_4_5-cover-ecology.py'
       - 'scripts/apply-phaser-v1_4_6-range-presence.py'
+      - 'scripts/apply-phaser-v1_4_6_range-init-fix.py'
       - '.github/workflows/phaser-v1_4-living-world.yml'
 permissions:
   contents: write
@@ -41,6 +42,8 @@ jobs:
         run: python3 scripts/apply-phaser-v1_4_5-cover-ecology.py
       - name: Apply v1.4.6 natural range presence
         run: python3 scripts/apply-phaser-v1_4_6-range-presence.py
+      - name: Fix v1.4.6 initial range windows
+        run: python3 scripts/apply-phaser-v1_4_6_range-init-fix.py
       - name: Syntax check renderer and ecology
         run: |
           node --check phaser-world-v1.js
