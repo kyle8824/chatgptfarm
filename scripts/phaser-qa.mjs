@@ -20,7 +20,7 @@ try{await page.waitForSelector('#phLoading.hidden',{state:'attached',timeout:100
 await page.waitForTimeout(1200);
 const snap=()=>page.evaluate(()=>window.ChatGPTFarmPhaserDebug.snapshot());
 let s=await snap();
-if(s.version!=='phaser-v1.3.1-art-bridge')failures.push(`wrong renderer: ${s.version}`);
+if(s.version!=='phaser-v1.4-living-world')failures.push(`wrong renderer: ${s.version}`);
 if(!String(s.phaser||'').startsWith('3.'))failures.push(`Phaser failed to initialize: ${s.phaser}`);
 if(s.agents!==2)failures.push(`expected 2 agents, got ${s.agents}`);
 if(s.wildlife<8)failures.push(`expected >=8 wildlife, got ${s.wildlife}`);
@@ -28,7 +28,7 @@ if(s.trees<55)failures.push(`expected a forest, got ${s.trees} trees`);
 if(s.treeWaterCollisions!==0)failures.push(`trees spawned in canonical water: ${s.treeWaterCollisions}`);
 if((s.terrain?.water||0)<20||(s.terrain?.bank||0)<20||(s.terrain?.forest||0)<100)failures.push(`terrain occupancy is incomplete: ${JSON.stringify(s.terrain)}`);
 if(s.movingEntities<1)failures.push('no entity has visible interpolated movement');
-const expectedDNA=state.dna?.[0]?.decision_id||null;if(!String(s.decisionDNA?.protocol||'').startsWith('Decision DNA'))failures.push(`Decision DNA projection missing: ${JSON.stringify(s.decisionDNA)}`);if(expectedDNA&&s.decisionDNA?.decisionId!==expectedDNA)failures.push(`renderer DNA drifted from canonical state: ${s.decisionDNA?.decisionId} != ${expectedDNA}`);if((s.agentArtModes||[]).length!==2||(s.agentArtModes||[]).some(x=>x!=='tiny-farm'))failures.push(`Tiny Farm agent art failed to load: ${JSON.stringify(s.agentArtModes)}`);if(s.campVisualMode!=='canonical-branch-camp-v1')failures.push(`canonical camp visual mode missing: ${s.campVisualMode}`);
+const expectedDNA=state.dna?.[0]?.decision_id||null;if(!String(s.decisionDNA?.protocol||'').startsWith('Decision DNA'))failures.push(`Decision DNA projection missing: ${JSON.stringify(s.decisionDNA)}`);if(expectedDNA&&s.decisionDNA?.decisionId!==expectedDNA)failures.push(`renderer DNA drifted from canonical state: ${s.decisionDNA?.decisionId} != ${expectedDNA}`);if((s.agentArtModes||[]).length!==2||(s.agentArtModes||[]).some(x=>x!=='tiny-farm'))failures.push(`Tiny Farm agent art failed to load: ${JSON.stringify(s.agentArtModes)}`);if(s.campVisualMode!=='canonical-branch-camp-v1')failures.push(`canonical camp visual mode missing: ${s.campVisualMode}`);const expectedTracks=(state.ecologySystem?.traces||[]).filter(t=>t.active&&(t.clarity??0)>.2).length;if(s.livingWorld?.trackVisuals!==expectedTracks||s.livingWorld?.canonicalTracks!==expectedTracks)failures.push(`wildlife trace projection drift: rendered=${s.livingWorld?.trackVisuals} canonical=${expectedTracks}`);const expectedCue=state.dna?.[0]?.decision_id||null;if(expectedCue&&s.livingWorld?.decisionCueId!==expectedCue)failures.push(`Decision DNA world cue drift: ${s.livingWorld?.decisionCueId} != ${expectedCue}`);
 await page.screenshot({path:'phaser-qa/mobile-auto.png'});
 
 for(const [name,id] of [['MARA','agent-mara'],['IVO','agent-ivo']]){
