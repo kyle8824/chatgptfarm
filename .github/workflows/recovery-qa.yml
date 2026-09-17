@@ -1,0 +1,43 @@
+name: Living World Recovery QA
+on:
+  push:
+    branches: [repair/living-world-recovery]
+  pull_request:
+    branches: [main]
+permissions:
+  contents: read
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    timeout-minutes: 8
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - name: Validate simulation and preserved state
+        run: |
+          npm test
+          node scripts/ecology-realism-qa.mjs
+          node scripts/living-history-qa.mjs
+          node scripts/recovery-qa.mjs
+          git diff --exit-code -- world/state.json
+      - name: Install browser harness
+        run: |
+          npm install --no-save playwright@1.55.0
+          npx playwright install --with-deps chromium
+      - name: Start exact build
+        run: |
+          python3 -m http.server 4173 >/tmp/farm-recovery-server.log 2>&1 &
+          for i in {1..20}; do curl -fsS http://127.0.0.1:4173/ >/dev/null && exit 0; sleep 1; done
+          exit 1
+      - name: Verify pinch, selection, stale reload and sustained polling
+        env:
+          BASE_URL: http://127.0.0.1:4173/
+        run: node scripts/phaser-qa.mjs
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: living-world-recovery
+          path: phaser-qa/
+          retention-days: 7
