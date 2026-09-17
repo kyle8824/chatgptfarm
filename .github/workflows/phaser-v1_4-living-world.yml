@@ -15,6 +15,7 @@ on:
       - 'scripts/apply-phaser-v1_4_3-habitat-depth.py'
       - 'scripts/apply-phaser-v1_4_4-quiet-world.py'
       - 'scripts/apply-phaser-v1_4_5-cover-ecology.py'
+      - 'scripts/apply-phaser-v1_4_6-range-presence.py'
       - '.github/workflows/phaser-v1_4-living-world.yml'
 permissions:
   contents: write
@@ -38,6 +39,8 @@ jobs:
         run: python3 scripts/apply-phaser-v1_4_4-quiet-world.py
       - name: Apply v1.4.5 cover-seeking ecology
         run: python3 scripts/apply-phaser-v1_4_5-cover-ecology.py
+      - name: Apply v1.4.6 natural range presence
+        run: python3 scripts/apply-phaser-v1_4_6-range-presence.py
       - name: Syntax check renderer and ecology
         run: |
           node --check phaser-world-v1.js
@@ -75,6 +78,6 @@ jobs:
           git config user.name 'ChatGPTFarm Builder'
           git config user.email 'actions@users.noreply.github.com'
           git add phaser-world-v1.js phaser-world.css phaser.html engine/ecology.js scripts/phaser-qa.mjs scripts/ecology-realism-qa.mjs
-          git commit -m 'phaser: apply v1.4.5 cover-seeking ecology pass'
+          git commit -m 'phaser: apply v1.4.6 natural range-presence pass'
           git pull --rebase origin "$GITHUB_REF_NAME"
           git push
