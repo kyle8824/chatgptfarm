@@ -1,0 +1,47 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+  <meta name="theme-color" content="#08100b">
+  <meta name="description" content="ChatGPTFarm legacy Object World renderer.">
+  <title>ChatGPTFarm — Legacy Object World</title>
+  <link rel="stylesheet" href="world.css?v=0801">
+  <link rel="stylesheet" href="world-v2.css?v=0802">
+  <link rel="stylesheet" href="world-v3.css?v=0803">
+  <link rel="stylesheet" href="world-v4.css?v=0804">
+  <link rel="stylesheet" href="world-v5.css?v=0805">
+  <link rel="stylesheet" href="world-v6.css?v=0900">
+</head>
+<body>
+  <div id="appShell">
+    <div id="worldViewport" aria-label="Legacy ChatGPTFarm world"></div>
+    <div class="hud topbar">
+      <div class="brand"><div class="brandMark"></div><div class="brandText"><strong>ChatGPTFarm</strong><span>LEGACY OBJECT WORLD</span></div></div>
+      <div id="worldStatus" class="worldStatus"><strong>● CONNECTING</strong><span>Reading canonical state…</span></div>
+    </div>
+    <a class="debugLink" href="/debug.html">DEBUG / DNA ↗</a>
+    <button id="pulseButton" class="pulseButton"><b>●</b> PULSE</button>
+    <div class="hud controls">
+      <button data-camera="auto" class="active">AUTO</button>
+      <button data-camera="agent-mara">MARA</button>
+      <button data-camera="agent-ivo">IVO</button>
+    </div>
+    <div class="hud zoomControls">
+      <button id="zoomIn" class="iconButton" aria-label="Zoom in">+</button>
+      <button id="zoomOut" class="iconButton" aria-label="Zoom out">−</button>
+      <button id="fitWorld" class="iconButton" aria-label="Recenter on activity">⌂</button>
+    </div>
+    <div id="focusCard" class="hud focusCard"></div>
+    <div class="hud threadBar"><div class="threadPanel"><div class="threadTop"><strong>What matters now</strong><span id="threadCount">0 active threads</span></div><div id="threads" class="threads"><article class="thread"><b>Reading world…</b><p>Waiting for canonical state.</p></article></div></div></div>
+    <div class="hud miniMap"><canvas id="miniMapCanvas"></canvas></div>
+    <aside id="inspector" class="inspector" aria-live="polite"><div class="inspectorHead"><div><small id="inspectType">CANONICAL OBJECT</small><h2 id="inspectTitle">Object</h2></div><button id="closeInspector" class="closeInspector" aria-label="Close">×</button></div><div id="inspectBody" class="inspectorBody"></div></aside>
+    <aside id="pulseDrawer" class="pulseDrawer" aria-label="World Pulse"><div class="pulseHead"><div><small>CHATGPTFARM · LIVING BASIN</small><h2>World Pulse</h2></div><button id="pulseClose" class="pulseClose" aria-label="Close World Pulse">×</button></div><div class="pulseTabs"><button class="active" data-pulse-tab="now">NOW</button><button data-pulse-tab="agents">AGENTS</button><button data-pulse-tab="relationship">RELATIONSHIP</button><button data-pulse-tab="discoveries">FIRSTS</button><button data-pulse-tab="dna">DECISION DNA</button><button data-pulse-tab="controls">AI / USAGE</button></div><div class="pulseBody"><section id="pulseNow" class="pulsePanel active" data-pulse-panel="now"></section><section id="pulseAgents" class="pulsePanel" data-pulse-panel="agents"></section><section id="pulseRelationship" class="pulsePanel" data-pulse-panel="relationship"></section><section id="pulseDiscoveries" class="pulsePanel" data-pulse-panel="discoveries"></section><section id="pulseDNA" class="pulsePanel" data-pulse-panel="dna"></section><section id="pulseControls" class="pulsePanel" data-pulse-panel="controls"></section></div></aside>
+    <div id="toast" class="toast"></div>
+    <div id="loading" class="loading"><div class="loadingBox"><div class="loadingMark">✦</div><strong>Entering Willow Basin</strong><p>Building the viewport from canonical world state…</p></div></div>
+  </div>
+  <script src="https://cdn.jsdelivr.net/npm/pixi.js@7.4.3/dist/pixi.min.js"></script>
+  <script src="action-visuals-v11.js?v=0907"></script>
+  <script src="world-pixi-v11.js?v=0907"></script>
+</body>
+</html>
