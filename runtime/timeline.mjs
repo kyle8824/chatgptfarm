@@ -28,16 +28,27 @@ export class Timeline {
       this.record = next;
     }
     if (this.record.version !== 1) throw Error('Unsupported runtime checkpoint');
+    this.prepare();
     return this;
+  }
+  prepare() {
+    const record=this.record;
+    // Plan the following action while the published transition is still running.
+    // No future outcomes are exposed, and a failed planner cannot reject unhandled.
+    this.prepared={start:record.end,promise:beginTransition(record.after,record.end,this.duration,
+      record.end+this.duration<this.now()?tick:this.planner).catch(()=>null)};
   }
   advance() {
     // Serialize timers and reads; no duplicate outcomes on concurrent requests.
     const operation = this.queue.then(async () => {
       let count = 0;
       while (this.now() >= this.record.end && count++ < 24) {
-        const next = await beginTransition(this.record.after,this.record.end,this.duration,this.planner);
+        const buffered=this.prepared?.start===this.record.end?await this.prepared.promise:null;
+        const next = buffered || await beginTransition(this.record.after,this.record.end,this.duration);
+        // Offline catch-up uses utility decisions, rather than a burst of paid model calls.
         await this.save(next); // Failed persistence cannot publish an uncommitted world.
         this.record = next;
+        this.prepare();
       }
       return this.snapshot();
     });
