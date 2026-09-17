@@ -13,7 +13,7 @@ on:
       - 'scripts/phaser-qa.mjs'
       - 'scripts/ecology-realism-qa.mjs'
       - 'scripts/living-history-qa.mjs'
-      - 'scripts/apply-v1_6-weather-memory.py'
+      - 'scripts/apply-v1_6_1-living-space-polish.py'
       - '.github/workflows/phaser-v1_4-living-world.yml'
 permissions:
   contents: write
@@ -25,8 +25,8 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: 22
-      - name: Apply v1.6 Weather Memory
-        run: python3 scripts/apply-v1_6-weather-memory.py
+      - name: Apply v1.6.1 living-space polish
+        run: python3 scripts/apply-v1_6_1-living-space-polish.py
       - name: Syntax check authoritative source
         run: |
           node --check phaser-world-v1.js
@@ -52,9 +52,9 @@ jobs:
           npx playwright install --with-deps chromium
       - name: Start local world
         run: |
-          python3 -m http.server 4173 >/tmp/chatgptfarm-phaser-v16.log 2>&1 &
+          python3 -m http.server 4173 >/tmp/chatgptfarm-phaser-v161.log 2>&1 &
           for i in {1..30}; do curl -fsS http://127.0.0.1:4173/phaser.html >/dev/null && exit 0; sleep 1; done
-          cat /tmp/chatgptfarm-phaser-v16.log
+          cat /tmp/chatgptfarm-phaser-v161.log
           exit 1
       - name: Run strict browser QA
         env:
@@ -64,10 +64,10 @@ jobs:
         if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: phaser-v1-6-weather-memory-qa
+          name: phaser-v1-6-1-living-space-qa
           path: phaser-qa/
           retention-days: 7
-      - name: Commit validated v1.6 source
+      - name: Commit validated v1.6.1 source
         run: |
           if git diff --quiet; then
             echo 'No generated changes to commit.'
@@ -75,7 +75,7 @@ jobs:
           fi
           git config user.name 'ChatGPTFarm Builder'
           git config user.email 'actions@users.noreply.github.com'
-          git add engine.js engine/core.js engine/world-model.js engine/ecology.js engine/decision.js phaser-world-v1.js phaser.html scripts/ecology-realism-qa.mjs scripts/living-history-qa.mjs scripts/phaser-qa.mjs
-          git commit -m 'world: apply v1.6 canonical weather memory'
+          git add phaser-world-v1.js phaser.html scripts/phaser-qa.mjs
+          git commit -m 'phaser: apply v1.6.1 living-space polish'
           git pull --rebase origin "$GITHUB_REF_NAME"
           git push
