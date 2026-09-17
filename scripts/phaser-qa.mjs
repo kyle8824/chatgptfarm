@@ -71,7 +71,7 @@ const sx=(mara.x-cam.scrollX-206)*cam.zoom+206,sy=(mara.y-20-cam.scrollY-457.5)*
 await page.touchscreen.tap(sx,sy);
 await page.getByRole('dialog',{name:'World details'}).waitFor({state:'visible'});
 if((await snap()).selected?.id!=='agent-mara')failures.push('tap did not select Mara');
-if(!(await page.locator('#phInspectBody').innerText()).includes('Memories'))failures.push('inspector lost persistent memory information');
+if(!(await page.locator('#phInspectBody').textContent()).includes('Memories'))failures.push('inspector lost persistent memory information');
 await page.screenshot({path:'phaser-qa/mobile-inspector.png'});
 await page.getByRole('button',{name:'Close details'}).click();
 const cdp=await context.newCDPSession(page),zoomBefore=(await snap()).camera.zoom;
