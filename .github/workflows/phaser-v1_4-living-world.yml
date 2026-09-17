@@ -1,0 +1,56 @@
+name: Phaser v1.4 Living World
+on:
+  push:
+    branches: [phaser-v1-4-living-world]
+    paths:
+      - 'phaser-world-v1.js'
+      - 'phaser.html'
+      - 'scripts/phaser-qa.mjs'
+      - 'scripts/apply-phaser-v1_4-living-world.py'
+      - '.github/workflows/phaser-v1_4-living-world.yml'
+permissions:
+  contents: write
+jobs:
+  build-and-qa:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - name: Apply v1.4 living-world pass
+        run: python3 scripts/apply-phaser-v1_4-living-world.py
+      - name: Syntax check renderer
+        run: node --check phaser-world-v1.js
+      - name: Install browser QA
+        run: |
+          npm install --no-save playwright@1.55.0
+          npx playwright install --with-deps chromium
+      - name: Start local world
+        run: |
+          python3 -m http.server 4173 >/tmp/chatgptfarm-phaser-v14.log 2>&1 &
+          for i in {1..30}; do curl -fsS http://127.0.0.1:4173/phaser.html >/dev/null && exit 0; sleep 1; done
+          cat /tmp/chatgptfarm-phaser-v14.log
+          exit 1
+      - name: Run strict Phaser QA
+        env:
+          BASE_URL: http://127.0.0.1:4173/phaser.html
+        run: node scripts/phaser-qa.mjs
+      - name: Upload visual QA
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: phaser-v1-4-living-world-qa
+          path: phaser-qa/
+          retention-days: 7
+      - name: Commit validated v1.4 output
+        run: |
+          if git diff --quiet; then
+            echo 'No generated changes to commit.'
+            exit 0
+          fi
+          git config user.name 'ChatGPTFarm Builder'
+          git config user.email 'actions@users.noreply.github.com'
+          git add phaser-world-v1.js phaser.html scripts/phaser-qa.mjs
+          git commit -m 'phaser: apply v1.4 canonical living-world pass'
+          git push
