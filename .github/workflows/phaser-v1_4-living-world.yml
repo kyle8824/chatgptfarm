@@ -13,9 +13,10 @@ on:
       - 'scripts/phaser-qa.mjs'
       - 'scripts/ecology-realism-qa.mjs'
       - 'scripts/living-history-qa.mjs'
+      - 'scripts/apply-v1_5_1-travel-wear.py'
       - '.github/workflows/phaser-v1_4-living-world.yml'
 permissions:
-  contents: read
+  contents: write
 jobs:
   validate:
     runs-on: ubuntu-latest
@@ -24,6 +25,8 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: 22
+      - name: Apply v1.5.1 emergent travel wear
+        run: python3 scripts/apply-v1_5_1-travel-wear.py
       - name: Syntax check authoritative source
         run: |
           node --check phaser-world-v1.js
@@ -32,13 +35,13 @@ jobs:
           node --check engine/runtime.js
           node --check engine/decision.js
           node --check engine/physics.js
+          node --check engine/spectator.js
           node --check mind.js
           node --check scripts/ecology-realism-qa.mjs
-          if [ -f scripts/living-history-qa.mjs ]; then node --check scripts/living-history-qa.mjs; fi
+          node --check scripts/living-history-qa.mjs
       - name: Run ecology realism invariants
         run: node scripts/ecology-realism-qa.mjs
       - name: Run living-history invariants
-        if: ${{ hashFiles('scripts/living-history-qa.mjs') != '' }}
         run: node scripts/living-history-qa.mjs
       - name: Install browser QA
         run: |
@@ -61,3 +64,15 @@ jobs:
           name: phaser-v1-5-living-history-qa
           path: phaser-qa/
           retention-days: 7
+      - name: Commit validated v1.5.1 source
+        run: |
+          if git diff --quiet; then
+            echo 'Validated source already contains v1.5.1.'
+            exit 0
+          fi
+          git config user.name 'ChatGPTFarm Builder'
+          git config user.email 'actions@users.noreply.github.com'
+          git add phaser-world-v1.js phaser.html engine/spectator.js scripts/phaser-qa.mjs scripts/living-history-qa.mjs
+          git commit -m 'phaser: apply v1.5.1 emergent travel wear'
+          git pull --rebase origin "$GITHUB_REF_NAME"
+          git push
