@@ -1,4 +1,4 @@
-export const WORLD_MODEL_VERSION='object-field-0.9';
+export const WORLD_MODEL_VERSION='object-field-1.0';
 
 const FIXED={
  camp:{id:'OBJ-CAMP-001',kind:'place',type:'camp_area',label:'camp',zone:'camp',position:{x:64,y:34},geometry:{shape:'ellipse',radiusM:11},physical:{navigable:true,ground:'meadow-soil'}},
@@ -69,16 +69,17 @@ export function syncLegacyIntoWorldModel(w){
 
 export function updateEnvironmentalModel(w){
  if(!w.worldModel)return;
- const rain=w.weather==='rain',cloud=w.weather==='cloudy';
- const humidity=rain?.94:cloud?.74:.52;
- const daylight=Math.max(0,Math.sin(((w.hour-6)/24)*Math.PI*2));
+ const rain=w.weather==='rain',cloud=w.weather==='cloudy',wet=Math.max(.12,Math.min(1,Number(w.environmentState?.surfaceWetness??(rain?.82:.32)))),level=Math.max(.2,Math.min(1,Number(w.environmentState?.creekLevel??(rain?.58:.42))));
+ const humidity=Math.min(.97,rain?.94:cloud?Math.max(.7,.63+wet*.16):.46+wet*.18);
+ const daylight=Math.max(0,Math.sin(((w.hour-6)/24)*Math.PI*2)),zone=(base,span)=>Math.round(Math.min(1,base+wet*span)*100)/100;
  const f=w.worldModel.fields;
  f.temperature={type:'scalar',unit:'F',global:w.temperature};
  f.precipitation={type:'scalar',unit:'relative',global:rain?.78:0,kind:rain?'rain':'none'};
- f.humidity={type:'scalar',unit:'relative',global:humidity};
+ f.humidity={type:'scalar',unit:'relative',global:Math.round(humidity*100)/100};
  f.light={type:'scalar',unit:'relative',global:Math.round(daylight*100)/100};
- f.soilMoisture={type:'zonal',unit:'relative',zones:{camp:rain?.72:.36,meadow:rain?.7:.33,forest:rain?.78:.49,creek:.92,clay:.88,reeds:.96,berries:rain?.68:.39,stones:rain?.43:.2,log:rain?.62:.31,edge:rain?.66:.38}};
- f.waterDepth={type:'object',unit:'m',objects:{'OBJ-CREEK-001':rain?.58:.42}};
+ f.soilMoisture={type:'zonal',unit:'relative',zones:{camp:zone(.16,.67),meadow:zone(.14,.69),forest:zone(.31,.58),creek:zone(.72,.27),clay:zone(.76,.22),reeds:zone(.82,.17),berries:zone(.2,.64),stones:zone(.08,.43),log:zone(.18,.58),edge:zone(.18,.62)}};
+ f.waterDepth={type:'object',unit:'m',objects:{'OBJ-CREEK-001':Math.round((.31+level*.32)*100)/100}};
+ f.surfaceWetness={type:'scalar',unit:'relative',global:Math.round(wet*100)/100,lastRainAt:w.environmentState?.lastRainAt||null,hoursSinceRain:w.environmentState?.hoursSinceRain??null};
  f.wind={type:'scalar',unit:'m/s',global:cloud?2.4:rain?3.1:1.5};
  for(const o of w.worldModel.objects){if(!o.state?.active)continue;const exposed=o.parentId===null||o.state.exposed;if(o.physical?.wood&&exposed){o.material||={};let m=Number(o.material.moisturePct??28);m+=rain?4:cloud?.2:-1.8;o.material.moisturePct=Math.max(8,Math.min(80,Math.round(m*10)/10))}if(o.physical?.weatherSensitive&&rain&&o.state.clarity!=null)o.state.clarity=Math.max(.1,Math.round((o.state.clarity-.08)*100)/100)}
 }
