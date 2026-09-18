@@ -81,8 +81,17 @@ export function snapshotTransition(r, now) {
       const next=r.after.ecologySystem?.wildlife?.find(x=>x.id===animal.id);
       if (!next || !animal.position || !next.position) continue;
       const from=copy(animal.position),to=next.position;
-      animal.position=mix(from,to,t);
-      animal.runtimeMotion={from,to,start:r.start,end:r.end};
+      // A transition represents a full world hour. Wildlife completes its
+      // travel during the visible part of that hour, then continues the
+      // selected activity (graze, forage, watch, hide, etc.) at its endpoint.
+      // Stretching a short rabbit step over the entire interval made valid
+      // movement too slow for a person to perceive.
+      const resting=/rest|hide|freeze|drink/i.test(next.activity||'');
+      const travelFraction=next.species==='fish' ? 1 : (resting ? .12 : .22);
+      const motionEnd=r.start+(r.end-r.start)*travelFraction;
+      const motionT=Math.max(0,Math.min(1,(now-r.start)/(motionEnd-r.start)));
+      animal.position=mix(from,to,motionT);
+      animal.runtimeMotion={from,to,start:r.start,end:motionEnd};
       animal.activity=next.activity;
       animal.behavior=next.behavior;
     }
