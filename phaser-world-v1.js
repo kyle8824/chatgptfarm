@@ -48,6 +48,8 @@ function canonicalAgentPoint(a,w=canonical){if(a?.coordinates&&Number.isFinite(a
 function agentPresentationOffset(a,w=canonical){const mine=canonicalAgentPoint(a,w),near=(w?.agents||[]).some(x=>x.id!==a.id&&dist(mine,canonicalAgentPoint(x,w))<.35);let x=near?(a.id==='agent-mara'?-14:14):0,y=near?(a.id==='agent-mara'?2:-2):0;const camp=(w?.worldModel?.objects||[]).find(o=>o.type==='camp_area'&&o.state?.active!==false);if(a?.position==='camp'&&camp?.position&&dist(mine,camp.position)<3.5){x+=a.id==='agent-mara'?-52:44;y+=a.id==='agent-mara'?18:10}return{x,y}}
 function currentPhase(a){const active=a?.activeAction;if(!active)return{phase:'idle',label:'IDLE'};const p=(active.phases||[]).find(x=>x.id==='travel'&&active.moving)||(active.phases||[]).find(x=>x.id==='interact')||(active.phases||[]).at(-1);return{phase:p?.id||'acting',label:String(p?.label||'ACTING').toUpperCase()}}
 function focusAgent(w=canonical){const urgent=(w?.liveThreads||[]).slice().sort((a,b)=>(b.urgency||0)-(a.urgency||0))[0],id=urgent?.agentIds?.[0];return(w?.agents||[]).find(a=>a.id===id)||(w?.agents||[])[0]||null}
+function relationshipFor(w,a){const other=(w?.agents||[]).find(x=>x.id!==a?.id)||null,key=other?[a.id,other.id].sort().join('|'):null;return{other,rel:key?w?.relationships?.[key]||null:null}}
+function friendlyLabel(v){return String(v??'').replaceAll('_',' ').replace(/\b\w/g,c=>c.toUpperCase())}
 
 class LivingWorld extends Phaser.Scene{
  constructor(){super('LivingWorld');this.entities=new Map();this.treeSprites=[];this.ambient=[];this.traceVisuals=[];this.signVisuals=[];this.routeVisuals=[];this.resourceVisuals=[];this.weatherMemoryVisuals=[];this.campWearVisuals=[];this.decisionCue=null;this.lastDecisionCueId=null;this.lightOverlay=null;this.nightLights=[];this.grid=null;this.drag=null;this.pinch=null;this.selected=null;this.assetOk={};this.lastRenderedTick=null}
@@ -212,7 +214,7 @@ class LivingWorld extends Phaser.Scene{
  renderCanonicalTraces(){for(const v of this.traceVisuals)v.destroy();this.traceVisuals=[];const traces=(canonical?.ecologySystem?.traces||[]).filter(t=>t.active&&(t.clarity??0)>.38&&(t.ageHours??0)<=14&&(t.species!=='rabbit'||(t.clarity??0)>.55));for(const t of traces){const p=worldToPx(t.position),heading=-(t.heading||0),size=clamp(t.size||1,.45,1.6),alpha=clamp((t.clarity??.7)*.46,.12,.42),g=this.add.graphics().setDepth(720+p.y*.02);g.setAlpha(alpha);const c=t.substrate==='mud'?0x493d31:t.species==='bear'?0x40372f:t.species==='rabbit'?0x6a6258:0x5b5044;g.fillStyle(c,1);const dx=Math.cos(heading)*7*size,dy=Math.sin(heading)*7*size,nx=-Math.sin(heading)*3.3*size,ny=Math.cos(heading)*3.3*size;for(let i=-1;i<=1;i++){const along=i*7.5*size,cx=p.x+dx*i,cy=p.y+dy*i;g.fillEllipse(cx+nx,cy+ny,5.6*size,3.4*size);g.fillEllipse(cx-nx,cy-ny,5.6*size,3.4*size);if(t.species==='bear'&&i===0)g.fillEllipse(cx,cy+1,5*size,4*size)}g.setData('kind','wildlife-trace');g.setData('traceId',t.id);g.setData('species',t.species);this.traceVisuals.push(g)} }
  renderCanonicalSigns(){for(const v of this.signVisuals)v.destroy();this.signVisuals=[];const signs=(canonical?.ecologySystem?.signs||[]).filter(s=>s.active&&(s.clarity??0)>.34&&(s.ageHours??0)<=30);for(const s of signs){const p=worldToPx(s.position),a=clamp((s.clarity??.6)*.34,.09,.3),g=this.add.graphics().setDepth(700+p.y*.02).setAlpha(a);if(s.kind==='deer-bed'){g.fillStyle(0x514b37,1);g.fillEllipse(p.x,p.y,25,10);g.lineStyle(1,0x7d805c,.8);for(let i=-2;i<=2;i++)g.lineBetween(p.x+i*5,p.y+3,p.x+i*6+2,p.y-5)}else if(s.kind==='deer-browse'){g.lineStyle(1.4,0x5c4e35,1);g.lineBetween(p.x-8,p.y+6,p.x+8,p.y-7);g.lineBetween(p.x-1,p.y,p.x-7,p.y-7);g.fillStyle(0x6d7d50,.9);g.fillEllipse(p.x+7,p.y-7,6,3)}else if(s.kind==='rabbit-browse'){g.lineStyle(1,0x66744c,1);for(let i=-2;i<=2;i++)g.lineBetween(p.x+i*3,p.y+5,p.x+i*3+(i%2),p.y-4-(i%2)*2)}else if(s.kind==='bear-forage'){g.fillStyle(0x4d4233,.72);g.fillEllipse(p.x-5,p.y,15,7);g.fillEllipse(p.x+6,p.y+3,13,6);g.lineStyle(1.2,0x786750,.8);g.lineBetween(p.x-9,p.y-6,p.x+10,p.y+7)}g.setData('kind','ecological-sign');g.setData('signId',s.id);g.setData('species',s.species);this.signVisuals.push(g)}}
  updateDecisionCue(initial=false){const dna=canonical?.dna?.[0],agent=dna?this.entities.get(dna.agent_id):null;if(!dna||!agent)return;if(this.decisionCue&&this.lastDecisionCueId!==dna.decision_id){this.decisionCue.destroy();this.decisionCue=null}if(!this.decisionCue){const label=String(dna.action_label||dna.action||'').replace(/^./,c=>c.toUpperCase()),intent=String(dna.mind?.intent||'').trim(),text=intent&&intent.toLowerCase()!==label.toLowerCase()?`${label}\n${intent}`:label;this.decisionCue=this.add.text(agent.x,agent.y-92,text,{fontFamily:'Arial',fontSize:'10px',fontStyle:'bold',align:'center',color:'#eef5e9',backgroundColor:'rgba(9,19,12,.72)',padding:{x:7,y:5},stroke:'#111a13',strokeThickness:2,wordWrap:{width:190}}).setOrigin(.5,1).setDepth(9100).setAlpha(initial?.78:.94);this.lastDecisionCueId=dna.decision_id;this.decisionCue.setData('decisionId',dna.decision_id)}else this.decisionCue.setPosition(agent.x,agent.y-92);}
- upsertAgent(a,initial){let e=this.entities.get(a.id);if(!e){const key=a.id==='agent-mara'?'person-mara':'person-ivo',target=worldToPx(canonicalAgentPoint(a));e=this.add.image(target.x,target.y,key).setOrigin(.5,1);const h=52;e.setDisplaySize(h*e.width/e.height,h).setDepth(1000+target.y+3);e.setData('kind','agent');e.setData('id',a.id);e.setData('artMode','natural-procedural');const name=this.add.text(target.x,target.y-59,a.name,{fontFamily:'Arial',fontSize:'10px',fontStyle:'bold',color:'#edf4e9',stroke:'#172018',strokeThickness:3}).setOrigin(.5).setDepth(9000).setAlpha(.9);e.setData('label',name);this.entities.set(a.id,e)}const fallback=canonicalAgentPoint(a),to=worldToPx(a.activeAction?.to||fallback),from=worldToPx(a.activeAction?.from||fallback),off=agentPresentationOffset(a);for(const p of [from,to]){p.x+=off.x;p.y+=off.y}if(a.runtimeMotion){e.setData('runtimeMotion',a.runtimeMotion);e.setData('runtimeOffset',off);e.setData('activity',a.currentAction);this.tweens.killTweensOf(e)}else this.applyRecordedMotion(e,from,to,'walking');}
+ upsertAgent(a,initial){let e=this.entities.get(a.id);if(!e){const key=a.id==='agent-mara'?'person-mara':'person-ivo',target=worldToPx(canonicalAgentPoint(a));e=this.add.image(target.x,target.y,key).setOrigin(.5,1);const h=52;e.setDisplaySize(h*e.width/e.height,h).setDepth(1000+target.y+3);e.setData('kind','agent');e.setData('id',a.id);e.setData('artMode','natural-procedural');const name=this.add.text(target.x,target.y-59,a.name,{fontFamily:'Arial',fontSize:'10px',fontStyle:'bold',color:'#edf4e9',stroke:'#172018',strokeThickness:3}).setOrigin(.5).setDepth(9000).setAlpha(.9);const ai=this.add.text(target.x,target.y-76,'✦ AI',{fontFamily:'Arial',fontSize:'9px',fontStyle:'bold',color:'#e9ffe1',backgroundColor:'rgba(18,54,29,.90)',padding:{x:5,y:3},stroke:'#102015',strokeThickness:1}).setOrigin(.5).setDepth(9001).setAlpha(.96);e.setData('label',name);e.setData('aiBadge',ai);this.entities.set(a.id,e)}const fallback=canonicalAgentPoint(a),to=worldToPx(a.activeAction?.to||fallback),from=worldToPx(a.activeAction?.from||fallback),off=agentPresentationOffset(a);for(const p of [from,to]){p.x+=off.x;p.y+=off.y}if(a.runtimeMotion){e.setData('runtimeMotion',a.runtimeMotion);e.setData('runtimeOffset',off);e.setData('activity',a.currentAction);this.tweens.killTweensOf(e)}else this.applyRecordedMotion(e,from,to,'walking');}
  upsertWildlife(a,initial){let e=this.entities.get(a.id);if(!e){const p=worldToPx(a.position),key=a.species==='bear'?'animal-bear-fallback':a.species==='rabbit'?'animal-rabbit-fallback':a.species==='fish'?'creek-fish':'animal-deer';if(a.species==='fish'){e=this.add.container(p.x,p.y);for(let i=0;i<4;i++)e.add(this.add.image((i-1.5)*8,(i%2?3:-3),key).setScale(.6));e.setDepth(25)}else{e=this.add.image(p.x,p.y,key).setOrigin(.5,.9);const h=a.species==='bear'?64:a.species==='deer'?58:20;e.setDisplaySize(h*e.width/e.height,h);e.setDepth(1000+p.y+2)}e.setData('kind','wildlife');e.setData('species',a.species);e.setData('id',a.id);this.entities.set(a.id,e)}let visibility=.96;if(a.species==='rabbit'&&a.activity==='hide')visibility=.34;else if(a.activity==='freeze')visibility=.52;e.setAlpha(visibility);e.setData('visibility',visibility);e.setData('behavior',a.behavior||null);const wf=a.movement?.from||a.previousPosition||a.position,wt=a.movement?.to||a.position;if(a.runtimeMotion){e.setData('runtimeMotion',a.runtimeMotion);e.setData('activity',a.activity);this.tweens.killTweensOf(e)}else this.applyRecordedMotion(e,worldToPx(wf),worldToPx(wt),'moving');}
  applyRecordedMotion(e,from,to,mode){
   this.tweens.killTweensOf(e);e.setAngle?.(0);
@@ -222,7 +224,7 @@ class LivingWorld extends Phaser.Scene{
   e.setPosition(lerp(from.x,to.x,progress),lerp(from.y,to.y,progress));
   this.moveEntity(e,to,moving?duration*(1-progress):0);e.setData('motionMode',moving?mode:'still');
  }
- moveEntity(e,to,duration){this.tweens.killTweensOf(e);const label=e.getData?.('label');if(!duration){e.setPosition(to.x,to.y);if(label)label.setPosition(to.x,to.y-59);e.setDepth(e.getData?.('species')==='fish'?25:1000+to.y+3);return}const start={x:e.x,y:e.y};this.tweens.add({targets:e,x:to.x,y:to.y,duration,ease:'Linear',onComplete:()=>e.setData('motionMode','still'),onUpdate:()=>{const dx=e.x-start.x;if(e.setFlipX&&Math.abs(dx)>.4)e.setFlipX(dx<0);if(label)label.setPosition(e.x,e.y-59);if(e.getData?.('species')!=='fish')e.setDepth(1000+e.y+3)}})}
+ moveEntity(e,to,duration){this.tweens.killTweensOf(e);const label=e.getData?.('label'),aiBadge=e.getData?.('aiBadge');if(!duration){e.setPosition(to.x,to.y);if(label)label.setPosition(to.x,to.y-59);if(aiBadge)aiBadge.setPosition(to.x,to.y-76);e.setDepth(e.getData?.('species')==='fish'?25:1000+to.y+3);return}const start={x:e.x,y:e.y};this.tweens.add({targets:e,x:to.x,y:to.y,duration,ease:'Linear',onComplete:()=>e.setData('motionMode','still'),onUpdate:()=>{const dx=e.x-start.x;if(e.setFlipX&&Math.abs(dx)>.4)e.setFlipX(dx<0);if(label)label.setPosition(e.x,e.y-59);if(aiBadge)aiBadge.setPosition(e.x,e.y-76);if(e.getData?.('species')!=='fish')e.setDepth(1000+e.y+3)}})}
  spawnAmbientLife(){this.refreshAmbient(true)}
  refreshAmbient(force=false){const birds=canonical?.ecologySystem?.ambient?.birds||0,target=clamp(Math.round(birds/14),0,7);if(!force&&this.ambient.length===target)return;for(const x of this.ambient)x.destroy();this.ambient=[];const R=seeded(`birds:${canonical?.ecologySystem?.ambient?.seed||0}`);for(let i=0;i<target;i++){const b=this.add.image(R()*WORLD,R()*WORLD*.5+140,'ambient-bird').setScale(.55+R()*.35).setAlpha(.28+R()*.2).setDepth(8000);this.ambient.push(b);this.tweens.add({targets:b,x:b.x+(R()>.5?1:-1)*(260+R()*520),y:b.y+(R()-.5)*90,duration:10500+R()*11000,repeat:-1,yoyo:true,ease:'Sine.InOut'})}}
  renderLightCycle(refresh=false){
@@ -285,9 +287,150 @@ if(canonical.runtime){
  return;
 }
 const age=updateAge(),stale=!Number.isFinite(age)||age>playbackMs()*2;const status=$('#phWorldStatus');status.dataset.freshness=this.connectionFailed?'offline':stale?'stale':'current';status.querySelector('b').textContent=this.connectionFailed?'CONNECTION INTERRUPTED':stale?'UPDATES DELAYED':'WORLD CONNECTED';const minutes=Number.isFinite(age)?Math.floor(age/60000):null;status.title=minutes==null?'Update time unavailable':`Last saved ${minutes} minutes ago`;let note=$('#phFreshness');if(!note){note=document.createElement('small');note.id='phFreshness';status.append(note)}note.textContent=minutes==null?'Update time unknown':minutes<1?'Saved just now':`Saved ${minutes}m ago`;if(!Number.isFinite(age)||age>=playbackMs())$('#phFocus small').textContent='LAST RECORDED ACTIVITY';if(stale||this.connectionFailed){$('#phPulseText').textContent='Showing the last saved world. Waiting for a new update.'}if(this.decisionCue)this.decisionCue.setVisible(!stale);}
- ensureInspector(){if($('#phInspector'))return;const p=document.createElement('section');p.id='phInspector';p.className='phHud phInspector';p.hidden=true;p.setAttribute('role','dialog');p.setAttribute('aria-label','World details');p.innerHTML='<button id="phInspectClose" aria-label="Close details">×</button><small id="phInspectKind"></small><h2 id="phInspectTitle"></h2><div id="phInspectBody"></div>';$('#phaserShell').append(p);$('#phInspectClose').onclick=()=>{p.hidden=true;this.selected=null};document.addEventListener('keydown',e=>{if(e.key==='Escape'){p.hidden=true;this.selected=null}});}
- showInspector(selection){this.ensureInspector();this.selected=selection;const w=canonical;let d=selection.kind==='agent'?w.agents.find(x=>x.id===selection.id):selection.kind==='wildlife'?w.ecologySystem.wildlife.find(x=>x.id===selection.id):w.worldModel.objects.find(x=>x.id===selection.id);if(!d)return;$('#phInspector').hidden=false;$('#phInspectKind').textContent=selection.kind==='agent'?'PERSON':selection.kind==='wildlife'?'WILDLIFE':'WORLD OBJECT';$('#phInspectTitle').textContent=d.name||d.label||d.type;let rows=[];const add=(label,value)=>{if(value!==undefined&&value!==null&&value!=='')rows.push(`<dt>${escapeHtml(label)}</dt><dd>${escapeHtml(value)}</dd>`)};
- if(selection.kind==='agent'){const dna=w.dna?.find(x=>x.agent_id===d.id);add('Goal',d.mind?.currentGoal);add('Last action',d.activeAction?.label||d.currentAction);add('Result',dna?.physics?.outcome?.detail);add('Decision',dna?.mind?.decision_summary);add('Decision source',dna?.mind?.brain_mode);add('Needs',Object.entries(d.needs||{}).map(([k,v])=>`${k==='hunger'?'satiety':k} ${Math.round(v)}%`).join(' · '));add('Carrying',Object.entries(d.inventory||{}).filter(([,v])=>v>0).map(([k,v])=>`${v} ${k.replace(/([A-Z])/g,' $1').toLowerCase()}`).join(', ')||'Nothing');add('Learned skills',Object.keys(d.skills||{}).join(', ')||'None yet');add('Memories',d.memories?.length||0);add('Recent memory',d.memories?.[0]?.text);add('Decision record',dna?.decision_id)}else if(selection.kind==='wildlife'){add('Species',d.species);add('Activity',d.activity);add('Behavior',d.behavior);add('Presence',d.localPresence===false?'Outside the basin':'In the basin');add('Drives',Object.entries(d.needs||{}).map(([k,v])=>`${k} ${Math.round(v)}%`).join(' · '));add('Recorded movements',d.history?.length||0)}else{add('Type',d.type?.replaceAll('_',' '));add('Material',typeof d.material==='string'?d.material:JSON.stringify(d.material||{}));add('Location',d.zone);add('Last event',d.history?.at(-1)?.detail);const key={berry_patch:'berries',stone_field:'stones',clay_bank:'clay',reed_marsh:'reeds'}[d.type];if(key)add('Available',w.resources?.[key]);add('State',Object.entries(d.state||{}).map(([k,v])=>`${k}: ${typeof v==='object'?JSON.stringify(v):v}`).join(' · '))}add('World record',`Day ${w.day}, ${String(w.hour).padStart(2,'0')}:00`);$('#phInspectBody').innerHTML=`<dl>${rows.join('')}</dl>`;}
+ ensureInspector(){
+    if($('#phInspector'))return;
+    const p=document.createElement('section');
+    p.id='phInspector';
+    p.className='phHud phInspector';
+    p.hidden=true;
+    p.setAttribute('role','dialog');
+    p.setAttribute('aria-label','World details');
+    p.innerHTML='<button id="phInspectClose" aria-label="Close details">×</button><div class="phInspectTopline"><small id="phInspectKind"></small><span id="phInspectAutonomy" class="phAutonomy" hidden>✦ AI CONTROLLED</span></div><h2 id="phInspectTitle"></h2><div id="phInspectBody"></div>';
+    $('#phaserShell').append(p);
+    $('#phInspectClose').onclick=()=>{p.hidden=true;this.selected=null};
+    document.addEventListener('keydown',e=>{if(e.key==='Escape'){p.hidden=true;this.selected=null}});
+  }
+ showInspector(selection){
+    this.ensureInspector();
+    this.selected=selection;
+    const w=canonical;
+    let d=selection.kind==='agent'
+      ? w.agents.find(x=>x.id===selection.id)
+      : selection.kind==='wildlife'
+        ? w.ecologySystem.wildlife.find(x=>x.id===selection.id)
+        : w.worldModel.objects.find(x=>x.id===selection.id);
+    if(!d)return;
+
+    const inspector=$('#phInspector');
+    const body=$('#phInspectBody');
+    const autonomy=$('#phInspectAutonomy');
+    const priorTab=body?.querySelector?.('[data-ph-tab].active')?.dataset?.phTab||'overview';
+
+    inspector.hidden=false;
+    $('#phInspectKind').textContent=selection.kind==='agent'?'PERSON':selection.kind==='wildlife'?'WILDLIFE':'WORLD OBJECT';
+    $('#phInspectTitle').textContent=d.name||d.label||d.type;
+    autonomy.hidden=selection.kind!=='agent';
+
+    if(selection.kind==='agent'){
+      const dna=(w.dna||[]).find(x=>x.agent_id===d.id);
+      const {other,rel}=relationshipFor(w,d);
+      const phase=currentPhase(d);
+      const pct=v=>clamp(Math.round(Number(v)||0),0,100);
+      const activity=d.activeAction?.label||d.currentAction||'Observing the basin';
+      const goal=d.mind?.currentGoal||'';
+      const outcome=dna?.physics?.outcome?.detail||'';
+      const needs=[
+        ['Hydration',d.needs?.hydration],
+        ['Satiety',d.needs?.hunger],
+        ['Energy',d.needs?.energy],
+        ['Warmth',d.needs?.warmth]
+      ].filter(([,v])=>Number.isFinite(Number(v)));
+      const meter=(label,value)=>{
+        const v=pct(value),tone=v<35?'low':v<60?'watch':'good';
+        return `<div class="phMeter ${tone}"><div><span>${escapeHtml(label)}</span><b>${v}%</b></div><i><em style="width:${v}%"></em></i></div>`;
+      };
+      const inventory=Object.entries(d.inventory||{})
+        .filter(([,v])=>Number(v)>0)
+        .map(([k,v])=>`<span class="phChip">${escapeHtml(v)} × ${escapeHtml(friendlyLabel(k))}</span>`)
+        .join('')||'<span class="phEmpty">Nothing carried</span>';
+      const skills=Object.keys(d.skills||{})
+        .map(k=>`<span class="phChip">${escapeHtml(friendlyLabel(k))}</span>`)
+        .join('')||'<span class="phEmpty">No learned skills yet</span>';
+      const memories=(d.memories||[]).slice(0,5)
+        .map(m=>`<article class="phMemory"><span>MEMORY</span><p>${escapeHtml(m.text||m.detail||'Recorded experience')}</p><small>${escapeHtml((m.tags||[]).slice(0,3).join(' · ')||'personal experience')}</small></article>`)
+        .join('')||'<p class="phEmpty">No memories recorded yet.</p>';
+      const relation=other
+        ? `<div class="phRelationHead"><div><small>RELATIONSHIP</small><strong>${escapeHtml(other.name)}</strong></div><span>${rel?.lastInteraction?'last interacted '+escapeHtml(String(rel.lastInteraction)):'no recent interaction'}</span></div>${meter('Trust',rel?.trust??0)}${meter('Familiarity',rel?.familiarity??0)}${meter('Affinity',rel?.affinity??50)}`
+        : '<p class="phEmpty">No other person is known yet.</p>';
+      const lowest=needs.slice().sort((a,b)=>Number(a[1])-Number(b[1]))[0];
+      const location=friendlyLabel(d.position||'unknown');
+      const skillCount=Object.keys(d.skills||{}).length;
+      const memoryCount=(d.memories||[]).length;
+
+      body.innerHTML=`
+        <div class="phAgentHero">
+          <div class="phActivityCard">
+            <span>RIGHT NOW · ${escapeHtml(phase.label)}</span>
+            <strong>${escapeHtml(activity)}</strong>
+            <p>${escapeHtml(goal?`Goal: ${goal}`:outcome||'Acting from the current world state.')}</p>
+          </div>
+          <div class="phQuickGrid">
+            <div><small>LOCATION</small><b>${escapeHtml(location)}</b></div>
+            <div><small>WATCH</small><b>${escapeHtml(lowest?lowest[0]:'Stable')}</b></div>
+            <div><small>EXPERIENCE</small><b>${memoryCount} memories</b></div>
+          </div>
+        </div>
+        <nav class="phInspectTabs" role="tablist" aria-label="${escapeHtml(d.name)} details">
+          <button type="button" data-ph-tab="overview">Overview</button>
+          <button type="button" data-ph-tab="mind">Mind</button>
+          <button type="button" data-ph-tab="memory">Memory</button>
+        </nav>
+        <section class="phInspectPanel" data-ph-panel="overview">
+          <h3>Condition</h3>
+          <div class="phMeterStack">${needs.map(([k,v])=>meter(k,v)).join('')}</div>
+          <h3>Connection</h3>
+          <div class="phRelation">${relation}</div>
+          <h3>Carrying</h3>
+          <div class="phChips">${inventory}</div>
+        </section>
+        <section class="phInspectPanel" data-ph-panel="mind" hidden>
+          <div class="phDeepCard"><small>CURRENT GOAL</small><strong>${escapeHtml(goal||'No explicit goal recorded')}</strong></div>
+          <div class="phDeepCard"><small>DECISION</small><p>${escapeHtml(dna?.mind?.decision_summary||dna?.mind?.intent||'No decision summary recorded for this tick.')}</p></div>
+          <div class="phDeepGrid">
+            <div><small>DECISION MODE</small><b>${escapeHtml(friendlyLabel(dna?.mind?.brain_mode||w.meta?.mindMode||'autonomous'))}</b></div>
+            <div><small>LEARNED SKILLS</small><b>${skillCount}</b></div>
+            <div><small>DECISION ID</small><b>${escapeHtml(dna?.decision_id||'—')}</b></div>
+            <div><small>WORLD TIME</small><b>Day ${escapeHtml(w.day)}, ${String(w.hour).padStart(2,'0')}:00</b></div>
+          </div>
+          <h3>Learned skills</h3>
+          <div class="phChips">${skills}</div>
+        </section>
+        <section class="phInspectPanel" data-ph-panel="memory" hidden>
+          <div class="phDeepCard"><small>LATEST OUTCOME</small><p>${escapeHtml(outcome||'No outcome detail recorded for the current decision.')}</p></div>
+          <h3>Recent memories</h3>
+          <div class="phMemoryList">${memories}</div>
+        </section>`;
+      const activate=tab=>{
+        body.querySelectorAll('[data-ph-tab]').forEach(b=>b.classList.toggle('active',b.dataset.phTab===tab));
+        body.querySelectorAll('[data-ph-panel]').forEach(p=>p.hidden=p.dataset.phPanel!==tab);
+      };
+      body.querySelectorAll('[data-ph-tab]').forEach(b=>b.addEventListener('click',()=>activate(b.dataset.phTab)));
+      activate(body.querySelector(`[data-ph-tab="${priorTab}"]`)?priorTab:'overview');
+      return;
+    }
+
+    autonomy.hidden=true;
+    let rows=[];
+    const add=(label,value)=>{if(value!==undefined&&value!==null&&value!=='')rows.push(`<dt>${escapeHtml(label)}</dt><dd>${escapeHtml(value)}</dd>`)};
+    if(selection.kind==='wildlife'){
+      add('Species',d.species);
+      add('Activity',d.activity);
+      add('Behavior',d.behavior);
+      add('Presence',d.localPresence===false?'Outside the basin':'In the basin');
+      add('Drives',Object.entries(d.needs||{}).map(([k,v])=>`${k} ${Math.round(v)}%`).join(' · '));
+      add('Recorded movements',d.history?.length||0);
+    }else{
+      add('Type',d.type?.replaceAll('_',' '));
+      add('Material',typeof d.material==='string'?d.material:JSON.stringify(d.material||{}));
+      add('Location',d.zone);
+      add('Last event',d.history?.at(-1)?.detail);
+      const key={berry_patch:'berries',stone_field:'stones',clay_bank:'clay',reed_marsh:'reeds'}[d.type];
+      if(key)add('Available',w.resources?.[key]);
+      add('State',Object.entries(d.state||{}).map(([k,v])=>`${k}: ${typeof v==='object'?JSON.stringify(v):v}`).join(' · '));
+    }
+    add('World record',`Day ${w.day}, ${String(w.hour).padStart(2,'0')}:00`);
+    body.innerHTML=`<dl>${rows.join('')}</dl>`;
+  }
  inspectAt(p){const cam=this.cameras.main,q=cam.getWorldPoint(p.x,p.y);let chosen=null,best=Infinity;for(const [id,e] of this.entities){const bounds=e.getBounds(),cx=e.x,cy=e.y-(e.getData('kind')==='agent'?22:12),d=Math.hypot(cx-q.x,cy-q.y);if((bounds.contains(q.x,q.y)||d<26/cam.zoom)&&d<best){best=d;chosen={id,kind:e.getData('kind')}}}if(!chosen){const point=pxToWorld(q);for(const o of canonical.worldModel?.objects||[]){if(o.parentId||o.state?.active===false||!o.position)continue;let d=o.type==='creek_segment'?creekDistance(point):dist(point,o.position);if(d<Math.max(1.4,objectRadiusUnits(o))&&d<best){best=d;chosen={id:o.id,kind:'object'}}}}if(chosen)this.showInspector(chosen);}
  wireInput(){const cam=this.cameras.main;this.input.addPointer(1);const active=()=>this.input.manager.pointers.filter(p=>p.isDown);const beginPinch=()=>{const [a,b]=active();if(!a||!b)return;this.drag=null;const mid={x:(a.x+b.x)/2,y:(a.y+b.y)/2};this.pinch={distance:Math.hypot(a.x-b.x,a.y-b.y),zoom:cam.zoom,anchor:cam.getWorldPoint(mid.x,mid.y)};cameraMode='free';cam.stopFollow();this.syncButtons()};this.input.on('pointerdown',p=>{if(active().length>=2){beginPinch();return}this.drag={x:p.x,y:p.y,scrollX:cam.scrollX,scrollY:cam.scrollY,moved:false}});this.input.on('pointermove',p=>{if(this.pinch){const [a,b]=active();if(!a||!b)return;const mid={x:(a.x+b.x)/2,y:(a.y+b.y)/2};this.setZoom(this.pinch.zoom*Math.hypot(a.x-b.x,a.y-b.y)/Math.max(1,this.pinch.distance));cam.scrollX=this.pinch.anchor.x-cam.width/2-(mid.x-cam.width/2)/cam.zoom;cam.scrollY=this.pinch.anchor.y-cam.height/2-(mid.y-cam.height/2)/cam.zoom;return}if(!this.drag||!p.isDown)return;const dx=p.x-this.drag.x,dy=p.y-this.drag.y;if(this.drag.moved||Math.hypot(dx,dy)>7){this.drag.moved=true;cameraMode='free';cam.stopFollow();cam.scrollX=this.drag.scrollX-dx/cam.zoom;cam.scrollY=this.drag.scrollY-dy/cam.zoom;this.syncButtons()}});const end=p=>{if(this.pinch){if(active().length<2)this.pinch=null;this.drag=null;return}if(this.drag&&!this.drag.moved)this.inspectAt(p);this.drag=null};this.input.on('pointerup',end);this.input.on('pointerupoutside',()=>{this.drag=null;this.pinch=null});this.input.on('gameout',()=>{this.drag=null;this.pinch=null});this.input.on('wheel',(p,_go,_dx,dy)=>{const anchor=cam.getWorldPoint(p.x,p.y);cameraMode='free';cam.stopFollow();this.setZoom(cam.zoom*Math.exp(-dy*.001));cam.scrollX=anchor.x-cam.width/2-(p.x-cam.width/2)/cam.zoom;cam.scrollY=anchor.y-cam.height/2-(p.y-cam.height/2)/cam.zoom;this.syncButtons()});}
 
@@ -303,13 +446,13 @@ if(motion){
  const active=canonical.runtime.status!=='paused'&&now<canonical.runtime.end&&!resting;
  e.setAngle?.(active?Math.sin(now/(moving?130:400)+hash(id)%10)*(moving?3:1.5):0);
  e.setData('motionMode',moving?'moving':resting?'resting':active?'acting':'still');
- const label=e.getData('label');if(label)label.setPosition(e.x,e.y-59);
+ const label=e.getData('label'),aiBadge=e.getData('aiBadge');if(label)label.setPosition(e.x,e.y-59);if(aiBadge)aiBadge.setPosition(e.x,e.y-76);
  e.setDepth(e.getData('species')==='fish'?25:1000+e.y+3);
 }
 if(e.getData?.('kind')==='wildlife'&&e.getData('species')!=='fish')e.setDepth(1000+e.y+2)}if(this.decisionCue&&this.lastDecisionCueId){const dna=canonical?.dna?.[0],agent=dna?this.entities.get(dna.agent_id):null;if(agent)this.decisionCue.setPosition(agent.x,agent.y-92)} }
- snapshot(){const treeWater=this.treeSprites.filter(t=>terrainTypeAt(t.getData('worldPoint'))===TERRAIN.WATER).length,moving=[...this.entities.values()].filter(e=>this.tweens.getTweensOf(e).length>0).length;return{recovery:'2026-09-17',freshness:{ageMs:updateAge(),tick:lastTick,failed:!!this.connectionFailed},selected:this.selected||null,version:'phaser-v1.6.3-embodiment',phaser:Phaser.VERSION,ready:!!canonical,worldModel:canonical?.worldModel?.version||null,terrain:this.grid?.counts||{},trees:this.treeSprites.length,treeWaterCollisions:treeWater,agents:[...this.entities.values()].filter(x=>x.getData?.('kind')==='agent').length,wildlife:[...this.entities.values()].filter(x=>x.getData?.('kind')==='wildlife').length,movingEntities:moving,assetErrors:[...assetErrors],decisionDNA:{protocol:canonical?.dna?.[0]?.protocol||null,decisionId:canonical?.dna?.[0]?.decision_id||null,action:canonical?.dna?.[0]?.action||null},agentArtModes:[...this.entities.values()].filter(x=>x.getData?.('kind')==='agent').map(x=>x.getData?.('artMode')||'unknown'),embodimentState:{agents:[...this.entities.values()].filter(x=>x.getData?.('kind')==='agent').map(x=>({id:x.getData?.('id'),mode:x.getData?.('motionMode')||'unknown'})),wildlifeMoving:[...this.entities.values()].filter(x=>x.getData?.('kind')==='wildlife'&&x.getData?.('motionMode')==='moving').length},campVisualMode:this.campVisualMode||null,visualFixes:'visual-fixes-v1',naturalism:'naturalism-v1',embodiment:'embodiment-v2',habitatDepth:'habitat-depth-v1',quietWorld:'quiet-world-v1',coverEcology:'cover-ecology-v1',rangePresence:'range-presence-v1',ecologicalSigns:'ecological-signs-v1',travelWear:'travel-wear-v1',resourceLandscape:'resource-responsive-v1',resourceVisualState:this.resourceVisualState||null,rangePresenceCounts:{present:(canonical?.ecologySystem?.wildlife||[]).filter(x=>x.active&&x.localPresence!==false).length,outside:(canonical?.ecologySystem?.wildlife||[]).filter(x=>x.active&&x.localPresence===false).length},pulseMode:this.pulseMode||null,concealedWildlife:[...this.entities.values()].filter(x=>x.getData?.('kind')==='wildlife'&&(x.getData?.('visibility')??1)<.7).length,habitatDetail:this.habitatDetail||null,meadowRelief:this.meadowRelief||null,lightCycle:this.lightCycle||null,weatherMemory:this.weatherMemoryState||null,livingWorld:{routeVisuals:this.routeVisuals.length,canonicalRoutes:(canonical?.surfaceHistory?.routes||[]).filter(r=>(r.traversals||0)>=2).length,campWear:canonical?.surfaceHistory?.campWear?.uses||0,campWearVisuals:this.campWearVisuals.length,campWearState:this.campWearState||null,signVisuals:this.signVisuals.length,canonicalSigns:(canonical?.ecologySystem?.signs||[]).filter(s=>s.active&&(s.clarity??0)>.34&&(s.ageHours??0)<=30).length,trackVisuals:this.traceVisuals.length,canonicalTracks:(canonical?.ecologySystem?.traces||[]).filter(t=>t.active&&(t.clarity??0)>.38&&(t.ageHours??0)<=14&&(t.species!=='rabbit'||(t.clarity??0)>.55)).length,decisionCueId:this.decisionCue?.getData?.('decisionId')||null},camera:{mode:cameraMode,zoom:this.cameras.main.zoom,scrollX:this.cameras.main.scrollX,scrollY:this.cameras.main.scrollY},positions:Object.fromEntries([...this.entities].map(([id,e])=>[id,{x:e.x,y:e.y,kind:e.getData?.('kind'),species:e.getData?.('species')||null}]))}}
+ snapshot(){const treeWater=this.treeSprites.filter(t=>terrainTypeAt(t.getData('worldPoint'))===TERRAIN.WATER).length,moving=[...this.entities.values()].filter(e=>this.tweens.getTweensOf(e).length>0).length;return{recovery:'2026-09-17',freshness:{ageMs:updateAge(),tick:lastTick,failed:!!this.connectionFailed},selected:this.selected||null,version:'phaser-v1.6.4-spectator-profile',phaser:Phaser.VERSION,ready:!!canonical,worldModel:canonical?.worldModel?.version||null,terrain:this.grid?.counts||{},trees:this.treeSprites.length,treeWaterCollisions:treeWater,agents:[...this.entities.values()].filter(x=>x.getData?.('kind')==='agent').length,wildlife:[...this.entities.values()].filter(x=>x.getData?.('kind')==='wildlife').length,movingEntities:moving,assetErrors:[...assetErrors],decisionDNA:{protocol:canonical?.dna?.[0]?.protocol||null,decisionId:canonical?.dna?.[0]?.decision_id||null,action:canonical?.dna?.[0]?.action||null},agentArtModes:[...this.entities.values()].filter(x=>x.getData?.('kind')==='agent').map(x=>x.getData?.('artMode')||'unknown'),aiAgentMarkers:[...this.entities.values()].filter(x=>x.getData?.('kind')==='agent'&&x.getData?.('aiBadge')).length,embodimentState:{agents:[...this.entities.values()].filter(x=>x.getData?.('kind')==='agent').map(x=>({id:x.getData?.('id'),mode:x.getData?.('motionMode')||'unknown'})),wildlifeMoving:[...this.entities.values()].filter(x=>x.getData?.('kind')==='wildlife'&&x.getData?.('motionMode')==='moving').length},campVisualMode:this.campVisualMode||null,visualFixes:'visual-fixes-v1',naturalism:'naturalism-v1',embodiment:'embodiment-v2',habitatDepth:'habitat-depth-v1',quietWorld:'quiet-world-v1',coverEcology:'cover-ecology-v1',rangePresence:'range-presence-v1',ecologicalSigns:'ecological-signs-v1',travelWear:'travel-wear-v1',resourceLandscape:'resource-responsive-v1',resourceVisualState:this.resourceVisualState||null,rangePresenceCounts:{present:(canonical?.ecologySystem?.wildlife||[]).filter(x=>x.active&&x.localPresence!==false).length,outside:(canonical?.ecologySystem?.wildlife||[]).filter(x=>x.active&&x.localPresence===false).length},pulseMode:this.pulseMode||null,concealedWildlife:[...this.entities.values()].filter(x=>x.getData?.('kind')==='wildlife'&&(x.getData?.('visibility')??1)<.7).length,habitatDetail:this.habitatDetail||null,meadowRelief:this.meadowRelief||null,lightCycle:this.lightCycle||null,weatherMemory:this.weatherMemoryState||null,livingWorld:{routeVisuals:this.routeVisuals.length,canonicalRoutes:(canonical?.surfaceHistory?.routes||[]).filter(r=>(r.traversals||0)>=2).length,campWear:canonical?.surfaceHistory?.campWear?.uses||0,campWearVisuals:this.campWearVisuals.length,campWearState:this.campWearState||null,signVisuals:this.signVisuals.length,canonicalSigns:(canonical?.ecologySystem?.signs||[]).filter(s=>s.active&&(s.clarity??0)>.34&&(s.ageHours??0)<=30).length,trackVisuals:this.traceVisuals.length,canonicalTracks:(canonical?.ecologySystem?.traces||[]).filter(t=>t.active&&(t.clarity??0)>.38&&(t.ageHours??0)<=14&&(t.species!=='rabbit'||(t.clarity??0)>.55)).length,decisionCueId:this.decisionCue?.getData?.('decisionId')||null},camera:{mode:cameraMode,zoom:this.cameras.main.zoom,scrollX:this.cameras.main.scrollX,scrollY:this.cameras.main.scrollY},positions:Object.fromEntries([...this.entities].map(([id,e])=>[id,{x:e.x,y:e.y,kind:e.getData?.('kind'),species:e.getData?.('species')||null}]))}}
 }
 
 const game=new Phaser.Game({type:Phaser.AUTO,parent:'phaserWorld',width:window.innerWidth,height:window.innerHeight,backgroundColor:COLORS.meadow,pixelArt:false,antialias:true,roundPixels:false,scale:{mode:Phaser.Scale.RESIZE,autoCenter:Phaser.Scale.CENTER_BOTH},render:{antialias:true,powerPreference:'high-performance'},scene:[LivingWorld]});
-window.ChatGPTFarmPhaserDebug={snapshot:()=>sceneRef?.snapshot()||{ready:false},focusWorldUnit(x,y,zoom=1){if(!sceneRef)return false;cameraMode='free';sceneRef.cameras.main.stopFollow();const p=worldToPx({x,y});sceneRef.cameras.main.centerOn(p.x,p.y);sceneRef.setZoom(zoom);sceneRef.syncButtons();return true},simulateMove(id,to,duration=2200){const e=sceneRef?.entities.get(id);if(!e)return false;sceneRef.moveEntity(e,worldToPx(to),duration);return true},reload:()=>sceneRef?.loadState(false)};
+window.ChatGPTFarmPhaserDebug={snapshot:()=>sceneRef?.snapshot()||{ready:false},inspectAgent(id){if(!sceneRef?.entities.get(id))return false;sceneRef.showInspector({id,kind:'agent'});return true},focusWorldUnit(x,y,zoom=1){if(!sceneRef)return false;cameraMode='free';sceneRef.cameras.main.stopFollow();const p=worldToPx({x,y});sceneRef.cameras.main.centerOn(p.x,p.y);sceneRef.setZoom(zoom);sceneRef.syncButtons();return true},simulateMove(id,to,duration=2200){const e=sceneRef?.entities.get(id);if(!e)return false;sceneRef.moveEntity(e,worldToPx(to),duration);return true},reload:()=>sceneRef?.loadState(false)};
 })();

@@ -4,3 +4,64 @@
 
 /* Restore the spectator inspector without covering the camera controls. */
 [hidden]{display:none!important}.phInspector{right:12px;top:155px;bottom:155px;width:min(380px,calc(100% - 24px));padding:22px;border-radius:16px;overflow:auto;overscroll-behavior:contain;touch-action:pan-y}.phInspector h2{font-size:22px;margin:7px 30px 18px 0}.phInspector>small{letter-spacing:.16em;color:var(--muted)}.phInspector dl{margin:0}.phInspector dt{font-size:11px;text-transform:uppercase;letter-spacing:.09em;color:#aebcab;margin-top:16px}.phInspector dd{margin:5px 0 0;line-height:1.5;font-size:14px}.phInspector button{position:absolute;right:10px;top:10px;border:0;border-radius:8px;background:#293a2c;width:40px;height:40px;font-size:25px}.phStatus[data-freshness=stale] b,.phStatus[data-freshness=offline] b{color:#e7bb79}#phFreshness{display:block;font-size:10px;color:var(--muted);margin-top:3px}@media(max-width:620px){.phInspector{top:145px;bottom:115px;padding:18px}.phStatus b{font-size:8px;letter-spacing:.07em}.phBrand small{letter-spacing:.05em}.phTop{height:67px}}
+
+
+/* spectator-profile-v1 — visual-first autonomous agent inspector */
+.phInspector{width:min(430px,calc(100% - 24px));padding:20px 20px 22px;background:rgba(8,18,12,.92)}
+.phInspectTopline{display:flex;align-items:center;justify-content:space-between;gap:10px;padding-right:42px;min-height:24px}
+.phInspectTopline>small{font-size:10px;letter-spacing:.16em;color:var(--muted)}
+.phAutonomy{display:inline-flex;align-items:center;gap:5px;border:1px solid rgba(167,227,143,.28);border-radius:999px;padding:5px 8px;background:rgba(90,152,79,.13);color:#dfffd5;font-size:9px;font-weight:800;letter-spacing:.11em;white-space:nowrap}
+.phInspector h2{margin:7px 30px 12px 0;font-size:24px}
+.phAgentHero{display:grid;gap:10px}
+.phActivityCard{padding:14px 15px;border-radius:14px;border:1px solid rgba(167,227,143,.18);background:linear-gradient(145deg,rgba(72,118,63,.18),rgba(12,26,17,.72));box-shadow:inset 0 1px 0 rgba(255,255,255,.025)}
+.phActivityCard>span,.phDeepCard>small,.phQuickGrid small,.phDeepGrid small,.phRelationHead small{display:block;color:#a9bba6;font-size:9px;letter-spacing:.13em}
+.phActivityCard>strong{display:block;margin-top:6px;font-size:18px;line-height:1.22;color:#f4f9f1}
+.phActivityCard>p{margin:7px 0 0;color:#c3d0c0;font-size:12px;line-height:1.45}
+.phQuickGrid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:7px}
+.phQuickGrid>div,.phDeepGrid>div{min-width:0;padding:10px;border:1px solid rgba(195,231,186,.1);border-radius:11px;background:rgba(255,255,255,.025)}
+.phQuickGrid b,.phDeepGrid b{display:block;margin-top:4px;font-size:11px;line-height:1.25;color:#eef6eb;overflow-wrap:anywhere}
+.phInspectTabs{display:grid;grid-template-columns:repeat(3,1fr);gap:5px;margin:14px 0 10px;padding:4px;border:1px solid rgba(195,231,186,.1);border-radius:12px;background:rgba(0,0,0,.16)}
+.phInspectTabs button{position:static!important;width:auto!important;height:36px!important;border-radius:9px!important;background:transparent!important;font-size:11px!important;color:#aebcab!important}
+.phInspectTabs button.active{background:rgba(167,227,143,.13)!important;color:#efffe9!important;box-shadow:inset 0 0 0 1px rgba(167,227,143,.08)}
+.phInspectPanel{padding:2px 1px 4px}
+.phInspectPanel h3{margin:15px 0 8px;font-size:10px;letter-spacing:.12em;text-transform:uppercase;color:#d9e7d5}
+.phMeterStack,.phRelation{display:grid;gap:8px}
+.phMeter{display:grid;gap:5px}
+.phMeter>div{display:flex;align-items:center;justify-content:space-between;gap:8px;font-size:11px;color:#c2cec0}
+.phMeter b{font-size:10px;color:#e8f0e4}
+.phMeter>i{display:block;height:7px;border-radius:999px;background:rgba(255,255,255,.075);overflow:hidden}
+.phMeter>i>em{display:block;height:100%;border-radius:inherit;background:#80bd72}
+.phMeter.watch>i>em{background:#c5a66d}
+.phMeter.low>i>em{background:#c77768}
+.phRelation{padding:12px;border:1px solid rgba(195,231,186,.11);border-radius:13px;background:rgba(255,255,255,.02)}
+.phRelationHead{display:flex;align-items:end;justify-content:space-between;gap:12px;margin-bottom:3px}
+.phRelationHead strong{display:block;margin-top:3px;font-size:15px}
+.phRelationHead>span{font-size:9px;color:#91a28f;text-align:right}
+.phChips{display:flex;flex-wrap:wrap;gap:6px}
+.phChip{border:1px solid rgba(195,231,186,.12);border-radius:999px;padding:6px 9px;background:rgba(255,255,255,.035);color:#dce7d8;font-size:10px}
+.phEmpty{color:#8f9e8d;font-size:11px}
+.phDeepCard{margin-top:8px;padding:13px 14px;border:1px solid rgba(195,231,186,.11);border-radius:13px;background:rgba(255,255,255,.025)}
+.phDeepCard strong{display:block;margin-top:5px;font-size:15px;line-height:1.35}
+.phDeepCard p{margin:6px 0 0;color:#c4d0c1;font-size:12px;line-height:1.5}
+.phDeepGrid{display:grid;grid-template-columns:1fr 1fr;gap:7px;margin-top:8px}
+.phMemoryList{display:grid;gap:7px}
+.phMemory{padding:11px 12px;border:1px solid rgba(195,231,186,.1);border-radius:12px;background:rgba(255,255,255,.022)}
+.phMemory>span{font-size:8px;letter-spacing:.13em;color:#8fa38b}
+.phMemory p{margin:5px 0 6px;font-size:12px;line-height:1.42;color:#e1eae0}
+.phMemory small{font-size:9px;color:#91a18f}
+@media(max-width:620px){
+ .phInspector{left:8px;right:8px;top:138px;bottom:76px;width:auto;padding:16px 15px 18px;border-radius:15px}
+ .phInspector h2{font-size:21px;margin-bottom:10px}
+ .phActivityCard{padding:12px 13px}
+ .phActivityCard>strong{font-size:16px}
+ .phQuickGrid{gap:5px}
+ .phQuickGrid>div{padding:8px 7px}
+ .phQuickGrid b{font-size:10px}
+ .phInspectTabs{margin-top:11px}
+ .phDeepGrid{grid-template-columns:1fr 1fr}
+}
+@media(max-width:380px){
+ .phQuickGrid{grid-template-columns:1fr 1fr}
+ .phQuickGrid>div:last-child{grid-column:1/-1}
+ .phDeepGrid{grid-template-columns:1fr}
+}
