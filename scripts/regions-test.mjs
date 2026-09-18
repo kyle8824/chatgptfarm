@@ -1,0 +1,26 @@
+import assert from 'node:assert/strict';
+import {createWorld,migrateWorld,tickWithMind} from '../engine.js';
+import {FORAGE,siteCandidates,resolveSiteAction,advanceSites} from '../engine/regions.js';
+import {coordForPosition} from '../engine/spectator.js';
+
+const w=createWorld(),[mara,ivo]=w.agents;
+const original=structuredClone({resources:w.resources,history:w.history,agents:w.agents});
+migrateWorld(w);const first=structuredClone(w);migrateWorld(w);assert.deepEqual(w,first,'migration is idempotent');
+assert.deepEqual(w.resources,original.resources);assert.deepEqual(w.history,original.history);
+assert(!siteCandidates(w,mara).some(x=>x.id.startsWith('forage:')),'unknown sites stay out of choices');
+const survey=siteCandidates(w,mara).find(x=>x.id.startsWith('survey:'));
+await tickWithMind(w,{decide:async c=>({actionId:c.agent.id===mara.id?survey.id:'drink',brainMode:'ai',model:'test-fixture'})});
+assert(mara.siteKnowledge[FORAGE]);assert(!ivo.siteKnowledge[FORAGE]);
+assert.deepEqual(mara.activeAction.to,coordForPosition(FORAGE,w));
+assert.equal(w.discoveries.filter(x=>x.key===FORAGE).length,1);
+const forage=siteCandidates(w,mara).find(x=>x.id.startsWith('forage:'));
+const initialPool=w.resources.berries;
+for(let j=0;j<6;j++)assert(resolveSiteAction(w,mara,forage).success);
+assert.equal(w.regions.sites[FORAGE].quantity,0);assert.equal(mara.inventory.berries,12);assert.equal(w.resources.berries,initialPool);
+assert(!resolveSiteAction(w,mara,forage).success,'no harvest from exhausted site');
+mara.inventory.berries=0;
+assert(!siteCandidates(w,mara).some(x=>x.id.startsWith('forage:')),'remembered depletion prevents immediate retry');
+const h=w.regions.sites[FORAGE].lastRegrowthHour;w.day=Math.floor((h+24)/24);w.hour=(h+24)%24;advanceSites(w);assert.equal(w.regions.sites[FORAGE].quantity,3);advanceSites(w);assert.equal(w.regions.sites[FORAGE].quantity,3);
+const restored=migrateWorld(JSON.parse(JSON.stringify(w)));assert.equal(restored.regions.sites[FORAGE].quantity,3);assert(restored.agents[0].siteKnowledge[FORAGE]);
+assert.equal(w.worldModel.objects.filter(x=>x.id===FORAGE).length,1);
+console.log('Region tests passed: migration, private discovery, decision execution, movement, finite harvest, depletion memory, regrowth and reload.');
