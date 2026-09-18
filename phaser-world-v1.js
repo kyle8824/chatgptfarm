@@ -287,9 +287,150 @@ if(canonical.runtime){
  return;
 }
 const age=updateAge(),stale=!Number.isFinite(age)||age>playbackMs()*2;const status=$('#phWorldStatus');status.dataset.freshness=this.connectionFailed?'offline':stale?'stale':'current';status.querySelector('b').textContent=this.connectionFailed?'CONNECTION INTERRUPTED':stale?'UPDATES DELAYED':'WORLD CONNECTED';const minutes=Number.isFinite(age)?Math.floor(age/60000):null;status.title=minutes==null?'Update time unavailable':`Last saved ${minutes} minutes ago`;let note=$('#phFreshness');if(!note){note=document.createElement('small');note.id='phFreshness';status.append(note)}note.textContent=minutes==null?'Update time unknown':minutes<1?'Saved just now':`Saved ${minutes}m ago`;if(!Number.isFinite(age)||age>=playbackMs())$('#phFocus small').textContent='LAST RECORDED ACTIVITY';if(stale||this.connectionFailed){$('#phPulseText').textContent='Showing the last saved world. Waiting for a new update.'}if(this.decisionCue)this.decisionCue.setVisible(!stale);}
- ensureInspector(){if($('#phInspector'))return;const p=document.createElement('section');p.id='phInspector';p.className='phHud phInspector';p.hidden=true;p.setAttribute('role','dialog');p.setAttribute('aria-label','World details');p.innerHTML='<button id="phInspectClose" aria-label="Close details">×</button><small id="phInspectKind"></small><h2 id="phInspectTitle"></h2><div id="phInspectBody"></div>';$('#phaserShell').append(p);$('#phInspectClose').onclick=()=>{p.hidden=true;this.selected=null};document.addEventListener('keydown',e=>{if(e.key==='Escape'){p.hidden=true;this.selected=null}});}
- showInspector(selection){this.ensureInspector();this.selected=selection;const w=canonical;let d=selection.kind==='agent'?w.agents.find(x=>x.id===selection.id):selection.kind==='wildlife'?w.ecologySystem.wildlife.find(x=>x.id===selection.id):w.worldModel.objects.find(x=>x.id===selection.id);if(!d)return;$('#phInspector').hidden=false;$('#phInspectKind').textContent=selection.kind==='agent'?'PERSON':selection.kind==='wildlife'?'WILDLIFE':'WORLD OBJECT';$('#phInspectTitle').textContent=d.name||d.label||d.type;let rows=[];const add=(label,value)=>{if(value!==undefined&&value!==null&&value!=='')rows.push(`<dt>${escapeHtml(label)}</dt><dd>${escapeHtml(value)}</dd>`)};
- if(selection.kind==='agent'){const dna=w.dna?.find(x=>x.agent_id===d.id);add('Goal',d.mind?.currentGoal);add('Last action',d.activeAction?.label||d.currentAction);add('Result',dna?.physics?.outcome?.detail);add('Decision',dna?.mind?.decision_summary);add('Decision source',dna?.mind?.brain_mode);add('Needs',Object.entries(d.needs||{}).map(([k,v])=>`${k==='hunger'?'satiety':k} ${Math.round(v)}%`).join(' · '));add('Carrying',Object.entries(d.inventory||{}).filter(([,v])=>v>0).map(([k,v])=>`${v} ${k.replace(/([A-Z])/g,' $1').toLowerCase()}`).join(', ')||'Nothing');add('Learned skills',Object.keys(d.skills||{}).join(', ')||'None yet');add('Memories',d.memories?.length||0);add('Recent memory',d.memories?.[0]?.text);add('Decision record',dna?.decision_id)}else if(selection.kind==='wildlife'){add('Species',d.species);add('Activity',d.activity);add('Behavior',d.behavior);add('Presence',d.localPresence===false?'Outside the basin':'In the basin');add('Drives',Object.entries(d.needs||{}).map(([k,v])=>`${k} ${Math.round(v)}%`).join(' · '));add('Recorded movements',d.history?.length||0)}else{add('Type',d.type?.replaceAll('_',' '));add('Material',typeof d.material==='string'?d.material:JSON.stringify(d.material||{}));add('Location',d.zone);add('Last event',d.history?.at(-1)?.detail);const key={berry_patch:'berries',stone_field:'stones',clay_bank:'clay',reed_marsh:'reeds'}[d.type];if(key)add('Available',w.resources?.[key]);add('State',Object.entries(d.state||{}).map(([k,v])=>`${k}: ${typeof v==='object'?JSON.stringify(v):v}`).join(' · '))}add('World record',`Day ${w.day}, ${String(w.hour).padStart(2,'0')}:00`);$('#phInspectBody').innerHTML=`<dl>${rows.join('')}</dl>`;}
+ ensureInspector(){
+    if($('#phInspector'))return;
+    const p=document.createElement('section');
+    p.id='phInspector';
+    p.className='phHud phInspector';
+    p.hidden=true;
+    p.setAttribute('role','dialog');
+    p.setAttribute('aria-label','World details');
+    p.innerHTML='<button id="phInspectClose" aria-label="Close details">×</button><div class="phInspectTopline"><small id="phInspectKind"></small><span id="phInspectAutonomy" class="phAutonomy" hidden>✦ AI CONTROLLED</span></div><h2 id="phInspectTitle"></h2><div id="phInspectBody"></div>';
+    $('#phaserShell').append(p);
+    $('#phInspectClose').onclick=()=>{p.hidden=true;this.selected=null};
+    document.addEventListener('keydown',e=>{if(e.key==='Escape'){p.hidden=true;this.selected=null}});
+  }
+ showInspector(selection){
+    this.ensureInspector();
+    this.selected=selection;
+    const w=canonical;
+    let d=selection.kind==='agent'
+      ? w.agents.find(x=>x.id===selection.id)
+      : selection.kind==='wildlife'
+        ? w.ecologySystem.wildlife.find(x=>x.id===selection.id)
+        : w.worldModel.objects.find(x=>x.id===selection.id);
+    if(!d)return;
+
+    const inspector=$('#phInspector');
+    const body=$('#phInspectBody');
+    const autonomy=$('#phInspectAutonomy');
+    const priorTab=body?.querySelector?.('[data-ph-tab].active')?.dataset?.phTab||'overview';
+
+    inspector.hidden=false;
+    $('#phInspectKind').textContent=selection.kind==='agent'?'PERSON':selection.kind==='wildlife'?'WILDLIFE':'WORLD OBJECT';
+    $('#phInspectTitle').textContent=d.name||d.label||d.type;
+    autonomy.hidden=selection.kind!=='agent';
+
+    if(selection.kind==='agent'){
+      const dna=(w.dna||[]).find(x=>x.agent_id===d.id);
+      const {other,rel}=relationshipFor(w,d);
+      const phase=currentPhase(d);
+      const pct=v=>clamp(Math.round(Number(v)||0),0,100);
+      const activity=d.activeAction?.label||d.currentAction||'Observing the basin';
+      const goal=d.mind?.currentGoal||'';
+      const outcome=dna?.physics?.outcome?.detail||'';
+      const needs=[
+        ['Hydration',d.needs?.hydration],
+        ['Satiety',d.needs?.hunger],
+        ['Energy',d.needs?.energy],
+        ['Warmth',d.needs?.warmth]
+      ].filter(([,v])=>Number.isFinite(Number(v)));
+      const meter=(label,value)=>{
+        const v=pct(value),tone=v<35?'low':v<60?'watch':'good';
+        return `<div class="phMeter ${tone}"><div><span>${escapeHtml(label)}</span><b>${v}%</b></div><i><em style="width:${v}%"></em></i></div>`;
+      };
+      const inventory=Object.entries(d.inventory||{})
+        .filter(([,v])=>Number(v)>0)
+        .map(([k,v])=>`<span class="phChip">${escapeHtml(v)} × ${escapeHtml(friendlyLabel(k))}</span>`)
+        .join('')||'<span class="phEmpty">Nothing carried</span>';
+      const skills=Object.keys(d.skills||{})
+        .map(k=>`<span class="phChip">${escapeHtml(friendlyLabel(k))}</span>`)
+        .join('')||'<span class="phEmpty">No learned skills yet</span>';
+      const memories=(d.memories||[]).slice(0,5)
+        .map(m=>`<article class="phMemory"><span>MEMORY</span><p>${escapeHtml(m.text||m.detail||'Recorded experience')}</p><small>${escapeHtml((m.tags||[]).slice(0,3).join(' · ')||'personal experience')}</small></article>`)
+        .join('')||'<p class="phEmpty">No memories recorded yet.</p>';
+      const relation=other
+        ? `<div class="phRelationHead"><div><small>RELATIONSHIP</small><strong>${escapeHtml(other.name)}</strong></div><span>${rel?.lastInteraction?'last interacted '+escapeHtml(String(rel.lastInteraction)):'no recent interaction'}</span></div>${meter('Trust',rel?.trust??0)}${meter('Familiarity',rel?.familiarity??0)}${meter('Affinity',rel?.affinity??50)}`
+        : '<p class="phEmpty">No other person is known yet.</p>';
+      const lowest=needs.slice().sort((a,b)=>Number(a[1])-Number(b[1]))[0];
+      const location=friendlyLabel(d.position||'unknown');
+      const skillCount=Object.keys(d.skills||{}).length;
+      const memoryCount=(d.memories||[]).length;
+
+      body.innerHTML=`
+        <div class="phAgentHero">
+          <div class="phActivityCard">
+            <span>RIGHT NOW · ${escapeHtml(phase.label)}</span>
+            <strong>${escapeHtml(activity)}</strong>
+            <p>${escapeHtml(goal?`Goal: ${goal}`:outcome||'Acting from the current world state.')}</p>
+          </div>
+          <div class="phQuickGrid">
+            <div><small>LOCATION</small><b>${escapeHtml(location)}</b></div>
+            <div><small>WATCH</small><b>${escapeHtml(lowest?lowest[0]:'Stable')}</b></div>
+            <div><small>EXPERIENCE</small><b>${memoryCount} memories</b></div>
+          </div>
+        </div>
+        <nav class="phInspectTabs" role="tablist" aria-label="${escapeHtml(d.name)} details">
+          <button type="button" data-ph-tab="overview">Overview</button>
+          <button type="button" data-ph-tab="mind">Mind</button>
+          <button type="button" data-ph-tab="memory">Memory</button>
+        </nav>
+        <section class="phInspectPanel" data-ph-panel="overview">
+          <h3>Condition</h3>
+          <div class="phMeterStack">${needs.map(([k,v])=>meter(k,v)).join('')}</div>
+          <h3>Connection</h3>
+          <div class="phRelation">${relation}</div>
+          <h3>Carrying</h3>
+          <div class="phChips">${inventory}</div>
+        </section>
+        <section class="phInspectPanel" data-ph-panel="mind" hidden>
+          <div class="phDeepCard"><small>CURRENT GOAL</small><strong>${escapeHtml(goal||'No explicit goal recorded')}</strong></div>
+          <div class="phDeepCard"><small>DECISION</small><p>${escapeHtml(dna?.mind?.decision_summary||dna?.mind?.intent||'No decision summary recorded for this tick.')}</p></div>
+          <div class="phDeepGrid">
+            <div><small>DECISION MODE</small><b>${escapeHtml(friendlyLabel(dna?.mind?.brain_mode||w.meta?.mindMode||'autonomous'))}</b></div>
+            <div><small>LEARNED SKILLS</small><b>${skillCount}</b></div>
+            <div><small>DECISION ID</small><b>${escapeHtml(dna?.decision_id||'—')}</b></div>
+            <div><small>WORLD TIME</small><b>Day ${escapeHtml(w.day)}, ${String(w.hour).padStart(2,'0')}:00</b></div>
+          </div>
+          <h3>Learned skills</h3>
+          <div class="phChips">${skills}</div>
+        </section>
+        <section class="phInspectPanel" data-ph-panel="memory" hidden>
+          <div class="phDeepCard"><small>LATEST OUTCOME</small><p>${escapeHtml(outcome||'No outcome detail recorded for the current decision.')}</p></div>
+          <h3>Recent memories</h3>
+          <div class="phMemoryList">${memories}</div>
+        </section>`;
+      const activate=tab=>{
+        body.querySelectorAll('[data-ph-tab]').forEach(b=>b.classList.toggle('active',b.dataset.phTab===tab));
+        body.querySelectorAll('[data-ph-panel]').forEach(p=>p.hidden=p.dataset.phPanel!==tab);
+      };
+      body.querySelectorAll('[data-ph-tab]').forEach(b=>b.addEventListener('click',()=>activate(b.dataset.phTab)));
+      activate(body.querySelector(`[data-ph-tab="${priorTab}"]`)?priorTab:'overview');
+      return;
+    }
+
+    autonomy.hidden=true;
+    let rows=[];
+    const add=(label,value)=>{if(value!==undefined&&value!==null&&value!=='')rows.push(`<dt>${escapeHtml(label)}</dt><dd>${escapeHtml(value)}</dd>`)};
+    if(selection.kind==='wildlife'){
+      add('Species',d.species);
+      add('Activity',d.activity);
+      add('Behavior',d.behavior);
+      add('Presence',d.localPresence===false?'Outside the basin':'In the basin');
+      add('Drives',Object.entries(d.needs||{}).map(([k,v])=>`${k} ${Math.round(v)}%`).join(' · '));
+      add('Recorded movements',d.history?.length||0);
+    }else{
+      add('Type',d.type?.replaceAll('_',' '));
+      add('Material',typeof d.material==='string'?d.material:JSON.stringify(d.material||{}));
+      add('Location',d.zone);
+      add('Last event',d.history?.at(-1)?.detail);
+      const key={berry_patch:'berries',stone_field:'stones',clay_bank:'clay',reed_marsh:'reeds'}[d.type];
+      if(key)add('Available',w.resources?.[key]);
+      add('State',Object.entries(d.state||{}).map(([k,v])=>`${k}: ${typeof v==='object'?JSON.stringify(v):v}`).join(' · '));
+    }
+    add('World record',`Day ${w.day}, ${String(w.hour).padStart(2,'0')}:00`);
+    body.innerHTML=`<dl>${rows.join('')}</dl>`;
+  }
  inspectAt(p){const cam=this.cameras.main,q=cam.getWorldPoint(p.x,p.y);let chosen=null,best=Infinity;for(const [id,e] of this.entities){const bounds=e.getBounds(),cx=e.x,cy=e.y-(e.getData('kind')==='agent'?22:12),d=Math.hypot(cx-q.x,cy-q.y);if((bounds.contains(q.x,q.y)||d<26/cam.zoom)&&d<best){best=d;chosen={id,kind:e.getData('kind')}}}if(!chosen){const point=pxToWorld(q);for(const o of canonical.worldModel?.objects||[]){if(o.parentId||o.state?.active===false||!o.position)continue;let d=o.type==='creek_segment'?creekDistance(point):dist(point,o.position);if(d<Math.max(1.4,objectRadiusUnits(o))&&d<best){best=d;chosen={id:o.id,kind:'object'}}}}if(chosen)this.showInspector(chosen);}
  wireInput(){const cam=this.cameras.main;this.input.addPointer(1);const active=()=>this.input.manager.pointers.filter(p=>p.isDown);const beginPinch=()=>{const [a,b]=active();if(!a||!b)return;this.drag=null;const mid={x:(a.x+b.x)/2,y:(a.y+b.y)/2};this.pinch={distance:Math.hypot(a.x-b.x,a.y-b.y),zoom:cam.zoom,anchor:cam.getWorldPoint(mid.x,mid.y)};cameraMode='free';cam.stopFollow();this.syncButtons()};this.input.on('pointerdown',p=>{if(active().length>=2){beginPinch();return}this.drag={x:p.x,y:p.y,scrollX:cam.scrollX,scrollY:cam.scrollY,moved:false}});this.input.on('pointermove',p=>{if(this.pinch){const [a,b]=active();if(!a||!b)return;const mid={x:(a.x+b.x)/2,y:(a.y+b.y)/2};this.setZoom(this.pinch.zoom*Math.hypot(a.x-b.x,a.y-b.y)/Math.max(1,this.pinch.distance));cam.scrollX=this.pinch.anchor.x-cam.width/2-(mid.x-cam.width/2)/cam.zoom;cam.scrollY=this.pinch.anchor.y-cam.height/2-(mid.y-cam.height/2)/cam.zoom;return}if(!this.drag||!p.isDown)return;const dx=p.x-this.drag.x,dy=p.y-this.drag.y;if(this.drag.moved||Math.hypot(dx,dy)>7){this.drag.moved=true;cameraMode='free';cam.stopFollow();cam.scrollX=this.drag.scrollX-dx/cam.zoom;cam.scrollY=this.drag.scrollY-dy/cam.zoom;this.syncButtons()}});const end=p=>{if(this.pinch){if(active().length<2)this.pinch=null;this.drag=null;return}if(this.drag&&!this.drag.moved)this.inspectAt(p);this.drag=null};this.input.on('pointerup',end);this.input.on('pointerupoutside',()=>{this.drag=null;this.pinch=null});this.input.on('gameout',()=>{this.drag=null;this.pinch=null});this.input.on('wheel',(p,_go,_dx,dy)=>{const anchor=cam.getWorldPoint(p.x,p.y);cameraMode='free';cam.stopFollow();this.setZoom(cam.zoom*Math.exp(-dy*.001));cam.scrollX=anchor.x-cam.width/2-(p.x-cam.width/2)/cam.zoom;cam.scrollY=anchor.y-cam.height/2-(p.y-cam.height/2)/cam.zoom;this.syncButtons()});}
 
