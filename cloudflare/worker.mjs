@@ -1,6 +1,11 @@
 import {DurableObject} from 'cloudflare:workers';
 import {WorldController} from './world.mjs';
-const json=(data,status=200)=>Response.json(data,{status,headers:{'Cache-Control':'no-store'}});
+const json=(data,status=200)=>Response.json(data,{status,headers:{
+  'Cache-Control':'no-store',
+  // The public site remains on Vercel during the domain migration and reads
+  // this public spectator state. Administrative POSTs still require the key.
+  'Access-Control-Allow-Origin':'*'
+}});
 export class FarmWorld extends DurableObject {
   constructor(ctx,env){super(ctx,env);this.world=new WorldController(ctx.storage,env);this.env=env;}
   async alarm(){await this.world.alarm();}
