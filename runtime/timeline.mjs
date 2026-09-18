@@ -56,7 +56,12 @@ export class Timeline {
     return operation;
   }
   snapshot() {
-    const r=this.record, now=this.now(), t=Math.max(0,Math.min(1,(now-r.start)/(r.end-r.start)));
+    return snapshotTransition(this.record,this.now());
+  }
+}
+
+export function snapshotTransition(r, now) {
+    const t=Math.max(0,Math.min(1,(now-r.start)/(r.end-r.start)));
     const w=copy(r.before);
     w.runtime={version:1,serverTime:now,start:r.start,end:r.end,revision:r.after.meta.tickNumber,
       status:now>=r.end?'catching-up':'running',decisionSource:r.after.meta.mindMode||'fallback'};
@@ -82,5 +87,4 @@ export class Timeline {
       animal.behavior=next.behavior;
     }
     return w;
-  }
 }
