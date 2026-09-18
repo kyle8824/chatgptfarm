@@ -1,0 +1,17 @@
+{
+  "name": "chatgptfarm-cloudflare",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "build": "node build.mjs",
+    "test": "node test.mjs",
+    "deploy": "npm run build && wrangler deploy",
+    "check": "npm run build && wrangler deploy --dry-run",
+    "test:worker": "node workerd-test.mjs"
+  },
+  "devDependencies": {
+    "wrangler": "4.134.0",
+    "miniflare": "5.20260917.0-alpha",
+    "esbuild": "0.28.1"
+  }
+}
