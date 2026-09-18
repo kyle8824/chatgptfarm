@@ -65,3 +65,24 @@
  .phQuickGrid>div:last-child{grid-column:1/-1}
  .phDeepGrid{grid-template-columns:1fr}
 }
+
+
+/* spectator-cleanup-v1 — clearer dismissal + both-agent status */
+.phFocus{min-height:82px}
+.phAgentsNow{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px;margin-top:6px}
+.phAgentNow{min-width:0;display:grid;grid-template-columns:auto minmax(0,1fr);column-gap:8px;row-gap:2px;align-items:baseline;padding:7px 9px;border-radius:10px;background:rgba(255,255,255,.025);border:1px solid rgba(195,231,186,.08)}
+.phAgentNow b{font-size:11px;color:#eff7ec}
+.phAgentNow span{min-width:0;font-size:11px;color:#cbd7c8;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.phAgentNow em{grid-column:1/-1;font-style:normal;font-size:8px;letter-spacing:.08em;color:#91a28f;text-transform:uppercase}
+@media(max-width:620px){
+ .phFocus{bottom:max(58px,calc(env(safe-area-inset-bottom) + 58px));min-height:76px;padding:8px 10px}
+ .phAgentsNow{gap:5px;margin-top:4px}
+ .phAgentNow{padding:6px 7px;column-gap:5px}
+ .phAgentNow b,.phAgentNow span{font-size:10px}
+ .phAgentNow em{font-size:7px}
+}
+
+
+/* ai-model-key-v1 */
+.phAiKey{display:block;margin-top:4px;font-size:9px;letter-spacing:.08em;color:#cfe7c7;white-space:nowrap}
+@media(max-width:620px){.phAiKey{font-size:8px;letter-spacing:.03em}}
