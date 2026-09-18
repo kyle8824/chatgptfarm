@@ -1,5 +1,5 @@
 {
-  "name": "chatgptfarm-runtime-preview",
+  "name": "chatgptfarm",
   "main": "worker.mjs",
   "compatibility_date": "2026-09-01",
   "workers_dev": true,
