@@ -1,0 +1,26 @@
+name: Cloudflare Runtime Validation
+on:
+  pull_request:
+    paths: ['cloudflare/**', 'runtime/**', 'engine/**', 'engine.js', 'mind.js', 'phaser-world-v1.js', '.github/workflows/cloudflare-runtime.yml']
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: npm
+          cache-dependency-path: cloudflare/package-lock.json
+      - run: npm ci --prefix cloudflare
+      - run: npm test
+      - run: node scripts/runtime-test.mjs
+      - run: npm test --prefix cloudflare
+      - run: npm run test:worker --prefix cloudflare
+      - run: npm run check --prefix cloudflare
+        env:
+          WRANGLER_SEND_METRICS: 'false'

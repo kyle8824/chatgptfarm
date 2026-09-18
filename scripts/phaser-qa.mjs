@@ -39,16 +39,18 @@ for(const [name,id] of [['MARA','agent-mara'],['IVO','agent-ivo']]){
 await page.getByRole('button',{name:'AUTO',exact:true}).click();await page.waitForTimeout(350);
 const habitatDeer=state.ecologySystem?.wildlife?.find(x=>x.active&&x.localPresence!==false&&x.species==='deer');if(habitatDeer){await page.evaluate(({x,y})=>window.ChatGPTFarmPhaserDebug.focusWorldUnit(x,y,.95),habitatDeer.position);await page.waitForTimeout(250);await page.screenshot({path:'phaser-qa/mobile-wildlife-habitat.png'});}
 
-let before=(await snap()).positions['W-DEER-001'];
-if(!before)failures.push('missing deer for movement QA');
+const movementSubject=state.ecologySystem?.wildlife?.find(x=>x.active&&x.localPresence!==false&&x.species!=='fish');
+const movementId=movementSubject?.id;
+let before=movementId?(await snap()).positions[movementId]:null;
+if(!before)failures.push('missing visible land animal for movement QA');
 else{
  const targetWorld={x:45,y:36},targetPx={x:targetWorld.x*24,y:(100-targetWorld.y)*24};
- await page.evaluate(({to})=>window.ChatGPTFarmPhaserDebug.simulateMove('W-DEER-001',to,2400),{to:targetWorld});
- await page.waitForTimeout(950);const mid=(await snap()).positions['W-DEER-001'];
- await page.waitForTimeout(1900);const end=(await snap()).positions['W-DEER-001'];
+ await page.evaluate(({id,to})=>window.ChatGPTFarmPhaserDebug.simulateMove(id,to,2400),{id:movementId,to:targetWorld});
+ await page.waitForTimeout(950);const mid=(await snap()).positions[movementId];
+ await page.waitForTimeout(1900);const end=(await snap()).positions[movementId];
  const d0=Math.hypot(mid.x-before.x,mid.y-before.y),d1=Math.hypot(mid.x-targetPx.x,mid.y-targetPx.y),de=Math.hypot(end.x-targetPx.x,end.y-targetPx.y);
- if(!(d0>5&&d1>5))failures.push(`deer did not visibly interpolate through a midpoint (${d0.toFixed(1)}, ${d1.toFixed(1)})`);
- if(de>4)failures.push(`deer did not reach visible movement target (${de.toFixed(1)}px)`);
+ if(!(d0>5&&d1>5))failures.push(`land animal did not visibly interpolate through a midpoint (${d0.toFixed(1)}, ${d1.toFixed(1)})`);
+ if(de>4)failures.push(`land animal did not reach visible movement target (${de.toFixed(1)}px)`);
  await page.evaluate(()=>window.ChatGPTFarmPhaserDebug.focusWorldUnit(45,36,.95));await page.waitForTimeout(250);await page.screenshot({path:'phaser-qa/mobile-movement-proof.png'});
 }
 

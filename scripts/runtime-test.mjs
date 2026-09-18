@@ -1,0 +1,31 @@
+import assert from 'node:assert/strict';
+import fs from 'node:fs/promises';
+import {Timeline} from '../runtime/timeline.mjs';
+const seed=JSON.parse(await fs.readFile(new URL('../world/state.json',import.meta.url),'utf8'));
+let time=1000000,stored=null,writes=0,fail=false;
+const options={seed,now:()=>time,duration:150000,
+  load:async()=>structuredClone(stored),save:async r=>{if(fail)throw Error('disk full');stored=structuredClone(r);writes++;}};
+const runtime=await new Timeline(options).init();
+const start=runtime.snapshot();
+assert.deepEqual(start.agents.map(a=>a.inventory),seed.agents.map(a=>a.inventory));
+assert.deepEqual(start.dna,seed.dna,'Unfinished outcomes cannot leak');
+time+=60000;
+const middle=runtime.snapshot();
+assert(middle.ecologySystem.wildlife.some((a,i)=>a.position.x!==start.ecologySystem.wildlife[i].position.x||a.position.y!==start.ecologySystem.wildlife[i].position.y),'Wildlife must actually advance');
+const restarted=await new Timeline(options).init();
+assert.deepEqual(restarted.snapshot(),middle,'Restart resumes exact shared motion');
+time+=90000;
+await Promise.all(Array.from({length:8},()=>runtime.advance()));
+assert.equal(writes,2,'Concurrent viewers cannot advance the world twice');
+assert.equal(runtime.snapshot().meta.tickNumber,(seed.meta.tickNumber||0)+1);
+assert(runtime.snapshot().dna.length>=start.dna.length);
+time+=150000;fail=true;
+await assert.rejects(runtime.advance(),/disk full/);
+assert.equal(runtime.snapshot().meta.tickNumber,(seed.meta.tickNumber||0)+1,'Failed saves cannot publish');
+fail=false;await runtime.advance();
+// No viewer requests for eight hours. Recover all elapsed transitions, with bounded work per call.
+time+=8*3600000;
+for(let i=0;i<10&&runtime.record.end<=time;i++)await runtime.advance();
+assert(runtime.record.end>time,'Runtime resumes after downtime');
+assert(runtime.snapshot().agents.every(a=>a.memories.length>0));
+console.log('PASS shared timeline, real wildlife movement, restart, concurrent readers, persistence failure, downtime recovery');

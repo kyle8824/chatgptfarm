@@ -1,0 +1,10 @@
+import fs from 'node:fs/promises';
+const root=new URL('../',import.meta.url),out=new URL('./public/',import.meta.url);
+await fs.mkdir(out,{recursive:true});
+for(const file of ['phaser-world.css','phaser-world-v1.js'])await fs.copyFile(new URL(file,root),new URL(file,out));
+let html=await fs.readFile(new URL('phaser.html',root),'utf8');
+html=html.replace('<script src="phaser-world-v1.js', '<script>window.CHATGPTFARM_RUNTIME_URL=location.origin;</script><script src="phaser-world-v1.js');
+html=html.replace('<body>','<body><script>if(location.hostname.endsWith(".workers.dev"))addEventListener("DOMContentLoaded",()=>{const a=document.createElement("a");a.href="/setup.html";a.textContent="Preview setup";a.style.cssText="position:fixed;bottom:8px;left:8px;z-index:10000;background:#17251b;color:white;padding:8px;border-radius:8px";document.body.append(a)})</script>');
+await fs.writeFile(new URL('index.html',out),html);
+await fs.copyFile(new URL('./setup.html',import.meta.url),new URL('setup.html',out));
+console.log('Built Cloudflare living-world assets');
