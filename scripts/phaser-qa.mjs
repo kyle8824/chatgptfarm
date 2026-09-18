@@ -7,6 +7,7 @@ const base=process.env.BASE_URL||'http://127.0.0.1:4173/phaser.html';
 fs.mkdirSync('phaser-qa',{recursive:true});
 let state=migrateWorld(JSON.parse(fs.readFileSync('world/state.json','utf8')));
 advanceEcology(state);
+const qaMara=state.agents.find(a=>a.id==='agent-mara');if(qaMara)qaMara.memories.unshift({id:'M-QA-NESTED',text:'Ivo told me: Mara told me: Ivo told me: The creek crossing is unsafe after rain.',importance:8,tags:['social','water'],source:'social:agent-ivo:M-QA',confidence:.8,lastSeen:`${state.day}:${state.hour}`});
 state.meta.lastAdvancedAt=new Date().toISOString();
 state.surfaceHistory={version:'surface-history-1',routes:[{id:'ROUTE-QA-VISUAL',key:'43,31|64,34',from:{x:43,y:31},to:{x:64,y:34},traversals:5,agents:{'agent-mara':3,'agent-ivo':2},firstUsed:{day:state.day,hour:Math.max(0,state.hour-5)},lastUsed:{day:state.day,hour:state.hour},lastActionId:'qa_walk'}],campWear:{uses:12,agents:{'agent-mara':7,'agent-ivo':5},lastUsed:{day:state.day,hour:state.hour}}};
 const browser=await chromium.launch({headless:true});
@@ -22,7 +23,7 @@ try{await page.waitForSelector('#phLoading.hidden',{state:'attached',timeout:100
 await page.waitForTimeout(1200);
 const snap=()=>page.evaluate(()=>window.ChatGPTFarmPhaserDebug.snapshot());
 let s=await snap();
-if(s.version!=='phaser-v1.6.4-spectator-profile')failures.push(`wrong renderer: ${s.version}`);
+if(s.version!=='phaser-v1.6.5-spectator-cleanup')failures.push(`wrong renderer: ${s.version}`);
 if(!String(s.phaser||'').startsWith('3.'))failures.push(`Phaser failed to initialize: ${s.phaser}`);
 if(s.agents!==2)failures.push(`expected 2 agents, got ${s.agents}`);
 const expectedPresentWildlife=(state.ecologySystem?.wildlife||[]).filter(x=>x.active&&x.localPresence!==false).length;if(s.wildlife!==expectedPresentWildlife)failures.push(`renderer wildlife count drift: ${s.wildlife} != canonical ${expectedPresentWildlife}`);
@@ -35,6 +36,8 @@ await page.screenshot({path:'phaser-qa/mobile-auto.png'});const savedResources={
 
 
 if(s.aiAgentMarkers!==2)failures.push(`expected 2 visible AI identity markers, got ${s.aiAgentMarkers}`);
+const agentNow=await page.evaluate(()=>[...document.querySelectorAll('[data-agent-now]')].map(x=>x.textContent.replace(/\s+/g,' ').trim()));
+if(agentNow.length!==2||!agentNow.some(x=>/Mara/i.test(x))||!agentNow.some(x=>/Ivo/i.test(x)))failures.push(`Agents Now panel does not show both agents: ${agentNow.join(' | ')}`);
 const profileOpened=await page.evaluate(()=>window.ChatGPTFarmPhaserDebug.inspectAgent('agent-mara'));
 if(!profileOpened)failures.push('Mara spectator profile could not be opened');
 else{
@@ -55,8 +58,19 @@ else{
  if(!(await page.locator('[data-ph-panel="mind"]').isVisible()))failures.push('Mind tab did not become visible');
  await page.getByRole('button',{name:'Memory',exact:true}).click();
  if(!(await page.locator('[data-ph-panel="memory"]').isVisible()))failures.push('Memory tab did not become visible');
+ const memoryText=(await page.locator('[data-ph-panel="memory"]').textContent())||'';
+ if(/told me:\s*.*told me:/i.test(memoryText))failures.push(`nested hearsay leaked into memory UI: ${memoryText.replace(/\s+/g,' ').trim()}`);
+ if(!/SHARED BY IVO/i.test(memoryText)||!/creek crossing is unsafe after rain/i.test(memoryText))failures.push(`flattened shared-memory presentation missing: ${memoryText.replace(/\s+/g,' ').trim()}`);
  await page.screenshot({path:'phaser-qa/mobile-agent-profile.png'});
- await page.locator('#phInspectClose').click();
+ await page.locator('#phWorldStatus').click();
+ if(await page.locator('#phInspector').isVisible())failures.push('clicking outside the inspector did not close it');
+ const reopened=await page.evaluate(()=>window.ChatGPTFarmPhaserDebug.inspectAgent('agent-mara'));
+ if(!reopened)failures.push('could not reopen Mara profile for camera-dismiss QA');
+ else{
+  await page.getByRole('button',{name:'IVO',exact:true}).click();
+  if(await page.locator('#phInspector').isVisible())failures.push('IVO camera button did not close the inspector');
+  if((await snap()).camera.mode!=='agent-ivo')failures.push('IVO camera button did not move focus after closing inspector');
+ }
 }
 
 for(const [name,id] of [['MARA','agent-mara'],['IVO','agent-ivo']]){
@@ -64,6 +78,23 @@ for(const [name,id] of [['MARA','agent-mara'],['IVO','agent-ivo']]){
 }
 await page.getByRole('button',{name:'AUTO',exact:true}).click();await page.waitForTimeout(350);
 const habitatDeer=state.ecologySystem?.wildlife?.find(x=>x.active&&x.localPresence!==false&&x.species==='deer');if(habitatDeer){await page.evaluate(({x,y})=>window.ChatGPTFarmPhaserDebug.focusWorldUnit(x,y,.95),habitatDeer.position);await page.waitForTimeout(250);await page.screenshot({path:'phaser-qa/mobile-wildlife-habitat.png'});}
+
+const campfire=state.worldModel?.objects?.find(x=>x.type==='camp_fire');
+if(campfire){
+ const opened=await page.evaluate(id=>window.ChatGPTFarmPhaserDebug.inspectObject(id),campfire.id);
+ if(!opened)failures.push('campfire inspector could not be opened');
+ else{
+  const rows=await page.evaluate(()=>[...document.querySelectorAll('#phInspectBody dt')].map(x=>x.textContent.trim()));
+  const bodyText=(await page.locator('#phInspectBody').textContent())||'';
+  const material=campfire.material;
+  const materiallyEmpty=!material||(typeof material==='string'&&!material.trim())||(typeof material==='object'&&!Array.isArray(material)&&Object.keys(material).length===0);
+  if(materiallyEmpty&&rows.includes('Material'))failures.push('campfire inspector still shows an empty Material row');
+  if(/Material\s*\{\}/i.test(bodyText))failures.push('campfire inspector exposes empty material JSON');
+  if(!/Fire state/i.test(bodyText))failures.push('campfire inspector does not explain whether the fire is burning or out');
+  await page.keyboard.press('Escape');
+  if(await page.locator('#phInspector').isVisible())failures.push('Escape did not close the inspector');
+ }
+}
 
 const movementSubject=state.ecologySystem?.wildlife?.find(x=>x.active&&x.localPresence!==false&&x.species!=='fish');
 const movementId=movementSubject?.id;
