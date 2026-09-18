@@ -64,7 +64,12 @@ class LivingWorld extends Phaser.Scene{
  }
  async create(){
   sceneRef=this;this.cameras.main.setBackgroundColor(COLORS.meadow);this.cameras.main.setBounds(0,0,WORLD,WORLD);this.cameras.main.roundPixels=true;this.cameras.main.setZoom(innerWidth<650?1.18:1.12);
-  this.makeFallbackTextures();this.makeTerrainTextures();this.wireInput();this.wireUI();await this.loadState(true);this.time.addEvent({delay:POLL_MS,loop:true,callback:()=>this.loadState(false)});this.time.addEvent({delay:1000,loop:true,callback:()=>this.updateFreshness()});
+  this.makeFallbackTextures();this.makeTerrainTextures();this.wireInput();this.wireUI();await this.loadState(true);
+  // Network freshness follows wall-clock time. Phaser's scene clock can be
+  // throttled or paused by the browser, which previously left a loaded world
+  // showing one transition forever on some phones.
+  this.pollTimer=setInterval(()=>this.loadState(false),POLL_MS);
+  this.freshnessTimer=setInterval(()=>this.updateFreshness(),1000);
  }
  makeFallbackTextures(){
   const make=(key,draw,w=72,h=88)=>{if(this.textures.exists(key))return;const g=this.make.graphics({x:0,y:0,add:false});draw(g,w,h);g.generateTexture(key,w,h);g.destroy()};
