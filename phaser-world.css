@@ -81,3 +81,8 @@
  .phAgentNow b,.phAgentNow span{font-size:10px}
  .phAgentNow em{font-size:7px}
 }
+
+
+/* ai-model-key-v1 */
+.phAiKey{display:block;margin-top:4px;font-size:9px;letter-spacing:.08em;color:#cfe7c7;white-space:nowrap}
+@media(max-width:620px){.phAiKey{font-size:8px;letter-spacing:.03em}}
