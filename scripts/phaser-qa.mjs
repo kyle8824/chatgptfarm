@@ -36,6 +36,10 @@ await page.screenshot({path:'phaser-qa/mobile-auto.png'});const savedResources={
 
 
 if(s.aiAgentMarkers!==2)failures.push(`expected 2 visible AI identity markers, got ${s.aiAgentMarkers}`);
+if((s.aiMarkerLabels||[]).length!==2||(s.aiMarkerLabels||[]).some(x=>x!=='✦'))failures.push(`AI world markers should be bare diamonds only: ${JSON.stringify(s.aiMarkerLabels)}`);
+const aiKey=(await page.locator('#phAiKey').textContent())||'';
+if(!/✦\s*=/.test(aiKey))failures.push(`AI model key missing: ${aiKey}`);
+if(/PREVIEW/i.test((await page.locator('#phWorldStatus').textContent())||''))failures.push('public world status still uses PREVIEW wording');
 const agentNow=await page.evaluate(()=>[...document.querySelectorAll('[data-agent-now]')].map(x=>x.textContent.replace(/\s+/g,' ').trim()));
 if(agentNow.length!==2||!agentNow.some(x=>/Mara/i.test(x))||!agentNow.some(x=>/Ivo/i.test(x)))failures.push(`Agents Now panel does not show both agents: ${agentNow.join(' | ')}`);
 const profileOpened=await page.evaluate(()=>window.ChatGPTFarmPhaserDebug.inspectAgent('agent-mara'));
@@ -49,7 +53,7 @@ else{
   meters:[...document.querySelectorAll('.phMeter')].map(x=>x.textContent.replace(/\s+/g,' ').trim()),
   relationship:document.querySelector('.phRelation')?.textContent?.replace(/\s+/g,' ').trim()||''
  }));
- if(!profile.autonomy.includes('AI CONTROLLED'))failures.push(`autonomy badge missing: ${profile.autonomy}`);
+ if(!/AI/i.test(profile.autonomy)||!(s.aiControllerModel?profile.autonomy.toLowerCase().includes(String(s.aiControllerModel).replace(/^gpt-/i,'GPT-').replace(/-([a-z])/g,(_m,c)=>` ${c.toUpperCase()}`).toLowerCase()):true))failures.push(`AI model autonomy badge missing or stale: ${profile.autonomy}`);
  if(!profile.activity)failures.push('current activity is missing from the agent profile');
  if(profile.tabs.join('|')!=='Overview|Mind|Memory')failures.push(`agent profile tabs missing or reordered: ${profile.tabs.join('|')}`);
  if(profile.meters.length<7)failures.push(`expected condition + relationship meters, got ${profile.meters.length}`);
