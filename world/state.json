@@ -1,13 +1,13 @@
 {
   "version": "0.7",
   "day": 6,
-  "hour": 14,
-  "temperature": 61,
+  "hour": 16,
+  "temperature": 57,
   "weather": "clear",
   "resources": {
     "berries": 2,
-    "dryWood": 0,
-    "wetWood": 5,
+    "dryWood": 1,
+    "wetWood": 1,
     "stones": 12,
     "creekWater": true,
     "clay": 4,
@@ -15,7 +15,7 @@
   },
   "structures": {
     "shelter": true,
-    "fire": false,
+    "fire": true,
     "cache": false,
     "dryingRack": false
   },
@@ -33,17 +33,17 @@
     {
       "id": "agent-mara",
       "name": "Mara",
-      "position": "edge",
+      "position": "log",
       "needs": {
         "hydration": 0,
-        "hunger": 26.6,
-        "energy": 39.000000000000014,
-        "warmth": 33
+        "hunger": 18.200000000000003,
+        "energy": 22.400000000000013,
+        "warmth": 43
       },
       "inventory": {
         "berries": 0,
-        "dryWood": 1,
-        "wetWood": 16,
+        "dryWood": 2,
+        "wetWood": 18,
         "stones": 3,
         "clay": 2,
         "reeds": 0,
@@ -59,6 +59,20 @@
         "tubers": 0
       },
       "memories": [
+        {
+          "id": "M-M094",
+          "text": "The damp branches here looks scarce; only a little seems to remain.",
+          "importance": 6,
+          "tags": [
+            "resource-observation",
+            "resource",
+            "wetWood",
+            "scarce"
+          ],
+          "source": "resource-observation:wetWood:6-15",
+          "confidence": 0.92,
+          "lastSeen": "6:15"
+        },
         {
           "id": "M-M093",
           "text": "The dry branches here looks scarce; only a little seems to remain.",
@@ -639,7 +653,7 @@
         "cooperation": 0.68,
         "caution": 0.56
       },
-      "currentAction": "Explore beyond the known basin",
+      "currentAction": "Cut dry branches with sharp stone",
       "skills": {
         "sharp-edge": 1,
         "clay-shaping": 1,
@@ -650,14 +664,12 @@
       },
       "mind": {
         "brainMode": "ai",
-        "currentGoal": "Find enough fuel to support overnight warmth.",
-        "intent": "Explore while energy and warmth are currently stable, rather than gathering more damp wood or exhausted nearby resources.",
-        "confidence": 0.84,
-        "decisionSummary": "Nearby dry branches are scarce and the known sources appear depleted, so exploration is the best next attempt to locate additional fuel.",
+        "currentGoal": "Build a larger fuel reserve for overnight warmth.",
+        "intent": "Prioritize the scarce dry wood that is currently the best-known warmth resource.",
+        "confidence": 0.94,
+        "decisionSummary": "Mara will cut dry branches while a small amount remains available, consistent with her experience that dry wood supports warmth.",
         "model": "gpt-5.6-luna",
         "recentActions": [
-          "rest",
-          "explore",
           "physical:bind:carried_wet_branch",
           "drink",
           "gather_wet_wood",
@@ -671,12 +683,13 @@
           "rest",
           "rest",
           "eat_berries",
-          "explore"
+          "explore",
+          "gather_wet_wood",
+          "gather_dry_wood"
         ],
         "lastReferencedMemoryIds": [
           "M-M087",
-          "M-M093",
-          "M-M061"
+          "M-M007"
         ],
         "lastPhysicalProposal": null
       },
@@ -703,58 +716,52 @@
         "move:place:log:none:none": 1
       },
       "coordinates": {
-        "x": 78,
-        "y": 42
+        "x": 59,
+        "y": 29
       },
       "activeAction": {
-        "id": "A-D-00255",
-        "decisionId": "D-00255",
-        "label": "Explore beyond the known basin",
-        "actionId": "explore",
+        "id": "A-D-00259",
+        "decisionId": "D-00259",
+        "label": "Cut dry branches with sharp stone",
+        "actionId": "gather_dry_wood",
         "worldDay": 6,
-        "worldHour": 13,
+        "worldHour": 15,
         "from": {
-          "x": 64,
-          "y": 34
+          "x": 59,
+          "y": 29
         },
         "to": {
-          "x": 78,
-          "y": 42
+          "x": 59,
+          "y": 29
         },
         "target": {
-          "x": 78,
-          "y": 42
+          "x": 59,
+          "y": 29
         },
-        "moving": true,
+        "moving": false,
         "phases": [
           {
             "id": "decide",
             "label": "Deciding",
             "start": 0,
-            "end": 0.1
-          },
-          {
-            "id": "travel",
-            "label": "Traveling",
-            "start": 0.1,
-            "end": 0.58
+            "end": 0.12
           },
           {
             "id": "interact",
             "label": "Acting",
-            "start": 0.58,
-            "end": 0.86
+            "start": 0.12,
+            "end": 0.82
           },
           {
             "id": "resolve",
             "label": "Resolving",
-            "start": 0.86,
+            "start": 0.82,
             "end": 1
           }
         ],
         "outcome": {
           "success": true,
-          "detail": "Mara explores the basin edge without finding an obvious new place."
+          "detail": "Mara gathers 1 dry branches."
         },
         "physicalProposal": null
       },
@@ -805,17 +812,17 @@
         "dryWood": {
           "band": "scarce",
           "day": 6,
-          "hour": 10
+          "hour": 15
         },
         "wetWood": {
-          "band": "available",
+          "band": "scarce",
           "day": 6,
-          "hour": 10
+          "hour": 15
         },
         "reeds": {
           "band": "scarce",
           "day": 6,
-          "hour": 5
+          "hour": 14
         },
         "clay": {
           "band": "available",
@@ -832,16 +839,16 @@
     {
       "id": "agent-ivo",
       "name": "Ivo",
-      "position": "log",
+      "position": "camp",
       "needs": {
         "hydration": 0,
         "hunger": 0,
         "energy": 0,
-        "warmth": 47
+        "warmth": 91
       },
       "inventory": {
         "berries": 0,
-        "dryWood": 3,
+        "dryWood": 1,
         "wetWood": 16,
         "stones": 1,
         "clay": 0,
@@ -858,6 +865,18 @@
         "tubers": 0
       },
       "memories": [
+        {
+          "id": "M-I095",
+          "text": "Physical attempt 1: place carried dry branch with camp fire produced no stable effect.",
+          "importance": 4,
+          "tags": [
+            "experiment",
+            "physical-attempt"
+          ],
+          "source": "experience:6-15",
+          "confidence": 0.64,
+          "lastSeen": "6:15"
+        },
         {
           "id": "M-I092",
           "text": "Physical attempt 1: heat carried wet branch with camp fire produced no stable effect.",
@@ -879,8 +898,8 @@
             "dry-wood"
           ],
           "source": "experience:6-7",
-          "confidence": 0.94,
-          "lastSeen": "6:7"
+          "confidence": 0.98,
+          "lastSeen": "6:14"
         },
         {
           "id": "M-I089",
@@ -1019,7 +1038,7 @@
           ],
           "source": "resource-observation:dryWood:5-14",
           "confidence": 1,
-          "lastSeen": "6:7"
+          "lastSeen": "6:14"
         },
         {
           "id": "M-I073",
@@ -1499,7 +1518,7 @@
         "cooperation": 0.76,
         "caution": 0.48
       },
-      "currentAction": "Cut dry branches with sharp stone",
+      "currentAction": "place carried dry branch + camp fire",
       "skills": {
         "sharp-edge": 1,
         "clay-shaping": 1,
@@ -1511,14 +1530,12 @@
       },
       "mind": {
         "brainMode": "ai",
-        "currentGoal": "Improve available dry fuel before nightfall.",
-        "intent": "Gather another dry branch from the fallen oak using the sharp stone.",
+        "currentGoal": "Improve overnight warmth and preserve survival.",
+        "intent": "Place the dry branch into the active camp fire.",
         "confidence": 0.98,
-        "decisionSummary": "Dry fuel is scarce, warmth is the main concern, and recent gathering has successfully produced dry branches.",
+        "decisionSummary": "Warmth is currently stable but overnight warmth remains the priority; dry wood is known to provide strong fire warmth, and one dry branch is available.",
         "model": "gpt-5.6-luna",
         "recentActions": [
-          "physical:bind:sharp_stone",
-          "drink",
           "physical:move:place:log",
           "gather_dry_wood",
           "explore",
@@ -1532,14 +1549,21 @@
           "physical:move:place:log",
           "gather_dry_wood",
           "gather_dry_wood",
-          "gather_dry_wood"
+          "gather_dry_wood",
+          "make_fire",
+          "physical:place:carried_dry_branch"
         ],
         "lastReferencedMemoryIds": [
           "M-I091",
-          "M-I078",
           "M-I088"
         ],
-        "lastPhysicalProposal": null
+        "lastPhysicalProposal": {
+          "verb": "place",
+          "primaryObjectId": "carried_dry_branch",
+          "secondaryObjectId": "camp_fire",
+          "configuration": "none",
+          "purpose": "Use the available dry branch as fuel to strengthen and extend the camp fire for overnight warmth."
+        }
       },
       "affordanceAttempts": {
         "search:place:berry_patch:none:none": 1,
@@ -1565,30 +1589,31 @@
         "bind:sharp_stone:wood_pole:bound": 1,
         "move:place:log:none:none": 2,
         "heat:carried_wet_branch:camp_fire:none": 1,
-        "cut:carried_wet_branch:bound_sharp_tool:straight": 1
+        "cut:carried_wet_branch:bound_sharp_tool:straight": 1,
+        "place:carried_dry_branch:camp_fire:none": 1
       },
       "coordinates": {
-        "x": 59,
-        "y": 29
+        "x": 64,
+        "y": 34
       },
       "activeAction": {
-        "id": "A-D-00256",
-        "decisionId": "D-00256",
-        "label": "Cut dry branches with sharp stone",
-        "actionId": "gather_dry_wood",
+        "id": "A-D-00260",
+        "decisionId": "D-00260",
+        "label": "place carried dry branch",
+        "actionId": "physical:place:carried_dry_branch",
         "worldDay": 6,
-        "worldHour": 13,
+        "worldHour": 15,
         "from": {
-          "x": 59,
-          "y": 29
+          "x": 64,
+          "y": 34
         },
         "to": {
-          "x": 59,
-          "y": 29
+          "x": 64,
+          "y": 34
         },
         "target": {
-          "x": 59,
-          "y": 29
+          "x": 64,
+          "y": 34
         },
         "moving": false,
         "phases": [
@@ -1612,10 +1637,16 @@
           }
         ],
         "outcome": {
-          "success": true,
-          "detail": "Ivo gathers 1 dry branches."
+          "success": false,
+          "detail": "Ivo tries to place carried dry branch with camp fire. No stable new effect emerges yet."
         },
-        "physicalProposal": null
+        "physicalProposal": {
+          "verb": "place",
+          "primaryObjectId": "carried_dry_branch",
+          "secondaryObjectId": "camp_fire",
+          "configuration": "none",
+          "purpose": "Use the available dry branch as fuel to strengthen and extend the camp fire for overnight warmth."
+        }
       },
       "wildlifeSeen": {
         "rabbit": {
@@ -1662,14 +1693,14 @@
       "wildlifeSignsSeen": {},
       "resourceObservations": {
         "dryWood": {
-          "band": "scarce",
+          "band": "depleted",
           "day": 6,
-          "hour": 13
+          "hour": 14
         },
         "wetWood": {
           "band": "available",
           "day": 6,
-          "hour": 13
+          "hour": 14
         },
         "reeds": {
           "band": "scarce",
@@ -1695,6 +1726,91 @@
     }
   },
   "history": [
+    {
+      "id": "E-00402",
+      "day": 6,
+      "hour": 15,
+      "type": "world",
+      "title": "A fallen branch dried",
+      "detail": "Moving air and weather dried exposed wood enough to make it useful as dry fuel."
+    },
+    {
+      "id": "E-00401",
+      "day": 6,
+      "hour": 15,
+      "type": "attempt",
+      "title": "place carried dry branch + camp fire",
+      "detail": "Ivo tries to place carried dry branch with camp fire. No stable new effect emerges yet.",
+      "agentId": "agent-ivo",
+      "physicalId": "P-00056",
+      "success": false,
+      "proposal": {
+        "verb": "place",
+        "primaryObjectId": "carried_dry_branch",
+        "secondaryObjectId": "camp_fire",
+        "configuration": "none",
+        "purpose": "Use the available dry branch as fuel to strengthen and extend the camp fire for overnight warmth."
+      },
+      "worldObjectId": null
+    },
+    {
+      "id": "E-00400",
+      "day": 6,
+      "hour": 15,
+      "type": "learn",
+      "title": "Ivo formed a memory",
+      "detail": "Physical attempt 1: place carried dry branch with camp fire produced no stable effect.",
+      "agentId": "agent-ivo",
+      "memoryId": "M-I095"
+    },
+    {
+      "id": "E-00399",
+      "day": 6,
+      "hour": 15,
+      "type": "action",
+      "title": "Cut dry branches with sharp stone",
+      "detail": "Mara gathers 1 dry branches.",
+      "agentId": "agent-mara",
+      "actionId": "gather_dry_wood"
+    },
+    {
+      "id": "E-00398",
+      "day": 6,
+      "hour": 15,
+      "type": "learn",
+      "title": "Mara formed a memory",
+      "detail": "The damp branches here looks scarce; only a little seems to remain.",
+      "agentId": "agent-mara",
+      "memoryId": "M-M094"
+    },
+    {
+      "id": "E-00397",
+      "day": 6,
+      "hour": 14,
+      "type": "world",
+      "title": "A fallen branch dried",
+      "detail": "Moving air and weather dried exposed wood enough to make it useful as dry fuel."
+    },
+    {
+      "id": "E-00396",
+      "day": 6,
+      "hour": 14,
+      "type": "action",
+      "title": "Try to make a fire",
+      "detail": "Ivo establishes a small fire.",
+      "agentId": "agent-ivo",
+      "actionId": "make_fire"
+    },
+    {
+      "id": "E-00395",
+      "day": 6,
+      "hour": 14,
+      "type": "action",
+      "title": "Gather damp branches",
+      "detail": "Mara gathers damp branches.",
+      "agentId": "agent-mara",
+      "actionId": "gather_wet_wood"
+    },
     {
       "id": "E-00394",
       "day": 6,
@@ -6146,6 +6262,1015 @@
     }
   ],
   "dna": [
+    {
+      "protocol": "Decision DNA 0.6-farm",
+      "decision_id": "D-00260",
+      "day": 6,
+      "hour": 15,
+      "agent_id": "agent-ivo",
+      "agent_name": "Ivo",
+      "observation": {
+        "time": "Day 6, 15:00",
+        "weather": "clear",
+        "temperature": 59,
+        "position": "camp",
+        "nearby": [
+          "camp fire"
+        ],
+        "needs": {
+          "hydration": 0,
+          "satiety": 0,
+          "energy": 0,
+          "warmth": 84
+        },
+        "inventory": {
+          "berries": 0,
+          "dryWood": 1,
+          "wetWood": 16,
+          "stones": 1,
+          "clay": 0,
+          "reeds": 0,
+          "sharpStone": 0,
+          "rawClayVessel": 1,
+          "firedVessel": 0,
+          "cordage": 1,
+          "woodPole": 2,
+          "pointedPole": 0,
+          "boundSharpTool": 1,
+          "rawMeat": 0,
+          "cookedMeat": 0,
+          "tubers": 0
+        },
+        "skills": {
+          "sharp-edge": 1,
+          "clay-shaping": 1,
+          "cordage": 1
+        },
+        "knownPeople": [
+          {
+            "name": "Mara",
+            "trust": 44,
+            "familiarity": 37,
+            "affinity": 55,
+            "nearby": false
+          }
+        ],
+        "localResources": [],
+        "groundCondition": {
+          "band": "damp"
+        },
+        "wildlife": [],
+        "wildlifeTracks": [],
+        "wildlifeSigns": []
+      },
+      "action": "physical:place:carried_dry_branch",
+      "action_label": "place carried dry branch",
+      "winner_score": null,
+      "baseline_policy_action": "drink",
+      "deviated_from_policy": true,
+      "candidates": [
+        {
+          "id": "drink",
+          "label": "Drink from the creek",
+          "score": 159.176,
+          "reasons": [
+            [
+              "thirst",
+              100
+            ]
+          ]
+        },
+        {
+          "id": "rest",
+          "label": "Rest in the shelter",
+          "score": 117.884,
+          "reasons": [
+            [
+              "fatigue",
+              100
+            ]
+          ]
+        },
+        {
+          "id": "gather_berries",
+          "label": "Gather berries",
+          "score": 38,
+          "reasons": [
+            [
+              "future hunger",
+              22
+            ]
+          ]
+        },
+        {
+          "id": "gather_clay",
+          "label": "Gather sticky clay",
+          "score": 12.64,
+          "reasons": [
+            [
+              "curiosity",
+              4.64
+            ]
+          ]
+        },
+        {
+          "id": "gather_reeds",
+          "label": "Gather flexible reeds",
+          "score": 12.64,
+          "reasons": [
+            [
+              "curiosity",
+              4.64
+            ]
+          ]
+        },
+        {
+          "id": "seek_other",
+          "label": "Look for Mara",
+          "score": 12.3,
+          "reasons": [
+            [
+              "cooperation",
+              6.08
+            ]
+          ]
+        },
+        {
+          "id": "gather_stones",
+          "label": "Gather loose stones",
+          "score": 11.64,
+          "reasons": [
+            [
+              "curiosity",
+              4.64
+            ]
+          ]
+        },
+        {
+          "id": "gather_wet_wood",
+          "label": "Gather damp branches",
+          "score": 10.24,
+          "reasons": [
+            [
+              "cold",
+              2.24
+            ]
+          ]
+        },
+        {
+          "id": "explore",
+          "label": "Explore beyond the known basin",
+          "score": -0.46,
+          "reasons": [
+            [
+              "curiosity",
+              7.539999999999999
+            ],
+            [
+              "novelty",
+              0
+            ]
+          ]
+        }
+      ],
+      "retrieved_memories": [
+        "M-I088",
+        "M-I086",
+        "M-I081",
+        "M-I091",
+        "M-I078",
+        "M-I062",
+        "M-I040",
+        "M-I027",
+        "M-I018",
+        "M-I014",
+        "M-I034",
+        "M-I031"
+      ],
+      "mind": {
+        "brain_mode": "ai",
+        "model": "gpt-5.6-luna",
+        "goal": "Improve overnight warmth and preserve survival.",
+        "intent": "Place the dry branch into the active camp fire.",
+        "confidence": 0.98,
+        "decision_summary": "Warmth is currently stable but overnight warmth remains the priority; dry wood is known to provide strong fire warmth, and one dry branch is available.",
+        "referenced_memory_ids": [
+          "M-I091",
+          "M-I088"
+        ],
+        "physical_proposal": {
+          "verb": "place",
+          "primaryObjectId": "carried_dry_branch",
+          "secondaryObjectId": "camp_fire",
+          "configuration": "none",
+          "purpose": "Use the available dry branch as fuel to strengthen and extend the camp fire for overnight warmth."
+        },
+        "usage": {
+          "input_tokens": 4624,
+          "input_tokens_details": {
+            "cache_write_tokens": 4621,
+            "cached_tokens": 0
+          },
+          "output_tokens": 201,
+          "output_tokens_details": {
+            "reasoning_tokens": 51
+          },
+          "total_tokens": 4825
+        }
+      },
+      "physics": {
+        "version": "affordance-0.5",
+        "outcome": {
+          "physicalId": "P-00056",
+          "success": false,
+          "blocked": false,
+          "detail": "Ivo tries to place carried dry branch with camp fire. No stable new effect emerges yet.",
+          "proposal": {
+            "verb": "place",
+            "primaryObjectId": "carried_dry_branch",
+            "secondaryObjectId": "camp_fire",
+            "configuration": "none",
+            "purpose": "Use the available dry branch as fuel to strengthen and extend the camp fire for overnight warmth."
+          },
+          "primary": "carried_dry_branch",
+          "secondary": "camp_fire",
+          "worldObjectId": null,
+          "resolvedComponents": []
+        }
+      },
+      "memory_counterfactuals": [
+        {
+          "removed_memory": "M-I091",
+          "memory_text": "Dry wood catches flame and provides strong warmth.",
+          "original_action": "physical:place:carried_dry_branch",
+          "counterfactual_action": "physical:place:carried_dry_branch",
+          "action_changed": false,
+          "method": "model_replay",
+          "provisional": true,
+          "trials": 1
+        }
+      ]
+    },
+    {
+      "protocol": "Decision DNA 0.6-farm",
+      "decision_id": "D-00259",
+      "day": 6,
+      "hour": 15,
+      "agent_id": "agent-mara",
+      "agent_name": "Mara",
+      "observation": {
+        "time": "Day 6, 15:00",
+        "weather": "clear",
+        "temperature": 59,
+        "position": "log",
+        "nearby": [
+          "dry branches",
+          "wet branches"
+        ],
+        "needs": {
+          "hydration": 0,
+          "satiety": 22.400000000000002,
+          "energy": 29.200000000000014,
+          "warmth": 38
+        },
+        "inventory": {
+          "berries": 0,
+          "dryWood": 1,
+          "wetWood": 18,
+          "stones": 3,
+          "clay": 2,
+          "reeds": 0,
+          "sharpStone": 1,
+          "rawClayVessel": 0,
+          "firedVessel": 0,
+          "cordage": 1,
+          "woodPole": 0,
+          "pointedPole": 0,
+          "boundSharpTool": 0,
+          "rawMeat": 0,
+          "cookedMeat": 0,
+          "tubers": 0
+        },
+        "skills": {
+          "sharp-edge": 1,
+          "clay-shaping": 1,
+          "cordage": 1
+        },
+        "knownPeople": [
+          {
+            "name": "Ivo",
+            "trust": 44,
+            "familiarity": 37,
+            "affinity": 55,
+            "nearby": false
+          }
+        ],
+        "localResources": [
+          {
+            "key": "dryWood",
+            "label": "dry branches",
+            "band": "scarce",
+            "estimate": "only a little"
+          },
+          {
+            "key": "wetWood",
+            "label": "damp branches",
+            "band": "scarce",
+            "estimate": "only a little"
+          }
+        ],
+        "groundCondition": {
+          "band": "damp"
+        },
+        "wildlife": [
+          {
+            "id": "W-FISH-001",
+            "species": "fish",
+            "label": "creek fish school",
+            "distance": 11.8,
+            "behavior": "following creek channel",
+            "activity": "swim",
+            "fear": 0
+          }
+        ],
+        "wildlifeTracks": [],
+        "wildlifeSigns": []
+      },
+      "action": "gather_dry_wood",
+      "action_label": "Cut dry branches with sharp stone",
+      "winner_score": 24.92,
+      "baseline_policy_action": "drink",
+      "deviated_from_policy": true,
+      "candidates": [
+        {
+          "id": "drink",
+          "label": "Drink from the creek",
+          "score": 153.8,
+          "reasons": [
+            [
+              "thirst",
+              100
+            ]
+          ]
+        },
+        {
+          "id": "rest",
+          "label": "Rest in the shelter",
+          "score": 71.4,
+          "reasons": [
+            [
+              "fatigue",
+              70.79999999999998
+            ]
+          ]
+        },
+        {
+          "id": "gather_berries",
+          "label": "Gather berries",
+          "score": 33.072,
+          "reasons": [
+            [
+              "future hunger",
+              17.072
+            ]
+          ]
+        },
+        {
+          "id": "gather_dry_wood",
+          "label": "Cut dry branches with sharp stone",
+          "score": 24.92,
+          "reasons": [
+            [
+              "cold",
+              16.12
+            ]
+          ]
+        },
+        {
+          "id": "gather_clay",
+          "label": "Gather sticky clay",
+          "score": 13.76,
+          "reasons": [
+            [
+              "curiosity",
+              5.76
+            ]
+          ]
+        },
+        {
+          "id": "gather_reeds",
+          "label": "Gather flexible reeds",
+          "score": 13.76,
+          "reasons": [
+            [
+              "curiosity",
+              5.76
+            ]
+          ]
+        },
+        {
+          "id": "gather_stones",
+          "label": "Gather loose stones",
+          "score": 12.76,
+          "reasons": [
+            [
+              "curiosity",
+              5.76
+            ]
+          ]
+        },
+        {
+          "id": "gather_wet_wood",
+          "label": "Gather damp branches",
+          "score": 12.48,
+          "reasons": [
+            [
+              "cold",
+              8.680000000000001
+            ]
+          ]
+        },
+        {
+          "id": "seek_other",
+          "label": "Look for Ivo",
+          "score": 11.66,
+          "reasons": [
+            [
+              "cooperation",
+              5.44
+            ]
+          ]
+        },
+        {
+          "id": "explore",
+          "label": "Explore beyond the known basin",
+          "score": 1.832,
+          "reasons": [
+            [
+              "curiosity",
+              9.36
+            ],
+            [
+              "novelty",
+              0
+            ]
+          ]
+        }
+      ],
+      "retrieved_memories": [
+        "M-M087",
+        "M-M055",
+        "M-M061",
+        "M-M079",
+        "M-M030",
+        "M-M015",
+        "M-M085",
+        "M-M039",
+        "M-M026",
+        "M-M094",
+        "M-M007",
+        "M-M093"
+      ],
+      "mind": {
+        "brain_mode": "ai",
+        "model": "gpt-5.6-luna",
+        "goal": "Build a larger fuel reserve for overnight warmth.",
+        "intent": "Prioritize the scarce dry wood that is currently the best-known warmth resource.",
+        "confidence": 0.94,
+        "decision_summary": "Mara will cut dry branches while a small amount remains available, consistent with her experience that dry wood supports warmth.",
+        "referenced_memory_ids": [
+          "M-M087",
+          "M-M007"
+        ],
+        "physical_proposal": null,
+        "usage": {
+          "input_tokens": 4952,
+          "input_tokens_details": {
+            "cache_write_tokens": 4949,
+            "cached_tokens": 0
+          },
+          "output_tokens": 199,
+          "output_tokens_details": {
+            "reasoning_tokens": 59
+          },
+          "total_tokens": 5151
+        }
+      },
+      "physics": {
+        "version": "affordance-0.5",
+        "outcome": {
+          "success": true,
+          "detail": "Mara gathers 1 dry branches.",
+          "actionId": "gather_dry_wood"
+        }
+      },
+      "memory_counterfactuals": [
+        {
+          "removed_memory": "M-M087",
+          "memory_text": "For surviving tonight, I should prioritize finding more dry branches rather than trying to heat or place them with the camp; the nearby dry-branch source and reed marsh appear depleted, and exploring the basin edge has not revealed an obvious new place.",
+          "original_action": "gather_dry_wood",
+          "counterfactual_action": "gather_dry_wood",
+          "action_changed": false,
+          "method": "model_replay",
+          "provisional": true,
+          "trials": 1
+        }
+      ]
+    },
+    {
+      "protocol": "Decision DNA 0.6-farm",
+      "decision_id": "D-00258",
+      "day": 6,
+      "hour": 14,
+      "agent_id": "agent-ivo",
+      "agent_name": "Ivo",
+      "observation": {
+        "time": "Day 6, 14:00",
+        "weather": "clear",
+        "temperature": 61,
+        "position": "log",
+        "nearby": [
+          "wet branches"
+        ],
+        "needs": {
+          "hydration": 0,
+          "satiety": 0,
+          "energy": 0,
+          "warmth": 47
+        },
+        "inventory": {
+          "berries": 0,
+          "dryWood": 3,
+          "wetWood": 16,
+          "stones": 1,
+          "clay": 0,
+          "reeds": 0,
+          "sharpStone": 0,
+          "rawClayVessel": 1,
+          "firedVessel": 0,
+          "cordage": 1,
+          "woodPole": 2,
+          "pointedPole": 0,
+          "boundSharpTool": 1,
+          "rawMeat": 0,
+          "cookedMeat": 0,
+          "tubers": 0
+        },
+        "skills": {
+          "sharp-edge": 1,
+          "clay-shaping": 1,
+          "cordage": 1
+        },
+        "knownPeople": [
+          {
+            "name": "Mara",
+            "trust": 44,
+            "familiarity": 37,
+            "affinity": 55,
+            "nearby": false
+          }
+        ],
+        "localResources": [
+          {
+            "key": "dryWood",
+            "label": "dry branches",
+            "band": "depleted",
+            "estimate": "none visible"
+          },
+          {
+            "key": "wetWood",
+            "label": "damp branches",
+            "band": "available",
+            "estimate": "some available"
+          }
+        ],
+        "groundCondition": {
+          "band": "damp"
+        },
+        "wildlife": [
+          {
+            "id": "W-FISH-001",
+            "species": "fish",
+            "label": "creek fish school",
+            "distance": 10.9,
+            "behavior": "following creek channel",
+            "activity": "swim",
+            "fear": 0
+          }
+        ],
+        "wildlifeTracks": [],
+        "wildlifeSigns": []
+      },
+      "action": "make_fire",
+      "action_label": "Try to make a fire",
+      "winner_score": 79.564,
+      "baseline_policy_action": "drink",
+      "deviated_from_policy": true,
+      "candidates": [
+        {
+          "id": "drink",
+          "label": "Drink from the creek",
+          "score": 159.176,
+          "reasons": [
+            [
+              "thirst",
+              100
+            ]
+          ]
+        },
+        {
+          "id": "rest",
+          "label": "Rest in the shelter",
+          "score": 117.884,
+          "reasons": [
+            [
+              "fatigue",
+              100
+            ]
+          ]
+        },
+        {
+          "id": "make_fire",
+          "label": "Try to make a fire",
+          "score": 79.564,
+          "reasons": [
+            [
+              "cold",
+              42.400000000000006
+            ]
+          ]
+        },
+        {
+          "id": "gather_berries",
+          "label": "Gather berries",
+          "score": 38,
+          "reasons": [
+            [
+              "future hunger",
+              22
+            ]
+          ]
+        },
+        {
+          "id": "gather_wet_wood",
+          "label": "Gather damp branches",
+          "score": 15.42,
+          "reasons": [
+            [
+              "cold",
+              7.420000000000001
+            ]
+          ]
+        },
+        {
+          "id": "gather_clay",
+          "label": "Gather sticky clay",
+          "score": 12.64,
+          "reasons": [
+            [
+              "curiosity",
+              4.64
+            ]
+          ]
+        },
+        {
+          "id": "gather_reeds",
+          "label": "Gather flexible reeds",
+          "score": 12.64,
+          "reasons": [
+            [
+              "curiosity",
+              4.64
+            ]
+          ]
+        },
+        {
+          "id": "seek_other",
+          "label": "Look for Mara",
+          "score": 12.3,
+          "reasons": [
+            [
+              "cooperation",
+              6.08
+            ]
+          ]
+        },
+        {
+          "id": "gather_stones",
+          "label": "Gather loose stones",
+          "score": 11.64,
+          "reasons": [
+            [
+              "curiosity",
+              4.64
+            ]
+          ]
+        },
+        {
+          "id": "explore",
+          "label": "Explore beyond the known basin",
+          "score": -0.46,
+          "reasons": [
+            [
+              "curiosity",
+              7.539999999999999
+            ],
+            [
+              "novelty",
+              0
+            ]
+          ]
+        }
+      ],
+      "retrieved_memories": [
+        "M-I088",
+        "M-I086",
+        "M-I081",
+        "M-I091",
+        "M-I078",
+        "M-I062",
+        "M-I040",
+        "M-I027",
+        "M-I018",
+        "M-I014",
+        "M-I034",
+        "M-I031"
+      ],
+      "mind": {
+        "brain_mode": "ai",
+        "model": "gpt-5.6-luna",
+        "goal": "Improve overnight warmth and preserve survival.",
+        "intent": "Make a fire with dry fuel.",
+        "confidence": 0.95,
+        "decision_summary": "Dry wood is available in inventory, and prior experience shows it catches flame and provides strong warmth; restoring the fire best serves the current goal.",
+        "referenced_memory_ids": [
+          "M-I091",
+          "M-I078",
+          "M-I062"
+        ],
+        "physical_proposal": null,
+        "usage": {
+          "input_tokens": 4850,
+          "input_tokens_details": {
+            "cache_write_tokens": 4847,
+            "cached_tokens": 0
+          },
+          "output_tokens": 201,
+          "output_tokens_details": {
+            "reasoning_tokens": 61
+          },
+          "total_tokens": 5051
+        }
+      },
+      "physics": {
+        "version": "affordance-0.5",
+        "outcome": {
+          "success": true,
+          "detail": "Ivo establishes a small fire.",
+          "actionId": "make_fire"
+        }
+      },
+      "memory_counterfactuals": []
+    },
+    {
+      "protocol": "Decision DNA 0.6-farm",
+      "decision_id": "D-00257",
+      "day": 6,
+      "hour": 14,
+      "agent_id": "agent-mara",
+      "agent_name": "Mara",
+      "observation": {
+        "time": "Day 6, 14:00",
+        "weather": "clear",
+        "temperature": 61,
+        "position": "edge",
+        "nearby": [
+          "flexible reed stalks"
+        ],
+        "needs": {
+          "hydration": 0,
+          "satiety": 26.6,
+          "energy": 39.000000000000014,
+          "warmth": 33
+        },
+        "inventory": {
+          "berries": 0,
+          "dryWood": 1,
+          "wetWood": 16,
+          "stones": 3,
+          "clay": 2,
+          "reeds": 0,
+          "sharpStone": 1,
+          "rawClayVessel": 0,
+          "firedVessel": 0,
+          "cordage": 1,
+          "woodPole": 0,
+          "pointedPole": 0,
+          "boundSharpTool": 0,
+          "rawMeat": 0,
+          "cookedMeat": 0,
+          "tubers": 0
+        },
+        "skills": {
+          "sharp-edge": 1,
+          "clay-shaping": 1,
+          "cordage": 1
+        },
+        "knownPeople": [
+          {
+            "name": "Ivo",
+            "trust": 44,
+            "familiarity": 37,
+            "affinity": 55,
+            "nearby": false
+          }
+        ],
+        "localResources": [
+          {
+            "key": "reeds",
+            "label": "reed marsh",
+            "band": "scarce",
+            "estimate": "only a little"
+          }
+        ],
+        "groundCondition": {
+          "band": "damp"
+        },
+        "wildlife": [],
+        "wildlifeTracks": [],
+        "wildlifeSigns": []
+      },
+      "action": "gather_wet_wood",
+      "action_label": "Gather damp branches",
+      "winner_score": 17.38,
+      "baseline_policy_action": "drink",
+      "deviated_from_policy": true,
+      "candidates": [
+        {
+          "id": "drink",
+          "label": "Drink from the creek",
+          "score": 153.8,
+          "reasons": [
+            [
+              "thirst",
+              100
+            ]
+          ]
+        },
+        {
+          "id": "rest",
+          "label": "Rest in the shelter",
+          "score": 60.62,
+          "reasons": [
+            [
+              "fatigue",
+              60.999999999999986
+            ]
+          ]
+        },
+        {
+          "id": "gather_berries",
+          "label": "Gather berries",
+          "score": 32.148,
+          "reasons": [
+            [
+              "future hunger",
+              16.148
+            ]
+          ]
+        },
+        {
+          "id": "gather_dry_wood",
+          "label": "Cut dry branches with sharp stone",
+          "score": 26.22,
+          "reasons": [
+            [
+              "cold",
+              17.42
+            ]
+          ]
+        },
+        {
+          "id": "gather_wet_wood",
+          "label": "Gather damp branches",
+          "score": 17.38,
+          "reasons": [
+            [
+              "cold",
+              9.38
+            ]
+          ]
+        },
+        {
+          "id": "gather_clay",
+          "label": "Gather sticky clay",
+          "score": 13.76,
+          "reasons": [
+            [
+              "curiosity",
+              5.76
+            ]
+          ]
+        },
+        {
+          "id": "gather_reeds",
+          "label": "Gather flexible reeds",
+          "score": 13.76,
+          "reasons": [
+            [
+              "curiosity",
+              5.76
+            ]
+          ]
+        },
+        {
+          "id": "gather_stones",
+          "label": "Gather loose stones",
+          "score": 12.76,
+          "reasons": [
+            [
+              "curiosity",
+              5.76
+            ]
+          ]
+        },
+        {
+          "id": "seek_other",
+          "label": "Look for Ivo",
+          "score": 11.66,
+          "reasons": [
+            [
+              "cooperation",
+              5.44
+            ]
+          ]
+        },
+        {
+          "id": "explore",
+          "label": "Explore beyond the known basin",
+          "score": 3.4,
+          "reasons": [
+            [
+              "curiosity",
+              9.36
+            ],
+            [
+              "novelty",
+              0
+            ]
+          ]
+        }
+      ],
+      "retrieved_memories": [
+        "M-M087",
+        "M-M055",
+        "M-M061",
+        "M-M079",
+        "M-M030",
+        "M-M015",
+        "M-M085",
+        "M-M039",
+        "M-M026",
+        "M-M093",
+        "M-M007",
+        "M-M090"
+      ],
+      "mind": {
+        "brain_mode": "ai",
+        "model": "gpt-5.6-luna",
+        "goal": "Build a larger fuel reserve for overnight warmth.",
+        "intent": "Gather available damp branches despite the depleted dry-branch supply.",
+        "confidence": 0.76,
+        "decision_summary": "Dry branches are scarce and the fire has already faded; gathering available wet wood is the best immediate fuel-related option.",
+        "referenced_memory_ids": [
+          "M-M087",
+          "M-M061",
+          "M-M039"
+        ],
+        "physical_proposal": null,
+        "usage": {
+          "input_tokens": 4638,
+          "input_tokens_details": {
+            "cache_write_tokens": 4635,
+            "cached_tokens": 0
+          },
+          "output_tokens": 410,
+          "output_tokens_details": {
+            "reasoning_tokens": 265
+          },
+          "total_tokens": 5048
+        }
+      },
+      "physics": {
+        "version": "affordance-0.5",
+        "outcome": {
+          "success": true,
+          "detail": "Mara gathers damp branches.",
+          "actionId": "gather_wet_wood"
+        }
+      },
+      "memory_counterfactuals": []
+    },
     {
       "protocol": "Decision DNA 0.6-farm",
       "decision_id": "D-00256",
@@ -72357,26 +73482,26 @@
     }
   ],
   "seq": {
-    "event": 395,
-    "memory": 94,
-    "decision": 257,
+    "event": 403,
+    "memory": 96,
+    "decision": 261,
     "discovery": 6,
-    "physical": 56,
+    "physical": 57,
     "artifact": 16,
     "object": 1
   },
   "meta": {
     "canonical": true,
-    "lastAdvancedAt": "2026-09-18T17:26:45.892Z",
-    "tickNumber": 59,
+    "lastAdvancedAt": "2026-09-18T17:47:10.631Z",
+    "tickNumber": 60,
     "heartbeatMinutes": 5,
     "worldHoursPerHeartbeat": 2,
     "lastDecisionIds": [
-      "D-00255",
-      "D-00256"
+      "D-00259",
+      "D-00260"
     ],
     "pacing": "young world",
-    "aiDecisions": 189,
+    "aiDecisions": 193,
     "fallbackDecisions": 55,
     "mindMode": "ai",
     "mindConfigured": true,
@@ -72384,22 +73509,22 @@
     "physicsVersion": "affordance-0.5",
     "worldModelVersion": "object-field-1.0",
     "aiUsage": {
-      "calls": 97,
-      "inputTokens": 447286,
-      "outputTokens": 26910,
-      "reasoningTokens": 12566,
+      "calls": 101,
+      "inputTokens": 466350,
+      "outputTokens": 27921,
+      "reasoningTokens": 13002,
       "byActor": {
         "agent-mara": {
-          "calls": 46,
-          "inputTokens": 217693,
-          "outputTokens": 12093,
-          "reasoningTokens": 5345
+          "calls": 48,
+          "inputTokens": 227283,
+          "outputTokens": 12702,
+          "reasoningTokens": 5669
         },
         "agent-ivo": {
-          "calls": 47,
-          "inputTokens": 224818,
-          "outputTokens": 14123,
-          "reasoningTokens": 7023
+          "calls": 49,
+          "inputTokens": 234292,
+          "outputTokens": 14525,
+          "reasoningTokens": 7135
         },
         "agent-mara:reflection": {
           "calls": 2,
@@ -72519,7 +73644,7 @@
         "agent-ivo"
       ],
       "placeIds": [
-        "log"
+        "camp"
       ]
     },
     {
@@ -72560,7 +73685,7 @@
         "agent-ivo"
       ],
       "placeIds": [
-        "log"
+        "camp"
       ]
     },
     {
@@ -72573,7 +73698,7 @@
         "agent-mara"
       ],
       "placeIds": [
-        "edge"
+        "log"
       ]
     }
   ],
@@ -72643,10 +73768,10 @@
       ],
       "status": "active",
       "carrierId": "agent-mara",
-      "position": "edge",
+      "position": "log",
       "coordinates": {
-        "x": 78,
-        "y": 42
+        "x": 59,
+        "y": 29
       },
       "created": {
         "day": 3,
@@ -72692,10 +73817,10 @@
       ],
       "status": "active",
       "carrierId": "agent-ivo",
-      "position": "log",
+      "position": "camp",
       "coordinates": {
-        "x": 59,
-        "y": 29
+        "x": 64,
+        "y": 34
       },
       "created": {
         "day": 3,
@@ -72825,10 +73950,10 @@
       ],
       "status": "active",
       "carrierId": "agent-mara",
-      "position": "edge",
+      "position": "log",
       "coordinates": {
-        "x": 78,
-        "y": 42
+        "x": 59,
+        "y": 29
       },
       "created": {
         "day": 4,
@@ -72851,10 +73976,10 @@
       ],
       "status": "active",
       "carrierId": "agent-ivo",
-      "position": "log",
+      "position": "camp",
       "coordinates": {
-        "x": 59,
-        "y": 29
+        "x": 64,
+        "y": 34
       },
       "created": {
         "day": 5,
@@ -72955,10 +74080,10 @@
       ],
       "status": "active",
       "carrierId": "agent-ivo",
-      "position": "log",
+      "position": "camp",
       "coordinates": {
-        "x": 59,
-        "y": 29
+        "x": 64,
+        "y": 34
       },
       "created": {
         "day": 5,
@@ -72983,10 +74108,10 @@
       ],
       "status": "active",
       "carrierId": "agent-ivo",
-      "position": "log",
+      "position": "camp",
       "coordinates": {
-        "x": 59,
-        "y": 29
+        "x": 64,
+        "y": 34
       },
       "created": {
         "day": 5,
@@ -73009,10 +74134,10 @@
       ],
       "status": "active",
       "carrierId": "agent-ivo",
-      "position": "log",
+      "position": "camp",
       "coordinates": {
-        "x": 59,
-        "y": 29
+        "x": 64,
+        "y": 34
       },
       "created": {
         "day": 6,
@@ -73221,7 +74346,7 @@
           "species": "oak",
           "densityKgM3": 690,
           "hardness": 5.8,
-          "moisturePct": 65.2
+          "moisturePct": 38.2
         },
         "parentId": null,
         "childrenIds": [],
@@ -73231,9 +74356,9 @@
         },
         "state": {
           "active": true,
-          "availableDryBranches": 0,
-          "availableWetBranches": 5,
-          "branchSupply": 5
+          "availableDryBranches": 1,
+          "availableWetBranches": 1,
+          "branchSupply": 2
         },
         "provenance": {
           "created": {
@@ -73480,7 +74605,7 @@
         },
         "material": {},
         "state": {
-          "active": false
+          "active": true
         },
         "parentId": null,
         "childrenIds": [],
@@ -73579,7 +74704,7 @@
       "temperature": {
         "type": "scalar",
         "unit": "F",
-        "global": 61
+        "global": 57
       },
       "precipitation": {
         "type": "scalar",
@@ -73590,34 +74715,34 @@
       "humidity": {
         "type": "scalar",
         "unit": "relative",
-        "global": 0.55
+        "global": 0.53
       },
       "light": {
         "type": "scalar",
         "unit": "relative",
-        "global": 0.87
+        "global": 0.5
       },
       "soilMoisture": {
         "type": "zonal",
         "unit": "relative",
         "zones": {
-          "camp": 0.51,
-          "meadow": 0.5,
-          "forest": 0.61,
-          "creek": 0.86,
-          "clay": 0.87,
-          "reeds": 0.91,
-          "berries": 0.53,
-          "stones": 0.3,
-          "log": 0.48,
-          "edge": 0.5
+          "camp": 0.43,
+          "meadow": 0.42,
+          "forest": 0.55,
+          "creek": 0.83,
+          "clay": 0.85,
+          "reeds": 0.89,
+          "berries": 0.46,
+          "stones": 0.26,
+          "log": 0.42,
+          "edge": 0.43
         }
       },
       "waterDepth": {
         "type": "object",
         "unit": "m",
         "objects": {
-          "OBJ-CREEK-001": 0.49
+          "OBJ-CREEK-001": 0.48
         }
       },
       "wind": {
@@ -73628,12 +74753,12 @@
       "surfaceWetness": {
         "type": "scalar",
         "unit": "relative",
-        "global": 0.52,
+        "global": 0.41,
         "lastRainAt": {
           "day": 6,
           "hour": 4
         },
-        "hoursSinceRain": 10
+        "hoursSinceRain": 12
       }
     },
     "terrain": [
@@ -74391,7 +75516,7 @@
         "behaviorUntil": 0,
         "localPresence": false,
         "rangeState": "outside-basin",
-        "rangeUntil": 158
+        "rangeUntil": 161
       },
       {
         "id": "W-DEER-002",
@@ -75000,63 +76125,35 @@
         "behaviorUntil": 0,
         "localPresence": false,
         "rangeState": "outside-basin",
-        "rangeUntil": 159
+        "rangeUntil": 162
       },
       {
         "id": "W-RABBIT-001",
         "species": "rabbit",
         "label": "cottontail",
         "position": {
-          "x": 75.8704891947722,
-          "y": 28.535708065736827
+          "x": 76.11703029313419,
+          "y": 28.633778597128345
         },
         "previousPosition": {
-          "x": 75.69963191365473,
-          "y": 28.5779429978327
+          "x": 75.99978158841539,
+          "y": 28.655121117561226
         },
         "target": {
-          "x": 78.75917089417926,
-          "y": 27.821642650302966
+          "x": 76.11703029313419,
+          "y": 28.633778597128345
         },
         "activity": "hide",
         "behavior": "resting in cover",
-        "fear": 40,
+        "fear": 22,
         "needs": {
-          "energy": 89.70000000000003,
-          "hunger": 59.60000000000004,
-          "thirst": 53.7999999999999
+          "energy": 97.70000000000003,
+          "hunger": 56.50000000000004,
+          "thirst": 53.099999999999895
         },
         "active": true,
         "ageClass": "adult",
         "history": [
-          {
-            "day": 4,
-            "hour": 14,
-            "activity": "graze",
-            "behavior": "feeding",
-            "from": {
-              "x": 35,
-              "y": 31
-            },
-            "to": {
-              "x": 74.2677502243605,
-              "y": 27.63785274903057
-            }
-          },
-          {
-            "day": 4,
-            "hour": 15,
-            "activity": "graze",
-            "behavior": "feeding",
-            "from": {
-              "x": 74.2677502243605,
-              "y": 27.63785274903057
-            },
-            "to": {
-              "x": 71.30087988910964,
-              "y": 34.415144444967154
-            }
-          },
           {
             "day": 4,
             "hour": 16,
@@ -75884,6 +76981,42 @@
               "x": 78.75917089417926,
               "y": 27.821642650302966
             }
+          },
+          {
+            "day": 6,
+            "hour": 14,
+            "activity": "hide",
+            "behavior": "resting in cover",
+            "from": {
+              "x": 75.8704891947722,
+              "y": 28.535708065736827
+            },
+            "to": {
+              "x": 75.99978158841539,
+              "y": 28.655121117561226
+            },
+            "goal": {
+              "x": 76.11672881691757,
+              "y": 28.763132308818086
+            }
+          },
+          {
+            "day": 6,
+            "hour": 15,
+            "activity": "hide",
+            "behavior": "resting in cover",
+            "from": {
+              "x": 75.99978158841539,
+              "y": 28.655121117561226
+            },
+            "to": {
+              "x": 76.11703029313419,
+              "y": 28.633778597128345
+            },
+            "goal": {
+              "x": 76.11703029313419,
+              "y": 28.633778597128345
+            }
           }
         ],
         "ai": {
@@ -75894,19 +77027,19 @@
         },
         "movement": {
           "from": {
-            "x": 75.69963191365473,
-            "y": 28.5779429978327
+            "x": 75.99978158841539,
+            "y": 28.655121117561226
           },
           "to": {
-            "x": 75.8704891947722,
-            "y": 28.535708065736827
+            "x": 76.11703029313419,
+            "y": 28.633778597128345
           },
           "goal": {
-            "x": 78.75917089417926,
-            "y": 27.821642650302966
+            "x": 76.11703029313419,
+            "y": 28.633778597128345
           },
           "worldDay": 6,
-          "worldHour": 13,
+          "worldHour": 15,
           "speed": 0.17600000000000002
         },
         "home": {
@@ -75927,56 +77060,28 @@
         "species": "rabbit",
         "label": "cottontail",
         "position": {
-          "x": 31.127673331996256,
-          "y": 28.54625308895514
+          "x": 31.389132315534127,
+          "y": 28.521274276781693
         },
         "previousPosition": {
-          "x": 31.300257915218616,
-          "y": 28.511748572816465
+          "x": 31.247259170227682,
+          "y": 28.41712049316892
         },
         "target": {
-          "x": 31.102319664457035,
-          "y": 28.551322000757388
+          "x": 38.26673486461514,
+          "y": 33.57035052108695
         },
         "activity": "hide",
         "behavior": "resting in cover",
         "fear": 0,
         "needs": {
           "energy": 100,
-          "hunger": 82.40000000000005,
-          "thirst": 53.7999999999999
+          "hunger": 79.30000000000005,
+          "thirst": 53.099999999999895
         },
         "active": true,
         "ageClass": "adult",
         "history": [
-          {
-            "day": 4,
-            "hour": 14,
-            "activity": "graze",
-            "behavior": "feeding",
-            "from": {
-              "x": 62,
-              "y": 33
-            },
-            "to": {
-              "x": 17.206463069363963,
-              "y": 28.852815354185623
-            }
-          },
-          {
-            "day": 4,
-            "hour": 15,
-            "activity": "graze",
-            "behavior": "feeding",
-            "from": {
-              "x": 17.206463069363963,
-              "y": 28.852815354185623
-            },
-            "to": {
-              "x": 22.68714707771869,
-              "y": 25.75415666445042
-            }
-          },
           {
             "day": 4,
             "hour": 16,
@@ -76804,6 +77909,42 @@
               "x": 31.102319664457035,
               "y": 28.551322000757388
             }
+          },
+          {
+            "day": 6,
+            "hour": 14,
+            "activity": "hide",
+            "behavior": "resting in cover",
+            "from": {
+              "x": 31.127673331996256,
+              "y": 28.54625308895514
+            },
+            "to": {
+              "x": 31.247259170227682,
+              "y": 28.41712049316892
+            },
+            "goal": {
+              "x": 31.31592629564947,
+              "y": 28.34297154474801
+            }
+          },
+          {
+            "day": 6,
+            "hour": 15,
+            "activity": "hide",
+            "behavior": "resting in cover",
+            "from": {
+              "x": 31.247259170227682,
+              "y": 28.41712049316892
+            },
+            "to": {
+              "x": 31.389132315534127,
+              "y": 28.521274276781693
+            },
+            "goal": {
+              "x": 38.26673486461514,
+              "y": 33.57035052108695
+            }
           }
         ],
         "ai": {
@@ -76814,19 +77955,19 @@
         },
         "movement": {
           "from": {
-            "x": 31.300257915218616,
-            "y": 28.511748572816465
+            "x": 31.247259170227682,
+            "y": 28.41712049316892
           },
           "to": {
-            "x": 31.127673331996256,
-            "y": 28.54625308895514
+            "x": 31.389132315534127,
+            "y": 28.521274276781693
           },
           "goal": {
-            "x": 31.102319664457035,
-            "y": 28.551322000757388
+            "x": 38.26673486461514,
+            "y": 33.57035052108695
           },
           "worldDay": 6,
-          "worldHour": 13,
+          "worldHour": 15,
           "speed": 0.17600000000000002
         },
         "home": {
@@ -76834,10 +77975,10 @@
           "y": 21.73854326336804
         },
         "behaviorGoal": {
-          "x": 27.586087970482186,
-          "y": 30.4742697487236
+          "x": 38.26673486461514,
+          "y": 33.57035052108695
         },
-        "behaviorUntil": 159,
+        "behaviorUntil": 161,
         "localPresence": true,
         "rangeState": "basin",
         "rangeUntil": 100133
@@ -76847,56 +77988,28 @@
         "species": "rabbit",
         "label": "cottontail",
         "position": {
-          "x": 74.33265698972298,
-          "y": 29.33322163795617
+          "x": 74.62040126309249,
+          "y": 29.13528749053371
         },
         "previousPosition": {
-          "x": 74.21690914343483,
-          "y": 29.200637943334034
+          "x": 74.46408236207242,
+          "y": 29.216160237388728
         },
         "target": {
-          "x": 74.37342685670004,
-          "y": 29.379921596239758
+          "x": 77.43343968045374,
+          "y": 27.679941129114013
         },
         "activity": "hide",
         "behavior": "resting in cover",
         "fear": 0,
         "needs": {
           "energy": 100,
-          "hunger": 76.80000000000007,
-          "thirst": 53.7999999999999
+          "hunger": 73.70000000000007,
+          "thirst": 53.099999999999895
         },
         "active": true,
         "ageClass": "adult",
         "history": [
-          {
-            "day": 4,
-            "hour": 14,
-            "activity": "graze",
-            "behavior": "feeding",
-            "from": {
-              "x": 77,
-              "y": 27
-            },
-            "to": {
-              "x": 66.43895847635577,
-              "y": 32.37213780952152
-            }
-          },
-          {
-            "day": 4,
-            "hour": 15,
-            "activity": "move",
-            "behavior": "roaming",
-            "from": {
-              "x": 66.43895847635577,
-              "y": 32.37213780952152
-            },
-            "to": {
-              "x": 62.301435640256386,
-              "y": 28.372002261923626
-            }
-          },
           {
             "day": 4,
             "hour": 16,
@@ -77724,6 +78837,42 @@
               "x": 74.37342685670004,
               "y": 29.379921596239758
             }
+          },
+          {
+            "day": 6,
+            "hour": 14,
+            "activity": "hide",
+            "behavior": "resting in cover",
+            "from": {
+              "x": 74.33265698972298,
+              "y": 29.33322163795617
+            },
+            "to": {
+              "x": 74.46408236207242,
+              "y": 29.216160237388728
+            },
+            "goal": {
+              "x": 74.47928970862392,
+              "y": 29.20261495876855
+            }
+          },
+          {
+            "day": 6,
+            "hour": 15,
+            "activity": "hide",
+            "behavior": "resting in cover",
+            "from": {
+              "x": 74.46408236207242,
+              "y": 29.216160237388728
+            },
+            "to": {
+              "x": 74.62040126309249,
+              "y": 29.13528749053371
+            },
+            "goal": {
+              "x": 77.43343968045374,
+              "y": 27.679941129114013
+            }
           }
         ],
         "ai": {
@@ -77734,19 +78883,19 @@
         },
         "movement": {
           "from": {
-            "x": 74.21690914343483,
-            "y": 29.200637943334034
+            "x": 74.46408236207242,
+            "y": 29.216160237388728
           },
           "to": {
-            "x": 74.33265698972298,
-            "y": 29.33322163795617
+            "x": 74.62040126309249,
+            "y": 29.13528749053371
           },
           "goal": {
-            "x": 74.37342685670004,
-            "y": 29.379921596239758
+            "x": 77.43343968045374,
+            "y": 27.679941129114013
           },
           "worldDay": 6,
-          "worldHour": 13,
+          "worldHour": 15,
           "speed": 0.17600000000000002
         },
         "home": {
@@ -77754,10 +78903,10 @@
           "y": 24.9215868632797
         },
         "behaviorGoal": {
-          "x": 67.78715683590853,
-          "y": 34.27172967070946
+          "x": 77.43343968045374,
+          "y": 27.679941129114013
         },
-        "behaviorUntil": 159,
+        "behaviorUntil": 161,
         "localPresence": true,
         "rangeState": "basin",
         "rangeUntil": 100133
@@ -78340,64 +79489,28 @@
         "species": "fish",
         "label": "creek fish school",
         "position": {
-          "x": 57.66128885942446,
-          "y": 18.23161303978705
+          "x": 49.29763821528073,
+          "y": 19.012220433240465
         },
         "previousPosition": {
-          "x": 61.84571551779469,
-          "y": 18.529632758668114
+          "x": 53.47946353735259,
+          "y": 18.621916736513757
         },
         "target": {
-          "x": 57.66128885942446,
-          "y": 18.23161303978705
+          "x": 49.29763821528072,
+          "y": 19.012220433240465
         },
         "activity": "swim",
         "behavior": "following creek channel",
         "fear": 0,
         "needs": {
-          "energy": 22.600000000000115,
+          "energy": 19.000000000000114,
           "hunger": 0,
-          "thirst": 22.199999999999932
+          "thirst": 21.199999999999932
         },
         "active": true,
         "ageClass": "school",
         "history": [
-          {
-            "day": 4,
-            "hour": 16,
-            "activity": "swim",
-            "behavior": "schooling",
-            "from": {
-              "x": 97.24493607227342,
-              "y": 63.64533813911548
-            },
-            "to": {
-              "x": 92.78538470145608,
-              "y": 64.77334592767069
-            },
-            "goal": {
-              "x": 48.486834079276015,
-              "y": 75.97830937994004
-            }
-          },
-          {
-            "day": 4,
-            "hour": 17,
-            "activity": "swim",
-            "behavior": "schooling",
-            "from": {
-              "x": 92.78538470145608,
-              "y": 64.77334592767069
-            },
-            "to": {
-              "x": 88.38717383571326,
-              "y": 66.12084033599369
-            },
-            "goal": {
-              "x": 59.36600514837555,
-              "y": 75.01215176305087
-            }
-          },
           {
             "day": 4,
             "hour": 18,
@@ -79218,6 +80331,42 @@
               "x": 57.66128885942446,
               "y": 18.23161303978705
             }
+          },
+          {
+            "day": 6,
+            "hour": 14,
+            "activity": "swim",
+            "behavior": "following creek channel",
+            "from": {
+              "x": 57.66128885942446,
+              "y": 18.23161303978705
+            },
+            "to": {
+              "x": 53.47946353735259,
+              "y": 18.621916736513757
+            },
+            "goal": {
+              "x": 53.479463537352586,
+              "y": 18.621916736513757
+            }
+          },
+          {
+            "day": 6,
+            "hour": 15,
+            "activity": "swim",
+            "behavior": "following creek channel",
+            "from": {
+              "x": 53.47946353735259,
+              "y": 18.621916736513757
+            },
+            "to": {
+              "x": 49.29763821528073,
+              "y": 19.012220433240465
+            },
+            "goal": {
+              "x": 49.29763821528072,
+              "y": 19.012220433240465
+            }
           }
         ],
         "ai": {
@@ -79228,19 +80377,19 @@
         },
         "movement": {
           "from": {
-            "x": 61.84571551779469,
-            "y": 18.529632758668114
+            "x": 53.47946353735259,
+            "y": 18.621916736513757
           },
           "to": {
-            "x": 57.66128885942446,
-            "y": 18.23161303978705
+            "x": 49.29763821528073,
+            "y": 19.012220433240465
           },
           "goal": {
-            "x": 57.66128885942446,
-            "y": 18.23161303978705
+            "x": 49.29763821528072,
+            "y": 19.012220433240465
           },
           "worldDay": 6,
-          "worldHour": 13,
+          "worldHour": 15,
           "speed": 4.2
         },
         "home": {
@@ -79248,10 +80397,10 @@
           "y": 21.01049778493481
         },
         "behaviorGoal": {
-          "x": 57.66128885942446,
-          "y": 18.23161303978705
+          "x": 49.29763821528072,
+          "y": 19.012220433240465
         },
-        "behaviorUntil": 158,
+        "behaviorUntil": 160,
         "localPresence": true,
         "rangeState": "basin",
         "rangeUntil": 100133,
@@ -79262,64 +80411,28 @@
         "species": "fish",
         "label": "creek fish school",
         "position": {
-          "x": 22.630726372731466,
-          "y": 17.92431283527222
+          "x": 30.96210118411306,
+          "y": 17.944788912815547
         },
         "previousPosition": {
-          "x": 18.460643651086396,
-          "y": 18.42472276186963
+          "x": 26.80080909437654,
+          "y": 17.423902908674812
         },
         "target": {
-          "x": 22.630726372731466,
-          "y": 17.92431283527222
+          "x": 30.96210118411306,
+          "y": 17.944788912815547
         },
         "activity": "swim",
         "behavior": "following creek channel",
         "fear": 0,
         "needs": {
-          "energy": 22.600000000000115,
+          "energy": 19.000000000000114,
           "hunger": 0,
-          "thirst": 22.199999999999932
+          "thirst": 21.199999999999932
         },
         "active": true,
         "ageClass": "school",
         "history": [
-          {
-            "day": 4,
-            "hour": 16,
-            "activity": "swim",
-            "behavior": "schooling",
-            "from": {
-              "x": 29.76978268322855,
-              "y": 65.97885158238277
-            },
-            "to": {
-              "x": 33.727675118418546,
-              "y": 68.3230118737165
-            },
-            "goal": {
-              "x": 48.14194819712138,
-              "y": 76.86022381993098
-            }
-          },
-          {
-            "day": 4,
-            "hour": 17,
-            "activity": "swim",
-            "behavior": "schooling",
-            "from": {
-              "x": 33.727675118418546,
-              "y": 68.3230118737165
-            },
-            "to": {
-              "x": 38.29770435400034,
-              "y": 67.7987669062369
-            },
-            "goal": {
-              "x": 99,
-              "y": 60.835381910993604
-            }
-          },
           {
             "day": 4,
             "hour": 18,
@@ -80140,6 +81253,42 @@
               "x": 22.630726372731466,
               "y": 17.92431283527222
             }
+          },
+          {
+            "day": 6,
+            "hour": 14,
+            "activity": "swim",
+            "behavior": "following creek channel",
+            "from": {
+              "x": 22.630726372731466,
+              "y": 17.92431283527222
+            },
+            "to": {
+              "x": 26.80080909437654,
+              "y": 17.423902908674812
+            },
+            "goal": {
+              "x": 26.80080909437654,
+              "y": 17.423902908674812
+            }
+          },
+          {
+            "day": 6,
+            "hour": 15,
+            "activity": "swim",
+            "behavior": "following creek channel",
+            "from": {
+              "x": 26.80080909437654,
+              "y": 17.423902908674812
+            },
+            "to": {
+              "x": 30.96210118411306,
+              "y": 17.944788912815547
+            },
+            "goal": {
+              "x": 30.96210118411306,
+              "y": 17.944788912815547
+            }
           }
         ],
         "ai": {
@@ -80150,19 +81299,19 @@
         },
         "movement": {
           "from": {
-            "x": 18.460643651086396,
-            "y": 18.42472276186963
+            "x": 26.80080909437654,
+            "y": 17.423902908674812
           },
           "to": {
-            "x": 22.630726372731466,
-            "y": 17.92431283527222
+            "x": 30.96210118411306,
+            "y": 17.944788912815547
           },
           "goal": {
-            "x": 22.630726372731466,
-            "y": 17.92431283527222
+            "x": 30.96210118411306,
+            "y": 17.944788912815547
           },
           "worldDay": 6,
-          "worldHour": 13,
+          "worldHour": 15,
           "speed": 4.2
         },
         "home": {
@@ -80170,10 +81319,10 @@
           "y": 20.352820184721338
         },
         "behaviorGoal": {
-          "x": 22.630726372731466,
-          "y": 17.92431283527222
+          "x": 30.96210118411306,
+          "y": 17.944788912815547
         },
-        "behaviorUntil": 158,
+        "behaviorUntil": 160,
         "localPresence": true,
         "rangeState": "basin",
         "rangeUntil": 100133,
@@ -80181,15 +81330,15 @@
       }
     ],
     "ambient": {
-      "birds": 71,
-      "frogs": 22,
-      "insects": 56,
-      "fishActivity": 47,
-      "seed": 2115901654
+      "birds": 69,
+      "frogs": 27,
+      "insects": 50,
+      "fishActivity": 60,
+      "seed": 2581246392
     },
     "lastAdvanced": {
       "day": 6,
-      "hour": 13
+      "hour": 15
     },
     "events": [
       {
@@ -80516,10 +81665,10 @@
           "y": 27.792031965491155
         },
         "heading": 2.563198551370395,
-        "clarity": 0.7399999999999999,
+        "clarity": 0.6719999999999998,
         "size": 0.48,
         "substrate": "mud",
-        "ageHours": 7,
+        "ageHours": 9,
         "created": {
           "day": 6,
           "hour": 6
@@ -80550,35 +81699,16 @@
       "bear-encounter:W-BEAR-001:agent-mara": 137,
       "wildlife-flight:W-DEER-001:agent-mara": 139
     },
-    "signs": [
-      {
-        "id": "SIGN-W-RABBIT-003-rabbit-browse-6-04",
-        "sourceId": "W-RABBIT-003",
-        "species": "rabbit",
-        "kind": "rabbit-browse",
-        "label": "clipped vegetation",
-        "position": {
-          "x": 75.93822477021081,
-          "y": 27.674044343810877
-        },
-        "clarity": 0.21800000000000017,
-        "ageHours": 9,
-        "created": {
-          "day": 6,
-          "hour": 4
-        },
-        "active": true
-      }
-    ]
+    "signs": []
   },
   "environmentState": {
-    "surfaceWetness": 0.519,
-    "creekLevel": 0.576,
+    "surfaceWetness": 0.409,
+    "creekLevel": 0.544,
     "lastRainAt": {
       "day": 6,
       "hour": 4
     },
-    "hoursSinceRain": 10
+    "hoursSinceRain": 12
   },
   "surfaceHistory": {
     "version": "surface-history-1",
@@ -80594,10 +81724,10 @@
           "x": 59,
           "y": 29
         },
-        "traversals": 8,
+        "traversals": 9,
         "agents": {
           "agent-mara": 6,
-          "agent-ivo": 2
+          "agent-ivo": 3
         },
         "firstUsed": {
           "day": 5,
@@ -80605,9 +81735,9 @@
         },
         "lastUsed": {
           "day": 6,
-          "hour": 10
+          "hour": 14
         },
-        "lastActionId": "physical:move:place:log"
+        "lastActionId": "make_fire"
       },
       {
         "id": "ROUTE-002",
@@ -80620,10 +81750,10 @@
           "x": 78,
           "y": 42
         },
-        "traversals": 5,
+        "traversals": 6,
         "agents": {
           "agent-ivo": 3,
-          "agent-mara": 2
+          "agent-mara": 3
         },
         "firstUsed": {
           "day": 5,
@@ -80631,7 +81761,7 @@
         },
         "lastUsed": {
           "day": 6,
-          "hour": 3
+          "hour": 14
         },
         "lastActionId": "gather_wet_wood"
       },
@@ -80838,14 +81968,14 @@
       }
     ],
     "campWear": {
-      "uses": 10,
+      "uses": 12,
       "agents": {
         "agent-mara": 7,
-        "agent-ivo": 3
+        "agent-ivo": 5
       },
       "lastUsed": {
         "day": 6,
-        "hour": 12
+        "hour": 15
       }
     }
   }
