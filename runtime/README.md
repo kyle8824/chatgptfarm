@@ -1,3 +1,6 @@
+Cloudflare deployment is now prepared separately: see [phone setup](../cloudflare/SETUP.md).
+The following instructions apply only to the alternative Node server.
+
 # Persistent world runtime — deployment candidate, not live
 
 The static viewer currently consumes GitHub snapshots. GitHub scheduled jobs have
