@@ -2,8 +2,10 @@
 'use strict';
 
 // Cloudflare owns the persistent world while the main hostname is migrated.
-// Cloudflare-hosted builds override this with their same-origin URL.
-const RUNTIME=window.CHATGPTFARM_RUNTIME_URL||'https://chatgptfarm.kyle8824.workers.dev';
+// Cloudflare-hosted builds override this with their same-origin URL. Local QA
+// keeps its controlled file-backed state rather than reaching production.
+const PUBLIC_HOST=/^(www\.)?chatgptfarm\.com$/i.test(location.hostname);
+const RUNTIME=window.CHATGPTFARM_RUNTIME_URL||(PUBLIC_HOST?'https://chatgptfarm.kyle8824.workers.dev':null);
 const RAW='https://raw.githubusercontent.com/kyle8824/chatgptfarm/main/world/state.json';
 const ASSET_REV='e0cbe0d995554a490d4c182fe9beb8769ffbb606';
 const ASSET_ROOT=`https://raw.githubusercontent.com/Tiddybub/2d-assets/${ASSET_REV}`;
