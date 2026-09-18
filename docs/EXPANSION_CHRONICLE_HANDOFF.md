@@ -13,7 +13,8 @@ Reviewed main at d7acaec0547448d2433e3e32cdcdb3fd3beefeea.
 - docs/DEPLOYMENT_ARCHITECTURE.md still describes GitHub as canonical; runtime/README.md describes an older pre-cutover state. These documents alone do not establish current production authority.
 - PR #5 feature/character-inspector remains open at inspection. Do NOT blindly merge it: user reports newer UI changes elsewhere.
 - Existing local chatgptfarm-live worktree has unrelated modifications. Do not reset, overwrite, or publish it wholesale.
-First implementation prerequisite: identify branch/deployment containing the other model's latest UI release. Confirm actual production state source and writer before any migration.
+Release baseline resolved: GitHub confirms PR #7 merged as a28b3faefb1cbfc309a64a1fa88b98e174d29b43; current main/index.html identifies LIVING WORLD · v1.6.5 with JS/CSS revision 001605000. User reports Vercel, Cloudflare validation and browser QA passed and canonical state preserved; those checks were not independently rerun in this checkpoint.
+Preserve popup closing, AGENTS NOW panel, memory-chain prevention, object/campfire information, bare AI indicators/model information, live status wording, removal of stale action labels, and shelter layering. PR #5 is older work, not the expansion baseline. Start from latest main including subsequent world heartbeats. Confirm actual production state source and writer before any migration.
 
 ## Proposed milestone: a richer starting region
 1. Introduce a backward-compatible region/site registry: stable region IDs, stable site IDs, positions local to region, typed resources and material properties. Wrap the existing basin without changing its coordinates, identities or history.
@@ -55,4 +56,4 @@ Use separate branches; record exact touched files. Do not concurrently edit shar
 After each completed/tested unit and before release: commit work to its task branch and update this file with branch, commit, changed files, tests actually run, failures, deployment status and exact next step. Mark untested/incomplete work explicitly. Never record secrets. Commit early; usage limits can interrupt without warning.
 
 ## Next exact step
-Locate latest UI branch/release from the other chat; reconcile production authority. Then create a fresh expansion branch from that code and implement the region/site compatibility layer with migration tests. Chronicle reader can proceed independently against fixtures.
+Release identification is complete. Reconcile production authority, then create a fresh expansion branch from latest main (v1.6.5 or newer) and implement the region/site compatibility layer with migration tests. First user-visible milestone: a second discoverable forage site with real harvesting, knowledge and consequences. Chronicle reader can proceed independently against fixtures.
