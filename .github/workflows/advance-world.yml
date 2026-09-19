@@ -2,20 +2,10 @@ name: Advance ChatGPTFarm World
 # Canonical heartbeats also apply versioned world/ecology migrations before decisions.
 # object-field-0.9 realigns creek, stone field, clay bank, and depth-aware basin rendering.
 
+# Cloudflare FarmWorld/preview-v1 owns the public world. Retain this workflow
+# only for an explicitly configured legacy environment; never run two writers.
 on:
-  schedule:
-    - cron: '2-59/5 * * * *'
   workflow_dispatch:
-  push:
-    branches: [main]
-    paths:
-      - 'engine.js'
-      - 'engine/**'
-      - 'mind.js'
-      - 'scripts/advance-world.mjs'
-      - 'scripts/smoke-test.mjs'
-      - 'package.json'
-      - '.github/workflows/advance-world.yml'
 
 permissions:
   contents: write
@@ -26,6 +16,7 @@ concurrency:
 
 jobs:
   advance:
+    if: ${{ vars.WORLD_RUNTIME == 'github-legacy' }}
     runs-on: ubuntu-latest
     timeout-minutes: 10
     steps:

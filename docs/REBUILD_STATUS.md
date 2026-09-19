@@ -4,7 +4,7 @@ Architecture map: [BLUEPRINT_IMPLEMENTATION.md](BLUEPRINT_IMPLEMENTATION.md). Re
 
 Branch: `rebuild/survival-foundation`
 Base: `25b8a7d5c7b1fdf0e883c64812b961a152462985`
-Release status: **BLOCKED — implementation checkpoint, not a release candidate.**
+Release status: **CANDIDATE — local gates pass; see latest entry for hosted checks.**
 
 ## Instructions for the next model
 
@@ -130,3 +130,5 @@ Public state fetched read-only at tick 439, Day 22 07:00, updated 2026-09-19T04:
 Release preparation: v1.6.6 cache/version identifiers, runtime /health and /state build identity generated from deployment checkout SHA. Wrangler keeps dashboard variables and no longer overwrites AI_ENABLED/model/budget with preview defaults (code defaults still apply for new installs). Existing FarmWorld / preview-v1 identity and secrets unchanged. Reference: https://developers.cloudflare.com/workers/wrangler/configuration/#source-of-truth .
 
 STATUS: CANDIDATE, NOT YET RELEASED. Await exact-commit CI/browser checks and verified deployment path. Main observed 25b8a7d5c7b1fdf0e883c64812b961a152462985; no other model's clay changes included. Do not reset the Durable Object, seed from the audit copy, or claim this is the complete open-world blueprint. Remaining blueprint work includes real travel/labor, learned plans/skills, generic assemblies, richer ecology, scalable archives and visual modernization.
+
+Release ownership: automatic schedule/push triggers removed from legacy GitHub advance-world workflow. Manual execution requires explicit WORLD_RUNTIME=github-legacy configuration; absent that, it cannot create a parallel world or spend on old-world AI calls. Cloudflare remains the public authority.
