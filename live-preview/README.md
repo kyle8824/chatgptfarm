@@ -31,3 +31,11 @@ Browser-only preview URL: https://chatgptfarm-h6tmzuztq-kyle8824.vercel.app (exi
 Verified unchanged production refs: main `88e0a6599dc5aef612b781e9a814ece94c9c395e`, repair/continuous-runtime `17a473447f7e68f27684ad891aade214bc2f597a`. No production deploy, merge, reseed or runtime write performed.
 
 User's full request remains INCOMPLETE: no remotely deployed unattended preview server, no connected live AI. The step engine has an adapter interface but asynchronous/bounded model decision scheduling is still required in the live controller. Do not describe this as only needing to flip AI_ENABLED. The preview is useful evidence of elapsed execution, not fulfillment of the autonomous AI world request.
+
+## Visible-motion correction — 2026-09-19
+
+Kyle reported nobody moved in repeated visits. Earlier QA proved changing needs but did not assert rendered travel. Replaying the seed showed a very short initial walk followed by roughly 100 seconds drinking at 6x, with Mara doing longer stationary work. This explains a static-looking opening but is not proof of the cause on Kyle's device.
+
+Candidate 977731e7d0a30f7e92638aaad36fa8ba0d6ee4a8 adds visible work progress, selectable 6x/24x clock, stopped/error status and worker request timeouts. The renderer interpolates between received positions for elapsed-only snapshots. No future positions are computed. Browser QA now selects 24x and requires a villager's actual canvas position to move >30 pixels within 45 seconds, then verifies changing needs, immediate rain, restart and no page errors. Run 35438965050 PASSED including real workerd tests. Vercel deployed successfully.
+
+Updated preview: https://chatgptfarm-61sxcvyfy-kyle8824.vercel.app . The previous immutable deployment URL does not receive this fix. Vercel login still applies. The deployed page has not been interactively verified through that login; exact-source browser QA passed in CI. Autonomous hosting and connected AI remain incomplete. Production unchanged.
