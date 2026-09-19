@@ -1,3 +1,4 @@
+import {beginActionTransition} from '../runtime/action-timeline.mjs';
 import {beginTransition,snapshotTransition} from '../runtime/timeline.mjs';
 import {tickWithMind,tick,migrateWorld} from '../engine.js';
 import {createOpenAIMind} from '../mind.js';
@@ -32,7 +33,7 @@ export class WorldController {
       r.aiBudget.used++;await this.persist(r);
       return mind.decide(context);
     }};
-    return beginTransition(world,start,150000,w=>tickWithMind(w,configured?bounded:null,{fallbackReason:this.env.AI_ENABLED!=='true'?'ai_disabled':'missing_api_key'}));
+    return beginActionTransition(world,start,150000,configured?bounded:null,{fallbackReason:this.env.AI_ENABLED!=='true'?'ai_disabled':'missing_api_key'});
   }
   alarm(){return this.serial(async()=>{
     const original=await this.load();if(!original||original.paused)return;
@@ -42,7 +43,7 @@ export class WorldController {
       // utility decisions so downtime cannot trigger an unbounded model bill.
       for(let i=0;this.now()>=r.current.end&&i<8;i++){
         const completed=r.current;
-        r.current=r.next||await beginTransition(r.current.after,r.current.end,150000,tick);
+        r.current=r.next||await beginActionTransition(r.current.after,r.current.end,150000,null,{fallbackReason:'offline_catchup',captureFrames:r.current.end+150000>this.now()});
         r.next=null;await this.persist(r,completed);r=structuredClone(r);
       }
       if(this.now()<r.current.end&&!r.next){
@@ -62,11 +63,11 @@ export class WorldController {
     return w;
   }
   async evidence(tick){return this.serial(()=>readEvidence(this.storage,tick));}
-  async health(){await this.load();const r=this.record;
+  async health(){await this.load();const r=this.record,visible=r?snapshotTransition(r.current,r.paused?r.pausedAt:this.now()):null;
     return r?{initialized:true,mode:r.mode,paused:r.paused,tick:r.current.before.meta.tickNumber,
       start:r.current.start,end:r.current.end,serverTime:this.now(),planned:!!r.next,
       alarmAt:await this.storage.getAlarm(),sourceTick:r.sourceTick,aiCallsToday:r.aiBudget.used,
-      cognition:{enabled:this.env.AI_ENABLED==='true',providerConfigured:!!this.env.OPENAI_API_KEY,model:createOpenAIMind(this.env).model,decisionMode:r.current.after.meta.mindMode||'fallback',lastDecisionReasons:r.current.after.dna.slice(0,r.current.after.agents.length).map(d=>({agentId:d.agent_id,reason:r.current.evidence?.decisions.find(x=>x.decision_id===d.decision_id)?.evidence?.fallbackReason||null})),reflection:'not_integrated',experiments:'disabled'},
+      cognition:{enabled:this.env.AI_ENABLED==='true',providerConfigured:!!this.env.OPENAI_API_KEY,model:createOpenAIMind(this.env).model,decisionMode:visible.runtime.decisionSource,lastDecisionReasons:visible.agents.map(a=>({agentId:a.id,reason:a.mind.fallbackReason||null,executionMode:a.mind.executionMode||a.mind.brainMode})),reflection:'not_integrated',experiments:'disabled'},
       evidence:await this.storage.get('evidence:summary')||{version:1,segments:0,externalArchive:'not_configured'},simulatedSecondsPerTransition:3600,wallMillisecondsPerTransition:150000}
       :{initialized:false,mode:'preview'};
   }

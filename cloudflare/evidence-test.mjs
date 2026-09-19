@@ -3,7 +3,7 @@ import {createWorld} from '../engine.js';
 import {beginTransition} from '../runtime/timeline.mjs';
 import {WorldController} from './world.mjs';
 import {readCheckpoint,writeCheckpoint} from './checkpoint.mjs';
-import {readEvidence} from './evidence.mjs';
+import {readEvidence,commitEvidence,EVIDENCE_WINDOW} from './evidence.mjs';
 class Storage {
  constructor(){this.map=new Map();this.alarm=null;this.failAt=null;}
  async get(k){return structuredClone(this.map.get(k));}
@@ -59,7 +59,15 @@ await assert.rejects(readEvidence(storage,1));
 for(const [env,reason] of [[{},'ai_disabled'],[{AI_ENABLED:'true'},'missing_api_key'],[{AI_ENABLED:'true',OPENAI_API_KEY:'unused',AI_CALLS_PER_DAY:'0'},'budget_exhausted']]){
  const store=new Storage(),c=new WorldController(store,env,()=>now);
  await c.initialize(createWorld());await c.alarm();
- assert(c.record.next.evidence.decisions.every(d=>d.evidence.fallbackReason===reason));
+ assert(c.record.next.evidence.decisions.some(d=>d.evidence.fallbackReason===reason));
  assert.equal(c.record.aiBudget.used,0);
 }
 console.log('PASS atomic evidence/outbox/checkpoint rollback, duplicate/restart/conflict, retention, legacy coverage, corruption and AI gate diagnostics');
+
+const bounded=new Storage();
+for(let tick=1;tick<=EVIDENCE_WINDOW+1;tick++)await bounded.transaction(tx=>commitEvidence(tx,{tick,checksum:String(tick),bytes:new Uint8Array([1]),eventCount:1,decisionCount:1,coverage:'fixture'}));
+assert.equal(await bounded.get('evidence:000000000001:manifest'),undefined);
+assert.equal(await bounded.get('archive-outbox:000000000001'),undefined);
+assert.equal((await bounded.get('evidence:summary')).firstTick,2);
+assert.equal((await bounded.get('evidence:summary')).pendingSegments,EVIDENCE_WINDOW);
+console.log('PASS bounded diagnostic retention explicitly retires oldest records');

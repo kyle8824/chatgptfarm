@@ -1,3 +1,4 @@
+import {snapshotActionTransition} from './action-timeline.mjs';
 import {tick, migrateWorld} from '../engine.js';
 import {coordForPosition} from '../engine/spectator.js';
 
@@ -66,6 +67,7 @@ export class Timeline {
 }
 
 export function snapshotTransition(r, now) {
+    if(r.actionVersion===1)return snapshotActionTransition(r,now);
     const t=Math.max(0,Math.min(1,(now-r.start)/(r.end-r.start)));
     const w=copy(r.before);
     w.runtime={version:1,serverTime:now,start:r.start,end:r.end,revision:r.after.meta.tickNumber,

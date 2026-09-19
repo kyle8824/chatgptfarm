@@ -17,6 +17,7 @@ export class TestWorld extends DurableObject {
  if(p==='/init')await this.world.initialize(createWorld());
  if(p==='/prepare')await this.world.alarm();
  if(p==='/complete'){this.clock=1150000;await this.world.alarm();}
+ if(p==='/middle'){this.clock=1225000;return Response.json(await this.world.snapshot());}
  if(p==='/record')return Response.json(await this.world.evidence(1));
  return Response.json(await this.world.health());}
 }
@@ -31,6 +32,7 @@ try{
  const health=await call('/complete');assert.equal(health.evidence.segments,1);assert.equal(health.evidence.pendingSegments,1);
  const record=await call('/record');assert.equal(record.payload.decisions.length,2);
  await call('/complete');assert.deepEqual(await call('/record'),record);
- await mf.dispose();mf=create();assert.deepEqual(await call('/record'),record);
+ const middle=await call('/middle');assert.equal(middle.runtime.actionVersion,1);assert(middle.agents.some(a=>a.task));
+ await mf.dispose();mf=create();assert.deepEqual(await call('/record'),record);assert.deepEqual(await call('/middle'),middle,'Exact persisted task progress and partial effects survive real restart');
  console.log('PASS real SQLite workerd: completed-only archive, atomic outbox, duplicate delivery, checksum and persistence across restart');
 }finally{await mf.dispose();await fs.rm(temporary,{recursive:true,force:true});}
