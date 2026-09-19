@@ -46,7 +46,7 @@ jobs:
         run: |
           grep -q 'phaser@3.90.0' index.html
           grep -q 'phaser-world-v1.js' index.html
-          grep -q 'LIVING WORLD · v1.6.3' index.html
+          node --input-type=module -e 'import fs from "node:fs"; import assert from "node:assert/strict"; import {BUILD_INFO} from "./cloudflare/build-info.mjs"; assert(fs.readFileSync("index.html","utf8").includes("LIVING WORLD · v"+BUILD_INFO.version),"Page and runtime release versions differ")' 
           grep -q 'pixi.js@7.4.3' legacy.html
           if grep -q 'world-pixi-v11.js' index.html; then
             echo 'Production root still references legacy Pixi renderer.'
@@ -74,6 +74,6 @@ jobs:
         if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: production-v1-6-3-qa
+          name: production-living-world-qa
           path: phaser-qa/
           retention-days: 7
