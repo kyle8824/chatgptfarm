@@ -1,3 +1,4 @@
+import {snapshotActionTransition} from './action-timeline.mjs';
 import {tick, migrateWorld} from '../engine.js';
 import {coordForPosition} from '../engine/spectator.js';
 
@@ -13,7 +14,10 @@ export async function beginTransition(world, start, duration = 150000, advance =
   await advance(after);
   after.meta.tickNumber = (before.meta.tickNumber || 0) + 1;
   after.meta.lastAdvancedAt = new Date(start + duration).toISOString();
-  return {version:1, start, end:start+duration, before, after};
+  // Full decision inputs stay private and outside the capped spectator working set.
+  const decisions=after.dna.filter(d=>d.evidence&&Number(d.decision_id.slice(2))>=before.seq.decision).map(d=>copy(d));
+  for(const d of after.dna)delete d.evidence;
+  return {version:1, start, end:start+duration, before, after, evidence:{version:1,decisions}};
 }
 
 export class Timeline {
@@ -63,6 +67,7 @@ export class Timeline {
 }
 
 export function snapshotTransition(r, now) {
+    if(r.actionVersion===1)return snapshotActionTransition(r,now);
     const t=Math.max(0,Math.min(1,(now-r.start)/(r.end-r.start)));
     const w=copy(r.before);
     w.runtime={version:1,serverTime:now,start:r.start,end:r.end,revision:r.after.meta.tickNumber,

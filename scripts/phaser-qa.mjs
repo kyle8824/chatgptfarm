@@ -1,7 +1,8 @@
+import {beginActionTransition,snapshotActionTransition} from '../runtime/action-timeline.mjs';
 // Phaser Living World QA · v1.3 diagnostic gate
 import { chromium } from 'playwright';
 import fs from 'node:fs';
-import { migrateWorld, advanceEcology } from '../engine.js';
+import { migrateWorld, advanceEcology, createWorld } from '../engine.js';
 
 const base=process.env.BASE_URL||'http://127.0.0.1:4173/phaser.html';
 fs.mkdirSync('phaser-qa',{recursive:true});
@@ -23,7 +24,7 @@ try{await page.waitForSelector('#phLoading.hidden',{state:'attached',timeout:100
 await page.waitForTimeout(1200);
 const snap=()=>page.evaluate(()=>window.ChatGPTFarmPhaserDebug.snapshot());
 let s=await snap();
-if(s.version!=='phaser-v1.6.7-world-continuity')failures.push(`wrong renderer: ${s.version}`);
+if(s.version!=='phaser-v1.6.8-persistent-actions')failures.push(`wrong renderer: ${s.version}`);
 if(!String(s.phaser||'').startsWith('3.'))failures.push(`Phaser failed to initialize: ${s.phaser}`);
 if(s.agents!==2)failures.push(`expected 2 agents, got ${s.agents}`);
 const expectedPresentWildlife=(state.ecologySystem?.wildlife||[]).filter(x=>x.active&&x.localPresence!==false).length;if(s.wildlife!==expectedPresentWildlife)failures.push(`renderer wildlife count drift: ${s.wildlife} != canonical ${expectedPresentWildlife}`);
@@ -35,10 +36,10 @@ const expectedDNA=state.dna?.[0]?.decision_id||null;if(!String(s.decisionDNA?.pr
 await page.screenshot({path:'phaser-qa/mobile-auto.png'});const savedResources={...state.resources};state.meta.tickNumber=Number(state.meta.tickNumber||0)+31;Object.assign(state.resources,{berries:0,reeds:0,stones:0,clay:0});await page.evaluate(()=>window.ChatGPTFarmPhaserDebug.reload());await page.waitForTimeout(650);let depleted=await snap();if(depleted.resourceVisualState?.stonesLoose!==0||depleted.resourceVisualState?.reedsStanding!==0||depleted.resourceVisualState?.berryFruitingBushes!==0||depleted.resourceVisualState?.clayRichness!==0)failures.push(`depleted resources remained visually full: ${JSON.stringify(depleted.resourceVisualState)}`);await page.screenshot({path:'phaser-qa/mobile-resource-depletion-proof.png'});Object.assign(state.resources,savedResources);state.meta.tickNumber++;state.meta.lastAdvancedAt=new Date().toISOString();await page.evaluate(()=>window.ChatGPTFarmPhaserDebug.reload());await page.waitForTimeout(650);s=await snap();if(JSON.stringify(s.resourceVisualState)!==JSON.stringify(expectedResourceVisuals))failures.push(`resource landscape failed to recover after canonical quantities restored: ${JSON.stringify(s.resourceVisualState)}`);
 
 
-if(s.aiAgentMarkers!==2)failures.push(`expected 2 visible AI identity markers, got ${s.aiAgentMarkers}`);
+const expectedAI=state.agents.filter(a=>a.mind?.brainMode==='ai').length;if(s.aiAgentMarkers!==expectedAI)failures.push(`expected ${expectedAI} actual AI markers, got ${s.aiAgentMarkers}`);
 if((s.aiMarkerLabels||[]).length!==2||(s.aiMarkerLabels||[]).some(x=>x!=='✦'))failures.push(`AI world markers should be bare diamonds only: ${JSON.stringify(s.aiMarkerLabels)}`);
 const aiKey=(await page.locator('#phAiKey').textContent())||'';
-if(!/✦\s*=/.test(aiKey))failures.push(`AI model key missing: ${aiKey}`);
+if(!(expectedAI?/✦\s*=/:/RULE-BASED FALLBACK/).test(aiKey))failures.push(`AI model key missing: ${aiKey}`);
 if(/PREVIEW/i.test((await page.locator('#phWorldStatus').textContent())||''))failures.push('public world status still uses PREVIEW wording');
 const agentNow=await page.evaluate(()=>[...document.querySelectorAll('[data-agent-now]')].map(x=>x.textContent.replace(/\s+/g,' ').trim()));
 if(agentNow.length!==2||!agentNow.some(x=>/Mara/i.test(x))||!agentNow.some(x=>/Ivo/i.test(x)))failures.push(`Agents Now panel does not show both agents: ${agentNow.join(' | ')}`);
@@ -53,7 +54,7 @@ else{
   meters:[...document.querySelectorAll('.phMeter')].map(x=>x.textContent.replace(/\s+/g,' ').trim()),
   relationship:document.querySelector('.phRelation')?.textContent?.replace(/\s+/g,' ').trim()||''
  }));
- if(!/AI/i.test(profile.autonomy)||!(s.aiControllerModel?profile.autonomy.toLowerCase().includes(String(s.aiControllerModel).replace(/^gpt-/i,'GPT-').replace(/-([a-z])/g,(_m,c)=>` ${c.toUpperCase()}`).toLowerCase()):true))failures.push(`AI model autonomy badge missing or stale: ${profile.autonomy}`);
+ const profileAI=state.agents.find(a=>a.id==='agent-mara')?.mind?.brainMode==='ai';if(!(profileAI?/AI/i:/RULES/i).test(profile.autonomy))failures.push(`Decision mode badge missing or stale: ${profile.autonomy}`);
  if(!profile.activity)failures.push('current activity is missing from the agent profile');
  if(profile.tabs.join('|')!=='Overview|Mind|Memory')failures.push(`agent profile tabs missing or reordered: ${profile.tabs.join('|')}`);
  if(!profile.meters.some(x=>x.replace(/\s/g,'')===`Hunger${Math.round(100-qaMara.needs.hunger)}%`)||profile.meters.some(x=>x.includes('Satiety')))failures.push('Hunger meter must invert legacy satiety');
@@ -183,6 +184,22 @@ await page.evaluate(()=>window.ChatGPTFarmPhaserDebug.reload());
 await page.evaluate(()=>window.ChatGPTFarmPhaserDebug.inspectAgent('agent-mara'));
 const hungryMeter=await page.evaluate(()=>[...document.querySelectorAll('.phMeter')].find(x=>x.querySelector('span')?.textContent==='Hunger')?.outerHTML||'');
 if(!hungryMeter.includes('100%')||!hungryMeter.includes('phMeter low'))failures.push('Empty stomach must render Hunger 100% with a warning color');
+
+// Actual persistent-action snapshots must update the HUD within the same tick.
+const actionFixture=createWorld();actionFixture.meta.tickNumber=state.meta.tickNumber+1;
+for(const a of actionFixture.agents){a.inventory.berries=1;Object.assign(a.needs,{hunger:30,hydration:80,warmth:80,energy:80});}
+const actionStart=Date.now(),actionTransition=await beginActionTransition(actionFixture,actionStart);
+state=snapshotActionTransition(actionTransition,actionStart);
+await page.evaluate(()=>window.ChatGPTFarmPhaserDebug.reload());
+await page.evaluate(()=>window.ChatGPTFarmPhaserDebug.inspectAgent('agent-mara'));
+const firstMeal=await page.locator('.phMeter').allTextContents();
+state=snapshotActionTransition(actionTransition,actionStart+12500);
+await page.evaluate(()=>window.ChatGPTFarmPhaserDebug.reload());
+const laterMeal=await page.locator('.phMeter').allTextContents();
+if(JSON.stringify(firstMeal)===JSON.stringify(laterMeal))failures.push('Persistent meal did not update needs inside the same hourly tick');
+if(!/RULES/i.test(await page.locator('#phInspectAutonomy').textContent()))failures.push('Fallback meal incorrectly claims AI control');
+if((await snap()).aiAgentMarkers!==0)failures.push('Fallback agents still have AI markers');
+await page.screenshot({path:'phaser-qa/mobile-persistent-meal.png'});
 
 fs.writeFileSync('phaser-qa/report.json',JSON.stringify({base,snapshot:s,errors,failures},null,2));
 await browser.close();

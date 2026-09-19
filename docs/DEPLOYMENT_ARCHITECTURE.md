@@ -1,21 +1,9 @@
-# ChatGPTFarm deployment architecture
+# ChatGPTFarm deployment authority
 
-## Authorities
+The live world is owned by the existing Cloudflare Worker `chatgptfarm`, Durable Object class `FarmWorld`, object name `preview-v1`. Never rename or reseed it. `world/state.json` is a legacy/export fixture, not the current live authority. The legacy GitHub advance workflow is disabled unless WORLD_RUNTIME is explicitly configured as github-legacy.
 
-- `main/world/state.json` is the canonical persistent timeline. Heartbeats advance this file; releases must preserve it.
-- Renderer milestone versions (for example `v1.6.3`) describe the Phaser presentation/behavior release.
-- World-model versions (for example `object-field-0.9`) describe canonical simulation schema. They are intentionally separate version systems.
+The Vercel-hosted `chatgptfarm.com` viewer reads the public Worker state at `chatgptfarm.kyle8824.workers.dev`. Site builds and runtime builds are separate; a merge alone is not evidence of deployment. Check Worker /health and /state.runtime.build against the release merge, and check the main-domain HTML version. Preserve dashboard settings with keep_vars and existing secrets.
 
-## Production flow
+The runtime commits its checkpoint and alarm atomically. v1.6.8 adds persistent tasks and five-minute elapsed substeps within the existing hourly save cadence; future substeps remain private. Completed diagnostic events/decisions commit in the same transaction and retain a bounded 256-transition window. Permanent external archival is deferred and must not be represented as complete.
 
-1. The scheduled `Advance ChatGPTFarm World` workflow advances canonical state and commits `world/state.json` to `main`.
-2. Heartbeat commits remain part of the permanent world history but are ignored by Vercel's build step. A heartbeat must never require a site rebuild.
-3. Code releases are integrated onto a branch created from the newest `main` heartbeat. `world/state.json` is never replaced by a stale feature-branch copy.
-4. After validation, the release branch is merged forward to `main`. Schema migrations must be idempotent and operate on the existing canonical state.
-5. `/` is the current Phaser living-world renderer. `/legacy.html` preserves the previous Pixi Object World for emergency comparison only.
-
-## CI contract
-
-Production CI is read-only. It validates committed source, ecology/living-history invariants, the renderer cutover, and browser behavior. It does not apply patch scripts and does not commit generated source.
-
-This separation keeps code releases from rewinding history and keeps autonomous heartbeats from churning deployment history.
+Production CI is read-only. Release a verified coherent candidate from current main; record exact code, CI, merge, actual deployment and live continuity separately. Accepted UI changes do not authorize rolling back simulation history. Use forward repair for action-schema problems.

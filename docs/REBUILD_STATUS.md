@@ -158,3 +158,17 @@ Release gates: exact candidate CI/mobile browser QA and worker deployment identi
 PR #11 merged as 46bcfc0293a1ab96c1920fde7038bd1040dda5ed. Both candidate checks, postmerge validate/visual, Workers Builds and Vercel passed. Main page and runtime confirm v1.6.7. Live tick 459 confirms both new fallback goals match actual actions after predeployment buffered decisions finished. World continued from tick 456; identities and recent memories preserved. Evidence: docs/releases/v1.6.7.md and v1.6.7-live-verification.json.
 
 No blocker to this release remains. Next substantive work is still the full blueprint: truthful cognition/decision evidence, physical travel and labor, incremental needs effects and learned plans. Runtime still uses fallback; do not claim live AI or continuous physical action resolution. User feedback specifically prioritizes believable food seeking, existing visible habitat and uninterrupted lived activity.
+
+## C1 durable evidence — development checkpoint after v1.6.7
+
+Branch: foundation/durable-decision-evidence. Tested code 1213ee2. HOLD RELEASE; no production changes. Full blueprint read. Exact decision inputs/proposals/validation and completed event segments now have atomic Cloudflare persistence, retry/conflict protection and an archive outbox. Public AI diagnostics distinguish configuration and budget/error paths; authenticated evidence reads exclude unfinished outcomes. Existing identities, art, world and material rules preserved.
+
+Full checkpoint, tests and remaining gates: [checkpoints/durable-evidence.md](checkpoints/durable-evidence.md). Local engine/runtime/real-workerd tests and current tick-468 copied-state survival passed. Hosted CI pending when written. External archival is not configured; reflection/plan parity and live AI configuration diagnosis remain unfinished. Do not call stage C complete, increase AI spend, merge or deploy this checkpoint as a release. Next integrate those C prerequisites, then resumable physical travel/work and incremental effects. Production remains v1.6.7.
+
+## User scope correction — v1.6.8 persistent-survival candidate
+
+Kyle clarified that the release target is visible survival, not completion of the broad archive/DNA roadmap. This supersedes C1's external-backup/cognitive-parity HOLD requirements. Keep evidence bounded to action continuity and AI diagnosis; external archival, reflection and experiments are deferred. Cloudflare dashboard access is not a blocker to this implementation or the existing connected build pipeline.
+
+Implemented candidate: persisted five-minute action steps within the existing hourly checkpoint; metric creek-aware routes with load/distance progress; arrival before effects; fractional eating/drinking/rest and location-based warmth; urgent interruption with retained work/portions; within-hour viewer refresh and truthful model/fallback labels. Diagnostic evidence retains only the last 256 completed transitions. No world reseed, identity changes, paid calls, AI budget changes or clay redesign.
+
+See releases/v1.6.8.md for acceptance gates and explicit approximations. Release remains CANDIDATE pending exact-head hosted verification, current-main recheck and actual deployment verification. Earlier blueprint-wide HOLD statements are superseded; do not expand the release back into infrastructure work.

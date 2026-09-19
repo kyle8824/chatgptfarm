@@ -1,3 +1,4 @@
+import {prepareEvidence,commitEvidence} from './evidence.mjs';
 const CHUNK=64000;
 export async function readCheckpoint(storage) {
   const manifest=await storage.get('manifest');
@@ -12,12 +13,14 @@ export async function readCheckpoint(storage) {
   const stream=new Blob(chunks).stream().pipeThrough(new DecompressionStream('gzip'));
   return JSON.parse(await new Response(stream).text());
 }
-export async function writeCheckpoint(storage, record, alarmAt) {
+export async function writeCheckpoint(storage, record, alarmAt, completed = null) {
+  const segment=completed?await prepareEvidence(completed):null;
   const stream=new Blob([JSON.stringify(record)]).stream().pipeThrough(new CompressionStream('gzip'));
   const bytes=new Uint8Array(await new Response(stream).arrayBuffer());
   const count=Math.ceil(bytes.length/CHUNK);
   // State and wake-up commit together, including when the instance is evicted.
   await storage.transaction(async tx=>{
+    await commitEvidence(tx,segment);
     const previous=await tx.get('manifest');
     for(let i=0;i<count;i++)await tx.put(`chunk:${i}`,bytes.slice(i*CHUNK,(i+1)*CHUNK));
     for(let i=count;i<(previous?.chunks||0);i++)await tx.delete(`chunk:${i}`);

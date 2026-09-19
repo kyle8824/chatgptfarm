@@ -1,0 +1,32 @@
+import assert from 'node:assert/strict';
+import {createWorld,tickWithMind,tick,retrieveDecisionContext} from '../engine.js';
+import {createOpenAIMind,decisionRequest} from '../mind.js';
+import {beginTransition,snapshotTransition} from '../runtime/timeline.mjs';
+const env={OPENAI_API_KEY:'test-secret-never-record',OPENAI_MODEL:'test-model'};
+const originalFetch=globalThis.fetch;
+let sent;
+try {
+ globalThis.fetch=async(url,options)=>{sent=options.body;return Response.json({id:'response-test',model:'test-model',usage:{input_tokens:40,output_tokens:20},output_text:JSON.stringify({choice_type:'known_action',action_id:JSON.parse(options.body).text.format.schema.properties.action_id.enum[0],goal:'Test goal',intent:'Test intent',decision_summary:'Test summary',confidence:.8,referenced_memory_ids:[]})});};
+ const world=createWorld(),context=retrieveDecisionContext(world,world.agents[0]);
+ const result=await createOpenAIMind(env).decide(context);
+ assert.equal(result.evidence.requestBody,sent);
+ assert.deepEqual(JSON.parse(sent),decisionRequest(context,env));
+ assert(!JSON.stringify(result).includes(env.OPENAI_API_KEY));
+ const transition=await beginTransition(world,0,150000,w=>tickWithMind(w,createOpenAIMind(env)));
+ assert.equal(transition.evidence.decisions.length,2);
+ assert(transition.evidence.decisions.every(d=>d.evidence.responseId==='response-test'));
+ assert(transition.after.dna.every(d=>!d.evidence),'Full context is not in spectator hot state');
+ assert.deepEqual(snapshotTransition(transition,149999).dna,transition.before.dna,'No future completed evidence is exposed');
+ assert(transition.evidence.decisions.every(d=>d.evidence.context.memories&&d.evidence.invocation.requestBody));
+ globalThis.fetch=async()=>new Response('sensitive provider error body',{status:429});
+ const failed=await beginTransition(createWorld(),0,150000,w=>tickWithMind(w,createOpenAIMind(env)));
+ assert(failed.evidence.decisions.every(d=>d.evidence.fallbackReason==='provider_http_error'&&d.evidence.invocation.httpStatus===429));
+ assert(!JSON.stringify(failed.evidence).includes('sensitive provider error body'));
+ const rejected=await beginTransition(createWorld(),0,150000,w=>tickWithMind(w,{decide:async()=>({...result,actionId:'invented-action'})}));
+ assert(rejected.evidence.decisions.every(d=>d.evidence.validation.accepted===false&&d.evidence.proposal.actionId==='invented-action'));
+ const disabled=await beginTransition(createWorld(),0,150000,w=>tickWithMind(w,null,{fallbackReason:'ai_disabled'}));
+ assert(disabled.evidence.decisions.every(d=>d.evidence.fallbackReason==='ai_disabled'));
+ const fallback=await beginTransition(createWorld(),0,150000,tick);
+ assert(fallback.evidence.decisions.every(d=>d.evidence.fallbackReason==='utility_tick'));
+ console.log('PASS exact requests, response IDs, retained rejection/errors, secret exclusion and private future evidence');
+}finally{globalThis.fetch=originalFetch;}
