@@ -1,5 +1,9 @@
 import fs from 'node:fs/promises';
+import {execFileSync} from 'node:child_process';
 const root=new URL('../',import.meta.url),out=new URL('./public/',import.meta.url);
+const commit=execFileSync('git',['rev-parse','HEAD'],{cwd:root,encoding:'utf8'}).trim();
+if(!/^[a-f0-9]{40}$/.test(commit))throw Error('Cannot identify deployment commit');
+await fs.writeFile(new URL('./build-info.mjs',import.meta.url),`export const BUILD_INFO = ${JSON.stringify({version:'1.6.6',commit})};\n`);
 await fs.mkdir(out,{recursive:true});
 for(const file of ['phaser-world.css','phaser-world-v1.js'])await fs.copyFile(new URL(file,root),new URL(file,out));
 let html=await fs.readFile(new URL('phaser.html',root),'utf8');

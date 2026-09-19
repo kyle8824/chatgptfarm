@@ -6,11 +6,13 @@ const source=process.argv[2]||'world/state.json';
 const world=migrateWorld(JSON.parse(fs.readFileSync(source,'utf8')));
 const report={source,start:{day:world.day,hour:world.hour},hours:72,
   initial:world.agents.map(a=>({id:a.id,needs:{...a.needs}})),
-  zeroAgentHours:{warmth:0,hunger:0,hydration:0},actions:{},
+  zeroAgentHours:{warmth:0,hunger:0,hydration:0},zeroAfterRecovery:{warmth:0,hunger:0,hydration:0},recoveryHours:12,actions:{},
   note:'Fallback diagnostic only. Zero meters in an exhausted habitat cannot be repaired by decision ranking alone.'};
 for(let i=0;i<report.hours;i++){
   for(const d of tick(world))report.actions[d.action]=(report.actions[d.action]||0)+1;
   for(const a of world.agents)for(const key of Object.keys(report.zeroAgentHours))
-    if(a.needs[key]===0)report.zeroAgentHours[key]++;
+    if(a.needs[key]===0){report.zeroAgentHours[key]++;if(i>=report.recoveryHours)report.zeroAfterRecovery[key]++;}
 }
 console.log(JSON.stringify(report,null,2));
+
+if(process.argv.includes('--assert-recovery')&&Object.values(report.zeroAfterRecovery).some(Boolean))process.exitCode=1;

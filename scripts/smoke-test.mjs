@@ -1,3 +1,4 @@
+import {gatherWood} from '../engine/wood-runtime.js';
 import { createWorld, tick, tickWithMind, migrateWorld, retrieveDecisionContext, buildAffordanceView, findWorldObject, WORLD_MODEL_VERSION, ensureEcology } from '../engine.js';
 
 const fail = message => { throw new Error(message); };
@@ -74,7 +75,7 @@ if (detached.parentId!==null || detached.carrierId!==observer.id || !detached.st
 if (!detached.provenance?.detached) fail('Detached object lost transformation provenance');
 
 const chainWorld = migrateWorld(createWorld());
-const mara = chainWorld.agents[0];mara.position='camp';mara.inventory.dryWood=1;mara.inventory.sharpStone=1;mara.inventory.cordage=1;
+const mara = chainWorld.agents[0];mara.position='camp';gatherWood(chainWorld,mara,'dryWood',1);mara.inventory.sharpStone=1;mara.inventory.cordage=1;
 const physicalMind = proposal => ({async decide(){return{choiceType:'physical_action',actionId:'__physical__',physicalAction:proposal,goal:'Experiment with material properties',intent:proposal.purpose,decisionSummary:'Synthetic emergence-chain action.',confidence:.9,referencedMemoryIds:[],brainMode:'ai',model:'chain-test'}}});
 await tickWithMind(chainWorld,physicalMind({verb:'cut',primaryObjectId:'carried_dry_branch',secondaryObjectId:'sharp_stone',configuration:'straight',purpose:'Make the branch straighter and easier to control.'}));
 if (chainWorld.agents[0].inventory.woodPole < 1) fail('Cutting branch did not produce a worked pole');

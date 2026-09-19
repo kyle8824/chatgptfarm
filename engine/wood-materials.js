@@ -1,4 +1,4 @@
-// Raw-branch material accounts. Not yet wired into legacy action execution.
+// Conserved wood material accounts shared by simulation actions.
 // Existing branch counts did not record mass/moisture: assumptions are explicit.
 export const WOOD_RULES = Object.freeze({version:1,legacyDryKgPerBranch:1,dryWaterRatio:.12,wetWaterRatio:.55,fuelWaterRatio:.24});
 const copy=x=>structuredClone(x);
@@ -85,18 +85,18 @@ export function consumeWood(ledger,id,count,{reason,operationId}={}){
 // ledger. Preconditions for reachability, tools and labor belong to the engine.
 // Transaction on a copy prevents partial multi-batch acquisition/consumption.
 export function applyWoodCommand(ledger,command){
-  const {operationId,from,to,quantity:count,category:kind,outputForm='branch',reason,mode='transfer'}=command;
+  const {operationId,from,to,quantity:count,category:kind,outputForm='branch',inputForm='branch',reason,mode='transfer'}=command;
   if(!operationId||typeof operationId!=='string'||!reason||typeof reason!=='string')throw Error('Wood command requires evidence');
   holder(from);units(count);if(!count)throw Error('Empty wood command');
   if(!['dryWood','wetWood','any'].includes(kind)||!['transfer','burn'].includes(mode))throw Error('Invalid wood command');
   if(mode==='transfer')holder(to);
-  if(!['branch','pole','shelter-component'].includes(outputForm))throw Error('Unsupported wood output');
+  if(!['branch','pole','pointedPole','boundSharpTool','shelter-component','fuel'].includes(outputForm))throw Error('Unsupported wood output');
   if(mode==='burn'&&(kind!=='dryWood'||outputForm!=='branch'))throw Error('Only usable raw fuel may burn');
-  const fingerprint=JSON.stringify({from:holder(from),to:mode==='transfer'?holder(to):null,count,kind,outputForm,reason,mode});
+  const fingerprint=JSON.stringify({from:holder(from),to:mode==='transfer'?holder(to):null,count,kind,inputForm,outputForm,reason,mode});
   const prior=ledger.operations?.find(x=>x.id===operationId);
   if(prior){if(prior.fingerprint!==fingerprint)throw Error('Conflicting wood command');return copy(prior);}
   const draft=copy(ledger);draft.operations??=[];
-  const sources=draft.batches.filter(b=>(b.form??'branch')==='branch'&&sameHolder(b.holder,from)&&(kind==='any'||category(b)===kind));
+  const sources=draft.batches.filter(b=>(b.form??'branch')===inputForm&&sameHolder(b.holder,from)&&(kind==='any'||category(b)===kind));
   if(sources.reduce((n,b)=>n+b.units,0)<count)throw Error('Insufficient usable wood');
   let remaining=count;const outputs=[],consumed=[];
   for(const b of sources){

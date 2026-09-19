@@ -114,6 +114,6 @@ export function advanceObjectEnvironment(w, toHour) {
  const elapsed=toHour-from;
  if(!elapsed)return;
  const rain=w.weather==='rain',cloud=w.weather==='cloudy';
- for(const o of w.worldModel.objects){if(!o.state?.active)continue;const exposed=o.parentId===null||o.state.exposed;if(o.physical?.wood&&exposed){o.material||={};let m=Number(o.material.moisturePct??28);m+=elapsed*(rain?4:cloud?.2:-1.8);o.material.moisturePct=Math.max(8,Math.min(80,Math.round(m*10)/10))}if(o.physical?.weatherSensitive&&rain&&o.state.clarity!=null)o.state.clarity=Math.max(.1,Math.round((o.state.clarity-.08*elapsed)*100)/100)}
+ for(const o of w.worldModel.objects){if(!o.state?.active)continue;const exposed=o.parentId===null||o.state.exposed;if(o.physical?.wood&&exposed&&!o.state?.woodBatchId){o.material||={};let m=Number(o.material.moisturePct??28);m+=elapsed*(rain?4:cloud?.2:-1.8);o.material.moisturePct=Math.max(8,Math.min(80,Math.round(m*10)/10))}if(o.physical?.weatherSensitive&&rain&&o.state.clarity!=null)o.state.clarity=Math.max(.1,Math.round((o.state.clarity-.08*elapsed)*100)/100)}
  w.worldModel.lastEnvironmentHour=toHour;
 }

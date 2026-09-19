@@ -4,7 +4,7 @@
   "version": "0.9.0",
   "type": "module",
   "scripts": {
-    "test": "node --check phaser-world-v1.js && node --check world-pixi-v11.js && node --check app.js && node --check artifacts-ui.js && node --check world-model-ui.js && node scripts/observation-purity-test.mjs && node scripts/smoke-test.mjs && node scripts/thermal-test.mjs && node scripts/warmth-decision-test.mjs && node scripts/survival-decision-test.mjs && node scripts/forage-sites-test.mjs",
+    "test": "node --check phaser-world-v1.js && node --check world-pixi-v11.js && node --check app.js && node --check artifacts-ui.js && node --check world-model-ui.js && node scripts/wood-materials-test.mjs && node scripts/wood-commands-test.mjs && node scripts/wood-runtime-test.mjs && node scripts/observation-purity-test.mjs && node scripts/smoke-test.mjs && node scripts/thermal-test.mjs && node scripts/warmth-decision-test.mjs && node scripts/survival-decision-test.mjs && node scripts/forage-sites-test.mjs",
     "advance": "node scripts/advance-world.mjs"
   }
 }

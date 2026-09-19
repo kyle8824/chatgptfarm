@@ -1,5 +1,6 @@
 import {DurableObject} from 'cloudflare:workers';
 import {WorldController} from './world.mjs';
+import {BUILD_INFO} from './build-info.mjs';
 const json=(data,status=200)=>Response.json(data,{status,headers:{
   'Cache-Control':'no-store',
   // The public site remains on Vercel during the domain migration and reads
@@ -12,9 +13,10 @@ export class FarmWorld extends DurableObject {
   async fetch(request){
     const path=new URL(request.url).pathname;
     try{
-      if(request.method==='GET'&&path==='/health')return json(await this.world.health());
+      if(request.method==='GET'&&path==='/health')return json({...await this.world.health(),build:BUILD_INFO});
       if(request.method==='GET'&&path==='/state'){
         const state=await this.world.snapshot();
+        if(state)state.runtime.build=BUILD_INFO;
         return state?json(state):json({error:'Open /setup.html to initialize the preview'},503);
       }
       if(request.method!=='POST'||!['/start','/pause','/resume'].includes(path))return json({error:'Not found'},404);
