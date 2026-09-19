@@ -38,4 +38,10 @@ Focused causal tests; existing engine/runtime tests; CI/browser checks; explicit
 
 ## Latest checkpoint
 
-Planning checkpoint only. No runtime changes released. Next: implement and test F1, recording remaining coupling to coarse positions and hourly updates.
+F1 code checkpoint: engine/thermal.js now owns hourly cold/rain/fire/shelter effects. Fire heats camp occupants only; shelter reduces cold and blocks rain at camp; weather observation no longer applies repeated bodily rain damage. Each agent records the latest before/after and contributing effects. No UI changes, world-state files, or clay graphics changed.
+
+Verified locally: focused thermal scenarios passed; existing npm test (syntax + smoke) passed; runtime-test.mjs passed (timeline, wildlife, restart, concurrent reads, save failure, downtime). The focused test was also added to npm test. No production deployment or browser verification performed.
+
+RELEASE BLOCKERS: removing remote fire heat increases exposure for traveling people. Add and verify a deliberate warmth-seeking option and assess survival before release. Existing make_fire/rest direct warmth bonuses still need reconciliation with the thermal model. Need AI perception of exposure, decision traces, and balanced scenario tests. Hourly endpoint location is an approximation, not continuous distance or travel exposure. Fire remains a legacy boolean with stochastic extinguishing, not a fuel simulation. Do not call this foundation complete.
+
+Next exact task: inspect candidateActions/retrieveDecisionContext and runtime executeKnown. Provide a feasible warmth-seeking choice without imposing a shelter quest; expose current thermal conditions; test cold people choose an available remedy and that outcomes are physically local. Then reconcile direct action heat effects and run the release gates above.
