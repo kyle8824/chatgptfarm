@@ -42,6 +42,7 @@ export function ensureWorldModel(w){
  if(stones?.provenance?.source==='world-origin'&&(stones.position?.y??0)<27){stones.position=clone(FIXED.stones.position);stones.history||=[];stones.history.push({day:w.day,hour:w.hour,type:'coordinate-migration',detail:'Moved the stone field clear of the creek channel and bank.'})}
  const clay=w.worldModel.objects.find(o=>o.id==='OBJ-CLAY-001');
  if(clay?.provenance?.source==='world-origin'&&(clay.position?.y??0)<22.5){clay.position=clone(FIXED.clay.position);clay.geometry=clone(FIXED.clay.geometry);clay.history||=[];clay.history.push({day:w.day,hour:w.hour,type:'coordinate-migration',detail:'Moved the clay exposure onto the north creek bank instead of inside the channel.'})}
+ w.worldModel.lastEnvironmentHour??=w.day*24+w.hour;
  syncLegacyIntoWorldModel(w);return w.worldModel;
 }
 
@@ -55,7 +56,7 @@ export function syncLegacyIntoWorldModel(w){
  if(!w.worldModel)return;
  const r=w.resources||{},s=w.structures||{},e=w.ecology||{};
  const patch=findWorldObject(w,FIXED.berries.id);if(patch){patch.state.ediblePortions=r.berries||0;patch.state.exhausted=(r.berries||0)<=0}
- const tree=findWorldObject(w,FIXED.log.id);if(tree){tree.state.availableDryBranches=r.dryWood||0;tree.state.availableWetBranches=r.wetWood||0;const total=(r.dryWood||0)+(r.wetWood||0);tree.state.branchSupply=total;tree.material.moisturePct=total?Math.round(((r.wetWood||0)/total)*55+12):Math.max(tree.material.moisturePct||28,28)}
+ const tree=findWorldObject(w,FIXED.log.id);if(tree){tree.state.availableDryBranches=r.dryWood||0;tree.state.availableWetBranches=r.wetWood||0;const total=(r.dryWood||0)+(r.wetWood||0);tree.state.branchSupply=total;tree.material.moisturePct??=total?Math.round(((r.wetWood||0)/total)*55+12):Math.max(tree.material.moisturePct||28,28)}
  const stones=findWorldObject(w,FIXED.stones.id);if(stones)stones.state.looseStones=r.stones||0;
  const clay=findWorldObject(w,FIXED.clay.id);if(clay){clay.state.harvestableUnits=r.clay||0;clay.state.approxKg=Math.round((r.clay||0)*.45*10)/10}
  const reeds=findWorldObject(w,FIXED.reeds.id);if(reeds)reeds.state.harvestableStalkBundles=r.reeds||0;
@@ -67,12 +68,11 @@ export function syncLegacyIntoWorldModel(w){
  updateEnvironmentalModel(w);
 }
 
-export function updateEnvironmentalModel(w){
- if(!w.worldModel)return;
+export function sampleEnvironmentalFields(w){
  const rain=w.weather==='rain',cloud=w.weather==='cloudy',wet=Math.max(.12,Math.min(1,Number(w.environmentState?.surfaceWetness??(rain?.82:.32)))),level=Math.max(.2,Math.min(1,Number(w.environmentState?.creekLevel??(rain?.58:.42))));
  const humidity=Math.min(.97,rain?.94:cloud?Math.max(.7,.63+wet*.16):.46+wet*.18);
  const daylight=Math.max(0,Math.sin(((w.hour-6)/24)*Math.PI*2)),zone=(base,span)=>Math.round(Math.min(1,base+wet*span)*100)/100;
- const f=w.worldModel.fields;
+ const f={};
  f.temperature={type:'scalar',unit:'F',global:w.temperature};
  f.precipitation={type:'scalar',unit:'relative',global:rain?.78:0,kind:rain?'rain':'none'};
  f.humidity={type:'scalar',unit:'relative',global:Math.round(humidity*100)/100};
@@ -81,8 +81,11 @@ export function updateEnvironmentalModel(w){
  f.waterDepth={type:'object',unit:'m',objects:{'OBJ-CREEK-001':Math.round((.31+level*.32)*100)/100}};
  f.surfaceWetness={type:'scalar',unit:'relative',global:Math.round(wet*100)/100,lastRainAt:w.environmentState?.lastRainAt||null,hoursSinceRain:w.environmentState?.hoursSinceRain??null};
  f.wind={type:'scalar',unit:'m/s',global:cloud?2.4:rain?3.1:1.5};
- for(const o of w.worldModel.objects){if(!o.state?.active)continue;const exposed=o.parentId===null||o.state.exposed;if(o.physical?.wood&&exposed){o.material||={};let m=Number(o.material.moisturePct??28);m+=rain?4:cloud?.2:-1.8;o.material.moisturePct=Math.max(8,Math.min(80,Math.round(m*10)/10))}if(o.physical?.weatherSensitive&&rain&&o.state.clarity!=null)o.state.clarity=Math.max(.1,Math.round((o.state.clarity-.08)*100)/100)}
+ return f;
+
 }
+
+export function updateEnvironmentalModel(w){if(w.worldModel)Object.assign(w.worldModel.fields,sampleEnvironmentalFields(w));}
 
 function spawnComponent(w,parent,suffix,type,label,offset,physical,material,state={}){const id=componentId(parent,suffix);let o=findWorldObject(w,id);if(o)return o;o={id,kind:'component',type,label,zone:parent.zone,position:{x:parent.position.x+offset[0],y:parent.position.y+offset[1]},geometry:{shape:'component'},physical:{...physical},material:{...clone(parent.material||{}),...material},state:{active:true,...state},parentId:parent.id,childrenIds:[],resolution:{level:'component',componentsInstantiated:true},provenance:{created:now(w),source:`resolved from ${parent.id}`},history:[]};w.worldModel.objects.push(o);parent.childrenIds.push(id);return o}
 
@@ -101,3 +104,16 @@ export function detachComponent(w,componentId,{actorId=null,newZone=null}={}){co
 
 export function objectSnapshot(o){return{id:o.id,type:o.type,label:o.label,zone:o.zone,position:o.position,geometry:o.geometry,physical:o.physical,material:o.material,state:o.state,resolution:o.resolution,parentId:o.parentId,childrenIds:o.childrenIds}}
 export function activeWorldObjects(w){return(w.worldModel?.objects||[]).filter(o=>o.state?.active!==false)}
+// Explicit physical transition over an interval with the current weather.
+// Migrations initialize the watermark at current time; no retroactive drying.
+export function advanceObjectEnvironment(w, toHour) {
+ if(!w.worldModel)throw new Error('Migrate world before environmental integration');
+ const from=w.worldModel.lastEnvironmentHour;
+ if(!Number.isFinite(from)||!Number.isFinite(toHour))throw new Error('Invalid environmental interval');
+ if(toHour<from)throw new Error('Environmental time cannot go backwards');
+ const elapsed=toHour-from;
+ if(!elapsed)return;
+ const rain=w.weather==='rain',cloud=w.weather==='cloudy';
+ for(const o of w.worldModel.objects){if(!o.state?.active)continue;const exposed=o.parentId===null||o.state.exposed;if(o.physical?.wood&&exposed){o.material||={};let m=Number(o.material.moisturePct??28);m+=elapsed*(rain?4:cloud?.2:-1.8);o.material.moisturePct=Math.max(8,Math.min(80,Math.round(m*10)/10))}if(o.physical?.weatherSensitive&&rain&&o.state.clarity!=null)o.state.clarity=Math.max(.1,Math.round((o.state.clarity-.08*elapsed)*100)/100)}
+ w.worldModel.lastEnvironmentHour=toHour;
+}

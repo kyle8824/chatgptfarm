@@ -1,5 +1,5 @@
 import{knows,knowsClay,knowsReeds,knowsTracks,knowsGameTrail,knowsTubers}from'./core.js';
-import{ensureWorldModel,worldObjectForZone,findWorldObject,activeWorldObjects,objectSnapshot}from'./world-model.js';
+import{worldObjectForZone,findWorldObject,activeWorldObjects,objectSnapshot}from'./world-model.js';
 export const PHYSICAL_VERBS=['move','inspect','search','follow','strike','cut','shape','bind','twist','heat','place','combine','dig','test'];
 export const PHYSICAL_CONFIGURATIONS=['none','straight','pointed','hollow','twisted','bound','raised','wrapped'];
 const sameZone=(p,q)=>p===q||(p==='meadow'&&['berries','stones'].includes(q))||(p==='forest'&&q==='log')||(p==='edge'&&q==='reeds')||(p==='creek'&&q==='clay');
@@ -9,7 +9,7 @@ const O=(id,label,kind,position,quantity,properties,extra={})=>{const physical=e
 function knownZones(a){const x=['camp','creek','berries','log','stones','edge'];if(knowsClay(a))x.push('clay');if(knowsReeds(a))x.push('reeds');return x}
 function placeObject(w,a,zone){const obj=worldObjectForZone(w,zone);if(!obj)return null;const local=sameZone(a.position,zone);return O(`place:${zone}`,obj.label,'place',zone,1,propTokens(obj),{worldObjectId:obj.id,worldObject:objectSnapshot(obj),physical:obj.physical,supports:local?deriveSupports({kind:'place',physical:obj.physical,properties:propTokens(obj)}):['move']})}
 function localProjection(o,id,label,q,props=[],extra={}){return O(id,label,'world',o.zone,q,[...new Set([...propTokens(o),...props])],{worldObjectId:o.id,worldObject:objectSnapshot(o),physical:o.physical,...extra})}
-export function buildAffordanceView(w,a){ensureWorldModel(w);const o=[];for(const zone of knownZones(a)){const place=placeObject(w,a,zone);if(place)o.push(place)}
+export function buildAffordanceView(w,a){if(!w.worldModel)throw new Error('Migrate world before observation');const o=[];for(const zone of knownZones(a)){const place=placeObject(w,a,zone);if(place)o.push(place)}
  const creek=findWorldObject(w,'OBJ-CREEK-001'),berries=findWorldObject(w,'OBJ-BERRIES-001'),tree=findWorldObject(w,'OBJ-TREE-001'),stones=findWorldObject(w,'OBJ-STONES-001'),clay=findWorldObject(w,'OBJ-CLAY-001'),reeds=findWorldObject(w,'OBJ-REEDS-001');
  if(creek?.state?.potable!==false&&sameZone(a.position,'creek'))o.push(localProjection(creek,'creek_water','creek water',1,['water','liquid','potable','wet'],{supports:['inspect','test']}));
  if(berries&&sameZone(a.position,'berries')&&(berries.state.ediblePortions||0)>0)o.push(localProjection(berries,'wild_berries','wild berries',berries.state.ediblePortions,['food','edible','perishable'],{supports:['inspect','search','test']}));

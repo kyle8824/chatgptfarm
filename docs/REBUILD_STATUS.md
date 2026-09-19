@@ -1,5 +1,7 @@
 # Living world rebuild — start here
 
+Architecture map: [BLUEPRINT_IMPLEMENTATION.md](BLUEPRINT_IMPLEMENTATION.md). Read this alongside the latest checkpoint at the end of this file. The full Heavy blueprint has been reviewed; later sections remain in the implementation plan. User clarification: live-world outcomes are not manipulated for experiments; Decision DNA experiments use isolated copies.
+
 Branch: `rebuild/survival-foundation`
 Base: `25b8a7d5c7b1fdf0e883c64812b961a152462985`
 Release status: **BLOCKED — implementation checkpoint, not a release candidate.**
@@ -74,3 +76,15 @@ Fetched current public Cloudflare /state read-only: tick 374, Day 19 14:00, last
 Starting resources: berries=0, dryWood=0, wetWood=0; shelter=true, fire=false. Mara carried dryWood=1/wetWood=58; Ivo dryWood=1/wetWood=65. Weather drying acts on world resources only; carried damp branches cannot dry. This is a concrete fuel-use gap, not a graphics task or reason to refill inventories.
 
 HOLD RELEASE. Next: implement elapsed-time drying for carried/stored damp wood with weather/cover constraints, conserved quantities, save-safe timing and no double application after reload. Expose useful drying choices/observations where appropriate. Test a depleted-world scenario matching the above, then repeat the actual current-state rollout. Do not assume this alone fixes all thermal behavior; inspect decisions and effects. Rerun affected CI for the new SHA. Do not merge, deploy, reseed, or ask a release agent to invent this fix.
+
+## Blueprint Chunk A — observation/time repair (latest checkpoint)
+
+Implemented: affordance and wildlife observation functions no longer run initialization/migration; weather and environmental field sampling are pure exported functions; weather sampling no longer creates wet branches. Moisture/trace weathering moved to explicit advanceObjectEnvironment over a clock interval with a persisted watermark. Repeated migrations/synchronization do not weather objects or overwrite already recorded tree moisture. Runtime refreshes compatibility projections after executing actions, rather than during observations.
+
+New tests pass: full-world equality across repeated observations in clear/cloudy/rain; frozen-world reads and samplers; repeat migration; no wood creation from weather sampling; one completed hour changes moisture once; duplicate/reloaded interval does not repeat effects; two hourly intervals match one two-hour constant-weather interval. Existing smoke, thermal, survival-decision tests passed. Runtime and Cloudflare controller tests passed, including downtime and failed writes. No renderer changes in this chunk.
+
+KNOWN FAILING GATES, intentionally retained: removing accidental rain-created fuel exposes fresh-world warmth depletion (24 zero-warmth agent-hours in its 72-hour fixture) and copied Day 6 recovery warmth depletion (17 after recovery). Food/hydration remain nonzero after recovery. npm test therefore FAILS and this branch MUST NOT release. Earlier passing CI belongs to c469168, not this code. Do not weaken these tests or restore wood creation during weather reads to make CI green.
+
+Chunk A is a checkpoint, not completion of all invariants: compatibility state synchronization still exists at explicit mutation/migration boundaries; component/material conservation, private remote knowledge, and arbitrary fractional-time integration remain future work. The new process preserves the existing coarse moisture rates and is not the unified material system.
+
+Next task is blueprint Chunk B: conserved legacy wood batches with moisture and elapsed drying across ground/carried/stored locations; remove competing material authorities gradually. Preserve Day 19 inventory quantities and owners. Keep unknown provenance unknown. Build tested physical options (cover/spreading/storage) rather than adding a scripted drying-rack quest. Re-run the unchanged survival failures plus current live-state copy after that work. Keep release HOLD until gates pass.
