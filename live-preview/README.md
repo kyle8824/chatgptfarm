@@ -21,3 +21,13 @@ AI is NOT configured in either preview. NPC utility rules choose actions. Model 
 ## Promotion status
 
 NOT READY FOR PRODUCTION. Kyle requested a separate demonstration before choosing whether to promote. No merge or promotion is authorized by this preview. Remaining gates: separate server deployment; hosted unattended progression and event tests; configured bounded AI calls and truthful failure status; broader survival/balance review. No promise that enabling AI alone delivers learning or generic construction.
+
+## Verified checkpoint — 2026-09-19
+
+Candidate `682e8ed60a2248f5fa8ce14f1f7d4cc3f4e7a205` passed GitHub Actions run 35429764312, including the actual mobile browser and real workerd tests. Artifact `elapsed-preview-evidence` includes the mobile screenshot and browser report.
+
+Browser-only preview URL: https://chatgptfarm-h6tmzuztq-kyle8824.vercel.app (existing Vercel authentication applies; sign in with the project-owning account). Its application source is identical to candidate; the subsequent commit added tests only. Cloud browser reached the login wall; functional browser verification was performed in CI against the exact source, not claimed against the authenticated deployment.
+
+Verified unchanged production refs: main `88e0a6599dc5aef612b781e9a814ece94c9c395e`, repair/continuous-runtime `17a473447f7e68f27684ad891aade214bc2f597a`. No production deploy, merge, reseed or runtime write performed.
+
+User's full request remains INCOMPLETE: no remotely deployed unattended preview server, no connected live AI. The step engine has an adapter interface but asynchronous/bounded model decision scheduling is still required in the live controller. Do not describe this as only needing to flip AI_ENABLED. The preview is useful evidence of elapsed execution, not fulfillment of the autonomous AI world request.
