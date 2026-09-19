@@ -1,0 +1,26 @@
+name: Isolated elapsed preview
+on:
+  push:
+    branches: [preview/elapsed-live-world]
+permissions:
+  contents: read
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    timeout-minutes: 6
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - run: npm ci --prefix cloudflare
+      - run: node live-preview/test.mjs && node live-preview/workerd-test.mjs
+      - run: npm install --no-save playwright@1.55.0 && npx playwright install --with-deps chromium
+      - run: |
+          python3 -m http.server 4173 >/tmp/preview-http.log 2>&1 &
+          node live-preview/browser-test.mjs
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: elapsed-preview-evidence
+          path: live-preview-qa/
