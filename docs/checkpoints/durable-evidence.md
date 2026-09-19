@@ -41,3 +41,11 @@ Hosted exact-head CI/browser verification is pending at checkpoint creation. The
 7. After C, proceed to persistent travel/work, arrival before effects, incremental needs and urgent interruption. No part of this checkpoint claims to implement those behaviors.
 
 Rollback/repair: checkpoint version remains 1 with additive transition evidence fields and independent storage keys. Existing readers ignore the extra fields. Reverting to old code would stop recording evidence and create a coverage gap; do not silently roll back the engine and later resume the archive. Use a forward repair or explicitly recorded coverage-epoch migration. A UI rollback must not roll back world history.
+
+## Continuation verification and blocker
+
+Hosted checks on e7b76d2542484aa4c73336363b10677313246739 passed: Cloudflare Runtime Validation 35425929774 and Living World Recovery QA 35425929762 (including browser QA). No repeated validation was dispatched.
+
+Kyle authorized continuing through a verified release unless a substantial blocker is encountered. The next runtime-configuration step is blocked: the Cloudflare dashboard presents a persistent security-verification page in the current browser, including after one reload; `wrangler whoami` reports no authenticated CLI session. No Cloudflare connector or deployment credentials were available in this session. GitHub access remains functional and existing Workers Builds can still deploy connected code; this is specifically a blocker to inspecting live AI settings and provisioning/configuring the external archive destination, not a claim that repository or build access is lost.
+
+Stopped at this access blocker as requested. No merge, deployment, state reset, secret change or AI-budget change. Resume through authenticated Cloudflare access, finish the outstanding implementation/gates above, and then prepare a coherent release. The documentation-only blocker update intentionally skips CI; its engine tree is unchanged from the passed candidate.
