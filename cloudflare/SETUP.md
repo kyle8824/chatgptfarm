@@ -97,3 +97,21 @@ The dry run validates Cloudflare bundling and bindings without deploying. The
 controller test covers alarm retries, eviction, actual coordinate changes,
 duplicate initialization/delivery, pause/resume, failed writes, and eight-hour
 catch-up. None of these local checks is a substitute for the hosted checks above.
+
+## v1.6.6 release continuation
+
+The existing Worker is already initialized. Do not use Start, change the Worker name,
+change the FarmWorld binding, or change the `preview-v1` object key during upgrades.
+Updates preserve that Durable Object's state. Build with `npm run build` from this
+folder, then deploy with `npx wrangler deploy`. `/health` and `/state.runtime.build`
+report version and the Git commit from the deployment checkout.
+
+Dashboard AI settings are retained by `keep_vars: true`; the configuration no longer
+writes preview defaults over them. On a new installation the code defaults to AI off
+and a 100-call daily limit unless configured. Secrets are never included in build
+metadata. Do not change API keys or AI budget as part of a routine release.
+
+Historical setup selected `repair/continuous-runtime` as the connected build branch.
+Verify the deployed commit after publishing; a merge to main alone is not proof that
+this Worker was updated. The main website and authoritative runtime need matching
+release evidence. Source: https://developers.cloudflare.com/workers/wrangler/configuration/#source-of-truth

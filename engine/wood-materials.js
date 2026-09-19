@@ -91,7 +91,7 @@ export function applyWoodCommand(ledger,command){
   if(!['dryWood','wetWood','any'].includes(kind)||!['transfer','burn'].includes(mode))throw Error('Invalid wood command');
   if(mode==='transfer')holder(to);
   if(!['branch','pole','pointedPole','boundSharpTool','shelter-component','fuel'].includes(outputForm))throw Error('Unsupported wood output');
-  if(mode==='burn'&&(kind!=='dryWood'||outputForm!=='branch'))throw Error('Only usable raw fuel may burn');
+  if(mode==='burn'&&(kind!=='dryWood'||outputForm!=='branch'||inputForm!=='branch'))throw Error('Only usable raw fuel may burn');
   const fingerprint=JSON.stringify({from:holder(from),to:mode==='transfer'?holder(to):null,count,kind,inputForm,outputForm,reason,mode});
   const prior=ledger.operations?.find(x=>x.id===operationId);
   if(prior){if(prior.fingerprint!==fingerprint)throw Error('Conflicting wood command');return copy(prior);}
