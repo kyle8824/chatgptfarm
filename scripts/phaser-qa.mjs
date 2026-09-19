@@ -169,6 +169,21 @@ const movingAfter=(await snap()).positions;
 if(!Object.keys(movingBefore).some(id=>Math.hypot(movingBefore[id].x-movingAfter[id].x,movingBefore[id].y-movingAfter[id].y)>.5))failures.push('movement stopped after the initial 9-second window');
 await page.screenshot({path:'phaser-qa/mobile-sustained-movement.png'});
 
+// A runtime handoff must arrive without waiting for the twelve-second poll.
+state.meta.tickNumber++;
+state.runtime={serverTime:Date.now(),start:Date.now()-1000,end:Date.now()+2200,status:'running',decisionSource:'fallback'};
+await page.evaluate(()=>window.ChatGPTFarmPhaserDebug.reload());
+state.meta.tickNumber++;
+state.runtime={...state.runtime,serverTime:Date.now()+2300,start:state.runtime.end,end:state.runtime.end+150000};
+try{await page.waitForFunction(tick=>window.ChatGPTFarmPhaserDebug.snapshot().freshness.tick===tick,state.meta.tickNumber,{timeout:6000});}
+catch{failures.push('Runtime handoff waited beyond six seconds instead of fetching at the deadline');}
+// A critical hunger reading is full/red, not an empty green meter.
+qaMara.needs.hunger=0;state.meta.tickNumber++;state.runtime.serverTime=Date.now();
+await page.evaluate(()=>window.ChatGPTFarmPhaserDebug.reload());
+await page.evaluate(()=>window.ChatGPTFarmPhaserDebug.inspectAgent('agent-mara'));
+const hungryMeter=await page.evaluate(()=>[...document.querySelectorAll('.phMeter')].find(x=>x.querySelector('span')?.textContent==='Hunger')?.outerHTML||'');
+if(!hungryMeter.includes('100%')||!hungryMeter.includes('phMeter low'))failures.push('Empty stomach must render Hunger 100% with a warning color');
+
 fs.writeFileSync('phaser-qa/report.json',JSON.stringify({base,snapshot:s,errors,failures},null,2));
 await browser.close();
 if(errors.length)console.error(errors.join('\n'));
