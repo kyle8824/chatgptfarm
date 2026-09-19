@@ -1,0 +1,346 @@
+{
+  "release": "1.6.8",
+  "status": "released_verified",
+  "merge": "17a473447f7e68f27684ad891aade214bc2f597a",
+  "candidate": "0ca5b3f5ace6f08b60749b1b014f1edac0188f9a",
+  "ci": {
+    "runtime": 35427153616,
+    "browser": 35427153634,
+    "both": "success"
+  },
+  "health": {
+    "initialized": true,
+    "mode": "preview",
+    "paused": false,
+    "tick": 486,
+    "start": 1789800549533,
+    "end": 1789800699533,
+    "serverTime": 1789800588261,
+    "planned": true,
+    "alarmAt": 1789800699533,
+    "sourceTick": 56,
+    "aiCallsToday": 0,
+    "cognition": {
+      "enabled": false,
+      "providerConfigured": false,
+      "model": "gpt-5.6-luna",
+      "decisionMode": "fallback",
+      "lastDecisionReasons": [
+        {
+          "agentId": "agent-mara",
+          "reason": "ai_disabled",
+          "executionMode": "fallback"
+        },
+        {
+          "agentId": "agent-ivo",
+          "reason": "ai_disabled",
+          "executionMode": "fallback"
+        }
+      ],
+      "reflection": "not_integrated",
+      "experiments": "disabled"
+    },
+    "evidence": {
+      "version": 1,
+      "retention": "last-256-completed-transitions",
+      "firstTick": 485,
+      "lastTick": 486,
+      "segments": 2,
+      "events": 4,
+      "decisions": 4,
+      "compressedBytes": 4166,
+      "externalArchive": "not_configured",
+      "pendingSegments": 2
+    },
+    "simulatedSecondsPerTransition": 3600,
+    "wallMillisecondsPerTransition": 150000,
+    "build": {
+      "version": "1.6.8",
+      "commit": "17a473447f7e68f27684ad891aade214bc2f597a"
+    }
+  },
+  "continuity": {
+    "recentMemoriesRetainedPerPerson": 20,
+    "accountedWoodDryKgBeforeAndAfter": 161,
+    "identities": [
+      "agent-mara",
+      "agent-ivo"
+    ],
+    "reseeded": false
+  },
+  "samples": [
+    {
+      "sample": "premerge-state.json",
+      "tick": 482,
+      "day": 24,
+      "hour": 2,
+      "minute": 0,
+      "runtime": {
+        "version": 1,
+        "serverTime": 1789799998609,
+        "start": 1789799949533,
+        "end": 1789800099533,
+        "revision": 483,
+        "status": "running",
+        "decisionSource": "fallback",
+        "mode": "preview",
+        "aiCallsToday": 0,
+        "build": {
+          "version": "1.6.7",
+          "commit": "46bcfc0293a1ab96c1920fde7038bd1040dda5ed"
+        }
+      },
+      "agents": [
+        {
+          "id": "agent-mara",
+          "needs": {
+            "hydration": 63.5,
+            "hunger": 57.399999999999906,
+            "energy": 72.00000000000121,
+            "warmth": 77
+          },
+          "task": {
+            "id": null,
+            "actionId": null,
+            "phase": null,
+            "workMinutes": null,
+            "requiredMinutes": null
+          },
+          "mind": {
+            "brainMode": "fallback",
+            "fallbackReason": null,
+            "executionMode": null
+          }
+        },
+        {
+          "id": "agent-ivo",
+          "needs": {
+            "hydration": 69.5,
+            "hunger": 57.39999999999992,
+            "energy": 75.0000000000012,
+            "warmth": 85
+          },
+          "task": {
+            "id": null,
+            "actionId": null,
+            "phase": null,
+            "workMinutes": null,
+            "requiredMinutes": null
+          },
+          "mind": {
+            "brainMode": "fallback",
+            "fallbackReason": null,
+            "executionMode": null
+          }
+        }
+      ]
+    },
+    {
+      "sample": "live-v168-first.json",
+      "tick": 485,
+      "day": 24,
+      "hour": 5,
+      "minute": 0,
+      "runtime": {
+        "version": 1,
+        "serverTime": 1789800424038,
+        "start": 1789800399533,
+        "end": 1789800549533,
+        "revision": 486,
+        "status": "running",
+        "decisionSource": "fallback",
+        "mode": "preview",
+        "aiCallsToday": 0,
+        "build": {
+          "version": "1.6.8",
+          "commit": "17a473447f7e68f27684ad891aade214bc2f597a"
+        }
+      },
+      "agents": [
+        {
+          "id": "agent-mara",
+          "needs": {
+            "hydration": 79,
+            "hunger": 72.7999999999999,
+            "energy": 63.60000000000122,
+            "warmth": 74
+          },
+          "task": {
+            "id": null,
+            "actionId": null,
+            "phase": null,
+            "workMinutes": null,
+            "requiredMinutes": null
+          },
+          "mind": {
+            "brainMode": "fallback",
+            "fallbackReason": null,
+            "executionMode": null
+          }
+        },
+        {
+          "id": "agent-ivo",
+          "needs": {
+            "hydration": 85,
+            "hunger": 72.79999999999991,
+            "energy": 61.6000000000012,
+            "warmth": 82
+          },
+          "task": {
+            "id": null,
+            "actionId": null,
+            "phase": null,
+            "workMinutes": null,
+            "requiredMinutes": null
+          },
+          "mind": {
+            "brainMode": "fallback",
+            "fallbackReason": null,
+            "executionMode": null
+          }
+        }
+      ]
+    },
+    {
+      "sample": "live-v168-action-a.json",
+      "tick": 486,
+      "day": 24,
+      "hour": 6,
+      "minute": 5,
+      "runtime": {
+        "version": 1,
+        "actionVersion": 1,
+        "serverTime": 1789800564079,
+        "start": 1789800549533,
+        "end": 1789800699533,
+        "nextUpdateAt": 1789800574533,
+        "revision": 487,
+        "status": "running",
+        "decisionSource": "fallback",
+        "mode": "preview",
+        "aiCallsToday": 0,
+        "build": {
+          "version": "1.6.8",
+          "commit": "17a473447f7e68f27684ad891aade214bc2f597a"
+        }
+      },
+      "agents": [
+        {
+          "id": "agent-mara",
+          "needs": {
+            "hydration": 71.95833333333333,
+            "hunger": 68.2499999999999,
+            "energy": 60.566666666667885,
+            "warmth": 81.58333333333333
+          },
+          "task": {
+            "id": "A-D-01106",
+            "actionId": "store_wet_wood",
+            "phase": "work",
+            "workMinutes": 5,
+            "requiredMinutes": 30
+          },
+          "mind": {
+            "brainMode": "fallback",
+            "fallbackReason": "ai_disabled",
+            "executionMode": "fallback"
+          }
+        },
+        {
+          "id": "agent-ivo",
+          "needs": {
+            "hydration": 77.95833333333333,
+            "hunger": 82.24999999999991,
+            "energy": 58.56666666666787,
+            "warmth": 73.33333333333333
+          },
+          "task": {
+            "id": "A-D-01105",
+            "actionId": "eat_berries",
+            "phase": "work",
+            "workMinutes": 5,
+            "requiredMinutes": 10
+          },
+          "mind": {
+            "brainMode": "fallback",
+            "fallbackReason": "ai_disabled",
+            "executionMode": "fallback"
+          }
+        }
+      ]
+    },
+    {
+      "sample": "live-v168-action-b.json",
+      "tick": 486,
+      "day": 24,
+      "hour": 6,
+      "minute": 10,
+      "runtime": {
+        "version": 1,
+        "actionVersion": 1,
+        "serverTime": 1789800583984,
+        "start": 1789800549533,
+        "end": 1789800699533,
+        "nextUpdateAt": 1789800587033,
+        "revision": 487,
+        "status": "running",
+        "decisionSource": "fallback",
+        "mode": "preview",
+        "aiCallsToday": 0,
+        "build": {
+          "version": "1.6.8",
+          "commit": "17a473447f7e68f27684ad891aade214bc2f597a"
+        }
+      },
+      "agents": [
+        {
+          "id": "agent-mara",
+          "needs": {
+            "hydration": 71.41666666666666,
+            "hunger": 67.8999999999999,
+            "energy": 60.33333333333455,
+            "warmth": 82.16666666666666
+          },
+          "task": {
+            "id": "A-D-01106",
+            "actionId": "store_wet_wood",
+            "phase": "work",
+            "workMinutes": 10,
+            "requiredMinutes": 30
+          },
+          "mind": {
+            "brainMode": "fallback",
+            "fallbackReason": "ai_disabled",
+            "executionMode": "fallback"
+          }
+        },
+        {
+          "id": "agent-ivo",
+          "needs": {
+            "hydration": 77.41666666666666,
+            "hunger": 95.89999999999992,
+            "energy": 58.33333333333454,
+            "warmth": 72.66666666666666
+          },
+          "task": {
+            "id": "A-D-01107",
+            "actionId": "drink",
+            "phase": "travel",
+            "workMinutes": 0,
+            "requiredMinutes": 10
+          },
+          "mind": {
+            "brainMode": "fallback",
+            "fallbackReason": "ai_disabled",
+            "executionMode": "fallback"
+          }
+        }
+      ]
+    }
+  ],
+  "limits": [
+    "Urgent interruption verified in automated tests, not induced in production.",
+    "Live AI disabled and provider key absent; no successful live model call claimed.",
+    "Five-minute simulated substeps; broader archival and Decision DNA deferred."
+  ]
+}

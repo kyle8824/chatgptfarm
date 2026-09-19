@@ -172,3 +172,12 @@ Kyle clarified that the release target is visible survival, not completion of th
 Implemented candidate: persisted five-minute action steps within the existing hourly checkpoint; metric creek-aware routes with load/distance progress; arrival before effects; fractional eating/drinking/rest and location-based warmth; urgent interruption with retained work/portions; within-hour viewer refresh and truthful model/fallback labels. Diagnostic evidence retains only the last 256 completed transitions. No world reseed, identity changes, paid calls, AI budget changes or clay redesign.
 
 See releases/v1.6.8.md for acceptance gates and explicit approximations. Release remains CANDIDATE pending exact-head hosted verification, current-main recheck and actual deployment verification. Earlier blueprint-wide HOLD statements are superseded; do not expand the release back into infrastructure work.
+
+
+## v1.6.8 released and verified — 2026-09-19
+
+PR #12 merged as 17a473447f7e68f27684ad891aade214bc2f597a. Final candidate 0ca5b3f passed runtime 35427153616 and browser/recovery 35427153634. Post-merge validate/visual, Vercel and Workers Builds passed. Cloudflare builds the existing repair/continuous-runtime branch, which was ancestry-checked and fast-forwarded to the merge; main alone does not deploy the runtime.
+
+Both viewer and Worker confirm v1.6.8. Live tick 486 has actionVersion 1; two within-hour reads show partial eating then completion, travel before drinking benefit, retained work ID/progress, changing warmth, and truthful fallback. World identities, recent memories and accounted wood mass preserved. AI is disabled and provider key absent; no live AI call claim or settings change. Urgent interruptions/restarts/resume passed automated tests. Evidence and explicit coarse-model limits: docs/releases/v1.6.8.md and v1.6.8-live-verification.json.
+
+Release complete; no release blocker. Broad external archival, reflection, experiments and Decision DNA remain deferred. Continue from this world and accepted UI; never reseed FarmWorld / preview-v1.
