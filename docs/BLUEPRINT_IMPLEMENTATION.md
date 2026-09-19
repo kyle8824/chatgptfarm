@@ -10,9 +10,9 @@ The live village follows physical constraints, natural variation and agent motiv
 
 | Stage | Scope | Completion evidence | Status |
 | --- | --- | --- | --- |
-| 0 | One authoritative writer, runtime SHA/settings/world identity, exports | Identify deployed engine and controls; preserve current checkpoint | Candidate exposes deployment SHA and preserves dashboard AI settings; hosted verification pending |
+| 0 | One authoritative writer, runtime SHA/settings/world identity, exports | Identify deployed engine and controls; preserve current checkpoint | Deployed SHA verified; dashboard settings preserved; single automatic writer. Actual AI path still needs verification |
 | A / 1 | Pure observations, migrations separated from elapsed environmental processes | Repeated reads preserve entire state; repeated migration stable; elapsed integration applies once | Observation/time invariants tested; remaining physical processes tracked in later stages |
-| B / 2 | Unified ground/carried/stored wood batches, moisture, drying, fuel | Conserved material; Day 19 fuel fixture; elapsed time/restart tests | Integrated v1.6.6 candidate; conservation, drying, finite fuel and copied-state survival pass; release checks pending |
+| B / 2 | Unified ground/carried/stored wood batches, moisture, drying, fuel | Conserved material; Day 19 fuel fixture; elapsed time/restart tests | Released v1.6.6; conservation, moisture, finite fuel and copied-state survival pass; live ledger verified at tick 448 |
 | C / 3 | Durable completed events and exact decision envelopes; runtime cognitive parity | Atomic outcome/archive outbox; exact inputs; truthful untested DNA display | Planned |
 | 4 | Navigation and resumable work | Arrival before effects; interruption, contention and load tests | Planned |
 | 5 | Persistent plans, beliefs, reflection, competencies and communication | Same runtime interfaces; local knowledge; measured learning on isolated copies | Planned |
@@ -44,4 +44,4 @@ Record starting knowledge, failure/mortality policy and simulation pace before i
 
 Separate mechanics tests, runtime/recovery tests, isolated model experiments and human visual review. Measure conservation, time consistency, local knowledge, learning, travel/work, archive completeness, and cost; do not optimize only for zero deaths. Adversarial fixtures never alter production. Version schemas/rules/prompts/assets separately. Rehearse migration and rollback or forward repair; a graphics rollback must not roll back history.
 
-Before each release, pin tested SHA, verify current-state migration and affected projections, document remaining approximations, and record actual runtime deployment separately from Git merge. See REBUILD_STATUS.md for the current HOLD.
+Before each release, pin tested SHA, verify current-state migration and affected projections, document remaining approximations, and record actual runtime deployment separately from Git merge. See REBUILD_STATUS.md and docs/releases/v1.6.6.md for current release evidence and remaining work.

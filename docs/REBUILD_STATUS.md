@@ -4,7 +4,7 @@ Architecture map: [BLUEPRINT_IMPLEMENTATION.md](BLUEPRINT_IMPLEMENTATION.md). Re
 
 Branch: `rebuild/survival-foundation`
 Base: `25b8a7d5c7b1fdf0e883c64812b961a152462985`
-Release status: **READY for v1.6.6 deployment — tested code 8e72759; hosted deployment still pending.**
+Release status: **RELEASED v1.6.6 — runtime e614106; live verification passed at tick 448.**
 
 ## Instructions for the next model
 
@@ -136,3 +136,11 @@ Release ownership: automatic schedule/push triggers removed from legacy GitHub a
 ## Release gate completed
 
 READY: code 8e72759ab3c8ee9d83601a3560e60dfcf06712ce passed Cloudflare Runtime Validation run 35422782393 and Living World Recovery QA run 35422782454. Both completed successfully. The next commit only records evidence and a public-state export; runtime code is unchanged. Recheck its CI before merging. Latest Day 22 10:00 copy also passed the 72-hour recovery gate. Deployment must still be verified separately. See docs/releases/v1.6.6.md.
+
+## RELEASED — resume here
+
+v1.6.6 is live. Engine release/PR #10 merge: e61410696ff6285efcd22bf0f65e6c711310b026. Cloudflare /health and /state confirm that SHA. Vercel and main-domain HTML confirm v1.6.6. Final PR CI passed at 9e19a63. A stale post-merge v1.6.3 text assertion was repaired in 8711d03 (production validation now PASS; no engine change).
+
+At tick 448, the new ledger is persisted and mass balances; world time advanced from predeployment tick 442, original identities and recent histories remain. Public reads do not alter the ledger. Details and evidence: docs/releases/v1.6.6.md and v1.6.6-live-verification.json. Source world was never reseeded or replaced. All earlier HOLD entries describe superseded checkpoints.
+
+The runtime still reports fallback decisions / zero AI calls. Dashboard configuration was preserved, not changed. Next phase must verify the actual AI path and durable completed-event/decision evidence before claiming learned autonomous planning. Follow the full blueprint, especially subsequent travel/labor and personal learning stages. Do not discard accepted UI, the new wood authority, regional foraging, or existing people/history.
