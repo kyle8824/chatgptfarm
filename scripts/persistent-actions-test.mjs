@@ -30,6 +30,11 @@ t=await beginActionTransition(w,0,150000,force('build_shelter'));
 assert.equal(t.after.structures.shelter,false);assert(t.after.history.some(e=>e.type==='action-interrupted'));
 assert(t.after.agents[0].suspendedTasks?.length||t.after.history.some(e=>e.type==='action-resumed'));
 const ids=t.after.history.filter(e=>e.type==='action-interrupted').map(e=>e.actionId);assert(ids.every(Boolean));
+// Resuming an AI task restores that task's source after a fallback interruption.
+const retained=snapshotActionTransition(t,0).agents[0].task;
+w=isolated();a=w.agents[0];a.position='camp';a.coordinates={x:64,y:34};a.suspendedTasks=[retained];a.mind.brainMode='fallback';a.mind.model=null;a.mind.fallbackReason='urgent_need';
+const resumed=snapshotActionTransition(await beginActionTransition(w,0),0).agents[0];
+assert.equal(resumed.task.id,retained.id);assert.equal(resumed.mind.brainMode,'ai');assert.equal(resumed.mind.model,'test-only');assert.equal(resumed.mind.fallbackReason,null);
 // Array order never determines contention for the final portion.
 w=createWorld();for(const a of w.agents){a.position='berries';a.coordinates={x:29,y:31};a.needs.hunger=25;}w.resources.berries=1;
 const reversed=structuredClone(w);reversed.agents.reverse();

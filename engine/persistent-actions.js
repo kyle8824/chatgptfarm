@@ -29,16 +29,16 @@ function outcome(w,a,task,success,detail,status='completed'){
  const dna=w.dna.find(d=>d.decision_id===task.decisionId);if(dna)dna.physics.outcome={success,detail,status,workMinutes:task.workMinutes};
  addEvent(w,'action-completed',task.label,detail,{agentId:a.id,actionId:task.id,decisionId:task.decisionId,status,success});
 }
-function display(a){const t=a.task;if(!t)return;a.currentAction=t.phase==='travel'?`Traveling to ${t.targetPosition} · ${t.label}`:t.label;a.activeAction={id:t.id,decisionId:t.decisionId,actionId:t.actionId,label:a.currentAction,from:{...a.coordinates},to:{...t.destination},moving:t.phase==='travel',phase:t.phase,workMinutes:t.workMinutes,requiredMinutes:t.requiredMinutes};a.mind.executionMode=t.source==='ai'?'model_plan':t.emergency?'emergency_rule':'fallback';}
+function display(a){const t=a.task;if(!t)return;a.currentAction=t.phase==='travel'?`Traveling to ${t.targetPosition} · ${t.label}`:t.label;a.activeAction={id:t.id,decisionId:t.decisionId,actionId:t.actionId,label:a.currentAction,from:{...a.coordinates},to:{...t.destination},moving:t.phase==='travel',phase:t.phase,workMinutes:t.workMinutes,requiredMinutes:t.requiredMinutes};Object.assign(a.mind,{brainMode:t.source,model:t.model||null,fallbackReason:t.fallbackReason||null});a.mind.executionMode=t.source==='ai'?'model_plan':t.emergency?'emergency_rule':'fallback';}
 async function startTask(w,a,mind,reason,emergency=false){
  const chosen=await selectPersistentAction(w,a,mind,reason,emergency?x=>family(x.id)===urgentNeed(a):null),targetPosition=actionDestination(w,a,chosen.selected,chosen.mindResult.physicalAction),destination=targetPosition===a.position?{...a.coordinates}:coordForPosition(targetPosition,w),path=findRoute(w,a.coordinates,destination);
- const t={origin:{...a.coordinates},id:`A-${chosen.decisionId}`,decisionId:chosen.decisionId,actionId:chosen.selected.id,label:chosen.selected.label,selected:chosen.selected,proposal:chosen.mindResult.physicalAction,source:chosen.mindResult.brainMode,emergency,targetPosition,destination,path:path||[],pathIndex:1,phase:distance(a.coordinates,destination)>.01?'travel':'work',requiredMinutes:duration(chosen.selected.id),workMinutes:0,startedAt:{day:w.day,hour:w.hour,minute:w.minute||0}};
+ const t={origin:{...a.coordinates},id:`A-${chosen.decisionId}`,decisionId:chosen.decisionId,actionId:chosen.selected.id,label:chosen.selected.label,selected:chosen.selected,proposal:chosen.mindResult.physicalAction,source:chosen.mindResult.brainMode,model:chosen.mindResult.model||null,fallbackReason:chosen.mindResult.fallbackReason||null,emergency,targetPosition,destination,path:path||[],pathIndex:1,phase:distance(a.coordinates,destination)>.01?'travel':'work',requiredMinutes:duration(chosen.selected.id),workMinutes:0,startedAt:{day:w.day,hour:w.hour,minute:w.minute||0}};
  if(!path){outcome(w,a,t,false,'No traversable route to the selected destination.','blocked');a.currentAction='Route blocked';a.task=null;return;}
  a.task=t;display(a);
 }
 function interrupt(w,a,need){
  const task=a.task;
- // Keep one suspended task. Its consumed food/work stays accounted; no refund.
+ // Retain suspended work. Its consumed food/work stays accounted; no refund.
  (a.suspendedTasks||=[]).push(structuredClone(task));a.task=null;
  addEvent(w,'action-interrupted',`${a.name} interrupts ${task.label}`,`Urgent ${need} requires attention. Completed work is retained.`,{agentId:a.id,actionId:task.id,decisionId:task.decisionId,need,workMinutes:task.workMinutes});
  const dna=w.dna.find(d=>d.decision_id===task.decisionId);if(dna)dna.physics.outcome={status:'interrupted',success:false,detail:`Interrupted for urgent ${need}; work retained.`};
