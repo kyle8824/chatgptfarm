@@ -38,18 +38,29 @@ Focused causal tests; existing engine/runtime tests; CI/browser checks; explicit
 
 ## Latest checkpoint
 
-F1: local thermal effects, exposure in AI perception/Decision DNA, warmth/cover-seeking options, removal of direct fire/rest heat bonuses implemented and tested. Still coarse hourly camp positions.
+F1/F2: local thermal effects, warmth/cover-seeking, exposure in AI context, bounded memory utilities, urgent food/fuel acquisition, critical repeat-action exemption implemented. Direct fire/rest heat bonuses removed.
 
-F2: capped accumulated memory utility contribution at 12; removed repetition penalties for critically low survival needs; increased urgency of food acquisition when no edible food is carried, and dry-fuel acquisition when cold without an existing fire or enough fuel. These are fallback preference changes, not compulsory AI actions or a shelter quest. AI retains its validated action choice.
+Food access chunk: selectively adapted PR #8 region/site engine and coordinate/render quantity plumbing. Added three finite berry habitats (upland, woodland margin, eastern meadow), capacity 12 and regrowth 3/day each. People search habitat locations, identify familiar edible berries, remember private availability, and consume actual harvested inventory. No new art: existing berry-bush rendering reused; independent site quantities are displayed. Renderer changes are limited to resource quantities and associated QA; rejected clay branch excluded. Original PR #8 and chronicle remain preserved; do not merge PR #8 wholesale now because this branch incorporates and extends part of it.
 
-Validation: complete npm test passed, including original smoke, thermal, warmth decisions, and new survival-decision-test.mjs. Tests cover 120 water memories not overriding urgent food gathering, actual inventory consumption before hunger recovery, repeated survival actions, absent supplies producing no food, urgent fuel, and deterministic AI adapter contracts. runtime-test.mjs passed. Fresh-world 72-hour fallback scenario still has zero depleted warmth/food/water agent-hours.
+Fuel finding: depleted dry-wood observations previously blocked return for 18 hours despite wood drying during that interval. Reinspection allowed after 4 hours (still no remote knowledge of actual quantity). This fixed the thermal regression introduced when people spent more time accessing food.
 
-Read-only diagnostic scripts/survival-audit.mjs runs a COPY of world/state.json. Source at baseline is Day 6 22:00, not verified live Cloudflare state. Both people already have zero hydration and satiety; berries and dry wood are depleted. Before F2, a 72-hour copied rollout recorded warmth=9, hunger=96, hydration=0 zero-agent-hours; after F2: warmth=5, hunger=92, hydration=0 out of 144. This is still unacceptable food availability, not a passing survival result. Original state file was never changed.
+Validation: full npm test passed (original smoke, thermal, warmth decisions, survival decisions, forage-site tests). Region tests cover personal discovery, shared last-portion contention, independent resource pools, idempotent migration/regrowth, save reload, river clearance, fuel reinspection, and copied saved-state survival without modifying the source file. Runtime tests passed earlier; rerun status for this checkpoint is recorded below after completion.
 
-Supply finding: two daily berry portions at +28 satiety each provide 56 total points/day; two people lose 201.6 points/day at 4.2/hour each. The existing accessible berry source alone cannot sustain them. Additional resources must become discoverable and usable, not silently refill inventories or reset hunger.
+72-hour COPY of baseline Day 6 22:00 world (not a verified current live snapshot): before food access, zero-agent-hours warmth=5, hunger=92, hydration=0; after food access + fuel reinspection, warmth=0, hunger=4, hydration=0 out of 144. After the first 12 hours, no zero survival meters in this scenario. Fresh-world regression also passes. This does not prove live AI judgment, all weather scenarios, or long-run population balance.
 
-Release remains BLOCKED: unresolved saved-world scarcity and discovery/acquisition behavior, exact-commit CI/browser checks, and authoritative live runtime checks. Actual AI quality has not been evaluated (only deterministic adapters). Camp knowledge remains global; fire remains a boolean with random extinguishing; travel exposure is endpoint-based; scripted construction remains until F4/F5.
+Release status: BLOCKED pending exact-commit CI/browser verification, authoritative runtime state/deployment identification, and migration check against that current state. Implementation checkpoint only; do not ask another model to invent ecology or visuals to make it releasable.
 
-Next exact task: inspect preserved PR #8 region/site adapter and existing physical search/dig/hunt paths. Design a small food-access chunk using finite known/observable resources and personal discovery, with a copied saved-world scenario. Preserve memories and state. Integrate selectively, avoiding unrelated renderer or rejected clay changes. Do not hide supply failure by weakening survival checks.
+## Narrow release-agent handoff
 
-Release handoff: once implementation blockers and pre-deployment checks pass, mark READY with exact code SHA and deployment instructions for another chat agent. Post-deploy live verification should then be recorded as a separate release outcome; do not require a deployment before authorizing the first deployment.
+Until this file says READY, do not merge or deploy PR #10. Do not modify game balance, generate artwork, reset world state, change secrets, or merge other feature branches as part of release.
+When READY: verify named code SHA and CI; merge only this PR preserving newer accepted popup changes; deploy to the existing authoritative runtime without reseeding; verify public version, advancing ticks, retained identities/history and site quantities. Record failures and stop rather than improvising fixes. Record actual release result separately from Git merge.
+
+## Next development work
+
+1. Run exact-commit CI/browser checks. Inspect authoritative Cloudflare snapshot read-only and check additive migration against a copy.
+2. Validate actual AI perception/choice integration; deterministic adapter tests are not model-quality evidence.
+3. Before release resolve any viewer projection or site-action issues found; keep tests truthful.
+4. Then F3 timing/navigation, followed by materials and construction experiment. Broader food variety (roots, seasonal plants, hunting) needs real identification/tool/ecology constraints and dedicated chunks. Do not claim berry habitats provide that variety.
+5. Reconcile social transfer of site knowledge and food-pressure summaries in the viewer; current site discovery is personal but not yet shared by conversation.
+
+Limits remain: shared camp knowledge, boolean fire/random extinguishing, coarse endpoint travel exposure, predefined search habitat locations and scripted legacy construction. No production state or UI artwork was changed.
