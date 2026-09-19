@@ -88,3 +88,19 @@ KNOWN FAILING GATES, intentionally retained: removing accidental rain-created fu
 Chunk A is a checkpoint, not completion of all invariants: compatibility state synchronization still exists at explicit mutation/migration boundaries; component/material conservation, private remote knowledge, and arbitrary fractional-time integration remain future work. The new process preserves the existing coarse moisture rates and is not the unified material system.
 
 Next task is blueprint Chunk B: conserved legacy wood batches with moisture and elapsed drying across ground/carried/stored locations; remove competing material authorities gradually. Preserve Day 19 inventory quantities and owners. Keep unknown provenance unknown. Build tested physical options (cover/spreading/storage) rather than adding a scripted drying-rack quest. Re-run the unchanged survival failures plus current live-state copy after that work. Keep release HOLD until gates pass.
+
+## Blueprint Chunk B1 — tested raw-wood module (latest checkpoint)
+
+Added engine/wood-materials.js and scripts/wood-materials-test.mjs. This is an ISOLATED module, NOT yet authoritative or connected to runtime actions. It does not fix the live fuel failure yet. HOLD remains, including the earlier failing survival tests.
+
+Model: deterministic legacy import preserves raw dry/wet branch counts and holders, explicitly assuming 1 kg dry wood per legacy unit and water/dry-mass ratios .12/.55 (not historical measurements). Batches have stable IDs and split lineage; location is ground/carried/stored. Covered/uncovered moisture follows an elapsed exponential approximation using temperature, humidity and airflow. Tracks atmospheric water exchange separately from conserved dry wood. Transfer preserves quantities; explicit consumption records its sink and operation ID, with retry conflict checking. Rates require calibration before integration/release.
+
+Focused test PASSED: Day 19 fixture imports 125 branches (2 dry + 123 damp) with original owners; transfers conserve material; covered wet wood dries while rain rewets exposed fuel; partitioned half-hour updates match one daily interval; duplicate/reloaded updates do nothing; invalid exposure/transfer is atomic; consumed wood and water remain accounted. Source world is not mutated. No new graphics, production changes or paid AI calls.
+
+NEXT B2 integration checklist (do not just call integrateWood from finishHour):
+1. Inventory every raw-wood write in core/runtime/physical-world/physical-materials and tests; choose ledger authority once, with numeric counts only projected for compatibility.
+2. Implement transfers for gathering and unloading, accounted burn consumption, and real output accounts for poles/structures. Do NOT classify construction as a disappearance sink. Reconcile detached component IDs with batches; avoid duplicate material.
+3. Versioned migration of existing counts and detached objects with explicit ambiguity policy; never silently double import represented branches or delete excess holdings.
+4. Replace ground-only drying and conflicting object-moisture writes with one integration path; resolve actual holder exposure/cover before elapsed updates. Preserve weather/time watermarks across restart.
+5. Give agents feasible storage/spreading options and observations without compulsory recipe progression. Existing cover is only a transitional coarse geometry model.
+6. Wire focused module tests into npm test with integration tests, restore unchanged failing survival gates through physical processes, and verify current-state copy. Rates and supplies must not be tuned solely to force survival.
