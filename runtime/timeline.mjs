@@ -7,7 +7,9 @@ const mix = (a, b, t) => ({x:a.x+(b.x-a.x)*t,y:a.y+(b.y-a.y)*t});
 // A transition is persisted BEFORE it is published. Its effects stay private
 // until its deadline. Reloads and other viewers receive the same transition.
 export async function beginTransition(world, start, duration = 150000, advance = tick) {
-  const before = copy(world), after = copy(world);
+  // Upgrade the existing world before publishing movement into its environment.
+  // Migration is private to this new persisted transition, never a spectator read.
+  const before = migrateWorld(copy(world)), after = copy(before);
   await advance(after);
   after.meta.tickNumber = (before.meta.tickNumber || 0) + 1;
   after.meta.lastAdvancedAt = new Date(start + duration).toISOString();
