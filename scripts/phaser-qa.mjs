@@ -178,7 +178,7 @@ state.runtime={...state.runtime,serverTime:Date.now()+2300,start:state.runtime.e
 try{await page.waitForFunction(tick=>window.ChatGPTFarmPhaserDebug.snapshot().freshness.tick===tick,state.meta.tickNumber,{timeout:6000});}
 catch{failures.push('Runtime handoff waited beyond six seconds instead of fetching at the deadline');}
 // A critical hunger reading is full/red, not an empty green meter.
-qaMara.needs.hunger=0;state.meta.tickNumber++;state.runtime.serverTime=Date.now();
+state.agents.find(a=>a.id==='agent-mara').needs.hunger=0;state.meta.tickNumber++;state.runtime.serverTime=Date.now();
 await page.evaluate(()=>window.ChatGPTFarmPhaserDebug.reload());
 await page.evaluate(()=>window.ChatGPTFarmPhaserDebug.inspectAgent('agent-mara'));
 const hungryMeter=await page.evaluate(()=>[...document.querySelectorAll('.phMeter')].find(x=>x.querySelector('span')?.textContent==='Hunger')?.outerHTML||'');
