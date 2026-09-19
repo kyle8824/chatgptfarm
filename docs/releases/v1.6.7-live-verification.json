@@ -1,0 +1,20 @@
+{
+  "version": {
+    "version": "1.6.7",
+    "commit": "46bcfc0293a1ab96c1920fde7038bd1040dda5ed"
+  },
+  "tick": 459,
+  "goals": [
+    {
+      "id": "agent-mara",
+      "goal": "Dry a branch beside the fire",
+      "action": "Dry a branch beside the fire"
+    },
+    {
+      "id": "agent-ivo",
+      "goal": "Rest in the shelter",
+      "action": "Rest in the shelter"
+    }
+  ],
+  "verifiedAt": "2026-09-19T05:42:02.019Z"
+}

@@ -152,3 +152,9 @@ User observed late berry habitat, waiting between transitions, stale goals and c
 Read-only live history confirmed Day 22 14:00 talk/wood decisions at zero satiety before regional foraging became available; subsequent search/forage/eat decisions still carried stale warmth goals. Existing survival tests cover food priority and finite supplies. The update does not claim continuous-time physiology, real physical travel/labor, or active AI. Those remain blueprint work.
 
 Release gates: exact candidate CI/mobile browser QA and worker deployment identity still required. Preserve FarmWorld/preview-v1, history and dashboard settings. Never reseed.
+
+## v1.6.7 RELEASED — current resume point
+
+PR #11 merged as 46bcfc0293a1ab96c1920fde7038bd1040dda5ed. Both candidate checks, postmerge validate/visual, Workers Builds and Vercel passed. Main page and runtime confirm v1.6.7. Live tick 459 confirms both new fallback goals match actual actions after predeployment buffered decisions finished. World continued from tick 456; identities and recent memories preserved. Evidence: docs/releases/v1.6.7.md and v1.6.7-live-verification.json.
+
+No blocker to this release remains. Next substantive work is still the full blueprint: truthful cognition/decision evidence, physical travel and labor, incremental needs effects and learned plans. Runtime still uses fallback; do not claim live AI or continuous physical action resolution. User feedback specifically prioritizes believable food seeking, existing visible habitat and uninterrupted lived activity.
