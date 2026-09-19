@@ -10,9 +10,9 @@ The live village follows physical constraints, natural variation and agent motiv
 
 | Stage | Scope | Completion evidence | Status |
 | --- | --- | --- | --- |
-| 0 | One authoritative writer, runtime SHA/settings/world identity, exports | Identify deployed engine and controls; preserve current checkpoint | Open; live public state accessed, deployed SHA not exposed |
-| A / 1 | Pure observations, migrations separated from elapsed environmental processes | Repeated reads preserve entire state; repeated migration stable; elapsed integration applies once | In progress |
-| B / 2 | Unified ground/carried/stored wood batches, moisture, drying, fuel | Conserved material; Day 19 fuel fixture; elapsed time/restart tests | Next |
+| 0 | One authoritative writer, runtime SHA/settings/world identity, exports | Identify deployed engine and controls; preserve current checkpoint | Candidate exposes deployment SHA and preserves dashboard AI settings; hosted verification pending |
+| A / 1 | Pure observations, migrations separated from elapsed environmental processes | Repeated reads preserve entire state; repeated migration stable; elapsed integration applies once | Observation/time invariants tested; remaining physical processes tracked in later stages |
+| B / 2 | Unified ground/carried/stored wood batches, moisture, drying, fuel | Conserved material; Day 19 fuel fixture; elapsed time/restart tests | Integrated v1.6.6 candidate; conservation, drying, finite fuel and copied-state survival pass; release checks pending |
 | C / 3 | Durable completed events and exact decision envelopes; runtime cognitive parity | Atomic outcome/archive outbox; exact inputs; truthful untested DNA display | Planned |
 | 4 | Navigation and resumable work | Arrival before effects; interruption, contention and load tests | Planned |
 | 5 | Persistent plans, beliefs, reflection, competencies and communication | Same runtime interfaces; local knowledge; measured learning on isolated copies | Planned |

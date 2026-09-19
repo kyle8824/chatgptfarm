@@ -435,6 +435,7 @@ const age=updateAge(),stale=!Number.isFinite(age)||age>playbackMs()*2;const stat
       if(material)add('Material',material);
       add('Location',d.zone);
       if(d.type==='camp_fire')add('Fire state',w.structures?.fire?'Burning':'Out');
+      if(w.wood&&['camp_fire','branch_shelter'].includes(d.type)){const batches=w.wood.batches||[],fuel=batches.filter(b=>b.form==='fuel').reduce((n,b)=>n+b.dryKg,0),stored=batches.filter(b=>b.form==='branch'&&b.holder?.id==='camp-drying'),dry=stored.filter(b=>b.waterKg/b.dryKg<=.24).reduce((n,b)=>n+b.units,0),wet=stored.filter(b=>b.waterKg/b.dryKg>.24).reduce((n,b)=>n+b.units,0);if(d.type==='camp_fire')add('Fuel remaining',`${fuel.toFixed(2)} kg`);add('Wood under cover',`${dry} dry · ${wet} damp`);}
       add('Last event',d.history?.at(-1)?.detail);
       const key={berry_patch:'berries',stone_field:'stones',clay_bank:'clay',reed_marsh:'reeds'}[d.type];
       if(key)add('Available',w.regions?.sites?.[d.id]?.quantity??w.resources?.[key]);

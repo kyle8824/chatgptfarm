@@ -23,7 +23,7 @@ try{await page.waitForSelector('#phLoading.hidden',{state:'attached',timeout:100
 await page.waitForTimeout(1200);
 const snap=()=>page.evaluate(()=>window.ChatGPTFarmPhaserDebug.snapshot());
 let s=await snap();
-if(s.version!=='phaser-v1.6.5-spectator-cleanup')failures.push(`wrong renderer: ${s.version}`);
+if(s.version!=='phaser-v1.6.6-survival-materials')failures.push(`wrong renderer: ${s.version}`);
 if(!String(s.phaser||'').startsWith('3.'))failures.push(`Phaser failed to initialize: ${s.phaser}`);
 if(s.agents!==2)failures.push(`expected 2 agents, got ${s.agents}`);
 const expectedPresentWildlife=(state.ecologySystem?.wildlife||[]).filter(x=>x.active&&x.localPresence!==false).length;if(s.wildlife!==expectedPresentWildlife)failures.push(`renderer wildlife count drift: ${s.wildlife} != canonical ${expectedPresentWildlife}`);
