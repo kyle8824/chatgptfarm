@@ -104,3 +104,13 @@ NEXT B2 integration checklist (do not just call integrateWood from finishHour):
 4. Replace ground-only drying and conflicting object-moisture writes with one integration path; resolve actual holder exposure/cover before elapsed updates. Preserve weather/time watermarks across restart.
 5. Give agents feasible storage/spreading options and observations without compulsory recipe progression. Existing cover is only a transitional coarse geometry model.
 6. Wire focused module tests into npm test with integration tests, restore unchanged failing survival gates through physical processes, and verify current-state copy. Rates and supplies must not be tuned solely to force survival.
+
+## Blueprint Chunk B2 — material command checkpoint
+
+Implemented and tested transactional wood commands: gathering transfers existing batches; competing claims cannot overdraw supplies; retry IDs prevent duplicate application and reject conflicting retries. Cutting a branch into a pole and allocating wood to a shelter component retain material in output accounts, including moisture. Burning accepts dry raw branches and records consumption. These are material-account operations, not yet physical construction or autonomous behavior.
+
+Added legacy carried-component reconciliation: detached wood entity IDs are associated with already counted inventory branches rather than imported a second time. Historical entity mass disagreement is explicitly retained as migration metadata; original counted mass is preserved. Unmatched entities stop migration instead of silently deleting or duplicating material. Reconciliation is idempotent.
+
+Validation: wood-materials-test.mjs and wood-commands-test.mjs PASS, including saved-state import without source modification, retry/conflict handling, insufficient-supply atomicity, wet pole moisture, construction retention, burn accounting and entity reconciliation.
+
+RELEASE HOLD. This module is still isolated from runtime. No production changes. Existing survival failures remain unresolved. Next: connect all raw wood consumers together (runtime gathering/fire/shelter, physical cutting/detaching/placing, environment drying/regrowth) to one authority; account for finite parent material when detaching; preserve output identity through later crafting; then connect elapsed exposure, agent options and integration tests. Do not enable ledger projection while legacy writes remain active, since it would silently overwrite those writes. Do not declare this checkpoint ready for a release agent.
