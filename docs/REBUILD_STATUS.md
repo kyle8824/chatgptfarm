@@ -4,7 +4,7 @@ Architecture map: [BLUEPRINT_IMPLEMENTATION.md](BLUEPRINT_IMPLEMENTATION.md). Re
 
 Branch: `rebuild/survival-foundation`
 Base: `25b8a7d5c7b1fdf0e883c64812b961a152462985`
-Release status: **CANDIDATE — local gates pass; see latest entry for hosted checks.**
+Release status: **READY for v1.6.6 deployment — tested code 8e72759; hosted deployment still pending.**
 
 ## Instructions for the next model
 
@@ -132,3 +132,7 @@ Release preparation: v1.6.6 cache/version identifiers, runtime /health and /stat
 STATUS: CANDIDATE, NOT YET RELEASED. Await exact-commit CI/browser checks and verified deployment path. Main observed 25b8a7d5c7b1fdf0e883c64812b961a152462985; no other model's clay changes included. Do not reset the Durable Object, seed from the audit copy, or claim this is the complete open-world blueprint. Remaining blueprint work includes real travel/labor, learned plans/skills, generic assemblies, richer ecology, scalable archives and visual modernization.
 
 Release ownership: automatic schedule/push triggers removed from legacy GitHub advance-world workflow. Manual execution requires explicit WORLD_RUNTIME=github-legacy configuration; absent that, it cannot create a parallel world or spend on old-world AI calls. Cloudflare remains the public authority.
+
+## Release gate completed
+
+READY: code 8e72759ab3c8ee9d83601a3560e60dfcf06712ce passed Cloudflare Runtime Validation run 35422782393 and Living World Recovery QA run 35422782454. Both completed successfully. The next commit only records evidence and a public-state export; runtime code is unchanged. Recheck its CI before merging. Latest Day 22 10:00 copy also passed the 72-hour recovery gate. Deployment must still be verified separately. See docs/releases/v1.6.6.md.
