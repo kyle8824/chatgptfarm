@@ -13,7 +13,10 @@ export async function beginTransition(world, start, duration = 150000, advance =
   await advance(after);
   after.meta.tickNumber = (before.meta.tickNumber || 0) + 1;
   after.meta.lastAdvancedAt = new Date(start + duration).toISOString();
-  return {version:1, start, end:start+duration, before, after};
+  // Full decision inputs stay private and outside the capped spectator working set.
+  const decisions=after.dna.filter(d=>d.evidence&&Number(d.decision_id.slice(2))>=before.seq.decision).map(d=>copy(d));
+  for(const d of after.dna)delete d.evidence;
+  return {version:1, start, end:start+duration, before, after, evidence:{version:1,decisions}};
 }
 
 export class Timeline {

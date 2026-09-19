@@ -67,16 +67,35 @@ function parseDecision(parsed, context, data, model) {
   return {choiceType,actionId:choiceType === "physical_action" ? "__physical__" : parsed.action_id,physicalAction:choiceType === "physical_action" ? {verb: parsed.physical_verb,primaryObjectId: parsed.primary_object_id,secondaryObjectId: parsed.secondary_object_id,configuration: parsed.configuration,purpose: parsed.purpose || ""} : null,goal: parsed.goal,intent: parsed.intent,decisionSummary: parsed.decision_summary,confidence: parsed.confidence,referencedMemoryIds: (parsed.referenced_memory_ids || []).filter(id => validMemoryIds.has(id)),brainMode: "ai",model: data.model || model,responseId: data.id || null,usage:data.usage||null};
 }
 
+export function decisionRequest(context, env = defaultEnvironment(), replayNote = null) {
+  const payload = publicContext(context);
+  if (replayNote) payload.counterfactual_replay = replayNote;
+  return {model:env.OPENAI_MODEL || DEFAULT_MODEL,reasoning:{effort:env.OPENAI_REASONING_EFFORT || "low"},instructions:SYSTEM,input:JSON.stringify(payload),text:{format:{type:"json_schema",name:"chatgptfarm_decision_v07",strict:true,schema:decisionSchema(context)}},max_output_tokens:640};
+}
+
 async function callDecision(context, { replayNote = null } = {}, env = defaultEnvironment()) {
   const model=env.OPENAI_MODEL || DEFAULT_MODEL;
   const key = env.OPENAI_API_KEY;
   if (!key) throw new Error("OPENAI_API_KEY is not configured");
   if (!context.candidates.length && !context.affordances.objects.length) throw new Error("No bounded actions or affordances available");
-  const payload = publicContext(context);if (replayNote) payload.counterfactual_replay = replayNote;
-  const response = await fetch(API_URL, {signal: AbortSignal.timeout(10000),method: "POST",headers: { "Authorization": `Bearer ${key}`, "Content-Type": "application/json" },body: JSON.stringify({model,reasoning: { effort: env.OPENAI_REASONING_EFFORT || "low" },instructions: SYSTEM,input: JSON.stringify(payload),text: { format: { type: "json_schema", name: "chatgptfarm_decision_v07", strict: true, schema: decisionSchema(context) } },max_output_tokens: 640})});
-  if (!response.ok) throw new Error(`OpenAI ${response.status}: ${(await response.text()).slice(0, 220)}`);
-  const data = await response.json(), text = outputText(data);if (!text) {const reason = data?.incomplete_details?.reason ? ` (${data.incomplete_details.reason})` : '';throw new Error(`OpenAI response contained no structured output text${reason}`)}
-  try { return parseDecision(JSON.parse(text), context, data, model); } catch (error) {const reason = data?.incomplete_details?.reason ? `; incomplete=${data.incomplete_details.reason}` : '';throw new Error(`Structured decision JSON could not be parsed${reason}: ${String(error?.message || error).slice(0, 120)}`)}
+  const request = decisionRequest(context, env, replayNote);
+  const evidence = {version:1,promptVersion:'decision-v07',requestBody:JSON.stringify(request),startedAt:new Date().toISOString()};
+  try {
+    const response = await fetch(API_URL, {signal:AbortSignal.timeout(10000),method:'POST',headers:{Authorization:`Bearer ${key}`,'Content-Type':'application/json'},body:evidence.requestBody});
+    evidence.httpStatus=response.status;
+    if (!response.ok) throw Object.assign(new Error(`OpenAI HTTP ${response.status}`), {code:'provider_http_error'});
+    const data=await response.json(), text=outputText(data);
+    evidence.response={id:data.id||null,model:data.model||model,status:data.status||null,usage:data.usage||null,outputText:text,incompleteDetails:data.incomplete_details||null};
+    if (!text) throw Object.assign(new Error('No structured output'),{code:'provider_missing_output'});
+    const result=parseDecision(JSON.parse(text),context,data,model);
+    evidence.completedAt=new Date().toISOString();
+    return {...result,evidence};
+  } catch(error) {
+    evidence.completedAt=new Date().toISOString();
+    evidence.errorCode=error.code|| (error.name==='TimeoutError'?'provider_timeout':'provider_response_error');
+    // Never retain headers, credentials, or arbitrary provider error bodies.
+    throw Object.assign(new Error(evidence.errorCode),{code:evidence.errorCode,evidence});
+  }
 }
 
 const reflectionSchema = {type: "object", additionalProperties: false,properties: {reflection: { type: "string", minLength: 1, maxLength: 320 },belief_key: { type: "string", minLength: 1, maxLength: 48 },belief: { type: "string", minLength: 1, maxLength: 220 },importance: { type: "integer", minimum: 5, maximum: 10 },tags: { type: "array", minItems: 1, maxItems: 5, items: { type: "string", maxLength: 30 } }},required: ["reflection", "belief_key", "belief", "importance", "tags"]};

@@ -4,10 +4,10 @@
   "type": "module",
   "scripts": {
     "build": "node build.mjs",
-    "test": "node test.mjs",
+    "test": "node evidence-test.mjs && node test.mjs",
     "deploy": "npm run build && wrangler deploy",
     "check": "npm run build && wrangler deploy --dry-run",
-    "test:worker": "node workerd-test.mjs"
+    "test:worker": "node evidence-workerd-test.mjs && node workerd-test.mjs"
   },
   "devDependencies": {
     "wrangler": "4.134.0",

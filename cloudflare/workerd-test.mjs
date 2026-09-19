@@ -19,6 +19,10 @@ try{
  assert.equal((await request('/state')).status,503);
  const response=await request('/start',auth);assert.equal(response.status,200,await response.clone().text());
  assert.equal((await request('/start',auth)).status,409);
+ assert.equal((await request('/evidence?tick=1')).status,401);
+ const evidenceAuth={headers:{Authorization:'Bearer test-only-password'}};
+ assert.equal((await request('/evidence?tick=1',evidenceAuth)).status,404);
+ assert.equal((await request('/evidence?tick=invalid',evidenceAuth)).status,400);
  const before=await(await request('/state')).json();
  await new Promise(resolve=>setTimeout(resolve,6500));
  const health=await(await request('/health')).json();assert(health.planned,'Real Durable Object alarm must prepare next action without requests');

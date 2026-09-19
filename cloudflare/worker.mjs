@@ -13,6 +13,13 @@ export class FarmWorld extends DurableObject {
   async fetch(request){
     const path=new URL(request.url).pathname;
     try{
+      if(request.method==='GET'&&path==='/evidence'){
+        if(!this.env.ADMIN_KEY||request.headers.get('Authorization')!==`Bearer ${this.env.ADMIN_KEY}`)return json({error:'Unauthorized'},401);
+        const tick=Number(new URL(request.url).searchParams.get('tick'));
+        if(!Number.isSafeInteger(tick)||tick<1)return json({error:'Invalid tick'},400);
+        const evidence=await this.world.evidence(tick);
+        return evidence?json(evidence):json({error:'No completed evidence for this tick'},404);
+      }
       if(request.method==='GET'&&path==='/health')return json({...await this.world.health(),build:BUILD_INFO});
       if(request.method==='GET'&&path==='/state'){
         const state=await this.world.snapshot();
@@ -33,7 +40,7 @@ export class FarmWorld extends DurableObject {
 export default {
   async fetch(request,env){
     const path=new URL(request.url).pathname;
-    if(['/state','/health','/start','/pause','/resume'].includes(path)){
+    if(['/state','/health','/evidence','/start','/pause','/resume'].includes(path)){
       return env.WORLD.getByName('preview-v1').fetch(request);
     }
     return env.ASSETS.fetch(request);
