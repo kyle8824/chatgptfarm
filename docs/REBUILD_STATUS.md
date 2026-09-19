@@ -144,3 +144,11 @@ v1.6.6 is live. Engine release/PR #10 merge: e61410696ff6285efcd22bf0f65e6c71131
 At tick 448, the new ledger is persisted and mass balances; world time advanced from predeployment tick 442, original identities and recent histories remain. Public reads do not alter the ledger. Details and evidence: docs/releases/v1.6.6.md and v1.6.6-live-verification.json. Source world was never reseeded or replaced. All earlier HOLD entries describe superseded checkpoints.
 
 The runtime still reports fallback decisions / zero AI calls. Dashboard configuration was preserved, not changed. Next phase must verify the actual AI path and durable completed-event/decision evidence before claiming learned autonomous planning. Follow the full blueprint, especially subsequent travel/labor and personal learning stages. Do not discard accepted UI, the new wood authority, regional foraging, or existing people/history.
+
+## v1.6.7 continuity fixes — candidate, not released
+
+User observed late berry habitat, waiting between transitions, stale goals and confusing satiety. Fallback goals now derive from the actual chosen action in both runtime paths. Transition preparation migrates a private copy BEFORE copying before/after, making new habitat visible before movement without publishing outcomes or mutating the prior checkpoint. Browser requests the next transition at its deadline (12-second polling remains fallback), retries late responses at one-second minimum intervals, restores the HUD after connection recovery, and reports genuine late updates. Hunger is 100 minus legacy satiety, with reversed warning colors and WATCH ranking. Internal save semantics unchanged.
+
+Read-only live history confirmed Day 22 14:00 talk/wood decisions at zero satiety before regional foraging became available; subsequent search/forage/eat decisions still carried stale warmth goals. Existing survival tests cover food priority and finite supplies. The update does not claim continuous-time physiology, real physical travel/labor, or active AI. Those remain blueprint work.
+
+Release gates: exact candidate CI/mobile browser QA and worker deployment identity still required. Preserve FarmWorld/preview-v1, history and dashboard settings. Never reseed.

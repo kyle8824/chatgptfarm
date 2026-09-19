@@ -23,7 +23,7 @@ try{await page.waitForSelector('#phLoading.hidden',{state:'attached',timeout:100
 await page.waitForTimeout(1200);
 const snap=()=>page.evaluate(()=>window.ChatGPTFarmPhaserDebug.snapshot());
 let s=await snap();
-if(s.version!=='phaser-v1.6.6-survival-materials')failures.push(`wrong renderer: ${s.version}`);
+if(s.version!=='phaser-v1.6.7-world-continuity')failures.push(`wrong renderer: ${s.version}`);
 if(!String(s.phaser||'').startsWith('3.'))failures.push(`Phaser failed to initialize: ${s.phaser}`);
 if(s.agents!==2)failures.push(`expected 2 agents, got ${s.agents}`);
 const expectedPresentWildlife=(state.ecologySystem?.wildlife||[]).filter(x=>x.active&&x.localPresence!==false).length;if(s.wildlife!==expectedPresentWildlife)failures.push(`renderer wildlife count drift: ${s.wildlife} != canonical ${expectedPresentWildlife}`);
@@ -56,6 +56,7 @@ else{
  if(!/AI/i.test(profile.autonomy)||!(s.aiControllerModel?profile.autonomy.toLowerCase().includes(String(s.aiControllerModel).replace(/^gpt-/i,'GPT-').replace(/-([a-z])/g,(_m,c)=>` ${c.toUpperCase()}`).toLowerCase()):true))failures.push(`AI model autonomy badge missing or stale: ${profile.autonomy}`);
  if(!profile.activity)failures.push('current activity is missing from the agent profile');
  if(profile.tabs.join('|')!=='Overview|Mind|Memory')failures.push(`agent profile tabs missing or reordered: ${profile.tabs.join('|')}`);
+ if(!profile.meters.includes(`Hunger ${Math.round(100-qaMara.needs.hunger)}%`)||profile.meters.some(x=>x.includes('Satiety')))failures.push('Hunger meter must invert legacy satiety');
  if(profile.meters.length<7)failures.push(`expected condition + relationship meters, got ${profile.meters.length}`);
  if(!/Trust/i.test(profile.relationship)||!/Familiarity/i.test(profile.relationship)||!/Affinity/i.test(profile.relationship))failures.push(`relationship visual is incomplete: ${profile.relationship}`);
  await page.getByRole('button',{name:'Mind',exact:true}).click();
