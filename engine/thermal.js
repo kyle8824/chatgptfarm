@@ -20,3 +20,22 @@ export function applyThermalExposure(world, agent) {
     appliedDelta: agent.needs.warmth - before, day: world.day, hour: world.hour};
   return agent.thermalExposure;
 }
+
+// Uses the legacy shared camp knowledge. Personal observations and travel costs
+// will replace that assumption as the spatial model is rebuilt.
+export function thermalChoices(world, agent) {
+  const here = thermalExposure(world, agent);
+  const camp = thermalExposure(world, {...agent, position: 'camp'});
+  const deficit = Math.max(0, 70 - agent.needs.warmth);
+  if (world.structures.fire && deficit > 0) {
+    return [{id: 'seek_warmth', label: 'Warm up beside the camp fire',
+      score: deficit * 1.8 + Math.max(0, -here.net),
+      reasons: [['warmth deficit', deficit], ['camp hourly warmth change', camp.net]]}];
+  }
+  if (world.structures.shelter && agent.position !== 'camp' && camp.net > here.net && deficit > 0) {
+    return [{id: 'seek_cover', label: 'Take cover in the camp shelter',
+      score: deficit + (camp.net - here.net) * 4,
+      reasons: [['warmth deficit', deficit], ['exposure reduction', camp.net - here.net]]}];
+  }
+  return [];
+}
