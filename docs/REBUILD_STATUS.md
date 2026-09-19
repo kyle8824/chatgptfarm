@@ -64,3 +64,13 @@ When READY: verify named code SHA and CI; merge only this PR preserving newer ac
 5. Reconcile social transfer of site knowledge and food-pressure summaries in the viewer; current site discovery is personal but not yet shared by conversation.
 
 Limits remain: shared camp knowledge, boolean fire/random extinguishing, coarse endpoint travel exposure, predefined search habitat locations and scripted legacy construction. No production state or UI artwork was changed.
+
+## Release verification — supersedes earlier next steps
+
+Code checked: c469168042ef7cd37dd08a98d43c5e2a4d31e297. Browser/recovery verify run 35414596230 PASSED; Cloudflare runtime validate run 35414596208 PASSED. Local runtime-test.mjs PASSED. PR #10 mergeable. Main-domain HTML still v1.6.5; no release performed.
+
+Fetched current public Cloudflare /state read-only: tick 374, Day 19 14:00, lastAdvancedAt 2026-09-19T02:09:09.533Z. Migration of a COPY preserved exact IDs, needs, inventories, memories and history. A 72-hour candidate rollout after a 12-hour recovery window recorded 47 zero-warmth agent-hours, zero hunger/hydration zero-hours. This FAILS the current-state survival gate despite the older Day 6 fixture passing.
+
+Starting resources: berries=0, dryWood=0, wetWood=0; shelter=true, fire=false. Mara carried dryWood=1/wetWood=58; Ivo dryWood=1/wetWood=65. Weather drying acts on world resources only; carried damp branches cannot dry. This is a concrete fuel-use gap, not a graphics task or reason to refill inventories.
+
+HOLD RELEASE. Next: implement elapsed-time drying for carried/stored damp wood with weather/cover constraints, conserved quantities, save-safe timing and no double application after reload. Expose useful drying choices/observations where appropriate. Test a depleted-world scenario matching the above, then repeat the actual current-state rollout. Do not assume this alone fixes all thermal behavior; inspect decisions and effects. Rerun affected CI for the new SHA. Do not merge, deploy, reseed, or ask a release agent to invent this fix.
