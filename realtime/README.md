@@ -40,8 +40,8 @@ those features are implemented.
 
 ## Cognition
 
-Workers AI binding `AI` supplies `@cf/meta/llama-3.2-3b-instruct`. Each person
-requests a proposal at most once per 30 wall minutes, with a total hard cap of
+Workers AI binding `AI` supplies `@cf/meta/llama-3.1-8b-instruct`. Each person
+requests a proposal every 30 wall minutes (failed calls retry after two minutes), with a total hard cap of
 96 calls per UTC day. Requests have bounded input and 180 output tokens. Calls
 are reserved durably before sending. Calls never block physical simulation.
 Only a currently available action can be applied at a task boundary; urgent
