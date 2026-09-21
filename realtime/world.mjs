@@ -2,7 +2,7 @@ import {prepare,step} from './elapsed.mjs';
 import {retrieveDecisionContext} from '../engine/runtime.js';
 import {walkable,clearSegment} from '../engine/navigation.js';
 import {readCheckpoint,writeCheckpoint} from '../cloudflare/checkpoint.mjs';
-export const MODEL='@cf/meta/llama-3.1-8b-instruct';
+export const MODEL='@cf/meta/llama-3.3-70b-instruct-fp8-fast';
 export function parseDecision(result,choices){
  const response=result?.response;let p=response;
  if(typeof response==='string'){const match=response.match(/\{[\s\S]*\}/);if(!match)throw Error('invalid_json');p=JSON.parse(match[0]);}
