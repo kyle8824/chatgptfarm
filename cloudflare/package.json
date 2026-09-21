@@ -10,8 +10,9 @@
     "test:worker": "node evidence-workerd-test.mjs && node workerd-test.mjs"
   },
   "devDependencies": {
-    "wrangler": "4.134.0",
+    "esbuild": "0.28.1",
     "miniflare": "5.20260917.0-alpha",
-    "esbuild": "0.28.1"
+    "three": "^0.180.0",
+    "wrangler": "4.134.0"
   }
 }

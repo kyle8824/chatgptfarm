@@ -1,0 +1,32 @@
+name: Realtime world verification
+on:
+  push:
+    branches: [overhaul/live-world-3d]
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    timeout-minutes: 8
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - run: npm ci --prefix cloudflare
+      - run: npm test && node realtime/test.mjs && node realtime/workerd-test.mjs
+      - run: node cloudflare/build.mjs
+      - run: npm install --no-save playwright@1.55.0 && npx playwright install --with-deps chromium
+      - run: |
+          node realtime/serve.mjs > /tmp/valley-server.log 2>&1 &
+          for i in $(seq 1 30); do curl --silent --fail http://127.0.0.1:4173/live/health && break || sleep 1; done
+          node realtime/browser-test.mjs
+      - name: Runtime logs
+        if: always()
+        run: cat /tmp/valley-server.log || true
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: realtime-world-evidence
+          path: realtime-qa/

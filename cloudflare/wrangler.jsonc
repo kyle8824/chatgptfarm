@@ -3,9 +3,42 @@
   "main": "worker.mjs",
   "compatibility_date": "2026-09-01",
   "workers_dev": true,
-  "assets": {"directory": "./public", "binding": "ASSETS", "run_worker_first": true},
-  "durable_objects": {"bindings": [{"name": "WORLD", "class_name": "FarmWorld"}]},
-  "migrations": [{"tag": "v1", "new_sqlite_classes": ["FarmWorld"]}],
+  "assets": {
+    "directory": "./public",
+    "binding": "ASSETS",
+    "run_worker_first": true
+  },
+  "durable_objects": {
+    "bindings": [
+      {
+        "name": "WORLD",
+        "class_name": "FarmWorld"
+      },
+      {
+        "name": "LIVE_VALLEY",
+        "class_name": "LiveValley"
+      }
+    ]
+  },
+  "migrations": [
+    {
+      "tag": "v1",
+      "new_sqlite_classes": [
+        "FarmWorld"
+      ]
+    },
+    {
+      "tag": "live-valley-v1",
+      "new_sqlite_classes": [
+        "LiveValley"
+      ]
+    }
+  ],
   "keep_vars": true,
-  "observability": {"enabled": true}
+  "observability": {
+    "enabled": true
+  },
+  "ai": {
+    "binding": "AI"
+  }
 }
