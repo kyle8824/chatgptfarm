@@ -40,8 +40,8 @@ those features are implemented.
 
 ## Cognition
 
-Workers AI binding `AI` supplies `@cf/meta/llama-3.2-3b-instruct`. Each person
-requests a proposal at most once per 30 wall minutes, with a total hard cap of
+Workers AI binding `AI` supplies `@cf/meta/llama-3.3-70b-instruct-fp8-fast`. Each person
+requests a proposal every 30 wall minutes (failed calls retry after two minutes), with a total hard cap of
 96 calls per UTC day. Requests have bounded input and 180 output tokens. Calls
 are reserved durably before sending. Calls never block physical simulation.
 Only a currently available action can be applied at a task boundary; urgent
@@ -49,7 +49,7 @@ needs and NPC rules continue between calls. Failed or stale proposals do not
 become AI-controlled actions. UI/health show actual calls, successes, applied
 proposals and errors. A configured binding is not proof of successful inference.
 
-This is a small model plus NPC survival system. Reflection, open-ended structure
+This is bounded model planning plus an NPC survival system. Reflection, open-ended structure
 creation, richer ecology and long-term survival balance remain unfinished.
 The valley renderer is stylized 3D, not photorealistic. Trees/terrain dressing
 outside known resources are scenery, not a complete individual-tree ecosystem.
