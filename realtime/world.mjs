@@ -1,0 +1,64 @@
+import {prepare,step} from './elapsed.mjs';
+import {retrieveDecisionContext} from '../engine/runtime.js';
+import {walkable,clearSegment} from '../engine/navigation.js';
+import {readCheckpoint,writeCheckpoint} from '../cloudflare/checkpoint.mjs';
+export const MODEL='@cf/meta/llama-3.2-3b-instruct';
+export const RATE=6;
+export function compact(w){
+ w.dna=w.dna.slice(-80);for(const d of w.dna)delete d.evidence;
+ w.history=w.history.slice(0,140);
+ // Full imported history is archived separately. Preserve all memories and
+ // sum historical material sinks; these are accounting, not active bodies.
+ if(w.wood?.sinks.length>100){const sums=new Map();for(const s of w.wood.sinks){const k=s.reason;let a=sums.get(k);if(!a){a={...s,operationId:`archive:${k}`,dryKg:0,waterKg:0,units:0,records:0};sums.set(k,a);}a.dryKg+=s.dryKg;a.waterKg+=s.waterKg;a.units+=s.units;a.records+=s.records||1;}w.wood.sinks=[...sums.values()];}
+ if(w.wood)w.wood.operations=w.wood.operations.slice(-80);
+ for(const a of w.agents){const seen=new Set();a.suspendedTasks=(a.suspendedTasks||[]).filter(t=>{if(seen.has(t.actionId))return false;seen.add(t.actionId);return true;}).slice(-6);}
+}
+function random(w){w.liveSeed=(Math.imul(w.liveSeed||73939,1664525)+1013904223)>>>0;return w.liveSeed/4294967296;}
+export function wildlifeStep(w,seconds){
+ for(const a of w.ecologySystem?.wildlife||[]){if(!a.active||a.species==='fish')continue;
+  const near=w.agents.reduce((best,p)=>Math.hypot(p.coordinates.x-a.position.x,p.coordinates.y-a.position.y)<Math.hypot(best.coordinates.x-a.position.x,best.coordinates.y-a.position.y)?p:best,w.agents[0]);
+  const threat=Math.hypot(near.coordinates.x-a.position.x,near.coordinates.y-a.position.y)<(a.species==='bear'?4:6);
+  if(threat){const dx=a.position.x-near.coordinates.x,dy=a.position.y-near.coordinates.y,d=Math.hypot(dx,dy)||1;a.liveTarget={x:Math.max(2,Math.min(98,a.position.x+dx/d*10)),y:Math.max(24,Math.min(80,a.position.y+dy/d*10))};a.liveRest=0;a.behavior='keeping distance';}
+  if(a.liveRest>0){a.liveRest-=seconds;a.behavior=a.species==='bear'?'foraging':'grazing';continue;}
+  if(!a.liveTarget||Math.hypot(a.liveTarget.x-a.position.x,a.liveTarget.y-a.position.y)<.2){a.liveTarget={x:Math.max(3,Math.min(97,a.position.x+(random(w)-.5)*18)),y:Math.max(24,Math.min(70,a.position.y+(random(w)-.5)*12))};a.liveRest=random(w)*20;}
+  const d=Math.hypot(a.liveTarget.x-a.position.x,a.liveTarget.y-a.position.y)||1,amount=Math.min(d,seconds*(threat?.7:a.species==='bear'?.18:.28)),p={x:a.position.x+(a.liveTarget.x-a.position.x)/d*amount,y:a.position.y+(a.liveTarget.y-a.position.y)/d*amount};
+  if(clearSegment(w,a.position,p)){a.previousPosition={...a.position};a.position=p;a.behavior=threat?'keeping distance':'roaming';}else{a.liveTarget=null;a.liveRest=2;}
+  a.activity='move';a.presenceState='present';
+ }
+}
+export class RealtimeController{
+ constructor(storage,{now=Date.now,ai=null}={}){this.storage=storage;this.now=now;this.ai=ai;this.queue=Promise.resolve();this.proposals=new Map();this.jobs=new Map();this.lastSaved=0;this.lastAiCheck=0;this.error=null;}
+ serial(fn){const p=this.queue.then(fn);this.queue=p.catch(()=>{});return p;}
+ async load(){if(this.record===undefined)this.record=await readCheckpoint(this.storage);return this.record;}
+ async initialize(seed){if(await this.load())return;const now=this.now(),w=prepare(seed);compact(w);w.meta.actionRulesVersion='realtime-2';w.meta.liveFork={sourceDay:w.day,sourceHour:w.hour,sourceTick:seed.meta.tickNumber,createdAt:now};
+  for(const a of w.agents){delete a.runtimeMotion;delete a.motionPath;}
+  this.record={version:1,world:w,lastWallTime:now,createdAt:now,revision:0,unattendedSteps:0,alarmCount:0,lastAlarmAt:null,rate:RATE,ai:{date:new Date(now).toISOString().slice(0,10),calls:0,succeeded:0,applied:0,rejected:0,lastError:null},lastDecisionAt:{}};
+  await this.save();
+ }
+ async save(){await writeCheckpoint(this.storage,this.record,this.now()+1000);this.lastSaved=this.now();}
+ async advance(target,viewers=0){const r=this.record;if(!r)return;let n=0;
+  while(r.lastWallTime<target&&n++<300){const wall=Math.min(100,target-r.lastWallTime);r.lastWallTime+=wall;
+   const adapter={decide:async c=>{const p=this.proposals.get(c.agent.id);if(!p||p.expires<this.now())throw Object.assign(Error('Reflex policy'),{code:this.ai?'between_model_decisions':'ai_not_configured'});this.proposals.delete(c.agent.id);if(!c.candidates.some(x=>x.id===p.actionId)){r.ai.rejected++;throw Object.assign(Error('Stale action'),{code:'model_action_no_longer_available'});}r.ai.applied++;return p;}};
+   await step(r.world,wall/1000*r.rate,{mind:adapter,wallTime:r.lastWallTime,fallbackReason:this.ai?'between_model_decisions':'ai_not_configured'});wildlifeStep(r.world,wall/1000*r.rate);r.revision++;if(!viewers)r.unattendedSteps++;
+  }
+  if(target-this.lastSaved>=1000){compact(r.world);await this.save();}
+ }
+ pulse(viewers=0){return this.serial(async()=>{try{await this.advance(this.now(),viewers);this.error=null;}catch(e){this.error=e.message;throw e;}});}
+ alarm(viewers=0){return this.serial(async()=>{try{await this.load();if(!this.record)return;this.record.alarmCount++;this.record.lastAlarmAt=this.now();await this.advance(this.now(),viewers);await this.save();this.error=null;}catch(e){this.error=e.message;await this.storage.setAlarm(this.now()+2000);throw e;}});}
+ async requestDecisions(){if(!this.ai||this.now()-this.lastAiCheck<10000||!this.record)return;this.lastAiCheck=this.now();
+  for(const a of this.record.world.agents){if(this.jobs.has(a.id)||this.proposals.has(a.id)||this.now()-(this.record.lastDecisionAt[a.id]||0)<1800000)continue;
+   const context=retrieveDecisionContext(this.record.world,a);const choices=context.candidates.slice(0,8).map(x=>({id:x.id,label:x.label}));
+   const input=JSON.stringify({person:a.name,needs:context.perception.needs,weather:context.perception.weather,temperature:context.perception.temperature,location:a.position,inventory:a.inventory,memories:context.memories.slice(0,5).map(m=>m.text.slice(0,170)),recentActions:context.agent.recentActions.slice(-4),choices}).slice(0,6000);
+   const job=this.makeDecision(a.id,input,choices);this.jobs.set(a.id,job);job.finally(()=>this.jobs.delete(a.id)).catch(()=>{});
+  }
+ }
+ async makeDecision(id,input,choices){
+  const reserved=await this.serial(async()=>{const r=this.record,date=new Date(this.now()).toISOString().slice(0,10);if(r.ai.date!==date){r.ai.date=date;r.ai.calls=0;}if(r.ai.calls>=96)return false;r.ai.calls++;r.lastDecisionAt[id]=this.now();await this.save();return true;});if(!reserved)return;
+  try{const result=await this.ai.run(MODEL,{messages:[{role:'system',content:'You are a person surviving in a physical valley. Choose one currently available action. Prioritize immediate needs but learn from memories. Return only JSON with actionId from choices, goal (short), intent (one sentence), decisionSummary (one sentence grounded in supplied facts). Never invent completed events or resources.'},{role:'user',content:input}],max_tokens:180,temperature:.65});
+   const raw=String(result.response||''),match=raw.match(/\{[\s\S]*\}/);if(!match)throw Error('invalid_json');const p=JSON.parse(match[0]);if(!choices.some(c=>c.id===p.actionId))throw Error('invalid_action');
+   await this.serial(async()=>{this.record.ai.succeeded++;this.record.ai.lastError=null;this.proposals.set(id,{...p,brainMode:'ai',choiceType:'known_action',model:MODEL,confidence:.7,expires:this.now()+600000,referencedMemoryIds:[]});const a=this.record.world.agents.find(a=>a.id===id);a.liveThought={text:String(p.decisionSummary||p.intent).slice(0,260),at:this.now(),actionId:p.actionId,source:'model',model:MODEL,status:'proposed'};await this.save();});
+  }catch(e){await this.serial(async()=>{this.record.ai.lastError=String(e.message||'provider_error').slice(0,120);await this.save();});}
+ }
+ frame(viewers=0){const r=this.record,w=r.world,now=this.now();return {type:'state',day:w.day,hour:w.hour,minute:w.minute,weather:w.weather,temperature:w.temperature,structures:w.structures,resources:w.resources,agents:w.agents.map(a=>({id:a.id,name:a.name,coordinates:a.coordinates,needs:a.needs,inventory:a.inventory,currentAction:a.currentAction,position:a.position,task:a.task?{id:a.task.id,actionId:a.task.actionId,label:a.task.label,phase:a.task.phase,workMinutes:a.task.workMinutes,requiredMinutes:a.task.requiredMinutes,source:a.task.source,model:a.task.model}:null,mind:{brainMode:a.mind.brainMode,decisionSummary:a.mind.decisionSummary,currentGoal:a.mind.currentGoal,fallbackReason:a.mind.fallbackReason},thought:a.liveThought,memories:a.memories.slice(0,5).map(m=>({text:m.text,day:m.day,hour:m.hour})),memoryCount:a.memories.length})),wildlife:(w.ecologySystem?.wildlife||[]).filter(a=>a.active).map(a=>({id:a.id,species:a.species,position:a.position,behavior:a.behavior})),history:w.history.slice(0,12).map(e=>({id:e.id,title:e.title,detail:e.detail,day:e.day,hour:e.hour})),runtime:{environment:'independent-live-fork',transport:'websocket',execution:'elapsed-only',revision:r.revision,serverTime:now,computedThrough:r.lastWallTime,lagMs:Math.max(0,now-r.lastWallTime),rate:r.rate,viewers,unattendedSteps:r.unattendedSteps,alarmCount:r.alarmCount,lastAlarmAt:r.lastAlarmAt,createdAt:r.createdAt,status:this.error?'error':now-r.lastWallTime>3000?'catching-up':'running',error:this.error,futureFrames:0,ai:{configured:!!this.ai,model:this.ai?MODEL:null,...r.ai},origin:w.meta.liveFork}};}
+ geometry(){const w=this.record.world;return {bounds:w.worldModel.bounds,objects:w.worldModel.objects.filter(o=>o.position).map(o=>({id:o.id,type:o.type,position:o.position,geometry:o.geometry,state:o.state})),sites:Object.values(w.regions?.sites||{}).map(s=>({id:s.id,position:s.position,label:s.label})),surfaceHistory:w.surfaceHistory};}
+}

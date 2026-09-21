@@ -1,3 +1,4 @@
+export {LiveValley} from '../realtime/worker.mjs';
 import {DurableObject} from 'cloudflare:workers';
 import {WorldController} from './world.mjs';
 import {BUILD_INFO} from './build-info.mjs';
@@ -40,6 +41,8 @@ export class FarmWorld extends DurableObject {
 export default {
   async fetch(request,env){
     const path=new URL(request.url).pathname;
+    if(['/live/ws','/live/state','/live/health','/live/geometry'].includes(path))return env.LIVE_VALLEY.getByName('live-valley-v1').fetch(request);
+    if(path==='/live')return Response.redirect(new URL('/live/',request.url),302);
     if(['/state','/health','/evidence','/start','/pause','/resume'].includes(path)){
       return env.WORLD.getByName('preview-v1').fetch(request);
     }

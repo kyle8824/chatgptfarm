@@ -119,3 +119,5 @@ export async function advanceActionHour(input,mind=null,{fallbackReason='utility
  w.meta.mindMode=w.agents.some(a=>a.mind.brainMode==='ai')?(w.agents.every(a=>a.mind.brainMode==='ai')?'ai':'mixed'):'fallback';
  onFrame(w,60);return w;
 }
+// Shared low-level elapsed-action primitives. Legacy hourly runner is unchanged.
+export {family,urgentNeed,outcome,display,startTask,interrupt,canResume,resume,work};

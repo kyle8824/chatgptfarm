@@ -12,3 +12,9 @@ html=html.replace('<body>','<body><script>if(location.hostname.endsWith(".worker
 await fs.writeFile(new URL('index.html',out),html);
 await fs.copyFile(new URL('./setup.html',import.meta.url),new URL('setup.html',out));
 console.log('Built Cloudflare living-world assets');
+// The separate live world is served by the existing Worker without changing
+// the original FarmWorld namespace, object name, or front page.
+const {build}=await import('esbuild');
+await fs.mkdir(new URL('live/',out),{recursive:true});
+for(const file of ['index.html','style.css'])await fs.copyFile(new URL(`web/live/${file}`,root),new URL(`live/${file}`,out));
+await build({entryPoints:[new URL('web/live/client.js',root).pathname],bundle:true,format:'esm',minify:true,outfile:new URL('live/client.js',out).pathname,nodePaths:[new URL('node_modules/',import.meta.url).pathname],target:'es2022'});
