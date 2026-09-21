@@ -22,7 +22,7 @@ export async function step(w,seconds,{mind=null,fallbackReason='no_provider',wal
   const urgent=urgentNeed(a);
   if(a.task&&urgent&&family(a.task.actionId)!==urgent&&a.task.requiredMinutes-a.task.workMinutes>0.1&&a.needs[urgent]+10<(a.needs[family(a.task.actionId)]??100))interrupt(w,a,urgent);
   if(!a.task&&!(canResume(a)&&resume(w,a)))await startTask(w,a,mind,urgent?'urgent_need':fallbackReason,!!urgent);
-  const t=a.task,from={...a.coordinates};if(t&&a.liveThought?.actionId===t.actionId&&t.source==='ai')a.liveThought.status='acting';let positionBefore=a.position;
+  const t=a.task,from={...a.coordinates};if(t&&!t.liveTiming&&t.workMinutes===0){const id=t.actionId;t.requiredMinutes=id==='drink'?.75:id.startsWith('eat_')?1:/^(gather_|forage:)/.test(id)?4:id==='talk'?3:t.requiredMinutes;t.liveTiming=true;}if(t&&a.liveThought?.actionId===t.actionId&&t.source==='ai')a.liveThought.status='acting';let positionBefore=a.position;
   if(t?.phase==='travel'){
    a.position='travel';positionBefore='travel';const movement=advanceRoute(w,a,t,minutes);
    if(movement.blocked){outcome(w,a,t,false,'Route changed while travelling.','blocked');a.task=null;}
