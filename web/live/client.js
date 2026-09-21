@@ -1,7 +1,8 @@
 import {ValleyScene} from './scene.js';
+import {ValleyMap} from './map.js';
 const $=s=>document.querySelector(s),esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 let state=null,socket=null,lastFrame=0,lastUI=0,latency=null,retry=0,selected=null,loaded=false,tab='thought',audio=null;
-const scene=new ValleyScene($('#world'),openPerson);
+let scene;try{scene=new ValleyScene($('#world'),openPerson);}catch{const old=$('#world'),canvas=old.cloneNode();old.replaceWith(canvas);scene=new ValleyMap(canvas,openPerson);}
 function openPerson(id){selected=id;tab='thought';renderInspector();if(!$('#inspector').open)$('#inspector').showModal();scene.follow(id);}
 function actionMode(a){return a.task?.source==='ai'?'AI':a.mind?.fallbackReason==='urgent_need'?'Instinct':'NPC';}
 function updateUI(){if(!state)return;const s=state;$('#day').textContent=`Day ${s.day}`;$('#clock').textContent=`${String(s.hour).padStart(2,'0')}:${String(Math.floor(s.minute||0)).padStart(2,'0')}`;$('#weather').textContent=`${s.weather==='rain'?'Rain':s.weather==='clear'?'Clear':s.weather} · ${Math.round(s.temperature)}°F`;
