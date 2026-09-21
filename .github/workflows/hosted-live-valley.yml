@@ -1,0 +1,22 @@
+name: Hosted live valley verification
+on:
+  push:
+    branches: [verify/live-valley-hosted]
+permissions:
+  contents: read
+jobs:
+  hosted:
+    runs-on: ubuntu-latest
+    timeout-minutes: 6
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - run: npm install --no-save playwright@1.55.0 && npx playwright install --with-deps chromium
+      - run: node realtime/hosted-test.mjs
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: hosted-live-valley-evidence
+          path: hosted-evidence/
