@@ -19,9 +19,21 @@ try{
    p.action=action;for(let i=0;i<200;i++)animatePerson(p,0,1/60,false,true);p.group.updateMatrixWorld(true);
    for(const leg of p.model.legs){const foot=new T.Box3().setFromObject(leg.userData.foot);assert(Math.abs(foot.min.y)<.025,name+' '+action+' soles stay at ground: '+foot.min.y);}
   }
+  p.action='drink';p.group.position.set(48,.08,20.85);p.waterPoint=new T.Vector3(48,-.105,21.41); // local +z faces the bank in this fixture
+  for(const [time,label]of [[0,'scoop'],[2,'sip']]){
+   for(let i=0;i<220;i++)animatePerson(p,time,1/60,false,true);p.group.updateMatrixWorld(true);
+   const target=label==='scoop'?p.waterPoint:p.model.head.localToWorld(new T.Vector3(0,-.08,.105));
+   for(const arm of p.model.arms){const hand=arm.userData.fore.localToWorld(new T.Vector3(0,-.30,0));assert(hand.distanceTo(target)<.07,name+' '+label+' hand reaches contact: '+hand.distanceTo(target));}
+  }
   updateCargo(p,{dryWood:2,berries:3});assert.equal(p.rig.cargo.children.length,5);assert(p.rig.bag.visible);
   const cargo=p.rig.cargo;updateCargo(p,{dryWood:2,berries:3});assert.equal(p.rig.cargo,cargo,'unchanged inventory reuses geometry');
   updateCargo(p,{});assert.equal(p.rig.cargo.children.length,0);assert(!p.rig.bag.visible);
+  for(const [elevation,gap]of [[.14,.54],[.27,.73]]){
+   p.group.position.set(0,elevation,0);p.waterPoint.set(0,-.105,gap);p.action='drink';
+   for(let i=0;i<220;i++)animatePerson(p,0,1/60,false,true);p.group.updateMatrixWorld(true);
+   for(const arm of p.model.arms){const hand=arm.userData.fore.localToWorld(new T.Vector3(0,-.30,0));assert(hand.distanceTo(p.waterPoint)<.065,'reach the creek from a sloping/far bank');}
+   for(const leg of p.model.legs){const foot=new T.Box3().setFromObject(leg.userData.foot);assert(Math.abs(foot.min.y-elevation)<.025,'deep water reach keeps soles planted');}
+  }
   const before=p.model.hips.position.toArray();animatePerson(p,10,.1,true,false);assert.deepEqual(p.model.hips.position.toArray(),before,'stale data never plays walking');
  }
  const deer=createDeer();assert(geometryStats(deer.root).triangles<10000);

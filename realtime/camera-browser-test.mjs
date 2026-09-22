@@ -8,6 +8,8 @@ import assert from 'node:assert/strict';
 
 const bundle=await build({stdin:{contents:`
  import {ValleyScene} from './web/live/scene.js';
+ import {animatePerson} from './web/live/people.js';
+ window.settlePose=time=>{valley.elapsed=time;for(let i=0;i<180;i++)for(const e of valley.entities.values())if(e.kind==='human')animatePerson(e,time,1/60,false,true);valley.scene.updateMatrixWorld(true);};
  window.selections=[];
  window.valley=new ValleyScene(document.querySelector('canvas'),id=>selections.push(id));
  valley.accept({agents:[{id:'test-person',name:'Camera test',coordinates:{x:51,y:31}}],wildlife:[],structures:{},weather:'clear',hour:12});
@@ -36,12 +38,14 @@ try{
    else{await page.mouse.move(...start[0]);await page.mouse.down({button:start.length===2?'right':'left'});await page.mouse.move(...end[0],{steps:12});await page.mouse.up({button:start.length===2?'right':'left'});}
    return measure(page);
   }
+  let pan,rotate,zoom;
+  if(!process.env.MODEL_POSES_ONLY){
   let before=await home(page),after=await gesture([[150,430]],[[230,430]]);
   assert(distance(before.target,after.target)>2,'drag changes the place being viewed');
   assert(distance(before.offset,after.offset)<.001,'drag translates without orbiting');
   const delta=after.position.map((v,i)=>v-before.position[i]);assert(distance(delta,after.target.map((v,i)=>v-before.target[i]))<.001,'camera and target translate together');
   await page.screenshot({path:`realtime-qa/camera-${mobile?'mobile':'desktop'}-pan.png`});
-  const pan={before,after};before=await home(page);
+  pan={before,after};before=await home(page);
   if(mobile){
    // Pinch, twist and move the midpoint in ONE gesture. The ground point
    // beneath the original midpoint must finish beneath the new midpoint.
@@ -67,11 +71,11 @@ try{
   }
   assert.equal(after.selections,0,'camera gestures never select a person');
   await page.screenshot({path:`realtime-qa/camera-${mobile?'mobile':'desktop'}-rotate.png`});
-  const rotate={before,after};before=await home(page);
+  rotate={before,after};before=await home(page);
   if(mobile)after=await gesture([[160,430],[240,430]],[[120,430],[280,430]]);
   else{await page.mouse.move(200,430);await page.mouse.wheel(0,-250);after=await measure(page);}
   assert(after.distance<before.distance*.9,'pinch/wheel zooms in');
-  const zoom={before,after};
+  zoom={before,after};
   await home(page);await page.evaluate(()=>valley.follow('test-person'));
   after=await gesture([[150,430]],[[220,430]]);assert.equal(after.focus,null,'manual movement releases person follow');
   if(mobile){
@@ -87,6 +91,7 @@ try{
    const tapPoint=await page.evaluate(()=>{const v=valley;v.camera.updateMatrixWorld();v.scene.updateMatrixWorld(true);const p=v.entities.get('test-person').group.position.clone();p.y+=1.04;p.project(v.camera);return[(p.x*.5+.5)*innerWidth,(-p.y*.5+.5)*innerHeight];});
    await page.touchscreen.tap(...tapPoint);assert.equal((await measure(page)).selections,1,'single tap still selects a person');
   }
+  }
   // Staged visual fixtures use the actual renderer/models; these screenshots
   // are close-up previews, not a claim that production villagers were posed.
   await page.evaluate(()=>{
@@ -101,8 +106,8 @@ try{
    const mara=v.entities.get('agent-mara');v.scene.remove(mara.group);v.entities.delete('agent-mara');v.labels.get('agent-mara').remove();v.labels.delete('agent-mara');v.accept(modelFrame);
    const e=v.entities.get('agent-ivo');e.group.position.copy(e.target);e.pos.copy(e.target);e.group.rotation.y=Math.PI;v.controls.target.set(48,.85,20.85);v.camera.position.set(50,2.6,15.7);v.controls.update();v.elapsed=.1;
   });
-  await page.waitForTimeout(600);await page.screenshot({path:`realtime-qa/drinking-${mobile?'mobile':'desktop'}-scoop.png`});
-  await page.evaluate(()=>{valley.elapsed=1.85;});await page.waitForTimeout(600);await page.screenshot({path:`realtime-qa/drinking-${mobile?'mobile':'desktop'}-sip.png`});
+  await page.waitForTimeout(600);await page.evaluate(()=>settlePose(.1));await page.screenshot({path:`realtime-qa/drinking-${mobile?'mobile':'desktop'}-scoop.png`});
+  await page.evaluate(()=>settlePose(1.85));await page.waitForTimeout(600);await page.screenshot({path:`realtime-qa/drinking-${mobile?'mobile':'desktop'}-sip.png`});
   await page.evaluate(()=>{modelFrame.agents[0].inventory={dryWood:2,berries:3};valley.accept(modelFrame);});await page.waitForTimeout(300);await page.screenshot({path:`realtime-qa/cargo-${mobile?'mobile':'desktop'}.png`});
   const graphics=await page.evaluate(()=>({triangles:valley.renderer.info.render.triangles,drawCalls:valley.renderer.info.render.calls}));
   assert.deepEqual(errors,[]);report.push({viewport:mobile?'mobile':'desktop',pan,rotate,zoom,graphics,errors});await context.close();

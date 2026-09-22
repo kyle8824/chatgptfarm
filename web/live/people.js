@@ -6,16 +6,33 @@ import {createVillager} from '../../shared/visuals/models.js';
 export function createPerson(id,name){
  const m=createVillager(name),group=m.root;group.userData.agentId=id;group.scale.setScalar(name==='Ivo'?1.10:1);
  const hit=new T.Mesh(new T.CapsuleGeometry(.30,1.10,4,8),new T.MeshBasicMaterial({visible:false}));hit.position.y=.88;group.add(hit);
- const cargoAnchor=new T.Group();cargoAnchor.position.set(0,.32,-.25);m.torso.add(cargoAnchor);
+ const cargoAnchor=new T.Group();cargoAnchor.position.set(0,0,-.215);m.torso.add(cargoAnchor);
  return {group,model:m,kind:'human',pos:null,target:null,walk:0,blinkOffset:name==='Mara'?1.2:3.1,rig:{body:m.torso,hips:m.hips,torso:m.torso,head:m.head,eyes:m.eyes,bag:m.bag,cargoAnchor},limbs:[m.legs[0],m.arms[0],m.legs[1],m.arms[1]]};
 }
 const approach=(old,target,blend)=>old+(target-old)*blend;
+const downAxis=new T.Vector3(0,-1,0);
+// Solve the articulated upper arm and forearm to a real contact point. The
+// elbow pole keeps elbows below/outside the hands instead of raising both arms.
+function reach(arm,target,side,blend){
+ const upper=.25,lower=.30,direction=target.clone().sub(arm.position),length=T.MathUtils.clamp(direction.length(),.051,.549);direction.normalize();
+ const along=(upper*upper-lower*lower+length*length)/(2*length),height=Math.sqrt(Math.max(0,upper*upper-along*along));
+ const pole=new T.Vector3(side*.7,-.8,.35);pole.addScaledVector(direction,-pole.dot(direction)).normalize();
+ const elbow=direction.clone().multiplyScalar(along).addScaledVector(pole,height),end=direction.clone().multiplyScalar(length);
+ const shoulderQ=new T.Quaternion().setFromUnitVectors(downAxis,elbow.clone().normalize());
+ const foreDirection=end.sub(elbow).normalize().applyQuaternion(shoulderQ.clone().invert()),foreQ=new T.Quaternion().setFromUnitVectors(downAxis,foreDirection);
+ arm.quaternion.slerp(shoulderQ,blend);arm.userData.fore.quaternion.slerp(foreQ,blend);
+}
+
 export function animatePerson(e,time,dt,walking,fresh){
  if(!fresh)return;const m=e.model,work=e.phase==='work'&&!walking,drink=work&&e.action==='drink',gather=work&&/^(gather_|forage:|survey:|building|handling_supplies)/.test(e.action||''),rest=work&&e.action==='rest',eat=work&&/^eat_/.test(e.action||'');
- const blend=1-Math.exp(-dt*10),cycle=(time*.28)%1,sip=drink?Math.sin(Math.min(1,Math.max(0,(cycle-.18)/.62))*Math.PI):0;
- const hip=drink?.42:gather?.56:rest?.38:.813,lean=drink?1.36-sip*1.22:gather?.62:rest?-.08:0;
+ const blend=1-Math.exp(-dt*10),cycle=(time*.28)%1,ease=x=>{x=T.MathUtils.clamp(x,0,1);return x*x*(3-2*x);},sip=drink?(cycle<.7?ease((cycle-.25)/.20):1-ease((cycle-.7)/.3)):0;
+ let scoopHip=.35;
+ if(drink&&e.waterPoint){m.root.updateMatrixWorld(true);const water=m.root.worldToLocal(e.waterPoint.clone()),forward=water.z-.418*Math.sin(1.85),side=Math.abs(water.x)+(m.female?.183:.217)-.034,maxDrop=Math.sqrt(Math.max(.01,.52*.52-forward*forward-side*side));scoopHip=T.MathUtils.clamp(water.y+maxDrop-.418*Math.cos(1.85),.16,.35);}
+ const hip=drink?scoopHip:gather?.56:rest?.38:.813,lean=drink?1.85-sip*1.60:gather?.62:rest?-.08:0;
  m.hips.position.y=approach(m.hips.position.y,hip+(walking?Math.abs(Math.sin(e.walk))*.010:0),blend);m.torso.rotation.x=approach(m.torso.rotation.x,lean,blend);
  m.head.rotation.x=approach(m.head.rotation.x,drink?-.12:gather?.12:0,blend);m.head.rotation.y=Math.sin(time*.55+e.blinkOffset)*(walking?.02:.05);
+ let scoop,mouth;
+ if(drink){m.root.updateMatrixWorld(true);scoop=e.waterPoint?e.waterPoint.clone():m.root.localToWorld(new T.Vector3(0,-.20,.58));scoop=m.torso.worldToLocal(scoop);mouth=m.torso.worldToLocal(m.head.localToWorld(new T.Vector3(0,-.08,.105)));}
  for(let i=0;i<2;i++){
   const leg=m.legs[i],shin=leg.userData.shin,arm=m.arms[i],fore=arm.userData.fore,phase=e.walk+i*Math.PI;
   let thigh=0,knee=0;
@@ -26,9 +43,12 @@ export function animatePerson(e,time,dt,walking,fresh){
   }else if(walking){thigh=-Math.sin(phase)*.38;knee=Math.max(0,Math.cos(phase))*.43;}
   leg.rotation.x=approach(leg.rotation.x,thigh,blend);shin.rotation.x=approach(shin.rotation.x,knee,blend);
   leg.userData.foot.rotation.x=walking?0:-leg.rotation.x-shin.rotation.x;
-  const armAngle=drink?-m.torso.rotation.x-sip*1.65:gather?-.75+Math.sin(time*3+i*.3)*.24:rest?-.30:eat&&i===1?-1.9:walking?Math.sin(phase)*.32:Math.sin(time+i)*.015;
-  arm.rotation.x=approach(arm.rotation.x,armAngle,blend);arm.rotation.z=approach(arm.rotation.z,(i?1:-1)*(drink?.18:.065),blend);
-  fore.rotation.x=approach(fore.rotation.x,drink?-.08-sip*1.12:gather?-.70:eat&&i===1?-1.15:-.06,blend);
+  if(drink){const target=scoop.clone().lerp(mouth,sip);target.x+=(i?1:-1)*.034;reach(arm,target,i?1:-1,blend);}
+  else{
+   const armAngle=gather?-.75+Math.sin(time*3+i*.3)*.24:rest?-.30:eat&&i===1?-1.9:walking?Math.sin(phase)*.32:Math.sin(time+i)*.015;
+   arm.rotation.x=approach(arm.rotation.x,armAngle,blend);arm.rotation.y=approach(arm.rotation.y,0,blend);arm.rotation.z=approach(arm.rotation.z,(i?1:-1)*.065,blend);
+   fore.rotation.x=approach(fore.rotation.x,gather?-.70:eat&&i===1?-1.15:-.06,blend);fore.rotation.y=approach(fore.rotation.y,0,blend);fore.rotation.z=approach(fore.rotation.z,0,blend);
+  }
  }
  const blink=(time+e.blinkOffset)%5.3<.1;m.eyes.forEach(eye=>eye.scale.y=blink?.09:1);
 }
