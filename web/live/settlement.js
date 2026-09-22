@@ -59,7 +59,7 @@ export class SettlementView{
   for(const id of this.objects.keys())if(!live.has(id))this.remove(id);
  }
  remove(id){const obj=this.objects.get(id);if(!obj)return;this.scene.remove(obj.group);obj.group.traverse(m=>{if(m.isLineSegments){m.geometry.dispose();m.material.dispose();}else if(m.isMesh&&!m.material.visible){m.geometry.dispose();m.material.dispose();}});this.objects.delete(id);}
- elevationAt(x,z){for(const p of this.data?.projects||[])if((p.purpose==='bridge'||p.spansWater))for(const part of p.parts){if(!part.built||part.kind!=='deck')continue;const [cx,y,cz]=part.center,[sx,sy,sz]=part.size;if(Math.abs(x-p.position.x-cx)<=sx/2+.05&&Math.abs(z-p.position.y-cz)<=sz/2+.05)return this.base(p)+y+sy/2;}return this.elevation(x,z);}
+ elevationAt(x,z){for(const p of this.data?.projects||[])for(const part of p.parts){if(!part.built||part.kind!=='deck'||part.center[1]+part.size[1]/2>.65)continue;const [cx,y,cz]=part.center,[sx,sy,sz]=part.size;if(Math.abs(x-p.position.x-cx)<=sx/2+.05&&Math.abs(z-p.position.y-cz)<=sz/2+.05)return this.base(p)+y+sy/2;}return this.elevation(x,z);}
 }
 export function updateCargo(person,inventory){const signature=JSON.stringify(inventory||{});if(person.cargoSignature===signature)return;person.cargoSignature=signature;const r=person.rig;if(!r)return;
  if(r.cargo)r.cargoAnchor.remove(r.cargo);r.cargo=new T.Group();r.cargoAnchor.add(r.cargo);drawContents(r.cargo,inventory,{carried:true,limit:8});r.bag.visible=Object.values(inventory||{}).some(v=>v>0);

@@ -31,8 +31,7 @@ try{
     const screen=center.project(v.camera);return {id,x:(screen.x*.5+.5)*innerWidth,y:(-screen.y*.5+.5)*innerHeight};
    },type);
    await page.waitForTimeout(250);await page.mouse.click(result.x,result.y);
-   assert.equal(await page.evaluate(()=>selected),result.id,type+' is selectable from its actual rendered position');assert((await page.locator('#details').innerText()).length>25);
-   await page.screenshot({path:`realtime-qa/${name}-inspect-${type}.png`});
+   await page.screenshot({path:`realtime-qa/${name}-inspect-${type}.png`});assert.equal(await page.evaluate(()=>selected),result.id,type+' is selectable from its actual rendered position');assert((await page.locator('#details').innerText()).length>25);
   }
   assert.equal(await page.evaluate(()=>document.documentElement.scrollWidth>innerWidth),false);assert.deepEqual(errors,[]);await page.close();
  }

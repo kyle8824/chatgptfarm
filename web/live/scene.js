@@ -79,7 +79,7 @@ export class ValleyScene{
  }
  human(id,name){const person=createPerson(id,name);this.scene.add(person.group);const label=document.createElement('div');label.className='label';label.textContent=name;const em=document.createElement('em');label.append(em);document.querySelector('#labels').append(label);this.labels.set(id,label);return person;}
  animal(a){const model=createAnimal(a.species),g=model.root;g.userData.objectId=a.id;this.scene.add(g);
-  const school=[];if(a.species==='fish')for(let i=0;i<3;i++){const fish=createAnimal('fish');fish.root.position.set((i%2?-.25:.25),-.015,-.25-Math.floor(i/2)*.3);fish.root.scale.setScalar(.72+(i%2)*.1);g.add(fish.root);school.push(fish);}
+  const school=[];if(a.species==='fish'){const hit=new T.Mesh(new T.SphereGeometry(1,10,8),new T.MeshBasicMaterial({visible:false}));hit.position.set(0,.04,-.2);hit.scale.set(.42,.28,.72);g.add(hit);}if(a.species==='fish')for(let i=0;i<3;i++){const fish=createAnimal('fish');fish.root.position.set((i%2?-.25:.25),-.015,-.25-Math.floor(i/2)*.3);fish.root.scale.setScalar(.72+(i%2)*.1);g.add(fish.root);school.push(fish);}
   return {group:g,model,school,limbs:model.legs,kind:a.species,pos:null,target:null,walk:0};
  }
  animals(){}

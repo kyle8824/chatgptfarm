@@ -48,7 +48,7 @@ export default {
   ]).then(results=>{for(const result of results)if(result.status==='rejected'||!result.value.ok)console.error('Scheduled world recovery deferred');}));},
   async fetch(request,env){
     const path=new URL(request.url).pathname;
-    if(['/live/ws','/live/state','/live/health','/live/geometry'].includes(path)){try{return await env.LIVE_VALLEY.getByName('live-valley-v1').fetch(request);}catch(e){return unavailableResponse(e,{diagnostic:path==='/live/health',build:BUILD_INFO});}}
+    if(['/live/ws','/live/state','/live/health','/live/geometry'].includes(path)||path.startsWith('/live/design/')){try{return await env.LIVE_VALLEY.getByName('live-valley-v1').fetch(request);}catch(e){return unavailableResponse(e,{diagnostic:path==='/live/health',build:BUILD_INFO});}}
     if(path==='/live')return Response.redirect(new URL('/live/',request.url),302);
     if(['/state','/health','/evidence','/start','/pause','/resume'].includes(path)){
       try{return await env.WORLD.getByName('preview-v1').fetch(request);}catch(e){return unavailableResponse(e,{diagnostic:path==='/health',build:BUILD_INFO});}
