@@ -9,7 +9,7 @@ export function normalizeStructureLook(value={}){
   else {if(typeof value[key]!=='string'||!/^#[0-9a-f]{6}$/i.test(value[key]))throw Error('Use a six-digit color.');out[key]=value[key].toLowerCase();}
  }return out;
 }
-export function structureSignature(p){return JSON.stringify({id:p.id,purpose:p.purpose,access:p.access,spansWater:!!p.spansWater,parts:p.parts.map(x=>({id:x.id,kind:x.kind,material:x.material,shape:x.shape||'box',center:x.center,size:x.size,requires:x.requires||[],materialUnits:x.materialUnits}))});}
+export function structureSignature(p){return JSON.stringify({id:p.id,purpose:p.purpose,access:p.access,spansWater:!!p.spansWater,parts:p.parts.map(x=>({id:x.id,kind:x.kind,material:x.material,shape:x.shape||'box',finish:x.finish||'rough',craftVersion:x.craftVersion||0,center:x.center,size:x.size,requires:x.requires||[],materialUnits:x.materialUnits}))});}
 export function makeStructureLook(p,appearance){return {schema:'chatgptfarm-structure-look/1',projectId:p.id,designSignature:structureSignature(p),appearance:normalizeStructureLook(appearance)};}
 export function readStructureLook(p,document){
  if(!document||Object.keys(document).some(k=>!['schema','projectId','designSignature','appearance'].includes(k))||document.schema!=='chatgptfarm-structure-look/1'||document.projectId!==p.id||document.designSignature!==structureSignature(p))throw Error('This look belongs to a different physical design.');

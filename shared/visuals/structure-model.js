@@ -2,16 +2,44 @@ import * as T from 'three';
 import {mergeGeometries} from 'three/addons/utils/BufferGeometryUtils.js';
 import {normalizeStructureLook} from './structure-appearance.js';
 const box=new T.BoxGeometry(1,1,1),cylinder=new T.CylinderGeometry(.5,.5,1,14),components=new Map();
+function tint(g,shade){const colors=[];for(let v=0;v<g.attributes.position.count;v++){const variation=shade*(.90+(v%7)*.025);colors.push(variation,variation,variation);}g.setAttribute('color',new T.Float32BufferAttribute(colors,3));return g;}
+function branch(seed=0,hewn=false){
+ const g=new T.CylinderGeometry(.43,.49,1,hewn?10:9,5),p=g.attributes.position;
+ for(let i=0;i<p.count;i++){const y=p.getY(i),bend=Math.sin((y+.5)*Math.PI*1.7+seed)*.035,taper=1+(Math.sin(y*13+seed)*.035);p.setXYZ(i,p.getX(i)*taper+bend,y,p.getZ(i)*taper);}
+ g.computeVertexNormals();return tint(g,.78+(seed%4)*.045);
+}
 function componentGeometry(part){
- if(part.shape==='cylinder')return cylinder;
- if(part.material!=='timber'||!['wall','deck','roof'].includes(part.kind))return box;
- const key=part.kind+part.size.join(',');if(components.has(key))return components.get(key);
- const axis=part.kind==='wall'?(part.size[0]>part.size[2]?0:2):0,count=Math.max(2,Math.min(18,Math.ceil(part.size[axis]/.2))),geos=[];
- for(let i=0;i<count;i++){const size=[1,1,1],offset=[0,0,0];size[axis]=1/count-.007/part.size[axis];offset[axis]=-.5+(i+.5)/count;const g=new T.BoxGeometry(...size);g.translate(...offset);const colors=[],shade=.90+((i*7+3)%11)*.019;for(let v=0;v<g.attributes.position.count;v++)colors.push(shade,shade,shade);g.setAttribute('color',new T.Float32BufferAttribute(colors,3));geos.push(g);}
- const geometry=mergeGeometries(geos);geos.forEach(g=>g.dispose());components.set(key,geometry);return geometry;
+ const finish=part.finish==='hewn'?'hewn':'rough',key=part.id+part.material+part.kind+part.size.join(',')+finish;
+ if(components.has(key))return components.get(key);
+ const geos=[],panel=['wall','deck','roof'].includes(part.kind),hewn=finish==='hewn';
+ if((part.material==='timber'||part.material==='reeds')&&panel){
+  const axis=part.kind==='wall'?(part.size[0]>part.size[2]?0:2):0;
+  const count=Math.max(3,Math.min(26,Math.ceil(part.size[axis]/(part.material==='reeds'?.085:hewn?.18:.12))));
+  for(let i=0;i<count;i++){
+   const size=[1,1,1],offset=[0,0,0];size[axis]=1/count*.98;offset[axis]=-.5+(i+.5)/count;
+   let g;
+   if(hewn){g=new T.BoxGeometry(...size);g.translate(...offset);tint(g,.90+((i*7+3)%11)*.019);}
+   else {g=branch(i);if(part.kind!=='wall')g.rotateX(Math.PI/2);g.scale(...size);g.translate(...offset);}
+   geos.push(g);
+  }
+  // Fibers lie across the rough mat; folded/joined material stays inside its envelope.
+  if(!hewn)for(const t of [-.34,.34]){const g=new T.CylinderGeometry(.018,.018,1,6),sz=[1,1,1],off=[0,0,0];
+   if(axis===0)g.rotateZ(Math.PI/2);else g.rotateX(Math.PI/2);
+   if(part.kind==='wall'){off[1]=t;off[axis===0?2:0]=.40;sz[axis===0?2:0]=.8;}
+   else{off[2]=t;off[1]=.40;}
+   g.scale(...sz);g.translate(...off);geos.push(tint(g,1.35));}
+ }else if(part.material==='timber'){
+  const g=branch(3,hewn);if(part.kind==='beam'){if(part.size[0]>part.size[2])g.rotateZ(Math.PI/2);else g.rotateX(Math.PI/2);}geos.push(g);
+ }else if(part.material==='stone'){const g=new T.IcosahedronGeometry(.58,0);geos.push(tint(g,1));}
+ else {const g=box.clone();geos.push(tint(g,.95));}
+ const geometry=mergeGeometries(geos);geos.forEach(g=>g.dispose());geometry.computeBoundingBox();
+ // Normalize to the recorded collision/material envelope. A cosmetic edit
+ // cannot expand dimensions, close gaps or upgrade a rough piece to hewn.
+ const b=geometry.boundingBox,span=new T.Vector3();b.getSize(span);const center=new T.Vector3();b.getCenter(center);geometry.translate(-center.x,-center.y,-center.z);geometry.scale(1/span.x,1/span.y,1/span.z);
+ components.set(key,geometry);return geometry;
 }
 // This is used by BOTH the world and the workshop. Geometry comes exclusively
-// from physical parts. A look affects shader inputs, never geometry or state.
+// from physical parts. Recorded technique controls the mesh. A look affects shader inputs only.
 export function createStructureModel(project,{stage='construction',appearance={},open=false}={}){
  const group=new T.Group(),look=normalizeStructureLook(appearance),materials=new Map(),owned=[];
  const material=part=>{const key=part.material+!!componentGeometry(part).getAttribute('color');if(materials.has(key))return materials.get(key);
