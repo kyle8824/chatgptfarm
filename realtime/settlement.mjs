@@ -134,7 +134,7 @@ export function workSettlement(w,a,t,minutes){
 export function recordStructureUse(w,a,p,kind){
  if(!p||p.status!=='complete')return;p.feedback??={uses:0,byUser:{},lastUse:null};
  const key=a.id+':'+kind,day=w.day;if(p.feedback.byUser[key]===day)return;p.feedback.byUser[key]=day;p.feedback.uses++;p.feedback.lastUse={kind,user:a.name,day};p.feedback.observations??={};p.feedback.observations[a.id]={uses:(p.feedback.observations[a.id]?.uses||0)+1,lastUse:p.feedback.lastUse};
- if(p.ownerId===a.id)return;const owner=w.agents.find(b=>b.id===p.ownerId);if(!owner)return;
+ if(p.ownerId===a.id||p.access!=='shared')return;const owner=w.agents.find(b=>b.id===p.ownerId);if(!owner)return;
  const rel=relationship(w,a,owner);if(rel)rel.trust=Math.min(100,rel.trust+2);
  remember(w,a,`${owner.name}'s ${p.name} helped me with ${kind}.`,{importance:5,tags:['construction','useful','social']});
  // Designer learns when present; no remote knowledge of unseen appreciation.
