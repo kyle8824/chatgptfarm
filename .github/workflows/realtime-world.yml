@@ -1,7 +1,7 @@
 name: Realtime world verification
 on:
   push:
-    branches: [overhaul/live-world-3d, fix/live-personal-space, fix/camera-pan, fix/physical-actions, feature/physical-settlement, fix/storage-write-budget, release/main-domain]
+    branches: [overhaul/live-world-3d, fix/live-personal-space, fix/camera-pan, fix/physical-actions, feature/physical-settlement, fix/storage-write-budget, release/main-domain, release/models-map-controls]
   workflow_dispatch:
 permissions:
   contents: read
@@ -23,6 +23,13 @@ jobs:
           node realtime/serve.mjs > /tmp/valley-server.log 2>&1 &
           for i in $(seq 1 30); do curl --silent --fail http://127.0.0.1:4173/live/health && break || sleep 1; done
           node realtime/browser-test.mjs
+      - name: Build and inspect the permanent model workshop
+        run: |
+          npm ci --prefix character-preview
+          npm run build --prefix character-preview
+          python3 -m http.server 4178 --directory vercel-public > /tmp/model-preview-server.log 2>&1 &
+          for i in $(seq 1 20); do curl --silent --fail http://127.0.0.1:4178/character-preview/ >/dev/null && break || sleep 1; done
+          node character-preview/browser-test.mjs
       - name: Runtime logs
         if: always()
         run: cat /tmp/valley-server.log || true
@@ -30,4 +37,6 @@ jobs:
         if: always()
         with:
           name: realtime-world-evidence
-          path: realtime-qa/
+          path: |
+            realtime-qa/
+            character-preview/evidence/

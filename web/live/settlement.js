@@ -54,5 +54,5 @@ export class SettlementView{
  elevationAt(x,z){for(const p of this.data?.projects||[])if(p.purpose==='bridge')for(const part of p.parts){if(!part.built||part.kind!=='deck')continue;const [cx,y,cz]=part.center,[sx,sy,sz]=part.size;if(Math.abs(x-p.position.x-cx)<=sx/2+.05&&Math.abs(z-p.position.y-cz)<=sz/2+.05)return this.base(p)+y+sy/2;}return this.elevation(x,z);}
 }
 export function updateCargo(person,inventory){const signature=JSON.stringify(inventory||{});if(person.cargoSignature===signature)return;person.cargoSignature=signature;const r=person.rig;if(!r)return;
- if(r.cargo)r.body.remove(r.cargo);r.cargo=new T.Group();r.cargo.position.set(0,1.18,-.36);r.body.add(r.cargo);drawContents(r.cargo,inventory,{carried:true,limit:8});r.bag.visible=Object.values(inventory||{}).some(v=>v>0);
+ if(r.cargo)r.cargoAnchor.remove(r.cargo);r.cargo=new T.Group();r.cargoAnchor.add(r.cargo);drawContents(r.cargo,inventory,{carried:true,limit:8});r.bag.visible=Object.values(inventory||{}).some(v=>v>0);
 }
