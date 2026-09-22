@@ -1,0 +1,35 @@
+name: Character study verification
+on:
+  push:
+    branches: [feature/character-study]
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    timeout-minutes: 12
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Build isolated preview
+        run: npm ci --prefix character-preview && npm run build --prefix character-preview
+      - name: Install browser harness
+        working-directory: character-preview
+        run: npm install --no-save playwright@1.55.0 && npx playwright install --with-deps chromium
+      - name: Start static preview
+        run: |
+          python3 -m http.server 4178 --directory vercel-public > /tmp/character-preview-server.log 2>&1 &
+          for i in $(seq 1 20); do curl --silent --fail http://127.0.0.1:4178/character-preview/ >/dev/null && break || sleep 1; done
+      - name: Inspect models and rendering costs
+        run: node character-preview/browser-test.mjs
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: character-study-evidence
+          path: character-preview/evidence/
+      - name: Preview server log
+        if: failure()
+        run: cat /tmp/character-preview-server.log

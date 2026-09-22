@@ -1,0 +1,7 @@
+{
+  "name": "chatgptfarm-character-study",
+  "private": true,
+  "type": "module",
+  "scripts": {"build": "node build.mjs"},
+  "devDependencies": {"esbuild": "0.28.1", "three": "0.180.0"}
+}
