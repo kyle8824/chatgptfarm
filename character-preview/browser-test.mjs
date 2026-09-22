@@ -25,11 +25,18 @@ try{
    const pinchBefore=await page.evaluate(()=>window.previewMetrics);await cdp.send('Input.dispatchTouchEvent',{type:'touchStart',touchPoints:[{x:150,y:420,id:1},{x:250,y:420,id:2}]});
    await cdp.send('Input.dispatchTouchEvent',{type:'touchMove',touchPoints:[{x:120,y:420,id:1},{x:280,y:420,id:2}]});await cdp.send('Input.dispatchTouchEvent',{type:'touchEnd',touchPoints:[]});await page.waitForTimeout(1800);
    const pinchAfter=await page.evaluate(()=>window.previewMetrics);assert(Math.hypot(...direction(pinchAfter))<Math.hypot(...direction(pinchBefore))*.8,'two-finger pinch zooms');await page.locator('#home').click();
+   await page.waitForTimeout(1800);const combinedBefore=await page.evaluate(()=>window.previewMetrics);
+   await cdp.send('Input.dispatchTouchEvent',{type:'touchStart',touchPoints:[{x:150,y:420,id:1},{x:250,y:420,id:2}]});
+   for(let i=1;i<=10;i++){const t=i/10,a=.5*t,r=50+25*t,cx=200+15*t,cy=420+10*t;await cdp.send('Input.dispatchTouchEvent',{type:'touchMove',touchPoints:[{x:cx-Math.cos(a)*r,y:cy-Math.sin(a)*r,id:1},{x:cx+Math.cos(a)*r,y:cy+Math.sin(a)*r,id:2}]});}
+   await cdp.send('Input.dispatchTouchEvent',{type:'touchEnd',touchPoints:[]});await page.waitForTimeout(1800);const combinedAfter=await page.evaluate(()=>window.previewMetrics),a=direction(combinedBefore),b=direction(combinedAfter);
+   assert(Math.hypot(...b)<Math.hypot(...a)*.75,'preview pinches while twisting');assert(Math.abs(Math.atan2(b[0],b[2])-Math.atan2(a[0],a[2]))>.35,'preview rotates by the twist');await page.locator('#home').click();
+
   }
   for(const subject of ['mara','ivo','deer']){
    await page.locator(`[data-subject=${subject}]`).click();await page.waitForTimeout(1300);await page.screenshot({path:new URL(`${name}-${subject}.png`,out).pathname});
    await page.locator('#close-up').click();await page.waitForTimeout(1300);await page.screenshot({path:new URL(`${name}-${subject}-close.png`,out).pathname});
    if(name==='desktop'){await page.locator('[data-angle=side]').click();await page.waitForTimeout(1300);await page.screenshot({path:new URL(`${name}-${subject}-side.png`,out).pathname});await page.locator('[data-angle=back]').click();await page.waitForTimeout(1300);await page.screenshot({path:new URL(`${name}-${subject}-back.png`,out).pathname});await page.locator('[data-angle=front]').click();}
+   if(subject==='deer'){await page.locator('#close-up').click();await page.locator('[data-mode=work]').click();await page.locator('#pause').click();await page.waitForTimeout(1500);for(const angle of ['side','back']){await page.locator(`[data-angle=${angle}]`).click();await page.waitForTimeout(1200);await page.screenshot({path:new URL(`${name}-deer-graze-${angle}.png`,out).pathname});}await page.locator('[data-mode=idle]').click();await page.waitForTimeout(1200);await page.locator('#pause').click();await page.locator('[data-angle=front]').click();}
   }
   await page.locator('[data-subject=together]').click();await page.locator('#pause').click();await page.locator('[data-mode=walk]').click();await page.waitForTimeout(3500);await page.screenshot({path:new URL(`${name}-walking.png`,out).pathname});
   await page.locator('#stats-toggle').click();assert.equal(await page.locator('#stats').isVisible(),true);await page.selectOption('#population','4');await page.waitForTimeout(4000);const crowd=await page.evaluate(()=>window.previewMetrics);assert.equal(crowd.population,12);await page.screenshot({path:new URL(`${name}-crowd.png`,out).pathname});
