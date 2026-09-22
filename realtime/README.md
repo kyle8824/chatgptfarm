@@ -56,6 +56,24 @@ outside known resources are scenery, not a complete individual-tree ecosystem.
 
 ## Operation
 
+### Camera
+
+One-finger or left-mouse dragging pans across the ground. Two-finger dragging
+rotates/tilts the view; pinching still zooms. Right-mouse dragging rotates on
+desktop, and the wheel zooms. Dragging releases villager follow. Multi-touch,
+cancelled touches, and drags that return to their starting point cannot count
+as selection taps. The home button returns to the valley overview.
+
+### Future physical storage (not implemented)
+
+Kyle's direction: visible carried loads with capacity limits and physical
+storage that villagers must visit and populate. Ownership, access, witnesses,
+memory, and social norms should make taking another person's supplies a
+possible costly choice; desperation may outweigh those costs. Observed theft
+can affect trust and motivate protective construction if the available building
+rules support it. These should arise from circumstances and agent decisions,
+without scheduled theft scenes or guaranteed defensive-building progression.
+
 ### Live movement and needs
 
 Villagers reserve distinct interaction points within a destination area, use
