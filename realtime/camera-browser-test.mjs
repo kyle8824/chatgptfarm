@@ -107,7 +107,7 @@ try{
    const e=v.entities.get('agent-ivo');e.group.position.copy(e.target);e.pos.copy(e.target);e.group.rotation.y=Math.PI;v.controls.target.set(48,.85,20.85);v.camera.position.set(50,2.6,15.7);v.controls.update();v.elapsed=.1;
   });
   await page.waitForTimeout(600);const contact=await page.evaluate(()=>{settlePose(.1);const e=valley.entities.get('agent-ivo'),m=e.model;return {water:e.waterPoint.toArray(),hands:m.arms.map(a=>a.userData.fore.localToWorld(e.waterPoint.clone().set(0,-.30,0)).toArray()),knees:m.legs.map(l=>{const p=l.userData.shin.getWorldPosition(e.waterPoint.clone());return m.root.worldToLocal(p).toArray();})};});
-  assert(contact.hands.every(p=>distance(p,contact.water)<.075),'rendered hands reach the visible creek');assert(contact.knees.every(p=>Math.abs(p[0])>.23),'knees clear the leaning torso');await page.screenshot({path:`realtime-qa/drinking-${mobile?'mobile':'desktop'}-scoop.png`});
+  assert(contact.hands.every(p=>distance(p,contact.water)<.075),'rendered hands reach the visible creek');assert(contact.knees.every(p=>Math.abs(p[0])>.28),'knees clear the leaning torso');await page.screenshot({path:`realtime-qa/drinking-${mobile?'mobile':'desktop'}-scoop.png`});
   await page.evaluate(()=>settlePose(1.85));await page.waitForTimeout(600);await page.screenshot({path:`realtime-qa/drinking-${mobile?'mobile':'desktop'}-sip.png`});
   await page.evaluate(()=>{modelFrame.agents[0].inventory={dryWood:2,berries:3};valley.accept(modelFrame);});await page.waitForTimeout(300);await page.screenshot({path:`realtime-qa/cargo-${mobile?'mobile':'desktop'}.png`});
   const graphics=await page.evaluate(()=>({triangles:valley.renderer.info.render.triangles,drawCalls:valley.renderer.info.render.calls}));

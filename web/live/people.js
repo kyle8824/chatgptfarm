@@ -41,7 +41,7 @@ export function animatePerson(e,time,dt,walking,fresh){
    const bend=-Math.acos(T.MathUtils.clamp((forward*forward+down*down-upper*upper-lower*lower)/(2*upper*lower),-.999,.999));
    thigh=-(Math.atan2(forward,down)-Math.atan2(lower*Math.sin(bend),upper+lower*Math.cos(bend)));knee=-bend;
   }else if(walking){thigh=-Math.sin(phase)*.38;knee=Math.max(0,Math.cos(phase))*.43;}
-  if(drink){aimBones(leg,shin,new T.Vector3((i?1:-1)*.18,.093-m.hips.position.y,.12),.365,.34,new T.Vector3((i?1:-1)*.8,0,1),blend);}
+  if(drink){aimBones(leg,shin,new T.Vector3((i?1:-1)*.23,.093-m.hips.position.y,.12),.365,.34,new T.Vector3((i?1:-1)*1.1,0,.6),blend);}
   else{leg.rotation.x=approach(leg.rotation.x,thigh,blend);shin.rotation.x=approach(shin.rotation.x,knee,blend);for(const axis of ['y','z']){leg.rotation[axis]=approach(leg.rotation[axis],0,blend);shin.rotation[axis]=approach(shin.rotation[axis],0,blend);}}
   if(walking)leg.userData.foot.quaternion.identity();else leg.userData.foot.quaternion.copy(leg.quaternion).multiply(shin.quaternion).invert();
   if(drink){const target=scoop.clone().lerp(mouth,sip);target.x+=(i?1:-1)*.034;aimBones(arm,fore,target,.25,.30,new T.Vector3((i?1:-1)*.7,-.8,.35),blend);}
