@@ -64,7 +64,7 @@ export function createPerson(id,name){
  return {group,limbs,kind:'human',pos:null,target:null,walk:0,rig:{body,torso,head,eyes,knees,elbows,bag},blinkOffset:mara?1:3};
 }
 export function animatePerson(e,time,dt,walking,fresh){
- const r=e.rig;if(!r||!fresh)return;const action=e.action,working=e.phase==='work',drink=working&&action==='drink',gather=working&&/^(gather_|forage:|survey:)/.test(action||''),rest=working&&action==='rest',eat=working&&action?.startsWith('eat_');
+ const r=e.rig;if(!r||!fresh)return;const action=e.action,working=e.phase==='work',drink=working&&action==='drink',gather=working&&/^(gather_|forage:|survey:|building|handling_supplies)/.test(action||''),rest=working&&action==='rest',eat=working&&action?.startsWith('eat_');
  const blend=Math.min(1,dt*10),approach=(o,k,n)=>o[k]+=(n-o[k])*blend,clamp=n=>Math.max(0,Math.min(1,n)),ease=n=>{n=clamp(n);return n*n*(3-2*n);};
  const cycle=(time*.28)%1,sip=drink?(cycle<.7?ease((cycle-.25)/.20):1-ease((cycle-.7)/.3)):0;
  const hip=drink?.35:gather?.43:rest?.30:.76,lean=drink?1.85-sip*1.60:gather?.7:rest?-.08:0;

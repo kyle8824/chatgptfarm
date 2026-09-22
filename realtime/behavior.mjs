@@ -5,6 +5,8 @@ import {distance} from '../engine/navigation.js';
 import {storedFuel} from '../engine/wood-runtime.js';
 import {addEvent} from '../engine/core.js';
 import {configureTask} from './motion.mjs';
+import {settlementCandidates} from './settlement.mjs';
+import {clock as liveClock,roomFor} from './holdings.mjs';
 
 const clock=w=>(w.day*24+w.hour)*60+(w.minute||0);
 const resourceFor={gather_dry_wood:'dryWood',gather_wet_wood:'wetWood',gather_berries:'berries',gather_stones:'stones',gather_clay:'clay',gather_reeds:'reeds'};
@@ -24,10 +26,10 @@ function knownUnavailable(w,a,id){
  return false;
 }
 export function liveCandidates(w,a,candidates){
- const filtered=candidates.filter(c=>!knownUnavailable(w,a,c.id));
+ const filtered=candidates.filter(c=>!['store_wet_wood','collect_dried_wood'].includes(c.id)&&(c.id!=='make_fire'||a.inventory.dryWood>0)&&(c.id!=='dry_wood_by_fire'||a.inventory.wetWood>0)&&(c.id!=='seek_cover'||(a.coverUntil||0)<clock(w))&&!knownUnavailable(w,a,c.id)&&(!resourceFor[c.id]||!w.settlement||roomFor(w,a,resourceFor[c.id])>0)&&(!['talk','seek_other','share_food'].includes(c.id)||(a.socialUntil||0)<clock(w)));
  // Retain a real, safe fallback if every remembered resource is unavailable.
  if(!filtered.length)filtered.push({id:'rest',label:w.structures.shelter?'Rest in the shelter':'Rest in the meadow',score:1,reasons:[['no useful reachable resource action',1]]});
- return filtered.map(c=>{
+ const ordinary=filtered.map(c=>{
   const target=actionDestination(w,a,c),goal=coordForPosition(target,w),trip=c.id==='explore'?12:target===a.position?0:distance(a.coordinates,goal),need=family(c.id),n=a.needs[need];
   const immediate=/^eat_/.test(c.id)&&Object.entries(a.inventory).some(([k,v])=>['berries','cookedMeat','tubers'].includes(k)&&v>0);
   const comfortPenalty=need&&n>70?(n-70)*1.2:0;
@@ -35,17 +37,17 @@ export function liveCandidates(w,a,candidates){
   // alphabetical tie to the same distant thicket on every decision.
   const score=c.score-trip*(a.needs.energy<25?.45:.24)-comfortPenalty+(immediate&&a.needs.hunger<35?20:0);
   return {...c,label:c.id==='explore'?'Explore the surrounding valley':c.label,score,reasons:[...(c.reasons||[]),['travel effort',-trip*.24]]};
- }).sort((x,y)=>y.score-x.score||x.id.localeCompare(y.id));
+ });return [...ordinary,...settlementCandidates(w,a)].sort((x,y)=>y.score-x.score||x.id.localeCompare(y.id));
 }
 export function rememberFailure(w,a,t,detail){
  const key=resourceFor[t.actionId];if(key)a.resourceObservations??={};
  if(key&&w.resources[key]<=0)a.resourceObservations[key]={band:'depleted',quantity:0,day:w.day,hour:w.hour};
- (a.liveFailures??={})[t.actionId]={at:clock(w),retryMinutes:key==='dryWood'?240:180,detail};
+ (a.liveFailures??={})[t.actionId]={at:clock(w),retryMinutes:t.selected?.job||/route/i.test(detail)?10:key==='dryWood'?240:180,detail};
  const entries=Object.entries(a.liveFailures).sort((a,b)=>b[1].at-a[1].at).slice(0,16);a.liveFailures=Object.fromEntries(entries);
 }
 export function retireObsoleteTask(w,a){
  const t=a.task;if(!t)return;
- let reason;
+ let reason;if(['store_wet_wood','collect_dried_wood'].includes(t.actionId))reason='Storage now requires a physical visit to its container; choosing a handling task.';
  if(knownUnavailable(w,a,t.actionId))reason='The remembered resource is unavailable; reconsidering another useful action.';
  if(t.actionId==='seek_cover'&&t.phase==='work'){
   // Taking cover is accomplished on arrival. Remaining there is a location,
@@ -54,6 +56,11 @@ export function retireObsoleteTask(w,a){
   if(a.position==='camp'&&['hydration','hunger','energy'].some(k=>a.needs[k]<35))reason='Already under cover; attending to other needs.';
  }
  if(t.actionId==='seek_warmth'&&!w.structures.fire)reason='The fire is out; this task can no longer warm anyone.';
+ if(t.actionId==='seek_other'){
+  const other=w.agents.find(b=>b.id!==a.id);
+  if(other&&distance(a.coordinates,other.coordinates)<2.1){a.socialUntil=clock(w)+90;outcome(w,a,t,true,`${a.name} found ${other.name} nearby; the search is finished.`);a.task=null;return;}
+  if(t.phase==='work'){reason='The other person moved away; reconsidering instead of waiting at an old location.';a.socialUntil=clock(w)+30;}
+ }
  if(reason){outcome(w,a,t,false,reason,'superseded');a.task=null;}
 }
 export function resumeLiveTask(w,a,urgent){

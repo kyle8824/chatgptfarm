@@ -42,17 +42,14 @@ those features are implemented.
 
 Workers AI binding `AI` supplies `@cf/meta/llama-3.3-70b-instruct-fp8-fast`. Each person
 requests a proposal every 30 wall minutes (failed calls retry after two minutes), with a total hard cap of
-96 calls per UTC day. Requests have bounded input and 180 output tokens. Calls
+96 calls per UTC day. Routine action requests have bounded input and 180 output tokens. Construction requests have a 2,600-token output bound and at most 16 calls/day, included in the same 96-call cap. Calls
 are reserved durably before sending. Calls never block physical simulation.
 Only a currently available action can be applied at a task boundary; urgent
 needs and NPC rules continue between calls. Failed or stale proposals do not
 become AI-controlled actions. UI/health show actual calls, successes, applied
 proposals and errors. A configured binding is not proof of successful inference.
 
-This is bounded model planning plus an NPC survival system. Reflection, open-ended structure
-creation, richer ecology and long-term survival balance remain unfinished.
-The valley renderer is stylized 3D, not photorealistic. Trees/terrain dressing
-outside known resources are scenery, not a complete individual-tree ecosystem.
+This is bounded model planning plus an NPC survival system. Construction uses model-written declarative programs interpreted by physical rules, not unrestricted model-generated JavaScript. Reflection, richer ecology and long-term survival balance remain unfinished. The valley renderer is stylized 3D, not photorealistic.
 
 ## Operation
 
@@ -64,15 +61,57 @@ desktop, and the wheel zooms. Dragging releases villager follow. Multi-touch,
 cancelled touches, and drags that return to their starting point cannot count
 as selection taps. The home button returns to the valley overview.
 
-### Future physical storage (not implemented)
+### Physical storage and construction
 
-Kyle's direction: visible carried loads with capacity limits and physical
-storage that villagers must visit and populate. Ownership, access, witnesses,
-memory, and social norms should make taking another person's supplies a
-possible costly choice; desperation may outweigh those costs. Observed theft
-can affect trust and motivate protective construction if the available building
-rules support it. These should arise from circumstances and agent decisions,
-without scheduled theft scenes or guaranteed defensive-building progression.
+Carried items have an 18 kg / 24-space limit. Existing excess is placed in an
+owned ground pile at the person's actual position; nothing is deleted or
+teleported to a chest. Stores have finite weight and volume capacities. Taking
+or depositing requires actual travel, reach, and elapsed handling time. Wood
+continues to use the conserved material ledger, including constructed parts.
+Backpacks/bundles and piles show actual carried/stored goods; select a pile or
+building, or use the journal's Structures & supplies list, to inspect it.
+
+Food desperation can overcome the normal cost of taking another person's open
+supplies. Witnesses remember and lose trust; unwitnessed losses are discovered
+only on returning and do not identify an unseen culprit. A completed enclosed
+and covered timber container supports secured owner access. There is no
+lock-picking system or scheduled theft story. Missing/witnessed theft feeds the
+owner's concern and subsequent design context; protective designs are possible,
+not guaranteed.
+
+A separate asynchronous model call may propose a structure once per wall hour
+per person, retrying rejected proposals after three minutes. Calls are reserved
+before inference, share the existing hard cap, and never block simulation.
+A program names its purpose/site and 4–28 individual box primitives, dimensions,
+materials and earlier supporting dependencies. Geometry, connectivity, sites,
+per-part carrying feasibility, material cost and supported functionality are
+validated. There are no prefab structure IDs or executable eval/JavaScript.
+The model may defer building; failed designs remain visibly rejected in state.
+There are limits of two unfinished projects and twelve total projects.
+
+An accepted plan provides no supplies and no functional building. Villagers
+choose gathering, site hauling and per-part assembly jobs between survival
+needs. Assembly consumes materials from the builder's carried inventory at the
+specific part; distant stockpiles cannot supply parts remotely. Partial labor
+and installed materials survive interruptions/restarts. Finished storage creates
+real capacity, built bridge deck sections alter navigation, and completed
+accessible shelters reduce exposure and provide rest locations. Support rules
+are simplified, not engineering-grade structural physics. Designs are currently
+bounded to storage, pedestrian bridges and shelters, not arbitrary new game
+mechanics or autonomous engine rewrites.
+
+The shared procedural forest layout now supplies tree collision and finite
+standing-timber accounts within world bounds. The migration explicitly records
+this activation of formerly decorative trees; it does not replenish exhausted
+old log stock. Cutting depletes those accounts and eventually leaves a visible
+stump. Full biological growth/regrowth and arbitrary ecosystem dynamics remain
+unfinished. Rock/grass decoration is not a fully mapped resource ecosystem.
+
+`node realtime/settlement-test.mjs` checks the filmed doorway obstruction,
+finite holdings, witnessed/unseen theft, secured access, rejected designs,
+full gather/carry/assemble cycles for a chest and bridge, material conservation,
+restart preservation, and the bridge's actual traversability. Browser fixtures
+render actual saved test-world parts/storage; fixtures never seed production.
 
 ### Physical exploration, drinking and close-up rendering
 
@@ -99,8 +138,7 @@ The inspector refreshes its explanation when the task or phase changes.
 Characters have smooth faces, eyes, brows, noses and mouths, articulated limbs,
 and action-specific drinking/gathering/resting poses. Trees use smooth curved
 foliage; leaves near the camera or obscuring its viewing location dither away.
-One-finger pan/two-finger rotation remain in place. Existing procedural trees
-are still scenery; this update does not claim a complete resource-entity mapping.
+One-finger pan/two-finger rotation remain in place. Trees within world bounds now have finite timber accounts; the whole ecosystem is not yet individually mapped.
 
 `node realtime/physical-actions-test.mjs` checks measured/blocked exploration,
 checkpoint continuity, proximity discoveries, physical drinking reach and
@@ -110,7 +148,7 @@ close-ups and a creek drinking pose. Those fixtures never change production.
 ### Live movement and needs
 
 Villagers reserve distinct interaction points within a destination area, use
-server-side body clearance and local avoidance, and enter the shelter through
+server-side body clearance, local avoidance and dynamic body-aware detours, and enter the shelter through
 its open ends. Shelter/fire geometry is shared with the renderer. Existing
 overlapping or invalid saved positions are separated through elapsed movement;
 there is no state reset or instant relocation on deployment. Work progress and
@@ -146,3 +184,5 @@ server and a browser to check desktop/mobile rendering, person and animal
 positions, inspection, journal, and progression after every browser closes.
 Screenshots and measured results are in its `realtime-world-evidence` artifact.
 Source CI is not hosted verification. Verify the deployed route after publishing.
+
+A search for another villager finishes on actual proximity, with a social cooldown. A blocked doorway prompts a detour around bodies through another opening; movement does not animate backwards merely to keep walking.

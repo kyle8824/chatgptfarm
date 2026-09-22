@@ -19,7 +19,7 @@ export function actionDestination(w,a,selected,proposal){
  if(id==='seek_other')return w.agents.find(x=>x.id!==a.id)?.position||a.position;
  return {drink:'creek',gather_berries:'berries',gather_dry_wood:'log',gather_wet_wood:'log',gather_stones:'stones',gather_clay:'clay',gather_reeds:'reeds',make_fire:'camp',build_shelter:'camp',dry_wood_by_fire:'camp',store_wet_wood:'camp',collect_dried_wood:'camp',seek_warmth:'camp',seek_cover:'camp',explore:'edge'}[id]||a.position;
 }
-function family(id){if(/^(eat_|forage:|survey:|gather_berries)/.test(id))return 'hunger';if(id==='drink')return 'hydration';if(/^(seek_warmth|seek_cover|make_fire|dry_wood_by_fire|store_wet_wood|gather_.*wood|collect_dried_wood)/.test(id))return 'warmth';if(id==='rest')return 'energy';return null;}
+function family(id){if(/^(eat_|retrieve_food:|forage:|survey:|gather_berries)/.test(id))return 'hunger';if(id==='drink')return 'hydration';if(/^(retrieve_fuel:|harvest_fuel:|seek_warmth|seek_cover|make_fire|dry_wood_by_fire|store_wet_wood|gather_.*wood|collect_dried_wood)/.test(id))return 'warmth';if(id==='rest'||id.startsWith('rest_at:'))return 'energy';return null;}
 function urgentNeed(a){return Object.entries(a.needs).filter(([k,v])=>['hydration','hunger','warmth','energy'].includes(k)&&v<20).sort((a,b)=>a[1]-b[1]||a[0].localeCompare(b[0]))[0]?.[0]||null;}
 function outcome(w,a,task,success,detail,status='completed'){
  const dna=w.dna.find(d=>d.decision_id===task.decisionId);if(dna)dna.physics.outcome={success,detail,status,workMinutes:task.workMinutes};
