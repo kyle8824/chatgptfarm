@@ -29,7 +29,7 @@ try{
    await cdp.send('Input.dispatchTouchEvent',{type:'touchStart',touchPoints:[{x:150,y:420,id:1},{x:250,y:420,id:2}]});
    for(let i=1;i<=10;i++){const t=i/10,a=.5*t,r=50+25*t,cx=200+15*t,cy=420+10*t;await cdp.send('Input.dispatchTouchEvent',{type:'touchMove',touchPoints:[{x:cx-Math.cos(a)*r,y:cy-Math.sin(a)*r,id:1},{x:cx+Math.cos(a)*r,y:cy+Math.sin(a)*r,id:2}]});}
    await cdp.send('Input.dispatchTouchEvent',{type:'touchEnd',touchPoints:[]});await page.waitForTimeout(1800);const combinedAfter=await page.evaluate(()=>window.previewMetrics),a=direction(combinedBefore),b=direction(combinedAfter);
-   assert(Math.hypot(...b)<Math.hypot(...a)*.75,'preview pinches while twisting');assert(Math.abs(Math.atan2(b[0],b[2])-Math.atan2(a[0],a[2]))>.35,'preview rotates by the twist');await page.locator('#home').click();
+   assert(Math.hypot(...b)<Math.hypot(...a)*.75,'preview pinches while twisting');assert(Math.atan2(b[0],b[2])-Math.atan2(a[0],a[2])>.35,'preview follows the clockwise finger twist');await page.locator('#home').click();
 
   }
   for(const subject of ['mara','ivo','deer']){
