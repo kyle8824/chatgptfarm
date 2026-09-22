@@ -13,8 +13,14 @@ try{
  import {createDeer,animateDeer,geometryStats} from './shared/visuals/models.js';
  import {createPerson,animatePerson} from './web/live/people.js';
  import {updateCargo} from './web/live/settlement.js';
- import {elevation,riverY} from './web/live/scene.js';
+ import {elevation,riverY,createTerrainGeometry} from './web/live/scene.js';
  for(const x of [5,25,50,75,95])for(const side of [-1,1]){assert(elevation(x,riverY(x)+side*1.25)<-.12,'terrain cannot cover the defined water edge');assert(elevation(x,riverY(x)+side*1.72)>-.12,'drinking feet stay on the dry bank');}
+ const terrain=new T.Mesh(createTerrainGeometry(),new T.MeshBasicMaterial());terrain.updateMatrixWorld();
+ for(const x of [5,25,48,75,95])for(const side of [-1,1])for(const wet of [true,false]){
+  const z=riverY(x)+side*(wet?1.18:1.72),ray=new T.Raycaster(new T.Vector3(x,10,z),new T.Vector3(0,-1,0)),hit=ray.intersectObject(terrain)[0];assert(hit,'terrain beneath the interaction point');
+  if(wet)assert(hit.point.y<-.12,'actual triangles stay under the visible creek');else assert(Math.abs(hit.point.y-elevation(x,z))<.012,'planted feet match the actual bank triangles');
+ }
+ terrain.geometry.dispose();terrain.material.dispose();
  for(const name of ['Mara','Ivo']){
   const p=createPerson(name,name);p.phase='work';
   for(const action of ['drink','gather_timber','rest','eat_berries']){

@@ -10,11 +10,22 @@ import {MapGestureControls} from '../../shared/visuals/map-controls.js';
 import {createDeer,animateDeer} from '../../shared/visuals/models.js';
 import {mergeGeometries} from 'three/addons/utils/BufferGeometryUtils.js';
 const clamp=(v,a,b)=>Math.max(a,Math.min(b,v));
-export function elevation(x,z){const d=Math.abs(z-riverY(x));const hills=Math.max(0,z-53)*.095+Math.max(0,9-z)*.13;const ground=-.48+Math.min(1.12,d*.36)+Math.sin(x*.16)*Math.sin(z*.15)*Math.min(.5,d*.055)+hills*(1.2+Math.sin(x*.15)*.6);return Math.min(ground,-.14+Math.max(0,d-CREEK_HALF_WIDTH)*.8);}
+export function elevation(x,z){
+ const center=riverY(x),d=Math.abs(z-center),side=Math.sign(z-center)||1;
+ const raw=sample=>{const gap=Math.abs(sample-center),hills=Math.max(0,sample-53)*.095+Math.max(0,9-sample)*.13;return -.48+Math.min(1.12,gap*.36)+Math.sin(x*.16)*Math.sin(sample*.15)*Math.min(.5,gap*.055)+hills*(1.2+Math.sin(x*.15)*.6);};
+ // Match the bank's mesh segments exactly where people stand and reach.
+ if(d<=CREEK_HALF_WIDTH)return -.48+.34*d/CREEK_HALF_WIDTH;
+ if(d<=2.5)return -.14+(d-CREEK_HALF_WIDTH)*.56;
+ if(d<3.75)return T.MathUtils.lerp(.56,raw(center+side*3.75),(d-2.5)/1.25);
+ return raw(z);
+}
+
 const mat=(color,extra={})=>new T.MeshStandardMaterial({color,roughness:1,flatShading:true,...extra});
 function mesh(geo,m,pos,parent){const o=new T.Mesh(geo,m);o.position.set(...pos);o.castShadow=true;o.receiveShadow=true;parent.add(o);return o;}
 function seeded(seed=816){return()=>{seed=(Math.imul(seed,1664525)+1013904223)>>>0;return seed/4294967296;};}
 function branch(parent,a,b,r,m){const av=new T.Vector3(...a),bv=new T.Vector3(...b),v=bv.clone().sub(av);const o=mesh(new T.CylinderGeometry(r*.72,r,v.length(),6),m,av.add(bv).multiplyScalar(.5).toArray(),parent);o.quaternion.setFromUnitVectors(new T.Vector3(0,1,0),v.normalize());return o;}
+// Existing rows follow the creek's center and edges; no extra triangles.
+export function createTerrainGeometry(){const g=new T.PlaneGeometry(148,116,148,116);g.rotateX(-Math.PI/2);const p=g.attributes.position,colors=[];const green=new T.Color();for(let i=0;i<p.count;i++){const x=p.getX(i)+50,gridZ=p.getZ(i)+38,offset=gridZ-20;let z=gridZ;if(Math.abs(offset)<=4)z=riverY(x)+offset*1.25;else if(Math.abs(offset)<12)z+=(riverY(x)-20+Math.sign(offset))*(12-Math.abs(offset))/8;const h=elevation(x,z);p.setXYZ(i,x,h,z);const d=Math.abs(z-riverY(x)),variation=(Math.sin(x*4.1+z*2.7)+Math.cos(z*3.3-x))/2;green.set(d<1.9?'#a4a382':d<3?'#85936b':z>60?'#52794b':'#789855');green.offsetHSL(variation*.008,variation*.025,variation*.033);colors.push(green.r,green.g,green.b);}g.setAttribute('color',new T.Float32BufferAttribute(colors,3));g.computeVertexNormals();return g;}
 export class ValleyScene{
  constructor(canvas,onSelect){
   this.canvas=canvas;this.onSelect=onSelect;this.entities=new Map();this.labels=new Map();this.frame=null;this.focus=null;this.elapsed=0;this.receivedAt=0;
@@ -36,7 +47,7 @@ export class ValleyScene{
  zoom(amount){const d=this.camera.position.clone().sub(this.controls.target);d.multiplyScalar(amount);this.camera.position.copy(this.controls.target).add(d);}
  follow(id){this.focus=id;const a=this.entities.get(id)||this.settlementView.objects.get(id);if(a){const v=a.group.position;const d=this.camera.position.clone().sub(this.controls.target).normalize().multiplyScalar(26);this.controls.target.copy(v);this.camera.position.copy(v).add(d);}}
  resize(){this.camera.aspect=innerWidth/innerHeight;this.camera.updateProjectionMatrix();this.renderer.setSize(innerWidth,innerHeight,false);}
- terrain(){const g=new T.PlaneGeometry(148,116,148,116);g.rotateX(-Math.PI/2);const p=g.attributes.position,colors=[];const green=new T.Color();for(let i=0;i<p.count;i++){const x=p.getX(i)+50,z=p.getZ(i)+38,h=elevation(x,z);p.setXYZ(i,x,h,z);const d=Math.abs(z-riverY(x)),variation=(Math.sin(x*4.1+z*2.7)+Math.cos(z*3.3-x))/2;green.set(d<1.9?'#a4a382':d<3?'#85936b':z>60?'#52794b':'#789855');green.offsetHSL(variation*.008,variation*.025,variation*.033);colors.push(green.r,green.g,green.b);}g.setAttribute('color',new T.Float32BufferAttribute(colors,3));g.computeVertexNormals();mesh(g,mat('#ffffff',{vertexColors:true}),[0,0,0],this.scene);
+ terrain(){const g=createTerrainGeometry();mesh(g,mat('#ffffff',{vertexColors:true}),[0,0,0],this.scene);
   const rnd=seeded(922);const grassGeo=new T.ConeGeometry(.055,.48,3),grassMat=mat('#acc277');const grass=new T.InstancedMesh(grassGeo,grassMat,1800),dummy=new T.Object3D();let index=0;for(let i=0;i<2300&&index<1800;i++){const x=rnd()*116-8,z=rnd()*82-3;if(Math.abs(z-riverY(x))<2.2||Math.hypot(x-64,z-34)<5)continue;dummy.position.set(x,elevation(x,z)+.15,z);dummy.rotation.set((rnd()-.5)*.4,rnd()*6.28,(rnd()-.5)*.4);dummy.scale.setScalar(.5+rnd()*.9);dummy.updateMatrix();grass.setMatrixAt(index++,dummy.matrix);}grass.count=index;this.scene.add(grass);
   // Small stones follow the actual bank, leaving the channel clear.
   const stones=mat('#9b9d84');for(let i=0;i<115;i++){const x=rnd()*110-5,z=riverY(x)+(rnd()<.5?-1:1)*(1.55+rnd()*1.3);const o=mesh(new T.IcosahedronGeometry(.2+rnd()*.6,0),stones,[x,elevation(x,z)+.04,z],this.scene);o.scale.set(1.5,.65,1);o.rotation.y=rnd()*6;}
