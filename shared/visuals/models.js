@@ -151,14 +151,15 @@ function deerSkin(body,neck){
  for(let i=0;i<steps;i++)for(let j=0;j<sides;j++){const a=i*sides+j,b=i*sides+(j+1)%sides;indices.push(a,a+sides,b,b,a+sides,b+sides);}
  g.setAttribute('position',new T.BufferAttribute(positions,3).setUsage(T.DynamicDrawUsage));g.setAttribute('color',new T.BufferAttribute(colors,3));g.setIndex(indices);
  const coat=new T.Color('#b48a58'),belly=new T.Color('#d7bb87'),bib=new T.Color('#eee0bd');
- for(let i=0;i<=steps;i++)for(let j=0;j<sides;j++){const t=i/steps,a=j/sides*Math.PI*2,c=coat.clone();if(t<.58)c.lerp(belly,Math.max(0,-Math.cos(a))*.50);else c.lerp(bib,Math.max(0,Math.cos(a))**10*.55);c.toArray(colors,(i*sides+j)*3);}
+ for(let i=0;i<=steps;i++)for(let j=0;j<sides;j++){const t=i/steps,a=j/sides*Math.PI*2,c=coat.clone();if(t<.58)c.lerp(belly,Math.max(0,-Math.cos(a))*.50);else c.lerp(bib,Math.max(0,-Math.cos(a))**10*.55);c.toArray(colors,(i*sides+j)*3);}
  const skin=new T.Mesh(g,surface);skin.castShadow=skin.receiveShadow=true;body.add(skin);let previous;
  const fixed=[v(0,.015,-.49),v(0,.005,-.39),v(0,0,-.22),v(0,0,0),v(0,.025,.16)];
  const radii=[[.001,.001],[.15,.19],[.203,.238],[.205,.245],[.175,.207],[.124,.137],[.092,.102],[.072,.077],[.045,.050]];
+ const radiusCurve=new T.CatmullRomCurve3(radii.map(([x,y])=>v(x,y,0)),false,'catmullrom',.5);
  function update(){if(previous===neck.rotation.x)return;previous=neck.rotation.x;neck.updateMatrix();
   const points=[...fixed,...[[0,.015,0],[0,.25,.018],[0,.51,.032],[0,.665,.04]].map(p=>v(...p).applyMatrix4(neck.matrix))];
   const path=new T.CatmullRomCurve3(points,false,'centripetal'),p=new T.Vector3(),tangent=new T.Vector3();
-  for(let i=0;i<=steps;i++){const t=i/steps,k=t*(radii.length-1),n=Math.min(radii.length-2,Math.floor(k)),f=k-n,rx=T.MathUtils.lerp(radii[n][0],radii[n+1][0],f),ry=T.MathUtils.lerp(radii[n][1],radii[n+1][1],f);path.getPoint(t,p);path.getTangent(t,tangent);
+  for(let i=0;i<=steps;i++){const t=i/steps,r=radiusCurve.getPoint(t),rx=Math.max(.001,r.x),ry=Math.max(.001,r.y);path.getPoint(t,p);path.getTangent(t,tangent);
    for(let j=0;j<sides;j++){const a=j/sides*Math.PI*2,off=(i*sides+j)*3;positions[off]=Math.sin(a)*rx;positions[off+1]=p.y+Math.cos(a)*ry*tangent.z;positions[off+2]=p.z-Math.cos(a)*ry*tangent.y;}
   }
   g.attributes.position.needsUpdate=true;g.computeVertexNormals();g.computeBoundingSphere();
