@@ -1,0 +1,16 @@
+import assert from 'node:assert/strict';
+import fs from 'node:fs/promises';
+import {createWorld} from '../engine/core.js';
+import {prepare,step} from './elapsed.mjs';
+import {validateBlueprint,adoptBlueprint} from './blueprints.mjs';
+import {totals} from '../engine/wood-materials.js';
+const example=JSON.parse(await fs.readFile(new URL('../structure-workshop/example.json',import.meta.url)));
+const w=prepare(createWorld());w.agents=w.agents.slice(0,1);const a=w.agents[0];a.coordinates={x:66,y:36};a.needs={hunger:95,hydration:95,energy:95,warmth:95};w.temperature=65;w.weather='clear';w.structures.shelter=true;
+const raw={...example,build:true,code:example.code.replace("material:'timber'","material:'timber',finish:'hewn'")};
+const p=adoptBlueprint(w,a,validateBlueprint(w,a,raw),'test-model'),before=totals(w.wood).dryKg;
+let steps=0;for(;steps<14000&&p.status!=='complete';steps++)await step(w,3);
+assert.equal(p.status,'complete',JSON.stringify({steps,task:a.task,inventory:a.inventory,practice:a.craftPractice,parts:p.parts,events:w.history.slice(0,8)}));
+assert(a.inventory.boundSharpTool>0,'autonomous prerequisite chain actually crafts a tool');assert(a.craftPractice.woodworking.minutes>=12);assert(a.craftPractice.hafting.successes>0);
+assert(p.parts.filter(x=>x.finish==='hewn').every(x=>x.workmanship.tool==='boundSharpTool'));
+assert(Math.abs(totals(w.wood).dryKg+w.wood.sinks.reduce((n,s)=>n+s.dryKg,0)-before)<1e-6);
+console.log('PASS autonomous hewn plan: gather, knap, twist, shape handle, haft, practice and build; no starter tools',steps);
