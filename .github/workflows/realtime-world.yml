@@ -1,7 +1,7 @@
 name: Realtime world verification
 on:
   push:
-    branches: [overhaul/live-world-3d]
+    branches: [overhaul/live-world-3d, fix/live-personal-space]
   workflow_dispatch:
 permissions:
   contents: read
@@ -15,7 +15,7 @@ jobs:
         with:
           node-version: '22'
       - run: npm ci --prefix cloudflare
-      - run: npm test && node realtime/test.mjs && node realtime/workerd-test.mjs
+      - run: npm test && node realtime/test.mjs && node realtime/behavior-test.mjs && node realtime/workerd-test.mjs
       - run: node cloudflare/build.mjs
       - run: npm install --no-save playwright@1.55.0 && npx playwright install --with-deps chromium
       - run: |

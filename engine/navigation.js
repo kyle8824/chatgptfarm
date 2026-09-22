@@ -14,18 +14,19 @@ export function walkable(w,p){
  }
  return true;
 }
-export function clearSegment(w,a,b){const n=Math.max(1,Math.ceil(distance(a,b)*4));for(let i=0;i<=n;i++)if(!walkable(w,{x:a.x+(b.x-a.x)*i/n,y:a.y+(b.y-a.y)*i/n}))return false;return true;}
-export function findRoute(w,from,to){
- if(!walkable(w,from)||!walkable(w,to))return null;
- if(clearSegment(w,from,to))return [{...from},{...to}];
+export function clearSegment(w,a,b,canWalk=walkable){const n=Math.max(1,Math.ceil(distance(a,b)*4));for(let i=0;i<=n;i++)if(!canWalk(w,{x:a.x+(b.x-a.x)*i/n,y:a.y+(b.y-a.y)*i/n}))return false;return true;}
+export function findRoute(w,from,to,canWalk=walkable){
+ const clear=(a,b)=>clearSegment(w,a,b,canWalk);
+ if(!canWalk(w,from)||!canWalk(w,to))return null;
+ if(clear(from,to))return [{...from},{...to}];
  const key=p=>`${p.x},${p.y}`,start={x:Math.round(from.x),y:Math.round(from.y)},end={x:Math.round(to.x),y:Math.round(to.y)};
- if(!clearSegment(w,from,start)||!clearSegment(w,end,to))return null;
+ if(!clear(from,start)||!clear(end,to))return null;
  const nodes=new Map([[key(start),{p:start,g:0,f:distance(start,end),parent:null}]]),open=[nodes.get(key(start))],closed=new Set();
  while(open.length&&closed.size<11000){
   open.sort((a,b)=>a.f-b.f||a.p.x-b.p.x||a.p.y-b.p.y);const n=open.shift(),k=key(n.p);if(closed.has(k))continue;closed.add(k);
   if(k===key(end)){const path=[{...to}];let cur=n;while(cur){path.unshift(cur.p);cur=cur.parent;}path.unshift({...from});return path;}
   for(const [dx,dy] of [[1,0],[-1,0],[0,1],[0,-1],[1,1],[1,-1],[-1,1],[-1,-1]]){
-   const p={x:n.p.x+dx,y:n.p.y+dy},pk=key(p);if(closed.has(pk)||!clearSegment(w,n.p,p))continue;
+   const p={x:n.p.x+dx,y:n.p.y+dy},pk=key(p);if(closed.has(pk)||!clear(n.p,p))continue;
    const g=n.g+Math.hypot(dx,dy),old=nodes.get(pk);if(old&&old.g<=g)continue;
    const next={p,g,f:g+distance(p,end),parent:n};nodes.set(pk,next);open.push(next);
   }
