@@ -29,7 +29,39 @@ Verification: realtime/wildlife-test.mjs, realtime/visual-assets-test.mjs and
 character-preview/browser-test.mjs. Browser CI screenshots must be reviewed
 before release. Isolated fixtures never seed or write the production world.
 
-## Next checkpoint
+## Checkpoint 2: resources and open construction code
 
-Selectable natural objects and wildlife; real resource quantities and gathering
-sources in construction; extend useful construction choices without free parts.
+- Existing trees, resource patches, creek, regional berries and wildlife expose
+  current server stats in the scene and journal. Additional mapped deposits
+  have a once-only finite stock with initial/remaining/harvested accounting.
+  They do not refill old accounts. Villagers discover the new nodes through
+  actual proximity, and search when an unfinished plan lacks known materials.
+- AI design calls now request source code, not a predefined building type.
+  construction-js-1 is a bounded interpreted JavaScript subset with variables,
+  functions, loops, arithmetic and part() output. It never runs in the Worker
+  host, browser, eval or Function. Source and rejected attempts are persisted.
+  /live/design/:id exposes generated source without resending it every frame.
+- New programs use any descriptive purpose. Generic measured geometry grants
+  rain cover, finite supply surfaces/enclosures, accessible sheltered rest and
+  low deck walkability. A name alone cannot confer a function. Existing saved
+  declarative projects remain supported without replacing their parts/work.
+- AI may choose among reachable local clearings generated around its position
+  as well as existing sites. Shapes are axis-aligned boxes and vertical round
+  posts; timber, stone, reeds and supported clay daub are physical materials.
+  New mechanics, arbitrary host code, rotating machinery and engineering-grade
+  loads are not implemented. Limits: 48 emitted pieces, 160 material units,
+  16,000 interpreter operations, 128 loop iterations, 8 function call levels.
+- Actual shared use gives bounded trust/memory feedback. A designer observes
+  use locally; spectator totals do not become omniscient villager memories.
+  Later AI prompts carry the villager's own code and observed use feedback.
+- Gathering, carrying and per-part work still supply all materials and labor.
+  No piece appears built because its generator ran. Generic covered storage
+  connects to the existing wood-moisture system and weather exposure.
+- No increased AI-call caps or checkpoint frequency. Program/source additions
+  are covered by the existing adaptive persistence byte budget.
+
+Verification: open-construction-test exercises actual code interpretation,
+invalid/host-access programs, measured capabilities, physical gather/assemble,
+weather exposure, depletion, pure inspection, feedback and restart. Existing
+settlement/design/runtime checks protect legacy work. Resource-browser-test
+renders and selects real geometry on desktop and mobile in isolated CI.

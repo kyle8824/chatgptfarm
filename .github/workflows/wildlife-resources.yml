@@ -15,9 +15,10 @@ jobs:
         with:
           node-version: '22'
       - run: npm ci --prefix cloudflare && npm ci --prefix character-preview
-      - run: node realtime/wildlife-test.mjs && node realtime/visual-assets-test.mjs
+      - run: node realtime/wildlife-test.mjs && node realtime/open-construction-test.mjs && node realtime/visual-assets-test.mjs && node realtime/design-planner-test.mjs && node realtime/test.mjs
       - run: node cloudflare/build.mjs && npm run build --prefix character-preview
       - run: npm install --no-save playwright@1.55.0 && npx playwright install --with-deps chromium
+      - run: node realtime/resource-browser-test.mjs && node realtime/camera-browser-test.mjs
       - name: Independent workshop desktop and touch verification
         run: |
           python3 -m http.server 4178 --directory vercel-public > /tmp/workshop.log 2>&1 &

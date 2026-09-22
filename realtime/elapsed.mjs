@@ -1,3 +1,4 @@
+import {observeResourceSites} from './resource-sites.mjs';
 import {migrateWorld,clamp,finishHour,updateWeather,addEvent} from '../engine/core.js';
 import {family,outcome,display,startTask,interrupt,work} from '../engine/persistent-actions.js';
 import {thermalExposure} from '../engine/thermal.js';
@@ -23,7 +24,7 @@ export function prepare(seed){
 export async function step(w,seconds,{mind=null,fallbackReason='no_provider',wallTime=Date.now()}={}){
  if(!(seconds>0&&seconds<=6.000001))throw Error('Invalid elapsed step');
  ensureSettlement(w);
- const minutes=seconds/60;
+ observeResourceSites(w);const minutes=seconds/60;
  const agents=[...w.agents].sort((a,b)=>a.id.localeCompare(b.id));
  if((w.day*24+w.hour)%2)agents.reverse();
  for(const a of agents){

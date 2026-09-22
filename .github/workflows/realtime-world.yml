@@ -1,7 +1,7 @@
 name: Realtime world verification
 on:
   push:
-    branches: [overhaul/live-world-3d, fix/live-personal-space, fix/camera-pan, fix/physical-actions, feature/physical-settlement, fix/storage-write-budget, release/main-domain, release/models-map-controls]
+    branches: [overhaul/live-world-3d, fix/live-personal-space, fix/camera-pan, fix/physical-actions, feature/physical-settlement, fix/storage-write-budget, release/main-domain, release/models-map-controls, feature/wildlife-resource-world]
   workflow_dispatch:
 permissions:
   contents: read

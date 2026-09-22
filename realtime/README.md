@@ -66,8 +66,7 @@ This is bounded model planning plus an NPC survival system. Construction uses mo
 
 ### Camera
 
-One-finger or left-mouse dragging pans across the ground. Two-finger dragging
-rotates/tilts the view; pinching still zooms. Right-mouse dragging rotates on
+One-finger or left-mouse dragging pans across the ground. Two-finger gestures simultaneously pinch to zoom, twist to rotate, and slide to pan beneath their midpoint. Right-mouse dragging rotates on
 desktop, and the wheel zooms. Dragging releases villager follow. Multi-touch,
 cancelled touches, and drags that return to their starting point cannot count
 as selection taps. The home button returns to the valley overview.
@@ -202,3 +201,11 @@ Screenshots and measured results are in its `realtime-world-evidence` artifact.
 Source CI is not hosted verification. Verify the deployed route after publishing.
 
 A search for another villager finishes on actual proximity, with a social cooldown. A blocked doorway prompts a detour around bodies through another opening; movement does not animate backwards merely to keep walking.
+
+## Open construction and species upgrade
+
+See `docs/WILDLIFE_RESOURCE_UPGRADE.md` for the newer construction-code path,
+geometry-derived functions, inspectable natural resources and wildlife rules.
+New model calls write bounded JavaScript construction programs with novel
+purpose descriptions; the older 4–28-part purpose validation above applies
+only to retained declarative projects. Source is available at `/live/design/:id`.

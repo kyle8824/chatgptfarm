@@ -270,10 +270,9 @@ function fin(parent,color,points){
 }
 export function createFish(){
  const root=new T.Group(),body=group(root),back='#647d74',silver='#acb9a2',finColor='#777e63';
- ell(body,back,[0,0,0],[.052,.083,.235],20);
- ell(body,silver,[0,-.018,.04],[.049,.060,.20],18);
+ const skin=ell(body,back,[0,0,0],[.052,.083,.235],24),color=skin.geometry.attributes.color,points=skin.geometry.attributes.position,top=new T.Color(back),belly=new T.Color(silver);for(let i=0;i<points.count;i++){const c=top.clone().lerp(belly,T.MathUtils.smoothstep(-points.getY(i),-.15,.7));color.setXYZ(i,c.r,c.g,c.b);}
  const head=group(body,[0,0,.17]);
- for(const side of [-1,1]){ell(head,'#d6cb9d',[side*.035,.018,.015],[.008,.018,.018],12);ell(head,'#212d28',[side*.042,.019,.019],[.003,.010,.009],10);}
+ for(const side of [-1,1]){ell(head,'#d6cb9d',[side*.035,.018,.015],[.004,.013,.013],12);ell(head,'#212d28',[side*.039,.019,.019],[.002,.008,.007],10);}
  const tail=group(body,[0,0,-.185]);
  fin(tail,finColor,[[0,0,.01],[0,.10,-.15],[0,-.10,-.15]]);
  fin(body,finColor,[[0,.06,.085],[0,.155,-.025],[0,.05,-.12]]);
@@ -282,7 +281,7 @@ export function createFish(){
 }
 export function createAnimal(species){return species==='bear'?createBear():species==='rabbit'?createRabbit():species==='fish'?createFish():createDeer();}
 export function animateAnimal(m,t,mode='idle',dt=1){
- if(!m.kind){animateDeer(m,t,['walk','flee','withdraw','roam','associate','water','cover'].includes(mode)?'walk':['graze','work'].includes(mode)?'work':'idle',dt);m.tail.rotation.x=mode==='flee'?-2.1:-.35+Math.sin(t*2)*.08;return;}
+ if(!m.kind){animateDeer(m,t,['walk','flee','withdraw','roam','associate','water','cover'].includes(mode)?'walk':['graze','work','drink'].includes(mode)?'work':'idle',dt);m.tail.rotation.x=mode==='flee'?-2.1:-.35+Math.sin(t*2)*.08;return;}
  const moving=['walk','flee','withdraw','roam','associate','water','cover','swim','dart'].includes(mode),feeding=['work','forage','graze','drink'].includes(mode),rest=mode==='rest',fast=['flee','dart','withdraw'].includes(mode);
  if(m.kind==='fish'){m.tail.rotation.y=Math.sin(t*(fast?15:7))*.36;m.body.rotation.y=Math.sin(t*3)*.035;return;}
  if(m.kind==='rabbit'){
