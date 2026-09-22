@@ -33,6 +33,12 @@ for(const [person,x,to]of [[a,42,56],[b,56,42]]){person.coordinates={x,y:40};per
 let closest=Infinity;for(let i=0;i<1600;i++){for(const p of crossing.agents){if(p.task.phase==='travel'){const r=advanceLiveRoute(crossing,p,p.task,.1);if(r.arrived)p.task.phase='work';}}closest=Math.min(closest,distance(a.coordinates,b.coordinates));}
 assert(closest>=BODY_DISTANCE-1e-6,`head-on clearance ${closest}`);assert.equal(a.task.phase,'work');assert.equal(b.task.phase,'work');
 assert(distance(a.coordinates,{x:56,y:40})<.2,'first walker reaches the intended destination');assert(distance(b.coordinates,{x:42,y:40})<.2,'second walker reaches the intended destination');
+// A saved route can become stale after collision recovery displaces its body.
+// Reproduce the tight fire/roof corner observed in the deployed world.
+const corner=prepare(seed),walker=corner.agents[0];corner.structures.shelter=true;corner.agents[1].coordinates={x:31,y:31};walker.coordinates={x:64.09028119046415,y:32.628025594347186};walker.locomotion=null;
+walker.task={actionId:'drink',targetPosition:'creek',destination:{x:48,y:22.5},path:[{...walker.coordinates},{x:62.6,y:34},{x:48,y:22.5}],pathIndex:1,phase:'travel',liveSpaceVersion:1};
+for(let i=0;i<600;i++){const r=advanceLiveRoute(corner,walker,walker.task,.6);if(r.arrived)break;}
+assert(distance(walker.coordinates,{x:48,y:22.5})<.2,'stale corner route recovers without changing the goal');
 // Returning to a resource selects usable space instead of a single shared dot.
 const destinations=[];for(let i=0;i<8;i++){const p=chooseDestination(w,w.agents[0],'creek',{id:'drink'});assert(liveWalkable(w,p));assert(liveRoute(w,w.agents[0].coordinates,p));destinations.push(p);motionState(w.agents[0]).arrivals.push(p);}
 assert(new Set(destinations.map(p=>`${p.x.toFixed(1)},${p.y.toFixed(1)}`)).size>4);
