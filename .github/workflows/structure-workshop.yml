@@ -1,0 +1,39 @@
+name: Structure workshop verification
+on:
+  push:
+    branches: [feature/structure-workshop, feature/structure-workshop-runtime]
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  workshop:
+    runs-on: ubuntu-latest
+    timeout-minutes: 12
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - run: npm ci --prefix character-preview
+      - run: node structure-workshop/test.mjs && node structure-workshop/build.mjs && npm run build --prefix character-preview
+      - run: npm install --prefix character-preview --no-save playwright@1.55.0 && cd character-preview && npx playwright install --with-deps chromium
+      - name: Verify browser flows without a production connection
+        run: |
+          python3 -m http.server 4178 --directory vercel-public > /tmp/structure-workshop-server.log 2>&1 &
+          node structure-workshop/browser-test.mjs
+      - name: Verify the shared model in the live renderer
+        if: hashFiles('realtime/settlement-browser-test.mjs') != ''
+        run: |
+          npm ci --prefix cloudflare
+          npm install --no-save playwright@1.55.0
+          node realtime/settlement-test.mjs
+          node cloudflare/build.mjs
+          node realtime/settlement-browser-test.mjs
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: structure-workshop-evidence
+          path: |
+            structure-workshop/evidence/
+            realtime-qa/settlement-*.png
+            realtime-qa/settlement-browser-report.json

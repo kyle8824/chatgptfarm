@@ -9,3 +9,9 @@ cloudflare/.dev.vars
 realtime-qa/
 character-preview/node_modules/
 character-preview/evidence/
+
+structure-workshop/evidence/
+
+character-preview/node_modules
+
+vercel-public/structure-workshop/
