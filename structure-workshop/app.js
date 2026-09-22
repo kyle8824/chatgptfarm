@@ -1,3 +1,4 @@
+import {CRAFT_GRAPH,constructionSpec,constructionBlockers} from '../shared/craft.js';
 import example from './example.json';
 import {StructureViewer} from './viewer.js';
 import {WORLD_BASE,SNAPSHOT_KEY,catalogFromFrame,readCatalog,resourceRows,physicalFunctions} from './catalog.js';
@@ -31,7 +32,10 @@ function renderInfo(){
  $('#access').textContent=p.access==='shared'?'Shared access · other villagers can use it.':'Personal property · taking supplies can affect relationships.';
  $('#feedback').textContent=isExample?'This authored example demonstrates the workshop. It is not a villager decision or a record of live construction.':p.feedback?.uses?`${p.feedback.uses} recorded uses · Last used by ${p.feedback.lastUse?.user||'a villager'}`:'No use feedback has been recorded yet.';
  $('#materials').innerHTML=resourceRows(p,isExample?[]:catalog?.stores).map(r=>`<tr><td>${esc(r.material)}</td><td>${r.required}</td><td>${r.committed}</td><td>${r.atSite}</td><td>${r.missing}</td></tr>`).join('');
- $('#parts').innerHTML=p.parts.map(x=>`<li><strong>${esc(x.id)}</strong> · ${esc(x.material)} × ${x.materialUnits}<br><span class="muted">${x.built?'Assembled':x.invested?'Being assembled':'Materials needed'}${x.requires?.length?' · after '+x.requires.map(esc).join(', '):' · on the ground'}</span></li>`).join('');
+ const designer=catalog?.agents?.find(a=>a.id===p.ownerId),specs=p.parts.map(constructionSpec);
+ $('#craft').innerHTML=`<h3>Tools & techniques</h3><p>${p.parts.some(x=>x.craftVersion)?'Rough construction keeps bark, irregular branches and fiber joints. Hewn wood needs earned practice and a carried tool.':'Earlier design: craftsmanship was not recorded. Shown as rough work; no skill credit has been invented.'}</p><p>${specs.filter(x=>x.binding).length} cordage bindings · ${specs.some(x=>x.tool)?'Hafted cutting edge required':'No precision tools required for these pieces'}</p>${designer?'<p>'+[...new Set(p.parts.filter(x=>!x.built).flatMap(x=>constructionBlockers(designer,x)))].map(esc).join(' · ')+'</p>':''}`;
+ $('#skill-graph').innerHTML=CRAFT_GRAPH.map(n=>`<li><strong>${esc(n.name)}</strong>${n.from.length?'<small>Builds on '+n.from.map(id=>esc(CRAFT_GRAPH.find(x=>x.id===id).name)).join(' + ')+'</small>':''}<p>${esc(n.practice)}. ${esc(n.unlocks)}.</p>${designer?`<small>${Math.round(designer.craftPractice?.[n.id]?.minutes||0)} minutes recorded · ${designer.craftPractice?.[n.id]?.successes||0} successful activities</small>`:''}</li>`).join('');
+ $('#parts').innerHTML=p.parts.map(x=>`<li><strong>${esc(x.id)}</strong> · ${esc(x.material)} × ${x.materialUnits}<br>${esc(constructionSpec(x).description)}${constructionSpec(x).binding?' · cordage × 1':''}<br><span class="muted">${x.built?'Assembled':x.invested?'Being assembled':'Materials needed'}${x.requires?.length?' · after '+x.requires.map(esc).join(', '):' · on the ground'}</span></li>`).join('');
  const mins=[0,1,2].map(i=>Math.min(...p.parts.map(x=>x.center[i]-x.size[i]/2))),maxs=[0,1,2].map(i=>Math.max(...p.parts.map(x=>x.center[i]+x.size[i]/2)));$('#scale-note').textContent=(maxs[0]-mins[0]).toFixed(1)+' × '+(maxs[2]-mins[2]).toFixed(1)+' unit footprint';
 }
 function renderLook(){

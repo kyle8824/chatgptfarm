@@ -1,3 +1,4 @@
+import {constructionSpec} from '../shared/craft.js';
 // The existing main-domain /live rewrite keeps snapshot reads same-origin.
 export const WORLD_BASE='/live';
 export const SNAPSHOT_KEY='chatgptfarm-structure-catalog-v1';
@@ -6,12 +7,13 @@ export function validProject(p){
 }
 export function catalogFromFrame(frame){
  if(!frame?.settlement||!Array.isArray(frame.settlement.projects)||!frame.settlement.projects.every(validProject))throw Error('The world returned an unreadable design catalog.');
- return {savedAt:Date.now(),worldId:frame.runtime?.createdAt??null,revision:frame.runtime?.revision??null,day:frame.day,projects:frame.settlement.projects.slice(0,12),stores:frame.settlement.stores||[]};
+ return {savedAt:Date.now(),worldId:frame.runtime?.createdAt??null,revision:frame.runtime?.revision??null,day:frame.day,agents:(frame.agents||[]).map(a=>({id:a.id,name:a.name,inventory:a.inventory||{},skills:a.skills||{},craftPractice:a.craftPractice||{}})),projects:frame.settlement.projects.slice(0,12),stores:frame.settlement.stores||[]};
 }
 export function readCatalog(storage){try{const raw=storage.getItem(SNAPSHOT_KEY);if(!raw||raw.length>2000000)return null;const x=JSON.parse(raw);return Array.isArray(x.projects)&&x.projects.every(validProject)&&Number.isFinite(x.savedAt)?x:null;}catch{return null;}}
 export function resourceRows(p,stores=[]){
  const rows=new Map(),stock=stores.find(s=>s.id===p.stockpileId)?.items||{},keys={timber:['dryWood','wetWood'],stone:['stones'],reeds:['reeds'],clay:['clay']};
  for(const part of p.parts){const row=rows.get(part.material)||{material:part.material,required:0,committed:0,atSite:0,missing:0};row.required+=part.materialUnits;if(part.built||part.invested)row.committed+=part.materialUnits;rows.set(part.material,row);}
+ const bindings=p.parts.reduce((n,x)=>n+constructionSpec(x).binding,0);if(bindings)rows.set('cordage',{material:'cordage',required:bindings,committed:p.parts.reduce((n,x)=>n+(x.bindingUsed||0),0),atSite:0,missing:0});keys.cordage=['cordage'];
  for(const row of rows.values()){row.atSite=keys[row.material].reduce((n,key)=>n+(stock[key]||0),0);row.missing=Math.max(0,row.required-row.committed-row.atSite);}return [...rows.values()];
 }
 export function physicalFunctions(p){

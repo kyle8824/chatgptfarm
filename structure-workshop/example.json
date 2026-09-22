@@ -1,6 +1,6 @@
 {
   "name": "Raised supply shelter",
-  "rationale": "A raised timber deck keeps gathered supplies off damp ground. A reed roof protects them from rain while the open sides leave access for carrying and sorting.",
+  "rationale": "An early branch shelter: uneven poles and a lashed branch mat raise supplies above damp ground. Overlapped reeds provide cover. No sawn boards or turned pegs are assumed.",
   "purpose": "keep gathered materials above damp ground and out of rain",
   "generic": true,
   "spansWater": false,
@@ -32,9 +32,11 @@
       "built": true,
       "workMinutes": 2.25,
       "materialUnits": 1,
-      "requiredMinutes": 2.25,
+      "requiredMinutes": 7,
       "invested": true,
-      "worker": null
+      "worker": null,
+      "finish": "rough",
+      "craftVersion": 1
     },
     {
       "id": "support-1",
@@ -55,9 +57,11 @@
       "built": true,
       "workMinutes": 2.25,
       "materialUnits": 1,
-      "requiredMinutes": 2.25,
+      "requiredMinutes": 7,
       "invested": true,
-      "worker": null
+      "worker": null,
+      "finish": "rough",
+      "craftVersion": 1
     },
     {
       "id": "support-2",
@@ -78,9 +82,11 @@
       "built": false,
       "workMinutes": 0,
       "materialUnits": 1,
-      "requiredMinutes": 2.25,
+      "requiredMinutes": 7,
       "invested": false,
-      "worker": null
+      "worker": null,
+      "finish": "rough",
+      "craftVersion": 1
     },
     {
       "id": "support-3",
@@ -101,9 +107,11 @@
       "built": false,
       "workMinutes": 0,
       "materialUnits": 1,
-      "requiredMinutes": 2.25,
+      "requiredMinutes": 7,
       "invested": false,
-      "worker": null
+      "worker": null,
+      "finish": "rough",
+      "craftVersion": 1
     },
     {
       "id": "shelf",
@@ -129,9 +137,11 @@
       "built": false,
       "workMinutes": 0,
       "materialUnits": 2,
-      "requiredMinutes": 3,
+      "requiredMinutes": 9,
       "invested": false,
-      "worker": null
+      "worker": null,
+      "finish": "rough",
+      "craftVersion": 1
     },
     {
       "id": "weather-top",
@@ -157,12 +167,14 @@
       "built": false,
       "workMinutes": 0,
       "materialUnits": 1,
-      "requiredMinutes": 2.25,
+      "requiredMinutes": 7,
       "materials": {
         "reeds": 1
       },
       "invested": false,
-      "worker": null
+      "worker": null,
+      "finish": "rough",
+      "craftVersion": 1
     }
   ],
   "bounds": {
