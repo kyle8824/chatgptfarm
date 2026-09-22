@@ -56,6 +56,32 @@ outside known resources are scenery, not a complete individual-tree ecosystem.
 
 ## Operation
 
+### Live movement and needs
+
+Villagers reserve distinct interaction points within a destination area, use
+server-side body clearance and local avoidance, and enter the shelter through
+its open ends. Shelter/fire geometry is shared with the renderer. Existing
+overlapping or invalid saved positions are separated through elapsed movement;
+there is no state reset or instant relocation on deployment. Work progress and
+consumed portions survive repositioning. Heading and moving/waiting state come
+from the server. Destination selection never transfers resources.
+
+An unfixable cold deficit no longer indefinitely interrupts drinking, eating
+or resting. Failed resource attempts have a remembered retry interval, and
+obsolete suspended work is checked before resumption. Ordinary choice scores
+include travel effort. This improves the existing survival policy; it is not
+a claim of human-level planning or open-ended cognition.
+
+Ground wear records actual entered ground cells while walking, persists with
+the world, and is sent to viewers. The renderer no longer turns old pairs of
+route endpoints into invented straight trails. Historical endpoint records
+remain preserved. Active ground wear is bounded to 1,600 cells.
+
+`node realtime/behavior-test.mjs` covers the reported cold/starving/overlapping
+camp condition across four simulated hours, head-on passing without changing
+the requested destination, physical obstacles, resource accounting at choice
+time, and varied usable interaction points. Test fixtures never seed production.
+
 Production remains the existing Worker `chatgptfarm`, deployed by Workers Builds
 from `repair/continuous-runtime`. Build: `npm ci --prefix cloudflare` then
 `node cloudflare/build.mjs`; existing deploy uses `cloudflare/wrangler.jsonc`.

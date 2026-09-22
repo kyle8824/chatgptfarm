@@ -21,9 +21,9 @@ export function tick(input){const w=migrateWorld(input);updateSpectatorState(w);
 export{candidateActions,retrieveDecisionContext};
 
 // Shared bounded proposal selection for persistent execution. No effects here.
-export async function selectPersistentAction(w,a,mind=null,fallbackReason='no_mind_adapter',candidateFilter=null) {
+export async function selectPersistentAction(w,a,mind=null,fallbackReason='no_mind_adapter',candidateFilter=null,candidateTransform=null) {
  recordWildlifeSightings(w,a);recordWildlifeSigns(w,a);recordResourceObservations(w,a);
- const context=retrieveDecisionContext(w,a);if(candidateFilter){const eligible=context.candidates.filter(candidateFilter);if(eligible.length)context.candidates=eligible;}const fb=fallback(a,context);
+ const context=retrieveDecisionContext(w,a);if(candidateTransform)context.candidates=candidateTransform(context.candidates);if(candidateFilter){const eligible=context.candidates.filter(candidateFilter);if(eligible.length)context.candidates=eligible;}const fb=fallback(a,context);
  let m={...fb,fallbackReason},selected=context.candidates[0];
  if(w.settings?.ai?.people?.[a.id]===false)m.fallbackReason='person_disabled';
  else if(mind?.decide){try{const proposal=await mind.decide(context);m={...normalize(proposal,fb),proposal:proposal?clone({...proposal,evidence:undefined}):null};if(m.brainMode==='fallback')m.fallbackReason='invalid_adapter_result';}catch(e){m={...fb,evidence:e.evidence||null,fallbackReason:e.code||'adapter_error'};}}

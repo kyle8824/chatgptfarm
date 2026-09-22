@@ -15,11 +15,7 @@ export function actionDestination(w,a,selected,proposal){
  if(id.startsWith('physical:')){const c=retrieveDecisionContext(w,a),o=c.affordances.objects.find(x=>x.id===proposal?.primaryObjectId);return o?.kind==='place'?o.position:a.position;}
  if(consume[id])return id==='eat_berries'&&!a.inventory.berries?'berries':a.position;
  if(id==='rest')return w.structures.shelter||w.structures.fire?'camp':'meadow';
- if(id==='share_food'){
-  const b=w.agents.find(x=>x.id!==a.id&&distance(x.coordinates,a.coordinates)<1);
-  if(!b||a.inventory.berries<2)return {done:true,success:false,detail:'Food or recipient is no longer here.'};
-  a.inventory.berries-=2;b.inventory.berries+=2;return {done:true,success:true,detail:`${a.name} gives two berry portions to ${b.name}.`};
- }
+ if(id==='share_food')return w.agents.find(x=>x.id!==a.id)?.position||a.position;
  if(id==='seek_other')return w.agents.find(x=>x.id!==a.id)?.position||a.position;
  return {drink:'creek',gather_berries:'berries',gather_dry_wood:'log',gather_wet_wood:'log',gather_stones:'stones',gather_clay:'clay',gather_reeds:'reeds',make_fire:'camp',build_shelter:'camp',dry_wood_by_fire:'camp',store_wet_wood:'camp',collect_dried_wood:'camp',seek_warmth:'camp',seek_cover:'camp',explore:'edge'}[id]||a.position;
 }
@@ -30,8 +26,8 @@ function outcome(w,a,task,success,detail,status='completed'){
  addEvent(w,'action-completed',task.label,detail,{agentId:a.id,actionId:task.id,decisionId:task.decisionId,status,success});
 }
 function display(a){const t=a.task;if(!t)return;a.currentAction=t.phase==='travel'?`Traveling to ${t.targetPosition} · ${t.label}`:t.label;a.activeAction={id:t.id,decisionId:t.decisionId,actionId:t.actionId,label:a.currentAction,from:{...a.coordinates},to:{...t.destination},moving:t.phase==='travel',phase:t.phase,workMinutes:t.workMinutes,requiredMinutes:t.requiredMinutes};Object.assign(a.mind,{brainMode:t.source,model:t.model||null,fallbackReason:t.fallbackReason||null});a.mind.executionMode=t.source==='ai'?'model_plan':t.emergency?'emergency_rule':'fallback';}
-async function startTask(w,a,mind,reason,emergency=false){
- const chosen=await selectPersistentAction(w,a,mind,reason,emergency?x=>family(x.id)===urgentNeed(a):null),targetPosition=actionDestination(w,a,chosen.selected,chosen.mindResult.physicalAction),destination=targetPosition===a.position?{...a.coordinates}:coordForPosition(targetPosition,w),path=findRoute(w,a.coordinates,destination);
+async function startTask(w,a,mind,reason,emergency=false,options={}){
+ const chosen=await selectPersistentAction(w,a,mind,reason,emergency?x=>family(x.id)===(options.urgentNeed||urgentNeed(a)):null,options.candidateTransform),targetPosition=actionDestination(w,a,chosen.selected,chosen.mindResult.physicalAction),destination=options.destinationResolver?options.destinationResolver(targetPosition,chosen.selected):targetPosition===a.position?{...a.coordinates}:coordForPosition(targetPosition,w),path=(options.routeFinder||findRoute)(w,a.coordinates,destination);
  const t={origin:{...a.coordinates},id:`A-${chosen.decisionId}`,decisionId:chosen.decisionId,actionId:chosen.selected.id,label:chosen.selected.label,selected:chosen.selected,proposal:chosen.mindResult.physicalAction,source:chosen.mindResult.brainMode,model:chosen.mindResult.model||null,fallbackReason:chosen.mindResult.fallbackReason||null,emergency,targetPosition,destination,path:path||[],pathIndex:1,phase:distance(a.coordinates,destination)>.01?'travel':'work',requiredMinutes:duration(chosen.selected.id),workMinutes:0,startedAt:{day:w.day,hour:w.hour,minute:w.minute||0}};
  if(!path){outcome(w,a,t,false,'No traversable route to the selected destination.','blocked');a.currentAction='Route blocked';a.task=null;return;}
  a.task=t;display(a);
@@ -69,7 +65,7 @@ function work(w,a,t,minutes){
   return {done:true,success:true,detail:`${a.name} finished ${t.label.toLowerCase()} after ${t.workMinutes} minutes of activity.`};
  }
  if(id==='share_food'){
-  const b=w.agents.find(x=>x.id!==a.id&&distance(x.coordinates,a.coordinates)<1);
+  const b=w.agents.find(x=>x.id!==a.id&&distance(x.coordinates,a.coordinates)<1.8);
   if(!b||a.inventory.berries<2)return {done:true,success:false,detail:'Food or recipient is no longer here.'};
   a.inventory.berries-=2;b.inventory.berries+=2;return {done:true,success:true,detail:`${a.name} gives two berry portions to ${b.name}.`};
  }
