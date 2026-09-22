@@ -7,27 +7,33 @@ import {chooseDestination,configureTask,liveRoute,advanceLiveRoute,separateBodie
 import {liveUrgency,liveCandidates,retireObsoleteTask,resumeLiveTask,rememberFailure} from './behavior.mjs';
 import {advanceExploration} from './exploration.mjs';
 import {withinWaterReach} from './water.mjs';
+import {ensureSettlement,enforceCarry,syncHoldings,clock} from './holdings.mjs';
+import {workSettlement,noticeMissingSupplies} from './settlement.mjs';
+import {builtCover} from './structures.mjs';
 
 export function prepare(seed){
  const w=migrateWorld(structuredClone(seed));delete w.runtime;
  w.meta.persistentActions=1;w.meta.actionRulesVersion='realtime-2';w.minute=Number(w.minute||0);
  for(const a of w.agents){a.coordinates||=coordForPosition(a.position,w);delete a.runtimeMotion;}
+ ensureSettlement(w);
  return w;
 }
 // No loop into future time, no transition.after, no future frames. The caller
 // supplies ONLY elapsed duration. At most 6 simulated seconds per physics step.
 export async function step(w,seconds,{mind=null,fallbackReason='no_provider',wallTime=Date.now()}={}){
  if(!(seconds>0&&seconds<=6.000001))throw Error('Invalid elapsed step');
+ ensureSettlement(w);
  const minutes=seconds/60;
  const agents=[...w.agents].sort((a,b)=>a.id.localeCompare(b.id));
  if((w.day*24+w.hour)%2)agents.reverse();
  for(const a of agents){
   retireObsoleteTask(w,a);
+  noticeMissingSupplies(w,a);
   const urgent=liveUrgency(w,a);
   if(a.task&&urgent&&family(a.task.actionId)!==urgent&&a.task.requiredMinutes-a.task.workMinutes>0.1&&a.needs[urgent]+10<(a.needs[family(a.task.actionId)]??100))interrupt(w,a,urgent);
   if(!a.task&&!resumeLiveTask(w,a,urgent))await startTask(w,a,mind,urgent?'urgent_need':fallbackReason,!!urgent,{urgentNeed:urgent,candidateTransform:c=>liveCandidates(w,a,c),destinationResolver:(target,selected)=>chooseDestination(w,a,target,selected),routeFinder:liveRoute});
   configureTask(w,a);
-  const t=a.task,from={...a.coordinates};if(t&&!t.liveTiming&&t.workMinutes===0){const id=t.actionId;t.requiredMinutes=id==='drink'?.75:id.startsWith('eat_')?1:/^(gather_|forage:)/.test(id)?4:id==='talk'?3:t.requiredMinutes;t.liveTiming=true;}if(t&&a.liveThought?.actionId===t.actionId&&t.source==='ai')a.liveThought.status='acting';let positionBefore=a.position;if(t?.actionId==='drink')t.interactionReady=withinWaterReach(w,a.coordinates);
+  const t=a.task,from={...a.coordinates};if(t&&!t.liveTiming&&t.workMinutes===0){const id=t.actionId;t.requiredMinutes=t.selected?.job?.minutes??(id==='drink'?.75:id.startsWith('eat_')?1:/^(gather_|forage:)/.test(id)?4:id==='talk'?3:id==='seek_other'?.1:t.requiredMinutes);t.liveTiming=true;}if(t&&a.liveThought?.actionId===t.actionId&&t.source==='ai')a.liveThought.status='acting';let positionBefore=a.position;if(t?.actionId==='drink')t.interactionReady=withinWaterReach(w,a.coordinates);
   if(t?.actionId==='explore'){
    positionBefore='travel';const result=advanceExploration(w,a,t,seconds);if(result.done){outcome(w,a,t,result.success,result.detail);if(!result.success)rememberFailure(w,a,t,result.detail);a.task=null;}
   }else if(t?.actionId==='drink'&&t.phase==='work'&&!withinWaterReach(w,a.coordinates)){
@@ -37,12 +43,13 @@ export async function step(w,seconds,{mind=null,fallbackReason='no_provider',wal
    if(t.waterRetry<=0){configureTask(w,a,{force:true});t.waterRetry=3;}
   }else if(t?.phase==='travel'){
    a.position='travel';positionBefore='travel';const movement=advanceLiveRoute(w,a,t,seconds);
-   if(movement.blocked){outcome(w,a,t,false,'Route changed while travelling.','blocked');a.task=null;}
+   if(movement.blocked){outcome(w,a,t,false,'Route changed while travelling.','blocked');rememberFailure(w,a,t,'Route remains blocked; try another useful task before retrying.');a.task=null;}
    else if(movement.arrived){a.position=t.targetPosition;t.phase='work';recordSurfaceUse(w,a,t.origin,t.destination,t.actionId);}
-  }else if(t){faceInteraction(w,a,seconds);const result=work(w,a,t,minutes);if(result.done){outcome(w,a,t,result.success!==false,result.detail);if(result.success===false)rememberFailure(w,a,t,result.detail);a.task=null;}}
+  }else if(t){faceInteraction(w,a,seconds);const result=t.selected?.job?workSettlement(w,a,t,minutes):work(w,a,t,minutes);if(result.done){outcome(w,a,t,result.success!==false,result.detail);if(result.success===false)rememberFailure(w,a,t,result.detail);if(['talk','seek_other'].includes(t.actionId))a.socialUntil=clock(w)+90;if(t.actionId==='seek_cover')a.coverUntil=clock(w)+45;a.task=null;}}
+  enforceCarry(w,a);
   const ratio=seconds/3600,n=a.needs;
   n.hydration=clamp(n.hydration-(a.inventory.firedVessel>0?5.5:6.5)*ratio);n.hunger=clamp(n.hunger-4.2*ratio);n.energy=clamp(n.energy-2.8*ratio-(positionBefore==='travel'?3.6*ratio:0));
-  const exposure=thermalExposure(w,{...a,position:positionBefore});n.warmth=clamp(n.warmth+exposure.net*ratio);a.thermalExposure={...exposure,model:'elapsed-location-live',minutes};
+  const exposure=thermalExposure(w,{...a,position:positionBefore});if(builtCover(w,a.coordinates)&&!exposure.sheltered){exposure.sheltered=true;exposure.rainLoss=0;exposure.shelterProtection=Math.min(exposure.coldLoss,2);exposure.net=exposure.fireGain+exposure.shelterProtection-exposure.coldLoss;}n.warmth=clamp(n.warmth+exposure.net*ratio);a.thermalExposure={...exposure,model:'elapsed-location-live',minutes};
   if(a.task){display(a);if(a.task.actionId==='explore'){a.currentAction='Exploring the surrounding valley';a.activeAction.label=a.currentAction;}if(a.task.actionId==='drink'&&a.task.phase==='work'&&!a.task.interactionReady){a.currentAction='Waiting for access to water';a.activeAction.label=a.currentAction;}}else{a.activeAction=null;a.currentAction='Choosing next action';}
   // Past positions only. Viewer may interpolate these; never predicts a target.
   delete a.runtimeMotion;
@@ -50,6 +57,7 @@ export async function step(w,seconds,{mind=null,fallbackReason='no_provider',wal
  separateBodies(w,seconds);
  w.minute+=minutes;
  advanceWood(w,w.day*24+w.hour+w.minute/60);
+ syncHoldings(w);
  if(w.minute>=60-1e-8){w.minute=Math.max(0,w.minute-60);finishHour(w,{needs:false,wood:false,ecology:false});updateSpectatorState(w);}
  w.meta.tickNumber=(w.meta.tickNumber||0)+1;w.meta.lastAdvancedAt=new Date(wallTime).toISOString();
  for(const d of w.dna||[])delete d.evidence;

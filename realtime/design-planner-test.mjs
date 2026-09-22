@@ -1,0 +1,15 @@
+import assert from 'node:assert/strict';
+import {RealtimeController,MODEL} from './world.mjs';
+import {createWorld} from '../engine/core.js';
+import {designContext} from './blueprints.mjs';
+const data=new Map(),storage={get:async k=>structuredClone(data.get(k)),put:async(k,v)=>data.set(k,structuredClone(v)),delete:async k=>data.delete(k),setAlarm:async()=>{},transaction:async fn=>fn(storage)};
+let now=1790051000000,calls=0;
+const program={build:true,name:'Reed-lined box',purpose:'storage',siteId:'clearing-0',access:'private',rationale:'Store my possessions at camp rather than carrying everything.',parts:[{id:'base',kind:'deck',material:'timber',center:[0,.1,0],size:[1.2,.2,1.2],requires:[]},...['left','right','back'].map((id,i)=>({id,kind:'wall',material:'reeds',center:i<2?[i? .55:-.55,.65,0]:[0,.65,-.55],size:i<2?[.1,.9,1.2]:[1.2,.9,.1],requires:['base']}))]};
+let respond;const ai={run:async(model,input)=>{calls++;assert.equal(model,MODEL);assert(input.max_tokens>=1500);return new Promise(r=>{respond=r;});}};
+const c=new RealtimeController(storage,{now:()=>now,ai});await c.initialize(createWorld());const a=c.record.world.agents[0],job=c.makeDesign(a.id,designContext(c.record.world,a));while(!respond)await new Promise(r=>setTimeout(r,0));
+assert.equal(c.record.ai.calls,1,'reserve before inference');const revision=c.record.revision;now+=1000;await c.pulse();assert(c.record.revision>revision,'slow model does not block physics');respond({response:JSON.stringify(program)});await job;
+assert.equal(c.record.world.settlement.projects.length,1);assert.equal(c.record.world.settlement.projects[0].source,'ai');assert(c.record.world.settlement.projects[0].parts.every(p=>!p.built));
+const restored=new RealtimeController(storage,{now:()=>now,ai});await restored.load();assert.deepEqual(restored.record.world.settlement,c.record.world.settlement,'accepted program persists');
+const count=c.record.world.settlement.projects.length;c.ai={run:async()=>({response:{...program,parts:program.parts.map(p=>({...p,center:[0,999,0]}))}})};await c.makeDesign(c.record.world.agents[1].id,{});assert.equal(c.record.world.settlement.projects.length,count);assert.equal(c.record.world.settlement.designs.at(-1).status,'rejected');
+c.record.ai.calls=96;await c.makeDesign(a.id,{});assert.equal(calls,1,'construction shares hard total daily budget');
+console.log('PASS asynchronous model design, durable reservations/programs, no free construction, rejected geometry, shared call cap');
