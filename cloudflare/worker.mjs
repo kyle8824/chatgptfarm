@@ -15,6 +15,8 @@ export class FarmWorld extends DurableObject {
   async fetch(request){
     const path=new URL(request.url).pathname;
     try{
+      // Internal binding route only; the public Worker does not forward it.
+      if(request.method==='POST'&&path==='/runtime-recover'){await this.world.recover();return json({ok:true});}
       if(request.method==='GET'&&path==='/evidence'){
         if(!this.env.ADMIN_KEY||request.headers.get('Authorization')!==`Bearer ${this.env.ADMIN_KEY}`)return json({error:'Unauthorized'},401);
         const tick=Number(new URL(request.url).searchParams.get('tick'));
@@ -40,6 +42,10 @@ export class FarmWorld extends DurableObject {
   }
 }
 export default {
+  async scheduled(event,env,ctx){ctx.waitUntil(Promise.allSettled([
+    env.LIVE_VALLEY.getByName('live-valley-v1').fetch('https://internal/live/health'),
+    env.WORLD.getByName('preview-v1').fetch('https://internal/runtime-recover',{method:'POST'})
+  ]).then(results=>{for(const result of results)if(result.status==='rejected'||!result.value.ok)console.error('Scheduled world recovery deferred');}));},
   async fetch(request,env){
     const path=new URL(request.url).pathname;
     if(['/live/ws','/live/state','/live/health','/live/geometry'].includes(path)){try{return await env.LIVE_VALLEY.getByName('live-valley-v1').fetch(request);}catch(e){return unavailableResponse(e,{diagnostic:path==='/live/health',build:BUILD_INFO});}}

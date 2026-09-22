@@ -10,15 +10,23 @@ on reload or deploy, and never import the live fork back into the original.
 - `LiveValley` owns one authoritative in-memory simulation and SQLite checkpoint.
 - A 100 ms server timer executes only elapsed wall time at 6x simulation speed.
   Each substep is at most 100 ms wall time / 0.6 simulated seconds.
-- A separately persisted one-second Durable Object alarm advances and saves the
+- A separately persisted Durable Object alarm (normally every 15 seconds) advances and saves the
   world with no viewers, and wakes it after eviction. Platform scheduling is
   best effort, not hard real-time. Catch-up is limited to past elapsed time.
 - WebSocket packets contain current executed positions, needs and actions.
   The viewer smooths only between received positions for up to 100 ms. There
   is no future-state timeline, prerecorded action sequence or database poll.
-- Persistence checkpoints normally occur each second. A crash can lose the
-  unsaved fraction of a second, then catch up from the last saved wall cursor.
+- Persistence checkpoints normally occur every 15 seconds. Larger checkpoints
+  increase that interval to target 30,000 routine storage rows written/day,
+  leaving headroom for the original world and durable AI reservations.
+  A crash can lose progress since the last checkpoint; execution then catches
+  up from that saved wall cursor. The actual interval is exposed in health.
+  Movement and WebSocket updates remain on the 100 ms execution loop.
+  A failed save pauses advancement and backs off; it never resets the world.
   Alarms and checkpoint data commit together. Connection/lag are exposed.
+- A 15-minute scheduled recovery check can wake the existing objects after
+  storage limits or exhausted alarm retries. It does not create a replacement
+  world or undo an explicit pause of the original world.
 - No clock or physics runs in the browser. A closed browser cannot pause the
   server. The viewer stops character movement when frames stop arriving and
   shows a connection interruption instead of a green live status.
