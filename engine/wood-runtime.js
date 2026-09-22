@@ -61,7 +61,8 @@ export function transformWood(w,a,key,outputForm){
 export function woodConditions(w,h){
   const location=h.kind==='carried'?w.agents.find(a=>a.id===h.id)?.position:h.id;
   const covered=!!w.structures.shelter&&['camp','camp-shelter','camp-drying'].includes(location)||!!w.settlement?.stores.find(s=>s.id===location&&s.covered);
-  return {temperatureC:(w.temperature-32)*5/9,humidity:w.weather==='rain'?.9:w.weather==='cloudy'?.7:.45,airflow:h.kind==='carried'?.6:1,covered,raining:w.weather==='rain'};
+  const coverage=w.settlement?.stores.find(s=>s.id===location)?.coverage;
+  return {...(coverage!==undefined?{rainExposure:1-coverage}:{}),temperatureC:(w.temperature-32)*5/9,humidity:w.weather==='rain'?.9:w.weather==='cloudy'?.7:.45,airflow:h.kind==='carried'?.6:1,covered,raining:w.weather==='rain'};
 }
 export function advanceWood(w,toHour){
   const ledger=ensureWood(w),from=ledger.lastHour;

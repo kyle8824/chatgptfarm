@@ -1,8 +1,9 @@
+import {recordCrossingWear,noteCargoLimits} from './structure-lifecycle.mjs';
 import {walkable,clearSegment,walkingSpeed,distance} from '../engine/navigation.js';
 import {coordForPosition} from '../engine/spectator.js';
 import {CAMP,shelterPoint,shelterLocal} from './layout.mjs';
 import {waterBankPoints,withinWaterReach,nearestWater} from './water.mjs';
-import {onDeck,structureBlocks,structureWaypoints} from './structures.mjs';
+import {onDeck,crossingPace,structureBlocks,structureWaypoints} from './structures.mjs';
 
 export const BODY_DISTANCE=1.05;
 export const ARRIVAL_SPACE=1.5;
@@ -12,8 +13,8 @@ export function motionState(a){return a.locomotion??={seed:hash(a.id),vx:0,vy:0,
 function random(a){const m=motionState(a);m.seed=(Math.imul(m.seed,1664525)+1013904223)>>>0;return m.seed/4294967296;}
 const angleDiff=(a,b)=>Math.atan2(Math.sin(a-b),Math.cos(a-b));
 function segmentDistance(p,a,b){const dx=b.x-a.x,dy=b.y-a.y,t=clamp(((p.x-a.x)*dx+(p.y-a.y)*dy)/(dx*dx+dy*dy||1),0,1);return distance(p,{x:a.x+t*dx,y:a.y+t*dy});}
-export function liveWalkable(w,p){
- if((!walkable(w,p)&&!onDeck(w,p))||distance(p,CAMP.fire)<CAMP.fire.radius||structureBlocks(w,p))return false;
+export function liveWalkable(w,p,actor=null){
+ if((!walkable(w,p)&&!onDeck(w,p,actor))||distance(p,CAMP.fire)<CAMP.fire.radius||structureBlocks(w,p))return false;
  for(const tree of w.settlement?.trees||[])if(!tree.depleted&&distance(p,tree.position)<.43)return false;
  if(w.structures.shelter){const q=shelterLocal(p),s=CAMP.shelter;
   // Two roof/wall footprints. Both gable entrances remain open.
@@ -21,16 +22,16 @@ export function liveWalkable(w,p){
  }
  return true;
 }
-export const liveClear=(w,a,b)=>clearSegment(w,a,b,liveWalkable);
+export const liveClear=(w,a,b,actor=null)=>clearSegment(w,a,b,(world,p)=>liveWalkable(world,p,actor));
 export function liveRoute(w,from,to,actor=null){
- if(!liveWalkable(w,to))return null;let start=from,escape=null;
+ if(!liveWalkable(w,to,actor))return null;let start=from,escape=null;
  // Old versions could save bodies inside a roof or fire footprint. Walk out
  // of that invalid placement over elapsed time; never teleport on migration.
  if(!liveWalkable(w,start)){
   outer:for(let r=.25;r<=4;r+=.25)for(let i=0;i<24;i++){const p={x:from.x+Math.cos(i/24*Math.PI*2)*r,y:from.y+Math.sin(i/24*Math.PI*2)*r};if(liveWalkable(w,p)){start=p;escape=p;break outer;}}
   if(!escape)return null;
  }
- const others=actor?w.agents.filter(b=>b.id!==actor.id):[],clear=(a,b)=>liveClear(w,a,b)&&others.every(o=>segmentDistance(o.coordinates,a,b)>=Math.min(BODY_DISTANCE+.08,distance(o.coordinates,a)-.001));
+ const others=actor?w.agents.filter(b=>b.id!==actor.id):[],clear=(a,b)=>liveClear(w,a,b,actor)&&others.every(o=>segmentDistance(o.coordinates,a,b)>=Math.min(BODY_DISTANCE+.08,distance(o.coordinates,a)-.001));
  let path;
  if(clear(start,to))path=[start,to];
  else{
@@ -69,14 +70,14 @@ export function chooseDestination(w,a,target,selected={}){
   points.push({p,score:Math.min(3,space)*1.4-distance(a.coordinates,p)*.07-previous*.6+random(a)*.35,space});
  }
  points.sort((a,b)=>b.score-a.score);
- for(const {p,space}of points)if(space>=ARRIVAL_SPACE&&liveRoute(w,a.coordinates,p))return p;
- for(const {p,space}of points)if(space>=BODY_DISTANCE+.1&&liveRoute(w,a.coordinates,p))return p;
+ for(const {p,space}of points)if(space>=ARRIVAL_SPACE&&liveRoute(w,a.coordinates,p,a))return p;
+ for(const {p,space}of points)if(space>=BODY_DISTANCE+.1&&liveRoute(w,a.coordinates,p,a))return p;
  // Hold safely if an interaction area is full; collision checks still apply.
  return liveWalkable(w,a.coordinates)?{...a.coordinates}:points[0]?.p||center;
 }
 export function configureTask(w,a,{force=false}={}){
  const t=a.task;if(!t||(!force&&t.liveSpaceVersion===1&&(t.actionId!=='drink'||t.liveWaterVersion===1)))return;
- t.destination=chooseDestination(w,a,t.targetPosition,{...t.selected,id:t.actionId});t.path=liveRoute(w,a.coordinates,t.destination)||[];t.pathIndex=1;t.liveSpaceVersion=1;
+ t.destination=chooseDestination(w,a,t.targetPosition,{...t.selected,id:t.actionId});t.path=liveRoute(w,a.coordinates,t.destination,a)||[];t.pathIndex=1;t.liveSpaceVersion=1;
  t.phase=distance(a.coordinates,t.destination)>.15?'travel':'work';t.egressing=!liveWalkable(w,a.coordinates);t.liveTrace=[{...a.coordinates}];
  if(t.actionId==='drink')t.liveWaterVersion=1;
 }
@@ -88,7 +89,7 @@ export function explorationDestination(w,a){
   const visits=memory.cells[explorationCell(p)]||0,previous=(motionState(a).arrivals||[]).reduce((n,q)=>n+Math.max(0,8-distance(q,p)),0);
   options.push({p,score:10/(1+visits)-previous+random(a)*2});
  }
- options.sort((a,b)=>b.score-a.score);for(const {p}of options)if(liveRoute(w,a.coordinates,p))return p;return null;
+ options.sort((a,b)=>b.score-a.score);for(const {p}of options)if(liveRoute(w,a.coordinates,p,a))return p;return null;
 }
 function bodyClear(w,a,from,to){for(const b of w.agents)if(b.id!==a.id&&segmentDistance(b.coordinates,from,to)<BODY_DISTANCE-1e-6)return false;return true;}
 export function advanceLiveRoute(w,a,t,seconds){
@@ -99,13 +100,13 @@ export function advanceLiveRoute(w,a,t,seconds){
  if(t.progressIndex!==t.pathIndex||remaining<(t.progressDistance??Infinity)-.04){t.progressIndex=t.pathIndex;t.progressDistance=remaining;m.stalledSeconds=0;}else m.stalledSeconds=(m.stalledSeconds||0)+seconds;
  if(m.stalledSeconds>3){const path=liveRoute(w,p,t.destination,a);if(path){t.path=path;t.pathIndex=1;t.progressIndex=null;t.detours=(t.detours||0)+1;}else t.blockedSeconds=(t.blockedSeconds||0)+3;
   m.stalledSeconds=0;m.vx=m.vy=m.speed=0;if(t.blockedSeconds>90)return {blocked:true};return {waiting:true};}
- const pace=.92+(hash(a.id)%160)/1000,maxSpeed=walkingSpeed(w,a)/(w.worldModel.bounds.metersPerUnit||2)*pace;
+ const pace=.92+(hash(a.id)%160)/1000,maxSpeed=walkingSpeed(w,a)/(w.worldModel.bounds.metersPerUnit||2)*pace*crossingPace(w,a);
  const end=t.pathIndex===t.path.length-1,speed=Math.min(maxSpeed,(m.speed||0)+seconds*1.3,end?Math.max(.10,remaining*1.3):maxSpeed),length=Math.min(remaining,speed*seconds);
  let best=null;
  for(const offset of [0,.3,-.3,.65,-.65,1,-1,1.4,-1.4,1.7,-1.7,2,-2]){
   const angle=heading+offset,turn=angleDiff(angle,m.facing),steered=m.speed>.02&&!t.egressing?m.facing+clamp(turn,-seconds*2.5,seconds*2.5):angle;
   const q={x:p.x+Math.sin(steered)*length,y:p.y+Math.cos(steered)*length};
-  if(!(t.egressing&&!liveWalkable(w,p))&&!liveClear(w,p,q))continue;
+  if(!(t.egressing&&!liveWalkable(w,p))&&!liveClear(w,p,q,a))continue;
   if(!bodyClear(w,a,p,q))continue;
   // Do not walk backwards down the same narrow passage to keep an animation
   // running. Wait, then route around the actual blocking body/obstacle.
@@ -116,11 +117,11 @@ export function advanceLiveRoute(w,a,t,seconds){
   if(offset<0)cost+=.015;
   if(!best||cost<best.cost)best={q,steered,cost};
  }
- if(!best){m.vx=m.vy=m.speed=0;m.waitSeconds=(m.waitSeconds||0)+seconds;
+ if(!best){noteCargoLimits(w,a);m.vx=m.vy=m.speed=0;m.waitSeconds=(m.waitSeconds||0)+seconds;
   return {waiting:true};
  }
  a.coordinates=best.q;m.vx=(best.q.x-p.x)/seconds;m.vy=(best.q.y-p.y)/seconds;m.speed=Math.hypot(m.vx,m.vy);m.facing=best.steered;m.waitSeconds=0;if(liveWalkable(w,a.coordinates))t.egressing=false;
- recordFootstep(w,a,p,a.coordinates);
+ recordCrossingWear(w,a,p,a.coordinates);recordFootstep(w,a,p,a.coordinates);
  if(end&&distance(a.coordinates,t.destination)<.16){m.arrivals=[...(m.arrivals||[]),{...a.coordinates}].slice(-5);return {arrived:true};}
  return {arrived:false};
 }
@@ -130,7 +131,7 @@ export function separateBodies(w,seconds){
   const angle=d>.001?Math.atan2(b.coordinates.x-a.coordinates.x,b.coordinates.y-a.coordinates.y):(hash(a.id+b.id)%628)/100;
   const amount=Math.min((BODY_DISTANCE-d)/2+.005,seconds*.65);
   for(const [person,sign]of [[a,-1],[b,1]]){const old=person.coordinates,p={x:old.x+Math.sin(angle)*amount*sign,y:old.y+Math.cos(angle)*amount*sign};
-   if(liveClear(w,old,p)||!liveWalkable(w,old)){person.coordinates=p;const m=motionState(person);m.vx=(p.x-old.x)/seconds;m.vy=(p.y-old.y)/seconds;m.speed=Math.hypot(m.vx,m.vy);m.facing=Math.atan2(m.vx,m.vy);recordFootstep(w,person,old,p);}
+   if(liveClear(w,old,p,person)||!liveWalkable(w,old)){person.coordinates=p;const m=motionState(person);m.vx=(p.x-old.x)/seconds;m.vy=(p.y-old.y)/seconds;m.speed=Math.hypot(m.vx,m.vy);m.facing=Math.atan2(m.vx,m.vy);recordFootstep(w,person,old,p);}
   }
  }
 }
