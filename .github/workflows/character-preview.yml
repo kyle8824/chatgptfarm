@@ -1,7 +1,7 @@
 name: Character study verification
 on:
   push:
-    branches: [feature/character-study, release/model-workshop]
+    branches: [feature/character-study, release/model-workshop, feature/wildlife-workshop]
   workflow_dispatch:
 permissions:
   contents: read
