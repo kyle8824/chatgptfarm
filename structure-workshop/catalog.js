@@ -1,3 +1,4 @@
+import {structurePerformance} from '../shared/structure-performance.js';
 import {constructionSpec} from '../shared/craft.js';
 // The existing main-domain /live rewrite keeps snapshot reads same-origin.
 export const WORLD_BASE='/live';
@@ -17,8 +18,8 @@ export function resourceRows(p,stores=[]){
  for(const row of rows.values()){row.atSite=keys[row.material].reduce((n,key)=>n+(stock[key]||0),0);row.missing=Math.max(0,row.required-row.committed-row.atSite);}return [...rows.values()];
 }
 export function physicalFunctions(p){
- const result=[],a=p.affordances;
- if(a){if(a.rainCover?.length)result.push('Rain cover beneath the roof');if(a.storage)result.push(`${Math.round(a.storage.capacityKg)} kg / ${Math.round(a.storage.capacityVolume)} space units of ${a.storage.covered?'covered':'open'} storage${a.storage.secured?' · secured':''}`);if(a.restPoints?.length)result.push('Accessible sheltered rest');if(a.walkableDecks?.length)result.push('Walkable sections across water');}
+ const result=[],a=p.affordances,live=p.status==='complete',performance=structurePerformance(p),factor=live?performance.storageFactor:1;
+ if(a){if(a.rainCover?.length&&(!live||performance.roofProtection>0))result.push(live?Math.round(performance.roofProtection*100)+'% rain protection beneath intact roofing':'Rain cover beneath the roof');if(a.storage&&factor>0)result.push(`${Math.round(a.storage.capacityKg*factor)} kg / ${Math.round(a.storage.capacityVolume*factor)} space units of ${a.storage.covered?'covered':'open'} storage${a.storage.secured?' · secured':''}`);if(a.restPoints?.length&&(!live||performance.roofProtection>0))result.push('Accessible sheltered rest');if(a.walkableDecks?.length&&(!live||performance.cargoKg>0))result.push(live?performance.cargoKg.toFixed(1)+' kg cargo allowance across intact deck sections':'Walkable sections across water');}
  else {if(p.purpose==='storage')result.push(`${Math.round(p.capacityKg||0)} kg of ${p.covered?'covered':'open'} storage${p.secured?' · secured':''}`);if(p.purpose==='bridge')result.push('A walkable crossing as its deck is assembled');if(p.purpose==='shelter')result.push('Sheltered rest beneath the roof');}
- return result.length?result:['No additional physical function has been measured for this design.'];
+ return result.length?result:[live?'Failed components currently prevent this structure from providing its intended uses.':'No additional physical function has been measured for this design.'];
 }
