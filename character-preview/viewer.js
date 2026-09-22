@@ -55,7 +55,7 @@ const counts=Object.fromEntries(Object.entries(models).map(([k,m])=>[k,geometryS
 function animate(now){requestAnimationFrame(animate);if(hidden)return;const delta=Math.min(.05,(now-prev)/1000),elapsed=now-prev;prev=now;if(!paused)clock+=delta;
  animateVillager(models.mara,clock,mode);animateVillager(models.ivo,clock+.5,mode);animateDeer(models.deer,clock,mode);
  extras.forEach((e,i)=>e.kind==='deer'?animateDeer(e,clock+i*.23,mode):animateVillager(e,clock+i*.23,mode));
- if(transition){camera.position.lerp(desiredPosition,.14);controls.target.lerp(desiredTarget,.14);if(camera.position.distanceTo(desiredPosition)<.003)transition=false;}controls.update();
+ if(transition){const cameraBlend=1-Math.exp(-Math.min(elapsed,500)/1000*11);camera.position.lerp(desiredPosition,cameraBlend);controls.target.lerp(desiredTarget,cameraBlend);if(camera.position.distanceTo(desiredPosition)<.003)transition=false;}controls.update();
  const begin=performance.now();renderer.render(scene,camera);renderTimes.push(performance.now()-begin);frames.push(elapsed);
  if(now-lastReport>1200){const avg=frames.reduce((a,b)=>a+b,0)/frames.length,fps=1000/avg,sorted=[...frames].sort((a,b)=>a-b),p95=sorted[Math.floor(sorted.length*.95)]||0;$('#fps').textContent=`${Math.round(fps)} fps`;
   const sum=Object.entries(counts).reduce((a,[id,b])=>a+(models[id].root.visible?b.triangles:0),0)+extras.reduce((a,e)=>a+(e.root.visible?counts[e.kind].triangles:0),0);
