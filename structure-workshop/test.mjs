@@ -20,4 +20,5 @@ assert.deepEqual(geometry(modelA),geometry(modelB),'appearance edits retain ever
 assert(modelA.children.reduce((n,x)=>n+(x.geometry?.index?.count||x.geometry?.attributes?.position?.count||0)/3,0)<15000,'rough example stays within a mobile geometry budget');
 assert.equal(modelA.children.filter(x=>x.isMesh).length,p.parts.length);assert.equal(structureSignature(p),structureSignature(progressed));
 assert.equal(modelB.children[0].material.color.getHexString(),'315347');modelA.userData.disposeStructure();modelB.userData.disposeStructure();
+const failed=structuredClone(p);for(const x of failed.parts){x.built=true;x.durability={quality:.4,condition:1};}failed.parts[0].durability.condition=0;const damaged=module.createStructureModel(failed,{stage:'construction'});assert(damaged.children.find(x=>x.userData.partId==='weather-top').position.y<.1,'failed support puts dependent roofing on the ground in the recorded view');damaged.userData.disposeStructure();
 console.log('PASS appearance-only schema, geometry invariance, design binding, construction progress, resource accounting, cached catalog and shared renderer');
