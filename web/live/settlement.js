@@ -16,11 +16,11 @@ export function drawContents(group,inventory,{carried=false,limit=20}={}){
 export class SettlementView{
  constructor(scene,elevation){this.scene=scene;this.elevation=elevation;this.objects=new Map();this.data=null;}
  base(p){return p.purpose==='bridge'?Math.max(this.elevation(p.position.x,riverY(p.position.x)-2),this.elevation(p.position.x,riverY(p.position.x)+2))+.04:this.elevation(p.position.x,p.position.y);}
- update(data){if(!data)return;this.data=data;const live=new Set();
-  for(const p of data.projects){live.add(p.id);const signature=JSON.stringify([p.parts.map(x=>[x.built,Math.floor(x.workMinutes/x.requiredMinutes*12)]),p.status]);let obj=this.objects.get(p.id);if(obj?.signature===signature)continue;if(obj)this.remove(p.id);
+ update(data,agents=[]){if(!data)return;this.data=data;const live=new Set();
+  for(const p of data.projects){live.add(p.id);const open=!!p.storeId&&agents.some(a=>a.task?.job?.storeId===p.storeId&&a.task.phase==='work'),signature=JSON.stringify([p.parts.map(x=>[x.built,Math.floor(x.workMinutes/x.requiredMinutes*12)]),p.status,open]);let obj=this.objects.get(p.id);if(obj?.signature===signature)continue;if(obj)this.remove(p.id);
    const g=new T.Group();g.position.set(p.position.x,this.base(p),p.position.y);g.userData.objectId=p.id;this.scene.add(g);
    for(const part of p.parts){
-    if(part.built||part.invested){const m=piece(g,box,colors[part.material],part.center,part.size);if(!part.built){m.scale.y*=Math.max(.08,part.workMinutes/part.requiredMinutes);m.position.y=part.center[1]-part.size[1]/2+m.scale.y/2;}}
+    if(part.built||part.invested){let parent=g,center=part.center;if(open&&part.kind==='roof'&&p.purpose==='storage'){parent=new T.Group();parent.position.set(part.center[0],part.center[1],part.center[2]-part.size[2]/2);parent.rotation.x=-1.15;g.add(parent);center=[0,0,part.size[2]/2];}const m=piece(parent,box,colors[part.material],center,part.size);if(!part.built){m.scale.y*=Math.max(.08,part.workMinutes/part.requiredMinutes);m.position.y=part.center[1]-part.size[1]/2+m.scale.y/2;}}
     if(!part.built){const geo=new T.EdgesGeometry(box),line=new T.LineSegments(geo,new T.LineBasicMaterial({color:'#d7cb95',transparent:true,opacity:.24}));line.position.set(...part.center);line.scale.set(...part.size);g.add(line);}
    }
    const hit=new T.Mesh(new T.BoxGeometry(p.bounds.maxX-p.bounds.minX,1.5,p.bounds.maxZ-p.bounds.minZ),new T.MeshBasicMaterial({visible:false}));hit.position.y=.75;g.add(hit);this.objects.set(p.id,{group:g,signature});

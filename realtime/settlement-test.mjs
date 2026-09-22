@@ -36,16 +36,18 @@ const world=fresh();world.agents=world.agents.slice(0,1);const a=world.agents[0]
 assert.throws(()=>validateBlueprint(world,a,{...chestDesign,parts:[{...chestDesign.parts[0],center:[0,3,0]},...chestDesign.parts.slice(1)]}),/Floating/);assert.equal(JSON.stringify(world),beforeBad);
 assert.throws(()=>validateBlueprint(world,a,{...chestDesign,parts:chestDesign.parts.map((p,i)=>i? p:{...p,size:[NaN,.2,1]})}));
 const design=validateBlueprint(world,a,chestDesign),project=adoptBlueprint(world,a,design,'fixture-model');assert(project.parts.every(x=>!x.built));assert.equal(world.settlement.stores.find(s=>s.id===project.stockpileId).items.dryWood||0,0,'planning grants no free materials');
-const materialBefore=totals(world.wood).dryKg;let lastBuilt=0,harvested=false,carried=false,progress=false;let count=0;
+const materialBefore=totals(world.wood).dryKg;let lastBuilt=0,harvested=false,carried=false,progress=false,midBuild=null;let count=0;
 for(;count<26000&&project.status!=='complete';count++){
  await step(world,.6);const built=project.parts.filter(p=>p.built).length;assert(built-lastBuilt<=1,'parts appear incrementally');lastBuilt=built;
  harvested ||=world.settlement.trees.some(t=>treeUnits(world,t)<t.initialUnits);carried ||=a.inventory.dryWood+a.inventory.wetWood>0;progress ||=project.parts.some(p=>p.workMinutes>0&&!p.built);
+ if(!midBuild&&lastBuilt>=2&&project.parts.some(p=>p.workMinutes>.5&&!p.built))midBuild=structuredClone(world);
  assert(loadOf(world,a).mass<=18.01&&loadOf(world,a).volume<=24.01,'every integrated action respects carry limits');
 }
 assert.equal(project.status,'complete',JSON.stringify({count,task:a.task,parts:project.parts,inventory:a.inventory,needs:a.needs,events:world.history.slice(0,5)}));assert(harvested&&carried&&progress);assert(Math.abs(totals(world.wood).dryKg+world.wood.sinks.reduce((n,s)=>n+s.dryKg,0)-materialBefore)<1e-6,'construction retains wood mass');assert(world.settlement.stores.find(s=>s.id===project.storeId)?.secured,'completed enclosure creates usable finite protected storage');
 const restarted=prepare(JSON.parse(JSON.stringify(world)));assert.deepEqual(restarted.settlement,world.settlement,'all designs, parts, storage and ownership survive checkpoint-style restart');
+const chest=world.settlement.stores.find(s=>s.id===project.storeId);world.resources.stones-=3;a.inventory.stones+=3;a.needs={hunger:95,hydration:95,energy:95,warmth:95};a.task=null;for(let i=0;i<1200&&chest.items.stones!==3;i++)await step(world,.6);assert.equal(chest.items.stones,3,'villager visits and physically populates the completed chest');
 // A fully built bridge changes walkability; its plan alone never does.
 const bridgeWorld=fresh();bridgeWorld.agents=bridgeWorld.agents.slice(0,1);bridgeWorld.agents[0].coordinates={x:48,y:24};const b=adoptBlueprint(bridgeWorld,bridgeWorld.agents[0],validateBlueprint(bridgeWorld,bridgeWorld.agents[0],bridgeDesign),'fixture-model');
 const middle={...b.position};assert(!liveWalkable(bridgeWorld,middle));for(let i=0;i<26000&&b.status!=='complete';i++)await step(bridgeWorld,.6);assert.equal(b.status,'complete',JSON.stringify({parts:b.parts,task:bridgeWorld.agents[0].task}));assert(liveWalkable(bridgeWorld,middle));assert(liveRoute(bridgeWorld,{x:48,y:b.position.y+4},{x:48,y:b.position.y-4}),'real traversable crossing');
-await fs.mkdir('realtime-qa',{recursive:true});await fs.writeFile('realtime-qa/settlement-fixture.json',JSON.stringify({world,bridge:bridgeWorld,traffic:{steps,min,detours:task.detours}},null,2));
+await fs.mkdir('realtime-qa',{recursive:true});await fs.writeFile('realtime-qa/settlement-fixture.json',JSON.stringify({world,midBuild,bridge:bridgeWorld,traffic:{steps,min,detours:task.detours}},null,2));
 console.log(JSON.stringify({result:'PASS doorway obstruction, finite carry/storage, conservation, witnessed/unseen theft, secured storage, blueprint validation, gathering/hauling/assembly, restart, usable bridge',trafficSteps:steps,minimumSeparation:min,constructionSteps:count,woodMass:materialBefore,parts:project.parts.length}));

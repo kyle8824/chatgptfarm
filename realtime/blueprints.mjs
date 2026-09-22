@@ -71,7 +71,8 @@ export function validateBlueprint(w,a,raw){
 export function adoptBlueprint(w,a,design,model){
  if(!design)return null;if(w.settlement.projects.length>=12||w.settlement.projects.filter(p=>p.status!=='complete').length>=2||w.settlement.projects.some(p=>p.ownerId===a.id&&p.status!=='complete'))throw Error('Construction capacity reached');
  const p={...design,id:`project-${w.settlement.nextId++}`,ownerId:a.id,designer:a.name,model,source:'ai',createdAt:clock(w),status:'planned',revision:0};
- p.stockpileId=makeStore(w,{position:{x:p.bounds.maxX+1,y:p.bounds.maxZ+1},ownerId:a.id,access:p.access,kind:'site',name:`Materials for ${p.name}`,capacityKg:260,capacityVolume:480,projectId:p.id}).id;
+ const stockPositions=[{x:p.bounds.maxX+1,y:p.bounds.maxZ+1},{x:p.bounds.minX-1,y:p.bounds.maxZ+1},{x:p.bounds.maxX+1,y:p.bounds.minZ-1},{x:p.bounds.minX-1,y:p.bounds.minZ-1}],stockPosition=stockPositions.find(q=>liveWalkable(w,q)&&liveRoute(w,a.coordinates,q));if(!stockPosition)throw Error('No reachable material staging area');
+ p.stockpileId=makeStore(w,{position:stockPosition,ownerId:a.id,access:p.access,kind:'site',name:`Materials for ${p.name}`,capacityKg:260,capacityVolume:480,projectId:p.id}).id;
  w.settlement.projects.push(p);w.settlement.revision++;remember(w,a,`I designed ${p.name}: ${p.rationale}`,{importance:8,tags:['construction','design'],source:`design:${p.id}`});
  addEvent(w,'construction-design',`${a.name} designed ${p.name}`,`${p.rationale} The ${p.parts.length} parts are a plan; materials still need to be carried here and assembled.`,{agentId:a.id,projectId:p.id});return p;
 }
