@@ -1,13 +1,13 @@
 import * as T from 'three';
-import {OrbitControls} from 'three/addons/controls/OrbitControls.js';
+import {MapGestureControls} from '../shared/visuals/map-controls.js';
 import {createVillager,createDeer,animateVillager,animateDeer,geometryStats} from './models.js';
 
 const $=s=>document.querySelector(s),scene=new T.Scene();scene.background=new T.Color('#dfebeb');scene.fog=new T.Fog('#dfebeb',12,30);
 let renderer;
 try{renderer=new T.WebGLRenderer({antialias:true,alpha:false,powerPreference:'high-performance'});}catch{ $('#failure').hidden=false;throw Error('WebGL unavailable: visible fallback shown');}
 renderer.info.autoReset=false;renderer.setPixelRatio(Math.min(devicePixelRatio,1.35));renderer.setSize(innerWidth,innerHeight);renderer.shadowMap.enabled=true;renderer.shadowMap.type=T.PCFSoftShadowMap;renderer.outputColorSpace=T.SRGBColorSpace;renderer.toneMapping=T.ACESFilmicToneMapping;renderer.toneMappingExposure=1.10;$('#stage').append(renderer.domElement);
-const camera=new T.PerspectiveCamera(35,innerWidth/innerHeight,.05,60),controls=new OrbitControls(camera,renderer.domElement);
-controls.enableDamping=true;controls.dampingFactor=.10;controls.minDistance=.48;controls.maxDistance=14;controls.maxPolarAngle=Math.PI*.49;controls.minPolarAngle=.25;controls.screenSpacePanning=true;controls.mouseButtons={LEFT:T.MOUSE.PAN,MIDDLE:T.MOUSE.DOLLY,RIGHT:T.MOUSE.ROTATE};controls.touches={ONE:T.TOUCH.PAN,TWO:T.TOUCH.DOLLY_ROTATE};
+const camera=new T.PerspectiveCamera(35,innerWidth/innerHeight,.05,60),controls=new MapGestureControls(camera,renderer.domElement,{planeMode:'screen'});
+controls.enableDamping=true;controls.dampingFactor=.10;controls.minDistance=.48;controls.maxDistance=14;controls.maxPolarAngle=Math.PI*.49;controls.minPolarAngle=.25;controls.screenSpacePanning=true;controls.mouseButtons={LEFT:T.MOUSE.PAN,MIDDLE:T.MOUSE.DOLLY,RIGHT:T.MOUSE.ROTATE};
 scene.add(new T.HemisphereLight('#e9f5ff','#a0ac7c',1.8));const sun=new T.DirectionalLight('#ffe8c6',2.4);sun.position.set(-3.5,6,4.5);sun.castShadow=true;sun.shadow.mapSize.set(1024,1024);Object.assign(sun.shadow.camera,{left:-5,right:5,top:5,bottom:-5,near:.5,far:15});sun.shadow.normalBias=.022;sun.shadow.bias=-.0001;sun.shadow.radius=3;scene.add(sun);const fill=new T.DirectionalLight('#dceaf5',.9);fill.position.set(3,3,-3);scene.add(fill);
 const groundMat=new T.MeshStandardMaterial({color:'#90a577',roughness:1});const ground=new T.Mesh(new T.PlaneGeometry(80,80),groundMat);ground.rotation.x=-Math.PI/2;ground.receiveShadow=true;scene.add(ground);
 // Simple background vegetation shares the models' matte materials and soft edges.
@@ -53,8 +53,8 @@ addEventListener('resize',()=>{camera.aspect=innerWidth/innerHeight;camera.updat
 let hidden=false;document.addEventListener('visibilitychange',()=>{hidden=document.hidden;prev=performance.now();});
 const counts=Object.fromEntries(Object.entries(models).map(([k,m])=>[k,geometryStats(m.root)]));
 function animate(now){requestAnimationFrame(animate);if(hidden)return;const delta=Math.min(.05,(now-prev)/1000),elapsed=now-prev;prev=now;if(!paused)clock+=delta;
- animateVillager(models.mara,clock,mode);animateVillager(models.ivo,clock+.5,mode);animateDeer(models.deer,clock,mode);
- extras.forEach((e,i)=>e.kind==='deer'?animateDeer(e,clock+i*.23,mode):animateVillager(e,clock+i*.23,mode));
+ animateVillager(models.mara,clock,mode);animateVillager(models.ivo,clock+.5,mode);animateDeer(models.deer,clock,mode,paused?0:delta);
+ extras.forEach((e,i)=>e.kind==='deer'?animateDeer(e,clock+i*.23,mode,paused?0:delta):animateVillager(e,clock+i*.23,mode));
  if(transition){const cameraBlend=1-Math.exp(-Math.min(elapsed,500)/1000*11);camera.position.lerp(desiredPosition,cameraBlend);controls.target.lerp(desiredTarget,cameraBlend);if(camera.position.distanceTo(desiredPosition)<.003)transition=false;}controls.update();
  const begin=performance.now();renderer.info.reset();renderer.render(scene,camera);renderTimes.push(performance.now()-begin);frames.push(elapsed);
  if(now-lastReport>1200){const avg=frames.reduce((a,b)=>a+b,0)/frames.length,fps=1000/avg,sorted=[...frames].sort((a,b)=>a-b),p95=sorted[Math.floor(sorted.length*.95)]||0;$('#fps').textContent=`${Math.round(fps)} fps`;
