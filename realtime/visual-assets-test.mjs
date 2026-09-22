@@ -13,6 +13,8 @@ try{
  import {createDeer,animateDeer,geometryStats} from './shared/visuals/models.js';
  import {createPerson,animatePerson} from './web/live/people.js';
  import {updateCargo} from './web/live/settlement.js';
+ import {elevation,riverY} from './web/live/scene.js';
+ for(const x of [5,25,50,75,95])for(const side of [-1,1]){assert(elevation(x,riverY(x)+side*1.25)<-.12,'terrain cannot cover the defined water edge');assert(elevation(x,riverY(x)+side*1.72)>-.12,'drinking feet stay on the dry bank');}
  for(const name of ['Mara','Ivo']){
   const p=createPerson(name,name);p.phase='work';
   for(const action of ['drink','gather_timber','rest','eat_berries']){

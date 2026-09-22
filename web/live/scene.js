@@ -10,7 +10,7 @@ import {MapGestureControls} from '../../shared/visuals/map-controls.js';
 import {createDeer,animateDeer} from '../../shared/visuals/models.js';
 import {mergeGeometries} from 'three/addons/utils/BufferGeometryUtils.js';
 const clamp=(v,a,b)=>Math.max(a,Math.min(b,v));
-export function elevation(x,z){const d=Math.abs(z-riverY(x));const hills=Math.max(0,z-53)*.095+Math.max(0,9-z)*.13;return -.48+Math.min(1.12,d*.36)+Math.sin(x*.16)*Math.sin(z*.15)*Math.min(.5,d*.055)+hills*(1.2+Math.sin(x*.15)*.6);}
+export function elevation(x,z){const d=Math.abs(z-riverY(x));const hills=Math.max(0,z-53)*.095+Math.max(0,9-z)*.13;const ground=-.48+Math.min(1.12,d*.36)+Math.sin(x*.16)*Math.sin(z*.15)*Math.min(.5,d*.055)+hills*(1.2+Math.sin(x*.15)*.6);return Math.min(ground,-.14+Math.max(0,d-CREEK_HALF_WIDTH)*.8);}
 const mat=(color,extra={})=>new T.MeshStandardMaterial({color,roughness:1,flatShading:true,...extra});
 function mesh(geo,m,pos,parent){const o=new T.Mesh(geo,m);o.position.set(...pos);o.castShadow=true;o.receiveShadow=true;parent.add(o);return o;}
 function seeded(seed=816){return()=>{seed=(Math.imul(seed,1664525)+1013904223)>>>0;return seed/4294967296;};}
