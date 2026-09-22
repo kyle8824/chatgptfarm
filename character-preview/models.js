@@ -20,9 +20,14 @@ function loft(parent,color,rings,sides=16){
  const pos=[],idx=[];
  for(const [y,rx,rz,z=0,x=0]of rings)for(let j=0;j<sides;j++){const a=j/sides*Math.PI*2;pos.push(x+Math.sin(a)*rx,y,z+Math.cos(a)*rz);}
  for(let i=0;i<rings.length-1;i++)for(let j=0;j<sides;j++){const a=i*sides+j,b=i*sides+(j+1)%sides;idx.push(a,b,b+sides,a,b+sides,a+sides);}
- // Winding follows outward-facing normals, including capped ends.
- for(let j=1;j<sides-1;j++){idx.push(0,j+1,j);const a=(rings.length-1)*sides;idx.push(a,a+j,a+j+1);}
- const g=new T.BufferGeometry();g.setAttribute('position',new T.Float32BufferAttribute(pos,3));g.setIndex(idx);g.computeVertexNormals();return mesh(parent,g,color);
+ // Caps have independent vertices. Sharing cap normals with the outer surface
+ // produces pinched dark triangles at cuffs, knees and the neck.
+ const g=new T.BufferGeometry();g.setAttribute('position',new T.Float32BufferAttribute(pos,3));g.setIndex(idx);g.computeVertexNormals();
+ const side=g.toNonIndexed(),cp=[],cn=[];
+ for(const end of [0,rings.length-1]){const [y,rx,rz,z=0,x=0]=rings[end],normal=end===0?-1:1;
+  for(let j=0;j<sides;j++){const a=j/sides*Math.PI*2,b=(j+1)/sides*Math.PI*2,points=[[x,y,z],[x+Math.sin(a)*rx,y,z+Math.cos(a)*rz],[x+Math.sin(b)*rx,y,z+Math.cos(b)*rz]];if(normal===1)points.reverse();for(const p of points){cp.push(...p);cn.push(0,normal,0);}}
+ }
+ const cap=new T.BufferGeometry();cap.setAttribute('position',new T.Float32BufferAttribute(cp,3));cap.setAttribute('normal',new T.Float32BufferAttribute(cn,3));const merged=mergeGeometries([side,cap]);g.dispose();side.dispose();cap.dispose();return mesh(parent,merged,color);
 }
 function ribbon(parent,color,points,width=.018,depth=.004){const m=tube(parent,color,points,width,12,8);m.scale.z=depth/width;return m;}
 function bake(root){
@@ -44,7 +49,7 @@ function scalp(parent,color,long){
  for(let j=0;j<=m;j++)for(let i=0;i<=n;i++){
   const a=i/n*Math.PI*2,front=Math.cos(a),edge=long?1.34+(1-front)*.40:1.16+(1-front)*.43;
   const theta=.015+j/m*edge,bulge=long?1:.98;
-  pos.push(Math.sin(theta)*Math.sin(a)*.129,.014+Math.cos(theta)*.169,Math.sin(theta)*Math.cos(a)*.106*bulge-.01);
+  pos.push(Math.sin(theta)*Math.sin(a)*.140,.014+Math.cos(theta)*.179,Math.sin(theta)*Math.cos(a)*.122*bulge-.018);
  }
  for(let j=0;j<m;j++)for(let i=0;i<n;i++){const a=j*(n+1)+i;idx.push(a,a+n+2,a+1,a,a+n+1,a+n+2);}
  const g=new T.BufferGeometry();g.setAttribute('position',new T.Float32BufferAttribute(pos,3));g.setIndex(idx);g.computeVertexNormals();return mesh(parent,g,color);
@@ -60,25 +65,27 @@ function eye(parent,x,skin,iris){
  return g;
 }
 function face(head,{skin,hair,iris,female}){
- loft(head,skin,[[-.145,.042,.048,.016],[-.13,.063,.065,.014],[-.103,.085,.081,.009],[-.060,.105,.09,.001],[0,.116,.100,0],[.065,.114,.10,-.004],[.12,.099,.084,-.014],[.157,.055,.049,-.018],[.168,.005,.005,-.018]],24);
+ loft(head,skin,[[-.145,female?.036:.047,.048,.016],[-.13,female?.056:.068,.065,.014],[-.103,female?.078:.089,.081,.009],[-.060,.105,.09,.001],[0,female?.111:.116,.100,0],[.065,female?.108:.114,.10,-.004],[.12,.099,.084,-.014],[.157,.055,.049,-.018],[.168,.005,.005,-.018]],32);
  for(const s of [-1,1]){ell(head,skin,[s*.115,-.008,-.006],[.023,.036,.018]);ell(head,'#bd8569',[s*.130,-.009,.006],[.008,.021,.009]);}
  // Bridge and tip form one restrained nose; lips follow the face's surface.
- loft(head,skin,[[-.045,.018,.012,.095],[-.029,.019,.020,.115],[-.016,.013,.026,.112],[.011,.010,.016,.102],[.039,.006,.006,.096]],12);
- for(const s of [-1,1])ell(head,'#b47d61',[s*.010,-.036,.130],[.0032,.0018,.001],8);
+ ell(head,skin,[0,.001,.100],[.009,.031,.013],18);
+ ell(head,skin,[0,-.024,.109],[female?.014:.016,.014,.020],18);
+ for(const s of [-1,1]){ell(head,skin,[s*.013,-.029,.106],[.008,.008,.012],12);ell(head,'#b47d61',[s*.010,-.032,.121],[.0022,.0013,.001],8);}
  tube(head,'#9d6150',[[-.033,-.077,.085],[-.015,-.081,.095],[0,-.080,.098],[.015,-.078,.095],[.032,-.072,.085]],.0028,16,6);
  tube(head,'#d0977c',[[-.021,-.086,.089],[0,-.088,.095],[.021,-.083,.089]],.003,12,5);
  const eyes=[eye(head,-.044,skin,iris),eye(head,.044,skin,iris)];
  for(const s of [-1,1])tube(head,hair,[[s*.023,.065,.097],[s*.042,.075,.098],[s*.065,.074,.087],[s*.073,.066,.080]],female?.004:.006,14,6);
- scalp(head,hair,female);
+ ell(head,hair,[0,.005,-.047],[.123,.160,.098],24);scalp(head,hair,female);
  if(female){
   for(const s of [-1,1])for(let i=0;i<4;i++){
    const x=s*(.058+i*.019),z=-.04-i*.017;
-   hairLock(head,i%2?'#62422f':'#533525',[[x,.134,z],[s*(.13+i*.008),-.004,z],[s*(.14+i*.008),-.13,z-.014],[s*(.118+i*.011),-.25,z+.013],[s*(.10+i*.012),-.32+i*.006,z-.013]],.036,.027);
+   hairLock(head,i%2?'#62422f':'#533525',[[x,.134,z],[s*(.135+i*.008),-.004,z],[s*(.151+i*.010),-.13,z-.014],[s*(.13+i*.012),-.24,z+.022],[s*(.152+i*.010),-.32,z-.015],[s*(.11+i*.012),-.405+i*.008,z]],.040,.031);
   }
-  hairLock(head,'#6b4934',[[.023,.165,.028],[-.05,.132,.084],[-.11,.045,.080],[-.13,-.02,.035]],.037,.025);
-  hairLock(head,'#674530',[[.027,.164,.025],[.097,.102,.073],[.124,-.004,.02],[.136,-.13,-.017]],.032,.023);
+  for(let i=0;i<5;i++)hairLock(head,i%2?'#65432f':'#543724',[[(i-2)*.043,.08,-.105],[(i-2)*.046,-.08,-.142],[(i-2)*.049,-.24,-.145],[(i-2)*.044,-.37,-.125]],.043,.034);
+  hairLock(head,'#6b4934',[[.023,.176,.028],[-.05,.139,.099],[-.12,.047,.087],[-.135,-.02,.035]],.040,.025);
+  hairLock(head,'#674530',[[.027,.176,.025],[.106,.111,.080],[.136,-.004,.02],[.145,-.13,-.017]],.035,.023);
  }else{
-  for(let i=0;i<6;i++)hairLock(head,i%2?'#513825':'#493020',[[.10-i*.031,.09,.052],[.096-i*.028,.165,.064],[.025-i*.019,.185,.021],[-.03-i*.009,.149,-.033]],.029,.021);
+  for(let i=0;i<6;i++)hairLock(head,i%2?'#513825':'#493020',[[.10-i*.031,.09,.075],[.096-i*.028,.165,.072],[.025-i*.019,.185,.021],[-.03-i*.009,.149,-.033]],.029,.021);
   for(const s of [-1,1])ell(head,hair,[s*.111,.025,-.012],[.010,.052,.04]);
  }
  return eyes;
@@ -107,6 +114,7 @@ export function createVillager(name='Mara'){
   const arm=group(torso,[s*(wide+.007),.418,0]);arms.push(arm);arm.rotation.z=s*.065;
   loft(arm,coat,[[-.27,.054,.051,0],[-.20,.062,.060,0],[-.06,.074,.065,0],[0,.066,.061,0],[.035,.025,.035,0]],14);
   const fore=group(arm,[0,-.25,0]);arm.userData.fore=fore;
+  ell(fore,coat,[0,0,0],[.055,.047,.052],14);
   loft(fore,coat,[[-.25,.044,.041,0],[-.18,.049,.048,0],[-.03,.055,.051,0],[.014,.050,.046,0]],14);
   loft(fore,shade,[[-.235,.047,.044,0],[-.197,.050,.047,0]],14);
   const hand=group(fore,[0,-.271,.004]);
@@ -116,6 +124,7 @@ export function createVillager(name='Mara'){
   const leg=group(hips,[s*.083,-.015,0]);legs.push(leg);
   loft(leg,pants,[[-.37,.062,.068,0],[-.25,.077,.083,0],[-.08,.082,.089,0],[.025,.080,.084,0]],16);
   const shin=group(leg,[0,-.365,0]);leg.userData.shin=shin;
+  ell(shin,pants,[0,0,0],[.062,.050,.065],14);
   loft(shin,pants,[[-.30,.053,.056,0],[-.15,.055,.057,0],[.015,.063,.068,0]],14);
   loft(shin,boots,[[-.397,.069,.098,.03],[-.34,.066,.074,.012],[-.15,.068,.061,0],[-.12,.067,.059,0]],16);
   ell(shin,boots,[0,-.357,.064],[.071,.057,.135],16);
@@ -140,9 +149,9 @@ export function createDeer(){
  const root=new T.Group(),body=group(root,[0,.85,0]),fur='#b48a58',light='#d7bb87',dark='#5c4430',white='#eee0bd';
  ell(body,fur,[0,0,0],[.205,.245,.46],22);ell(body,'#a77a4d',[0,.045,-.27],[.192,.22,.23],18);
  ell(body,light,[0,-.12,.11],[.16,.11,.32],18);
- const neck=group(body,[0,.12,.32]);neck.rotation.x=-.27;
- loft(neck,fur,[[0,.14,.16],[.16,.104,.117,.015],[.35,.077,.082,.032],[.40,.070,.073,.04]],18);
- ell(neck,white,[0,.17,.103],[.073,.17,.025],16);
+ const neck=group(body,[0,.08,.27]);neck.rotation.x=.35;
+ loft(neck,fur,[[-.15,.125,.16,-.005],[-.02,.14,.16],[.16,.104,.117,.015],[.35,.077,.082,.032],[.40,.070,.073,.04]],24);
+ ell(neck,white,[0,.18,.108],[.060,.145,.021],16);
  const head=group(neck,[0,.38,.06]);
  ell(head,fur,[0,.022,.025],[.085,.108,.16],20);
  ell(head,light,[0,-.018,.14],[.058,.060,.14],18);ell(head,dark,[0,-.005,.257],[.048,.033,.023],16);
@@ -152,7 +161,7 @@ export function createDeer(){
   const ear=group(head,[s*.064,.079,-.025]);ear.rotation.z=-s*.62;ear.rotation.x=-.12;ears.push(ear);
   loft(ear,fur,[[0,.035,.021],[.07,.050,.022],[.15,.034,.014],[.205,.002,.002]],14);
   ell(ear,'#ddbd9c',[0,.096,.016],[.029,.078,.007],14);
-  ell(head,dark,[s*.074,.048,.081],[.011,.020,.018],14);ell(head,'#eee9d8',[s*.081,.056,.092],[.003,.004,.004],8);
+  ell(head,dark,[s*.077,.048,.078],[.004,.016,.016],14);ell(head,'#eee9d8',[s*.081,.053,.085],[.001,.0025,.003],8);
   tube(head,light,[[s*.071,.069,.062],[s*.084,.073,.082],[s*.078,.060,.10]],.0035,10,5);
  }
  const legs=[];
@@ -160,6 +169,7 @@ export function createDeer(){
   const leg=group(body,[s*.123,-.105,front?.28:-.29]);legs.push(leg);leg.userData.front=front;
   loft(leg,fur,[[-.33,.028,.033],[front?-.12:-.18,front?.045:.060,front?.047:.073,front?0:-.04],[.08,.07,.082]],14);
   const shin=group(leg,[0,-.32,0]);leg.userData.shin=shin;
+  ell(shin,fur,[0,0,0],[.030,.028,.034],12);
   loft(shin,light,[[-.345,.017,.025],[front?-.12:-.10,.021,.027,front?0:-.035],[0,.030,.035]],12);
   ell(shin,dark,[0,-.370,.016],[.033,.038,.052],14);
   tube(shin,'#382e24',[[0,-.386,.060],[0,-.353,.061]],.0025,4,4);
@@ -169,7 +179,7 @@ export function createDeer(){
 }
 export function animateDeer(m,t,mode='idle'){
  const walk=mode==='walk',graze=mode==='work';m.body.position.y=.85+(walk?Math.cos(t*6)*.007:Math.sin(t*1.5)*.002);
- m.neck.rotation.x=graze?1.12:-.27+Math.sin(t*.8)*.025;m.head.rotation.x=graze?.38:0;m.head.rotation.y=graze?0:Math.sin(t*.47)*.10;
+ m.neck.rotation.x=graze?2.25:.35+Math.sin(t*.8)*.025;m.head.rotation.x=graze?-.38:0;m.head.rotation.y=graze?0:Math.sin(t*.47)*.10;
  m.ears.forEach((e,i)=>e.rotation.y=Math.sin(t*1.4+i*2.3)*.13);m.tail.rotation.x=-.35+Math.sin(t*2)*.08;
  m.legs.forEach((l,i)=>{const phase=t*5.4+[0,Math.PI,Math.PI,0][i];l.rotation.x=walk?Math.sin(phase)*.32:0;l.userData.shin.rotation.x=walk?Math.max(0,-Math.sin(phase))*(l.userData.front?.45:-.45):0;});
 }

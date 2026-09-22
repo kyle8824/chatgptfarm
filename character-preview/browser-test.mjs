@@ -12,7 +12,20 @@ try{
   await page.goto(base,{waitUntil:'networkidle'});await page.waitForFunction(()=>window.previewMetrics?.fps>0);assert.equal(await page.locator('#failure').isVisible(),false,'actual WebGL rendered');
   assert.equal(await page.evaluate(()=>document.documentElement.scrollWidth>innerWidth),false,'no horizontal overflow');
   await page.locator('#pause').click();await page.screenshot({path:new URL(`${name}-together.png`,out).pathname});
-  const initial=await page.evaluate(()=>window.previewMetrics);assert(initial.counts.mara.triangles<18000);assert(initial.counts.ivo.triangles<18000);assert(initial.counts.deer.triangles<10000);assert.equal(initial.previewOnly,true);
+  const initial=await page.evaluate(()=>window.previewMetrics);assert(initial.counts.mara.triangles<20000);assert(initial.counts.ivo.triangles<20000);assert(initial.counts.deer.triangles<10000);assert.equal(initial.previewOnly,true);
+  if(name==='mobile'){
+   const cdp=await context.newCDPSession(page);await page.waitForTimeout(1400);const before=await page.evaluate(()=>window.previewMetrics);
+   await cdp.send('Input.dispatchTouchEvent',{type:'touchStart',touchPoints:[{x:140,y:410,id:1}]});
+   for(let x=150;x<=220;x+=10)await cdp.send('Input.dispatchTouchEvent',{type:'touchMove',touchPoints:[{x,y:410,id:1}]});
+   await cdp.send('Input.dispatchTouchEvent',{type:'touchEnd',touchPoints:[]});await page.waitForTimeout(1800);const after=await page.evaluate(()=>window.previewMetrics);
+   assert(Math.hypot(...after.camera.target.map((x,i)=>x-before.camera.target[i]))>.05,'single-finger drag pans the camera');
+   const direction=m=>m.camera.position.map((x,i)=>x-m.camera.target[i]);assert(Math.hypot(...direction(after).map((x,i)=>x-direction(before)[i]))<.01,'single-finger drag does not orbit');
+   assert.equal(after.animationTime,before.animationTime,'pause stops the model animation');
+   await page.locator('#home').click();await page.waitForTimeout(1800);
+   const pinchBefore=await page.evaluate(()=>window.previewMetrics);await cdp.send('Input.dispatchTouchEvent',{type:'touchStart',touchPoints:[{x:150,y:420,id:1},{x:250,y:420,id:2}]});
+   await cdp.send('Input.dispatchTouchEvent',{type:'touchMove',touchPoints:[{x:120,y:420,id:1},{x:280,y:420,id:2}]});await cdp.send('Input.dispatchTouchEvent',{type:'touchEnd',touchPoints:[]});await page.waitForTimeout(1800);
+   const pinchAfter=await page.evaluate(()=>window.previewMetrics);assert(Math.hypot(...direction(pinchAfter))<Math.hypot(...direction(pinchBefore))*.8,'two-finger pinch zooms');await page.locator('#home').click();
+  }
   for(const subject of ['mara','ivo','deer']){
    await page.locator(`[data-subject=${subject}]`).click();await page.waitForTimeout(1300);await page.screenshot({path:new URL(`${name}-${subject}.png`,out).pathname});
    await page.locator('#close-up').click();await page.waitForTimeout(1300);await page.screenshot({path:new URL(`${name}-${subject}-close.png`,out).pathname});
