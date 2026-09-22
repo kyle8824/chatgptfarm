@@ -28,7 +28,7 @@ function setView(immediate=false){
  const {x,y,z}=focus;
  let distance=close?(selected==='deer'?2.2:1.4):together?(mobile?10.8:6.6):selected==='deer'?(mobile?4.8:4.3):(mobile?4.8:4.5);
  if(together&&extras.length)distance=mobile?14:9;
- const theta=angle==='side'?Math.PI/2:angle==='back'?Math.PI:0;
+ const theta=(angle==='side'?Math.PI/2:angle==='back'?Math.PI:0)+(together?0:m.root.rotation.y);
  desiredTarget.set(x,y,z);desiredPosition.set(x+Math.sin(theta)*distance,y+distance*(close?.045:.085),z+Math.cos(theta)*distance);
  // View offset reserves room for header and controls without tilting the faces.
  const offset=mobile?-.015:-.015;camera.setViewOffset(innerWidth,innerHeight,0,innerHeight*offset,innerWidth,innerHeight);
