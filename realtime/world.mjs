@@ -60,7 +60,7 @@ export class RealtimeController{
    const failed=this.record.decisionFailures?.[a.id]||(!this.record.decisionFailures&&this.record.ai.lastError);const cooldown=failed?120000:1800000;
    if(this.jobs.has(a.id)||this.proposals.has(a.id)||this.now()-(this.record.lastDecisionAt[a.id]||0)<cooldown)continue;
    const context=retrieveDecisionContext(this.record.world,a);const choices=liveCandidates(this.record.world,a,context.candidates).slice(0,8).map(x=>({id:x.id,label:x.label}));
-   const input=JSON.stringify({person:a.name,needs:context.perception.needs,weather:context.perception.weather,temperature:context.perception.temperature,location:a.position,inventory:a.inventory,memories:context.memories.slice(0,5).map(m=>m.text.slice(0,170)),recentActions:context.agent.recentActions.slice(-4),choices}).slice(0,6000);
+   const input=JSON.stringify({person:a.name,needs:context.perception.needs,weather:context.perception.weather,temperature:context.perception.temperature,location:a.position,inventory:a.inventory,relationships:context.perception.knownPeople,memories:context.memories.slice(0,5).map(m=>m.text.slice(0,170)),recentActions:context.agent.recentActions.slice(-4),choices}).slice(0,6000);
    const job=this.makeDecision(a.id,input,choices);this.jobs.set(a.id,job);job.finally(()=>this.jobs.delete(a.id)).catch(()=>{});
   }
  }

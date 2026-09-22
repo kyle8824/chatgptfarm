@@ -3,7 +3,7 @@ import {actionDestination,family,outcome,display} from '../engine/persistent-act
 import {coordForPosition} from '../engine/spectator.js';
 import {distance} from '../engine/navigation.js';
 import {storedFuel} from '../engine/wood-runtime.js';
-import {addEvent} from '../engine/core.js';
+import {addEvent,relationship} from '../engine/core.js';
 import {configureTask} from './motion.mjs';
 import {settlementCandidates} from './settlement.mjs';
 import {clock as liveClock,roomFor} from './holdings.mjs';
@@ -35,7 +35,8 @@ export function liveCandidates(w,a,candidates){
   const comfortPenalty=need&&n>70?(n-70)*1.2:0;
   // Travel has a cost. Equally useful nearby resources should not lose a fixed
   // alphabetical tie to the same distant thicket on every decision.
-  const score=c.score-trip*(a.needs.energy<25?.45:.24)-comfortPenalty+(immediate&&a.needs.hunger<35?20:0);
+  const other=w.agents.find(b=>b.id!==a.id),trust=other?relationship(w,a,other)?.trust??34:34,socialPenalty=['talk','seek_other','share_food'].includes(c.id)?Math.max(0,35-trust)*(c.id==='share_food'?1.6:.7):0;
+  const score=c.score-trip*(a.needs.energy<25?.45:.24)-comfortPenalty-socialPenalty+(immediate&&a.needs.hunger<35?20:0);
   return {...c,label:c.id==='explore'?'Explore the surrounding valley':c.label,score,reasons:[...(c.reasons||[]),['travel effort',-trip*.24]]};
  });return [...ordinary,...settlementCandidates(w,a)].sort((x,y)=>y.score-x.score||x.id.localeCompare(y.id));
 }
