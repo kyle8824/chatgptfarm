@@ -203,3 +203,97 @@ export function animateDeer(m,t,mode='idle',dt=1){
  m.legs.forEach((l,i)=>{const phase=t*5.4+[0,Math.PI,Math.PI,0][i];l.rotation.x=walk?Math.sin(phase)*.32:0;l.userData.shin.rotation.x=walk?Math.max(0,-Math.sin(phase))*(l.userData.front?.45:-.45):0;});
 }
 export function geometryStats(root){let triangles=0,meshes=0;root.traverse(o=>{if(o.isMesh){meshes++;triangles+=(o.geometry.index?.count??o.geometry.attributes.position.count)/3;}});return {triangles,meshes};}
+
+// Smooth low-cost wildlife, sharing the people's matte vertex-color material.
+// Roots face +z; articulated joins are buried inside the torso, never capped
+// cylinders stuck onto its surface. Static details are baked per moving group.
+export function createBear(){
+ const root=new T.Group(),body=group(root,[0,.71,0]),fur='#423c32',warm='#514639',muzzle='#9d805e',dark='#292820';
+ ell(body,fur,[0,0,-.10],[.38,.39,.64],24);
+ ell(body,warm,[0,.055,.29],[.32,.33,.39],20);
+ const head=group(body,[0,.02,.57]);
+ ell(head,fur,[0,.08,.02],[.24,.24,.26],20);
+ ell(head,muzzle,[0,-.01,.24],[.14,.105,.19],18);
+ ell(head,dark,[0,.015,.389],[.097,.061,.043],16);
+ tube(head,'#382d25',[[-.095,-.071,.255],[0,-.076,.357],[.095,-.071,.255]],.003,12,5);
+ const ears=[];
+ for(const side of [-1,1]){
+  const ear=group(head,[side*.178,.255,-.012]);ears.push(ear);
+  ell(ear,fur,[0,0,0],[.075,.079,.044],14);ell(ear,'#76604b',[0,.004,.036],[.044,.046,.009],12);
+  ell(head,'#171b19',[side*.171,.118,.187],[.020,.022,.009],14);ell(head,'#e5d4a7',[side*.170,.124,.196],[.004,.005,.002],8);
+  tube(head,warm,[[side*.135,.15,.19],[side*.17,.157,.176],[side*.195,.145,.156]],.013,8,6);
+ }
+ const legs=[];
+ for(const front of [true,false])for(const side of [-1,1]){
+  const leg=group(body,[side*.235,-.04,front?.31:-.42]);legs.push(leg);leg.userData.front=front;
+  loft(leg,fur,[[-.49,.095,.105,.01],[-.36,.108,.12,0],[-.16,.143,.16,front?.035:-.035],[.045,.135,.16],[.12,.055,.08]],16);
+  const foot=group(leg,[0,-.535,.055]);leg.userData.foot=foot;
+  ell(foot,fur,[0,0,.04],[.105,.125,.16],16);
+  for(let j=0;j<4;j++)ell(foot,'#b1a181',[(j-1.5)*.039,-.025,.172],[.012,.020,.042],8);
+ }
+ const tail=group(body,[0,-.018,-.705]);ell(tail,fur,[0,0,0],[.062,.07,.065],12);
+ bake(root);return {root,body,head,ears,legs,tail,kind:'bear'};
+}
+export function createRabbit(){
+ const root=new T.Group(),body=group(root,[0,.205,0]),fur='#8e8070',light='#c7baa1',cream='#e8ddc3',dark='#3b342e';
+ ell(body,fur,[0,0,-.055],[.125,.15,.235],20);
+ ell(body,'#a09079',[0,.06,.09],[.107,.115,.13],18);
+ const head=group(body,[0,.08,.18]);ell(head,fur,[0,.022,.015],[.086,.098,.104],20);
+ for(const side of [-1,1]){
+  ell(head,cream,[side*.03,-.017,.106],[.04,.036,.039],14);
+  ell(head,dark,[side*.070,.041,.064],[.007,.020,.018],14);ell(head,'#fff3d1',[side*.076,.047,.070],[.002,.004,.003],8);
+  tube(head,light,[[side*.065,.061,.05],[side*.080,.062,.063],[side*.078,.041,.085]],.004,10,5);
+  for(let i=0;i<2;i++)tube(head,'#b9ab97',[[side*.037,-.01+i*.008,.12],[side*.105,.005+i*.012,.13],[side*.14,.02+i*.012,.11]],.0012,5,3);
+ }
+ ell(head,'#805c53',[0,-.006,.137],[.014,.011,.010],12);
+ tube(head,dark,[[0,-.014,.137],[0,-.023,.135],[-.012,-.026,.126]],.0015,5,4);
+ const ears=[];
+ for(const side of [-1,1]){
+  const ear=group(head,[side*.047,.094,-.023]);ears.push(ear);ear.rotation.z=-side*.17;
+  loft(ear,fur,[[0,.026,.019],[.065,.033,.019],[.17,.027,.013],[.235,.004,.004]],14);
+  ell(ear,'#ba9482',[0,.12,.015],[.017,.087,.004],14);
+  tube(ear,light,[[0,.015,.02],[0,.105,.023],[0,.215,.007]],.0025,9,5);
+ }
+ const legs=[];
+ for(const front of [true,false])for(const side of [-1,1]){
+  const leg=group(body,[side*(front?.075:.09),-.045,front?.12:-.14]);legs.push(leg);leg.userData.front=front;
+  if(!front)ell(leg,fur,[0,.01,0],[.075,.105,.12],16);
+  ell(leg,front?light:fur,[0,-.054,front?0:.01],[front?.026:.048,.07,.04],14);
+  ell(leg,cream,[0,-.125,front?.018:.065],[front?.033:.047,.035,front?.052:.103],14);
+  for(let i=0;i<2;i++)tube(leg,'#a49780',[[(i-.5)*.018,-.139,front?.06:.15],[(i-.5)*.018,-.12,front?.066:.158]],.0014,3,3);
+ }
+ const tail=group(body,[0,-.003,-.27]);ell(tail,cream,[0,0,0],[.055,.058,.056],16);
+ bake(root);return {root,body,head,ears,legs,tail,kind:'rabbit'};
+}
+function fin(parent,color,points){
+ const g=new T.BufferGeometry();g.setAttribute('position',new T.Float32BufferAttribute(points.flat(),3));g.setIndex([0,1,2,2,1,0]);g.computeVertexNormals();return mesh(parent,g,color);
+}
+export function createFish(){
+ const root=new T.Group(),body=group(root),back='#647d74',silver='#acb9a2',finColor='#777e63';
+ const skin=ell(body,back,[0,0,0],[.052,.083,.235],24),color=skin.geometry.attributes.color,points=skin.geometry.attributes.position,top=new T.Color(back),belly=new T.Color(silver);for(let i=0;i<points.count;i++){const c=top.clone().lerp(belly,T.MathUtils.smoothstep(-points.getY(i),-.15,.7));color.setXYZ(i,c.r,c.g,c.b);}
+ const head=group(body,[0,0,.17]);
+ for(const side of [-1,1]){ell(head,'#d6cb9d',[side*.035,.018,.015],[.004,.013,.013],12);ell(head,'#212d28',[side*.039,.019,.019],[.002,.008,.007],10);}
+ const tail=group(body,[0,0,-.185]);
+ fin(tail,finColor,[[0,0,.01],[0,.10,-.15],[0,-.10,-.15]]);
+ fin(body,finColor,[[0,.06,.085],[0,.155,-.025],[0,.05,-.12]]);
+ for(const side of [-1,1])fin(body,finColor,[[side*.032,-.025,.105],[side*.13,-.07,-.02],[side*.04,-.045,-.08]]);
+ bake(root);return {root,body,head,tail,legs:[],kind:'fish'};
+}
+export function createAnimal(species){return species==='bear'?createBear():species==='rabbit'?createRabbit():species==='fish'?createFish():createDeer();}
+export function animateAnimal(m,t,mode='idle',dt=1){
+ if(!m.kind){animateDeer(m,t,['walk','flee','withdraw','roam','associate','water','cover'].includes(mode)?'walk':['graze','work','drink'].includes(mode)?'work':'idle',dt);m.tail.rotation.x=mode==='flee'?-2.1:-.35+Math.sin(t*2)*.08;return;}
+ const moving=['walk','flee','withdraw','roam','associate','water','cover','swim','dart'].includes(mode),feeding=['work','forage','graze','drink'].includes(mode),rest=mode==='rest',fast=['flee','dart','withdraw'].includes(mode);
+ if(m.kind==='fish'){m.tail.rotation.y=Math.sin(t*(fast?15:7))*.36;m.body.rotation.y=Math.sin(t*3)*.035;return;}
+ if(m.kind==='rabbit'){
+  const cycle=t*(fast?14:9),hop=moving?Math.max(0,Math.sin(cycle)):0;
+  m.body.position.y=.205+hop*.065-(rest?.02:0);m.body.rotation.x=moving?Math.cos(cycle)*.07:0;
+  m.head.rotation.x=feeding?.35+Math.sin(t*8)*.04:0;m.head.rotation.y=mode==='freeze'?0:Math.sin(t*.7)*.07;
+  m.ears.forEach((e,i)=>{e.rotation.x=moving?-.55:rest?-.35:Math.sin(t*.8+i*2)*.14;e.rotation.z=(i?-.17:.17);});
+  m.legs.forEach(l=>{l.rotation.x=moving?Math.sin(cycle+(l.userData.front?1.4:0))*.38:rest?.15:0;});
+ }else{
+  m.body.position.y=.71+(moving?Math.abs(Math.sin(t*4.5))*.008:0)-(rest?.12:0);
+  m.head.rotation.x=feeding?.38+Math.sin(t*2.8)*.035:mode==='defend'?-.15:0;m.head.rotation.y=mode==='defend'?Math.sin(t*7)*.09:Math.sin(t*.55)*.07;
+  m.legs.forEach((l,i)=>l.rotation.x=moving?Math.sin(t*(fast?7:4.5)+[0,Math.PI,Math.PI,0][i])*.3:rest?(l.userData.front?-.85:.85):0);
+  m.ears.forEach((e,i)=>e.rotation.y=Math.sin(t*.8+i)*.1);
+ }
+}
