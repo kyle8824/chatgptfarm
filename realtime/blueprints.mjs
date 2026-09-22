@@ -35,11 +35,21 @@ function coversRectangle(rectangles,target){
  const xs=[target.minX,target.maxX,...rectangles.flatMap(r=>[Math.max(target.minX,Math.min(target.maxX,r.minX)),Math.max(target.minX,Math.min(target.maxX,r.maxX))])].sort((a,b)=>a-b);
  for(let i=1;i<xs.length;i++){if(xs[i]-xs[i-1]<.001)continue;const x=(xs[i]+xs[i-1])/2,spans=rectangles.filter(r=>r.minX<=x&&r.maxX>=x).sort((a,b)=>a.minZ-b.minZ);let end=target.minZ;for(const r of spans){if(r.minZ>end+.04)break;end=Math.max(end,r.maxZ);}if(end<target.maxZ-.04)return false;}return true;
 }
-export function validateBlueprint(w,a,raw){
+// A villager can move during inference. Keep the issued local site identity,
+// but recheck its physical clearance and route against the current world.
+function issuedLocalSite(w,a,raw,issued){
+ if(!issued||issued.id!==raw.siteId||!/^local-\d+-\d+$/.test(issued.id)||issued.spansWater)return null;
+ const p=issued.position;
+ if(!p||issued.width!==4||issued.depth!==4||issued.id!==`local-${p.x}-${p.y}`||p.x<4||p.y<4||p.x>w.worldModel.bounds.width-4||p.y>w.worldModel.bounds.height-4)return null;
+ if(w.settlement.projects.some(b=>distance(b.position,p)<6)||w.settlement.trees.some(t=>treeUnits(w,t)>0&&distance(t.position,p)<3.5))return null;
+ if(![-2,0,2].every(x=>[-2,0,2].every(y=>liveWalkable(w,{x:p.x+x,y:p.y+y})))||!liveRoute(w,a.coordinates,p))return null;
+ return issued;
+}
+export function validateBlueprint(w,a,raw,issuedSite=null){
  if(!raw||typeof raw!=='object')throw Error('Invalid construction response');
  if(raw.build===false)return null;
  if(raw.build!==true)throw Error('Explicit build decision required');
- const site=buildingSites(w,a).find(s=>s.id===raw.siteId),generated=typeof raw.code==='string';if(!site||!generated&&!site.purposes.includes(raw.purpose))throw Error('Site unavailable or wrong purpose');
+ const generated=typeof raw.code==='string',site=buildingSites(w,a).find(s=>s.id===raw.siteId)||(generated&&issuedLocalSite(w,a,raw,issuedSite));if(!site||!generated&&!site.purposes.includes(raw.purpose))throw Error('Site unavailable or wrong purpose');
  const compiled=generated?runConstructionCode(raw.code,{site:physicalSite(site),materials:{timber:w.settlement.trees.reduce((n,t)=>n+treeUnits(w,t),0),stone:materialSources(w,'stone',a).reduce((n,s)=>n+s.remaining,0),reeds:materialSources(w,'reeds',a).reduce((n,s)=>n+s.remaining,0),clay:materialSources(w,'clay',a).reduce((n,s)=>n+s.remaining,0)}}):null;
  if(compiled)raw={...raw,parts:compiled.parts};
  if(!Array.isArray(raw.parts)||raw.parts.length<4||raw.parts.length>(generated?48:28))throw Error('Use 4–'+(generated?48:28)+' parts');
