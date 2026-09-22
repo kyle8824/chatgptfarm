@@ -1,0 +1,18 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover"><meta name="theme-color" content="#eef2ec"><title>Character study · ChatGPTFarm</title><link rel="stylesheet" href="./style.css"><link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 40 40'%3E%3Crect width='40' height='40' rx='10' fill='%23294636'/%3E%3Cpath d='M20 7L31 28H9Z' fill='%23c9ddb7'/%3E%3C/svg%3E"></head>
+<body>
+ <main>
+  <div id="stage" aria-label="Interactive 3D character and deer study"></div>
+  <header><a class="brand" href="https://chatgptfarm.com"><span class="mark">◈</span> ChatGPTFarm</a><span class="study">CHARACTER STUDY <span>01</span></span></header>
+  <section class="intro"><p class="eyebrow">A SHARED VISUAL LANGUAGE</p><h1>Life in the valley.</h1><p class="description">Mara, Ivo & the white-tailed deer.</p><span class="preview-label">Animation preview · separate from the live world</span></section>
+  <nav class="subjects" aria-label="Choose a subject"><button data-subject="together" aria-pressed="true">Together</button><button data-subject="mara" aria-pressed="false">Mara</button><button data-subject="ivo" aria-pressed="false">Ivo</button><button data-subject="deer" aria-pressed="false">Deer</button></nav>
+  <div class="view-tools"><button id="zoom-in" aria-label="Zoom in">＋</button><button id="zoom-out" aria-label="Zoom out">−</button><button id="home" aria-label="Reset view">⌂</button></div>
+  <aside id="failure" hidden><h2>3D graphics couldn’t start</h2><p>This preview needs WebGL. Try opening this link directly in Chrome with hardware acceleration enabled.</p></aside>
+  <section class="control-panel" aria-label="Preview controls">
+   <div class="control-row"><div class="control-group"><span class="caption">MOVEMENT</span><div class="segmented"><button data-mode="idle" aria-pressed="true">Idle</button><button data-mode="walk" aria-pressed="false">Walk</button><button data-mode="work" aria-pressed="false">Work / graze</button></div></div><button id="pause" aria-pressed="false" aria-label="Pause animation">Ⅱ</button></div>
+   <div class="control-row views"><div class="segmented angles" aria-label="Camera angle"><button data-angle="front" aria-pressed="true">Front</button><button data-angle="side" aria-pressed="false">Side</button><button data-angle="back" aria-pressed="false">Back</button><button id="close-up" aria-pressed="false">Close-up</button></div><label class="quality-label">Graphics<select id="quality"><option value="balanced">Balanced</option><option value="detail">Detail</option></select></label></div>
+   <div class="footer-row"><span class="gesture">Drag to move · pinch to zoom · two fingers to rotate</span><button id="stats-toggle" aria-expanded="false" aria-controls="stats">Performance <span id="fps">measuring</span></button></div>
+   <div id="stats" hidden><div id="numbers"></div><p>Measured in this browser. This small scene is an art and animation study, not a full-world performance benchmark.</p><label class="population">Rendering load<select id="population"><option value="1">2 people + 1 deer</option><option value="4">8 people + 4 deer</option></select></label></div>
+  </section>
+ </main><script type="module" src="./viewer.js"></script>
+</body></html>
