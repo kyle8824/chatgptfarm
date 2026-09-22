@@ -13,14 +13,14 @@ const approach=(old,target,blend)=>old+(target-old)*blend;
 const downAxis=new T.Vector3(0,-1,0);
 // Solve the articulated upper arm and forearm to a real contact point. The
 // elbow pole keeps elbows below/outside the hands instead of raising both arms.
-function reach(arm,target,side,blend){
- const upper=.25,lower=.30,direction=target.clone().sub(arm.position),length=T.MathUtils.clamp(direction.length(),.051,.549);direction.normalize();
+function aimBones(joint,lowerJoint,target,upper,lower,pole,blend){
+ const direction=target.clone().sub(joint.position),length=T.MathUtils.clamp(direction.length(),Math.abs(upper-lower)+.001,upper+lower-.001);direction.normalize();
  const along=(upper*upper-lower*lower+length*length)/(2*length),height=Math.sqrt(Math.max(0,upper*upper-along*along));
- const pole=new T.Vector3(side*.7,-.8,.35);pole.addScaledVector(direction,-pole.dot(direction)).normalize();
+ pole.addScaledVector(direction,-pole.dot(direction)).normalize();
  const elbow=direction.clone().multiplyScalar(along).addScaledVector(pole,height),end=direction.clone().multiplyScalar(length);
  const shoulderQ=new T.Quaternion().setFromUnitVectors(downAxis,elbow.clone().normalize());
  const foreDirection=end.sub(elbow).normalize().applyQuaternion(shoulderQ.clone().invert()),foreQ=new T.Quaternion().setFromUnitVectors(downAxis,foreDirection);
- arm.quaternion.slerp(shoulderQ,blend);arm.userData.fore.quaternion.slerp(foreQ,blend);
+ joint.quaternion.slerp(shoulderQ,blend);lowerJoint.quaternion.slerp(foreQ,blend);
 }
 
 export function animatePerson(e,time,dt,walking,fresh){
@@ -41,9 +41,10 @@ export function animatePerson(e,time,dt,walking,fresh){
    const bend=-Math.acos(T.MathUtils.clamp((forward*forward+down*down-upper*upper-lower*lower)/(2*upper*lower),-.999,.999));
    thigh=-(Math.atan2(forward,down)-Math.atan2(lower*Math.sin(bend),upper+lower*Math.cos(bend)));knee=-bend;
   }else if(walking){thigh=-Math.sin(phase)*.38;knee=Math.max(0,Math.cos(phase))*.43;}
-  leg.rotation.x=approach(leg.rotation.x,thigh,blend);shin.rotation.x=approach(shin.rotation.x,knee,blend);
-  leg.userData.foot.rotation.x=walking?0:-leg.rotation.x-shin.rotation.x;
-  if(drink){const target=scoop.clone().lerp(mouth,sip);target.x+=(i?1:-1)*.034;reach(arm,target,i?1:-1,blend);}
+  if(drink){aimBones(leg,shin,new T.Vector3((i?1:-1)*.18,.093-m.hips.position.y,.12),.365,.34,new T.Vector3((i?1:-1)*.8,0,1),blend);}
+  else{leg.rotation.x=approach(leg.rotation.x,thigh,blend);shin.rotation.x=approach(shin.rotation.x,knee,blend);for(const axis of ['y','z']){leg.rotation[axis]=approach(leg.rotation[axis],0,blend);shin.rotation[axis]=approach(shin.rotation[axis],0,blend);}}
+  if(walking)leg.userData.foot.quaternion.identity();else leg.userData.foot.quaternion.copy(leg.quaternion).multiply(shin.quaternion).invert();
+  if(drink){const target=scoop.clone().lerp(mouth,sip);target.x+=(i?1:-1)*.034;aimBones(arm,fore,target,.25,.30,new T.Vector3((i?1:-1)*.7,-.8,.35),blend);}
   else{
    const armAngle=gather?-.75+Math.sin(time*3+i*.3)*.24:rest?-.30:eat&&i===1?-1.9:walking?Math.sin(phase)*.32:Math.sin(time+i)*.015;
    arm.rotation.x=approach(arm.rotation.x,armAngle,blend);arm.rotation.y=approach(arm.rotation.y,0,blend);arm.rotation.z=approach(arm.rotation.z,(i?1:-1)*.065,blend);

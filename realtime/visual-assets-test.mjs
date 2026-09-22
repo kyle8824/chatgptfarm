@@ -32,6 +32,7 @@ try{
    p.group.position.set(0,elevation,0);p.waterPoint.set(0,-.105,gap);p.action='drink';
    for(let i=0;i<220;i++)animatePerson(p,0,1/60,false,true);p.group.updateMatrixWorld(true);
    for(const arm of p.model.arms){const hand=arm.userData.fore.localToWorld(new T.Vector3(0,-.30,0));assert(hand.distanceTo(p.waterPoint)<.065,'reach the creek from a sloping/far bank');}
+   for(const leg of p.model.legs){const knee=p.model.root.worldToLocal(leg.userData.shin.getWorldPosition(new T.Vector3()));assert(Math.abs(knee.x)>.23,'knees clear the leaning coat');}
    for(const leg of p.model.legs){const foot=new T.Box3().setFromObject(leg.userData.foot);assert(Math.abs(foot.min.y-elevation)<.025,'deep water reach keeps soles planted');}
   }
   const before=p.model.hips.position.toArray();animatePerson(p,10,.1,true,false);assert.deepEqual(p.model.hips.position.toArray(),before,'stale data never plays walking');
