@@ -1,0 +1,222 @@
+{
+  "name": "Raised supply shelter",
+  "rationale": "A raised timber deck keeps gathered supplies off damp ground. A reed roof protects them from rain while the open sides leave access for carrying and sorting.",
+  "purpose": "keep gathered materials above damp ground and out of rain",
+  "generic": true,
+  "spansWater": false,
+  "code": "const width=1.6;\nfunction upright(id,x,z){ return part({id:id,kind:'post',shape:'cylinder',material:'timber',center:[x,1,z],size:[.14,2,.14],requires:[]}); }\nfor(let i=0;i<4;i++){ const x=i%2===0?-.75:.75;const z=i<2?-.55:.55;upright('support-'+i,x,z); }\npart({id:'shelf',kind:'deck',material:'timber',center:[0,.35,0],size:[width,.12,1.2],requires:['support-0','support-1','support-2','support-3']});\npart({id:'weather-top',kind:'roof',material:'reeds',center:[0,2.05,0],size:[1.9,.1,1.5],requires:['support-0','support-1','support-2','support-3']});",
+  "codeVersion": "construction-js-1",
+  "siteId": "clearing-0",
+  "position": {
+    "x": 72,
+    "y": 38
+  },
+  "access": "shared",
+  "parts": [
+    {
+      "id": "support-0",
+      "kind": "post",
+      "material": "timber",
+      "center": [
+        -0.75,
+        1,
+        -0.55
+      ],
+      "size": [
+        0.14,
+        2,
+        0.14
+      ],
+      "shape": "cylinder",
+      "requires": [],
+      "built": true,
+      "workMinutes": 2.25,
+      "materialUnits": 1,
+      "requiredMinutes": 2.25,
+      "invested": true,
+      "worker": null
+    },
+    {
+      "id": "support-1",
+      "kind": "post",
+      "material": "timber",
+      "center": [
+        0.75,
+        1,
+        -0.55
+      ],
+      "size": [
+        0.14,
+        2,
+        0.14
+      ],
+      "shape": "cylinder",
+      "requires": [],
+      "built": true,
+      "workMinutes": 2.25,
+      "materialUnits": 1,
+      "requiredMinutes": 2.25,
+      "invested": true,
+      "worker": null
+    },
+    {
+      "id": "support-2",
+      "kind": "post",
+      "material": "timber",
+      "center": [
+        -0.75,
+        1,
+        0.55
+      ],
+      "size": [
+        0.14,
+        2,
+        0.14
+      ],
+      "shape": "cylinder",
+      "requires": [],
+      "built": false,
+      "workMinutes": 0,
+      "materialUnits": 1,
+      "requiredMinutes": 2.25,
+      "invested": false,
+      "worker": null
+    },
+    {
+      "id": "support-3",
+      "kind": "post",
+      "material": "timber",
+      "center": [
+        0.75,
+        1,
+        0.55
+      ],
+      "size": [
+        0.14,
+        2,
+        0.14
+      ],
+      "shape": "cylinder",
+      "requires": [],
+      "built": false,
+      "workMinutes": 0,
+      "materialUnits": 1,
+      "requiredMinutes": 2.25,
+      "invested": false,
+      "worker": null
+    },
+    {
+      "id": "shelf",
+      "kind": "deck",
+      "material": "timber",
+      "center": [
+        0,
+        0.35,
+        0
+      ],
+      "size": [
+        1.6,
+        0.12,
+        1.2
+      ],
+      "shape": "box",
+      "requires": [
+        "support-0",
+        "support-1",
+        "support-2",
+        "support-3"
+      ],
+      "built": false,
+      "workMinutes": 0,
+      "materialUnits": 2,
+      "requiredMinutes": 3,
+      "invested": false,
+      "worker": null
+    },
+    {
+      "id": "weather-top",
+      "kind": "roof",
+      "material": "reeds",
+      "center": [
+        0,
+        2.05,
+        0
+      ],
+      "size": [
+        1.9,
+        0.1,
+        1.5
+      ],
+      "shape": "box",
+      "requires": [
+        "support-0",
+        "support-1",
+        "support-2",
+        "support-3"
+      ],
+      "built": false,
+      "workMinutes": 0,
+      "materialUnits": 1,
+      "requiredMinutes": 2.25,
+      "materials": {
+        "reeds": 1
+      },
+      "invested": false,
+      "worker": null
+    }
+  ],
+  "bounds": {
+    "minX": 71.05,
+    "maxX": 72.95,
+    "minZ": 37.25,
+    "maxZ": 38.75
+  },
+  "affordances": {
+    "rainCover": [
+      {
+        "minX": 71.05,
+        "maxX": 72.95,
+        "minZ": 37.25,
+        "maxZ": 38.75,
+        "bottom": 1.9999999999999998,
+        "top": 2.0999999999999996,
+        "material": "reeds"
+      }
+    ],
+    "walkableDecks": [],
+    "storage": {
+      "position": {
+        "x": 72,
+        "y": 38
+      },
+      "capacityKg": 30.6,
+      "capacityVolume": 34,
+      "covered": true,
+      "secured": false,
+      "enclosed": false,
+      "baseHeight": 0.44999999999999996,
+      "radius": 0.7999999999999972
+    },
+    "restPoints": [
+      {
+        "x": 72,
+        "y": 38
+      }
+    ],
+    "labels": [
+      "Rain cover",
+      "Covered supply surface",
+      "Potential sheltered rest"
+    ]
+  },
+  "bill": {
+    "timber": 6,
+    "reeds": 1
+  },
+  "id": "example-supply-shelter",
+  "ownerId": null,
+  "designer": "Workshop example",
+  "source": "example",
+  "status": "planned",
+  "completedAt": 1823.450000000001
+}
