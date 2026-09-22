@@ -42,7 +42,7 @@ export function validateBlueprint(w,a,raw){
   const ground=r.bottom<=.16&&(p.purpose!=='bridge'||[r.minZ,r.maxZ].every(y=>(nearestWater(w,{x:p.position.x,y})?.edge??-1)>.25));
   if(!ground&&!supports.length)throw Error(`Floating part ${part.id}`);
   if(part.kind==='deck'&&p.purpose==='bridge'&&(size[0]<1.1||size[2]>1.6||r.top>.65))throw Error('Bridge decks need walkable width, low height, and short assembly sections');
-  const volume=size[0]*size[1]*size[2];part.materialUnits=Math.max(1,Math.ceil(volume*(part.material==='stone'?8:part.material==='timber'?5:3)));part.requiredMinutes=1.5+part.materialUnits*.75;
+  const volume=size[0]*size[1]*size[2];part.materialUnits=Math.max(1,Math.ceil(volume*(part.material==='stone'?8:part.material==='timber'?5:3)-1e-9));part.requiredMinutes=1.5+part.materialUnits*.75;
   if(part.materialUnits>(part.material==='timber'?6:part.material==='stone'?12:16))throw Error('Split this part into smaller pieces that a person can carry');
   total+=part.materialUnits;if(total>160)throw Error('Design exceeds material budget');p.parts.push(part);ids.add(part.id);
  }
