@@ -1,5 +1,6 @@
 {
   "$schema": "https://openapi.vercel.sh/vercel.json",
+  "outputDirectory": "vercel-public",
   "ignoreCommand": "if git log -1 --pretty=%s | grep -q '^world: heartbeat '; then echo 'Ignoring canonical heartbeat deployment'; exit 0; fi; exit 1",
   "rewrites": [
     {
