@@ -1,9 +1,20 @@
 import * as T from 'three';
+import {mergeGeometries} from 'three/addons/utils/BufferGeometryUtils.js';
 import {riverY} from '../../realtime/water.mjs';
 const colors={timber:'#96724c',stone:'#969b90',reeds:'#b3a171'};
 const box=new T.BoxGeometry(1,1,1),ball=new T.SphereGeometry(1,10,8),log=new T.CylinderGeometry(.075,.1,1,10);
-const materials=new Map();const material=c=>{if(!materials.has(c))materials.set(c,new T.MeshStandardMaterial({color:c,roughness:.9}));return materials.get(c);};
-function piece(group,geometry,color,position,scale=[1,1,1]){const m=new T.Mesh(geometry,material(color));m.position.set(...position);m.scale.set(...scale);m.castShadow=m.receiveShadow=true;group.add(m);return m;}
+const materials=new Map();const material=(c,vertexColors=false)=>{const key=c+vertexColors;if(!materials.has(key))materials.set(key,new T.MeshStandardMaterial({color:c,roughness:.9,vertexColors}));return materials.get(key);};
+function piece(group,geometry,color,position,scale=[1,1,1]){const m=new T.Mesh(geometry,material(color,!!geometry.getAttribute('color')));m.position.set(...position);m.scale.set(...scale);m.castShadow=m.receiveShadow=true;group.add(m);return m;}
+const components=new Map();
+function componentGeometry(part){
+ if(part.material!=='timber'||!['wall','deck','roof'].includes(part.kind))return box;
+ const key=part.kind+part.size.join(',');if(components.has(key))return components.get(key);
+ // Board seams and slight timber variation describe the assembled panel;
+ // one merged mesh per physical part keeps the mobile draw count bounded.
+ const axis=part.kind==='wall'?(part.size[0]>part.size[2]?0:2):0,count=Math.max(2,Math.min(18,Math.ceil(part.size[axis]/.2))),geos=[];
+ for(let i=0;i<count;i++){const size=[1,1,1],offset=[0,0,0];size[axis]=1/count-.007/part.size[axis];offset[axis]=-.5+(i+.5)/count;const g=new T.BoxGeometry(...size);g.translate(...offset);const colors=[],shade=.90+((i*7+3)%11)*.019;for(let v=0;v<g.attributes.position.count;v++)colors.push(shade,shade,shade);g.setAttribute('color',new T.Float32BufferAttribute(colors,3));geos.push(g);}
+ const geometry=mergeGeometries(geos);geos.forEach(g=>g.dispose());components.set(key,geometry);return geometry;
+}
 export function drawContents(group,inventory,{carried=false,limit=20}={}){
  let index=0;for(const [key,value]of Object.entries(inventory||{})){for(let n=0;n<Math.min(Math.floor(value),carried?3:8)&&index<limit;n++,index++){
   const x=((index%4)-1.5)*.20,y=Math.floor(index/8)*.16+.1,z=(Math.floor(index/4)%2-.5)*.22;
@@ -20,7 +31,7 @@ export class SettlementView{
   for(const p of data.projects){live.add(p.id);const open=!!p.storeId&&agents.some(a=>a.task?.job?.storeId===p.storeId&&a.task.phase==='work'),signature=JSON.stringify([p.parts.map(x=>[x.built,Math.floor(x.workMinutes/x.requiredMinutes*12)]),p.status,open]);let obj=this.objects.get(p.id);if(obj?.signature===signature)continue;if(obj)this.remove(p.id);
    const g=new T.Group();g.position.set(p.position.x,this.base(p),p.position.y);g.userData.objectId=p.id;this.scene.add(g);
    for(const part of p.parts){
-    if(part.built||part.invested){let parent=g,center=part.center;if(open&&part.kind==='roof'&&p.purpose==='storage'){parent=new T.Group();parent.position.set(part.center[0],part.center[1],part.center[2]-part.size[2]/2);parent.rotation.x=-1.15;g.add(parent);center=[0,0,part.size[2]/2];}const m=piece(parent,box,colors[part.material],center,part.size);if(!part.built){m.scale.y*=Math.max(.08,part.workMinutes/part.requiredMinutes);m.position.y=part.center[1]-part.size[1]/2+m.scale.y/2;}}
+    if(part.built||part.invested){let parent=g,center=part.center;if(open&&part.kind==='roof'&&p.purpose==='storage'){parent=new T.Group();parent.position.set(part.center[0],part.center[1],part.center[2]-part.size[2]/2);parent.rotation.x=-1.15;g.add(parent);center=[0,0,part.size[2]/2];}const m=piece(parent,componentGeometry(part),colors[part.material],center,part.size);if(!part.built){m.scale.y*=Math.max(.08,part.workMinutes/part.requiredMinutes);m.position.y=part.center[1]-part.size[1]/2+m.scale.y/2;}}
     if(!part.built){const geo=new T.EdgesGeometry(box),line=new T.LineSegments(geo,new T.LineBasicMaterial({color:'#d7cb95',transparent:true,opacity:.24}));line.position.set(...part.center);line.scale.set(...part.size);g.add(line);}
    }
    const hit=new T.Mesh(new T.BoxGeometry(p.bounds.maxX-p.bounds.minX,1.5,p.bounds.maxZ-p.bounds.minZ),new T.MeshBasicMaterial({visible:false}));hit.position.y=.75;g.add(hit);this.objects.set(p.id,{group:g,signature});
