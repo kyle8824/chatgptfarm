@@ -1,0 +1,22 @@
+name: Hosted personal space verification
+on:
+  push:
+    branches: [verify/live-personal-space]
+permissions:
+  contents: read
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    timeout-minutes: 6
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - run: npm install --no-save playwright@1.55.0 && npx playwright install --with-deps chromium
+      - run: node realtime/hosted-personal-space.mjs
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: hosted-personal-space-evidence
+          path: hosted-motion-evidence/
