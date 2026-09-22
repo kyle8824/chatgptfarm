@@ -3,10 +3,14 @@ import {RoundedBoxGeometry} from 'three/addons/geometries/RoundedBoxGeometry.js'
 const material=color=>new T.MeshStandardMaterial({color,roughness:.88});
 function part(parent,geometry,mat,x,y,z,scale){const o=new T.Mesh(geometry,mat);o.position.set(x,y,z);if(scale)o.scale.set(...scale);o.castShadow=true;o.receiveShadow=true;parent.add(o);return o;}
 const ball=new T.SphereGeometry(1,24,16);
-function sphere(parent,mat,x,y,z,sx,sy=sx,sz=sx){return part(parent,ball,mat,x,y,z,[sx,sy,sz]);}
+const detailBall=new T.SphereGeometry(1,12,8);
+function sphere(parent,mat,x,y,z,sx,sy=sx,sz=sx){return part(parent,Math.max(sx,sy,sz)<.1?detailBall:ball,mat,x,y,z,[sx,sy,sz]);}
 function curve(parent,mat,points,radius){return part(parent,new T.TubeGeometry(new T.CatmullRomCurve3(points.map(p=>new T.Vector3(...p))),12,radius,6,false),mat,0,0,0);}
 export function createPerson(id,name){
  const group=new T.Group();group.userData.agentId=id;
+ // A continuous body hit area keeps mobile taps forgiving around the neck,
+ // fingers and joints, where the detailed visible meshes contain small gaps.
+ const hitArea=new T.Mesh(new T.CapsuleGeometry(.34,1.32,4,8),new T.MeshBasicMaterial({visible:false}));hitArea.position.y=.98;group.add(hitArea);
  const mara=name==='Mara',skin=material(mara?'#c99778':'#d3a47f'),shirt=material(mara?'#c48c61':'#598d91'),cuff=material(mara?'#ead4ac':'#aed0c3'),pants=material(mara?'#59634f':'#435966'),hair=material(mara?'#573b2c':'#392c25'),leather=material('#69503b'),sole=material('#3c352d'),white=material('#fff5de'),iris=material(mara?'#63836a':'#725338'),dark=material('#292a25'),lip=material('#975e50');
  const body=new T.Group();group.add(body);
  const torso=part(body,new T.CapsuleGeometry(.235,.38,6,16),shirt,0,1.04,0,[1.1,1,.75]);
@@ -60,7 +64,7 @@ export function createPerson(id,name){
  return {group,limbs,kind:'human',pos:null,target:null,walk:0,rig:{body,torso,head,eyes,knees,elbows,bag},blinkOffset:mara?1:3};
 }
 export function animatePerson(e,time,dt,walking,fresh){
- const r=e.rig;if(!r)return;const action=e.action,working=fresh&&e.phase==='work',drink=working&&action==='drink',gather=working&&/^(gather_|forage:|survey:)/.test(action||''),rest=working&&action==='rest',eat=working&&action?.startsWith('eat_'),crouch=drink||gather;
+ const r=e.rig;if(!r||!fresh)return;const action=e.action,working=fresh&&e.phase==='work',drink=working&&action==='drink',gather=working&&/^(gather_|forage:|survey:)/.test(action||''),rest=working&&action==='rest',eat=working&&action?.startsWith('eat_'),crouch=drink||gather;
  const blend=Math.min(1,dt*8),approach=(o,k,n)=>o[k]+=(n-o[k])*blend;
  approach(r.body.position,'y',rest?-.42:crouch?-.30:0);approach(r.body.rotation,'x',crouch?.36:rest?-.08:0);
  r.torso.scale.y=1+(fresh?Math.sin(time*1.8)*.008:0);

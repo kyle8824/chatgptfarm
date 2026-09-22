@@ -63,7 +63,9 @@ try{
    await touch('touchStart',[person]);await touch('touchCancel',[]);
    await touch('touchStart',[person]);await touch('touchMove',[[person[0]+40,person[1]]]);await touch('touchMove',[person]);await touch('touchEnd',[]);
    assert.equal((await measure(page)).selections,0,'multi-touch, cancellation and returning drags suppress selection');
-   await page.touchscreen.tap(...person);assert.equal((await measure(page)).selections,1,'single tap still selects a person');
+   // Aim at the current torso after the preceding camera gestures settle.
+   const tapPoint=await page.evaluate(()=>{const v=valley;v.camera.updateMatrixWorld();v.scene.updateMatrixWorld(true);const p=v.entities.get('test-person').group.position.clone();p.y+=1.04;p.project(v.camera);return[(p.x*.5+.5)*innerWidth,(-p.y*.5+.5)*innerHeight];});
+   await page.touchscreen.tap(...tapPoint);assert.equal((await measure(page)).selections,1,'single tap still selects a person');
   }
   // Staged visual fixtures use the actual renderer/models; these screenshots
   // are close-up previews, not a claim that production villagers were posed.

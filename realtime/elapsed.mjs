@@ -27,7 +27,7 @@ export async function step(w,seconds,{mind=null,fallbackReason='no_provider',wal
   if(a.task&&urgent&&family(a.task.actionId)!==urgent&&a.task.requiredMinutes-a.task.workMinutes>0.1&&a.needs[urgent]+10<(a.needs[family(a.task.actionId)]??100))interrupt(w,a,urgent);
   if(!a.task&&!resumeLiveTask(w,a,urgent))await startTask(w,a,mind,urgent?'urgent_need':fallbackReason,!!urgent,{urgentNeed:urgent,candidateTransform:c=>liveCandidates(w,a,c),destinationResolver:(target,selected)=>chooseDestination(w,a,target,selected),routeFinder:liveRoute});
   configureTask(w,a);
-  const t=a.task,from={...a.coordinates};if(t&&!t.liveTiming&&t.workMinutes===0){const id=t.actionId;t.requiredMinutes=id==='drink'?.75:id.startsWith('eat_')?1:/^(gather_|forage:)/.test(id)?4:id==='talk'?3:t.requiredMinutes;t.liveTiming=true;}if(t&&a.liveThought?.actionId===t.actionId&&t.source==='ai')a.liveThought.status='acting';let positionBefore=a.position;
+  const t=a.task,from={...a.coordinates};if(t&&!t.liveTiming&&t.workMinutes===0){const id=t.actionId;t.requiredMinutes=id==='drink'?.75:id.startsWith('eat_')?1:/^(gather_|forage:)/.test(id)?4:id==='talk'?3:t.requiredMinutes;t.liveTiming=true;}if(t&&a.liveThought?.actionId===t.actionId&&t.source==='ai')a.liveThought.status='acting';let positionBefore=a.position;if(t?.actionId==='drink')t.interactionReady=withinWaterReach(w,a.coordinates);
   if(t?.actionId==='explore'){
    positionBefore='travel';const result=advanceExploration(w,a,t,seconds);if(result.done){outcome(w,a,t,result.success,result.detail);if(!result.success)rememberFailure(w,a,t,result.detail);a.task=null;}
   }else if(t?.actionId==='drink'&&t.phase==='work'&&!withinWaterReach(w,a.coordinates)){
@@ -43,7 +43,7 @@ export async function step(w,seconds,{mind=null,fallbackReason='no_provider',wal
   const ratio=seconds/3600,n=a.needs;
   n.hydration=clamp(n.hydration-(a.inventory.firedVessel>0?5.5:6.5)*ratio);n.hunger=clamp(n.hunger-4.2*ratio);n.energy=clamp(n.energy-2.8*ratio-(positionBefore==='travel'?3.6*ratio:0));
   const exposure=thermalExposure(w,{...a,position:positionBefore});n.warmth=clamp(n.warmth+exposure.net*ratio);a.thermalExposure={...exposure,model:'elapsed-location-live',minutes};
-  if(a.task){display(a);if(a.task.actionId==='explore'){a.currentAction='Exploring the surrounding valley';a.activeAction.label=a.currentAction;}}else{a.activeAction=null;a.currentAction='Choosing next action';}
+  if(a.task){display(a);if(a.task.actionId==='explore'){a.currentAction='Exploring the surrounding valley';a.activeAction.label=a.currentAction;}if(a.task.actionId==='drink'&&a.task.phase==='work'&&!a.task.interactionReady){a.currentAction='Waiting for access to water';a.activeAction.label=a.currentAction;}}else{a.activeAction=null;a.currentAction='Choosing next action';}
   // Past positions only. Viewer may interpolate these; never predicts a target.
   delete a.runtimeMotion;
  }
