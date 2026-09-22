@@ -12,7 +12,7 @@ try{
   await page.goto(base,{waitUntil:'networkidle'});await page.waitForFunction(()=>window.previewMetrics?.fps>0);assert.equal(await page.locator('#failure').isVisible(),false,'actual WebGL rendered');
   assert.equal(await page.evaluate(()=>document.documentElement.scrollWidth>innerWidth),false,'no horizontal overflow');
   await page.locator('#pause').click();await page.screenshot({path:new URL(`${name}-together.png`,out).pathname});
-  const initial=await page.evaluate(()=>window.previewMetrics);assert(initial.counts.mara.triangles<20000);assert(initial.counts.ivo.triangles<20000);assert(initial.counts.deer.triangles<10000);assert.equal(initial.previewOnly,true);
+  const initial=await page.evaluate(()=>window.previewMetrics);assert(initial.counts.mara.triangles<20000);assert(initial.counts.ivo.triangles<20000);assert(initial.counts.deer.triangles<10000);assert(initial.counts.bear.triangles<12000);assert(initial.counts.rabbit.triangles<9000);assert(initial.counts.fish.triangles<3000);assert.equal(initial.previewOnly,true);
   if(name==='mobile'){
    const cdp=await context.newCDPSession(page);await page.waitForTimeout(1400);const before=await page.evaluate(()=>window.previewMetrics);
    await cdp.send('Input.dispatchTouchEvent',{type:'touchStart',touchPoints:[{x:140,y:410,id:1}]});
@@ -32,18 +32,18 @@ try{
    assert(Math.hypot(...b)<Math.hypot(...a)*.75,'preview pinches while twisting');assert(Math.atan2(b[0],b[2])-Math.atan2(a[0],a[2])>.35,'preview follows the clockwise finger twist');await page.locator('#home').click();
 
   }
-  for(const subject of ['mara','ivo','deer']){
+  for(const subject of ['mara','ivo','deer','bear','rabbit','fish']){
    await page.locator(`[data-subject=${subject}]`).click();await page.waitForTimeout(1300);await page.screenshot({path:new URL(`${name}-${subject}.png`,out).pathname});
    await page.locator('#close-up').click();await page.waitForTimeout(1300);await page.screenshot({path:new URL(`${name}-${subject}-close.png`,out).pathname});
    if(name==='desktop'){await page.locator('[data-angle=side]').click();await page.waitForTimeout(1300);await page.screenshot({path:new URL(`${name}-${subject}-side.png`,out).pathname});await page.locator('[data-angle=back]').click();await page.waitForTimeout(1300);await page.screenshot({path:new URL(`${name}-${subject}-back.png`,out).pathname});await page.locator('[data-angle=front]').click();}
    if(subject==='deer'){await page.locator('#close-up').click();await page.locator('[data-mode=work]').click();await page.locator('#pause').click();await page.waitForTimeout(1500);for(const angle of ['side','back']){await page.locator(`[data-angle=${angle}]`).click();await page.waitForTimeout(1200);await page.screenshot({path:new URL(`${name}-deer-graze-${angle}.png`,out).pathname});}await page.locator('[data-mode=idle]').click();await page.waitForTimeout(1200);await page.locator('#pause').click();await page.locator('[data-angle=front]').click();}
   }
   await page.locator('[data-subject=together]').click();await page.locator('#pause').click();await page.locator('[data-mode=walk]').click();await page.waitForTimeout(3500);await page.screenshot({path:new URL(`${name}-walking.png`,out).pathname});
-  await page.locator('#stats-toggle').click();assert.equal(await page.locator('#stats').isVisible(),true);await page.selectOption('#population','4');await page.waitForTimeout(4000);const crowd=await page.evaluate(()=>window.previewMetrics);assert.equal(crowd.population,12);await page.screenshot({path:new URL(`${name}-crowd.png`,out).pathname});
+  await page.locator('#stats-toggle').click();assert.equal(await page.locator('#stats').isVisible(),true);await page.selectOption('#population','4');await page.waitForTimeout(4000);const crowd=await page.evaluate(()=>window.previewMetrics);assert.equal(crowd.population,14);await page.screenshot({path:new URL(`${name}-crowd.png`,out).pathname});
   await page.selectOption('#quality','detail');await page.waitForTimeout(1800);const detail=await page.evaluate(()=>window.previewMetrics);assert.equal(detail.quality,'detail');
   await page.selectOption('#population','1');await page.locator('[data-mode=work]').click();await page.waitForTimeout(1500);await page.screenshot({path:new URL(`${name}-working.png`,out).pathname});
   assert(requests.every(u=>new URL(u).origin===new URL(base).origin),'preview makes no external, world or storage requests');assert(requests.every(u=>!u.includes('/live/')),'preview never opens the world');assert.deepEqual(errors,[]);
   report.push({viewport:name,initial,crowd,detail,requests,errors});await context.close();
  }
 }finally{await fs.writeFile(new URL('report.json',out),JSON.stringify(report,null,2));await browser.close();}
-console.log('PASS independent WebGL preview; desktop/mobile views; model geometry budgets; selectors and quality controls; 12-model load; no world connections or console errors. Software-rendered frame rates are not phone benchmarks.');
+console.log('PASS independent WebGL preview; desktop/mobile views; model geometry budgets; selectors and quality controls; 14-model load; no world connections or console errors. Software-rendered frame rates are not phone benchmarks.');

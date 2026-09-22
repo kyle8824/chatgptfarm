@@ -10,7 +10,7 @@ try{
  await build({stdin:{contents:`
  import assert from 'node:assert/strict';
  import * as T from 'three';
- import {createDeer,animateDeer,geometryStats} from './shared/visuals/models.js';
+ import {createDeer,animateDeer,createAnimal,animateAnimal,geometryStats} from './shared/visuals/models.js';
  import {createPerson,animatePerson} from './web/live/people.js';
  import {updateCargo} from './web/live/settlement.js';
  import {elevation,riverY,createTerrainGeometry} from './web/live/scene.js';
@@ -50,6 +50,11 @@ try{
   animateDeer(deer,i/60,mode,1/60);deer.root.updateMatrixWorld(true);
   const bounds=new T.Box3().setFromObject(deer.root);assert(bounds.max.y<1.85&&bounds.min.y>-.10,'deer motion stays within anatomical bounds');
   const p=deer.skin.mesh.geometry.attributes.position.array;assert(p.every(Number.isFinite),'deforming skin stays finite');
+ }
+ for(const kind of ['bear','rabbit','fish']){
+  const model=createAnimal(kind),stats=geometryStats(model.root);assert(stats.triangles<({bear:12000,rabbit:9000,fish:3000}[kind]),kind+' geometry budget '+stats.triangles);assert(stats.meshes<=14,kind+' draw budget');
+  for(const mode of ['idle','walk','work','defend','freeze','rest'])for(let i=0;i<40;i++){animateAnimal(model,i/20,mode,.05);model.root.updateMatrixWorld(true);const box=new T.Box3().setFromObject(model.root);assert(Number.isFinite(box.min.y));assert(box.min.y>-.13,kind+' feet do not penetrate ground: '+box.min.y);}
+  console.log(kind,JSON.stringify(stats));
  }
  console.log('PASS shared asset budget, grounded action poses, physical cargo, stale-frame pause and deer deformation');
  `,resolveDir:process.cwd()},bundle:true,platform:'node',format:'esm',outfile:file,nodePaths:[new URL('../cloudflare/node_modules/',import.meta.url).pathname]});

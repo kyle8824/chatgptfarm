@@ -1,0 +1,31 @@
+name: Wildlife and resource world verification
+on:
+  push:
+    branches: [feature/wildlife-resource-world]
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  wildlife:
+    runs-on: ubuntu-latest
+    timeout-minutes: 18
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - run: npm ci --prefix cloudflare && npm ci --prefix character-preview
+      - run: node realtime/wildlife-test.mjs && node realtime/visual-assets-test.mjs
+      - run: node cloudflare/build.mjs && npm run build --prefix character-preview
+      - run: npm install --no-save playwright@1.55.0 && npx playwright install --with-deps chromium
+      - name: Independent workshop desktop and touch verification
+        run: |
+          python3 -m http.server 4178 --directory vercel-public > /tmp/workshop.log 2>&1 &
+          node character-preview/browser-test.mjs
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: wildlife-world-evidence
+          path: |
+            character-preview/evidence/
+            realtime-qa/
