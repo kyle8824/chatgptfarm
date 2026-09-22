@@ -5,3 +5,7 @@ cloudflare/node_modules/
 cloudflare/public/
 cloudflare/.wrangler/
 cloudflare/.dev.vars
+
+realtime-qa/
+character-preview/node_modules/
+character-preview/evidence/

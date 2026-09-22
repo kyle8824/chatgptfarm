@@ -3,3 +3,5 @@
 @media(max-height:700px) and (min-width:651px){.intro{margin-top:-30px}h1{font-size:28px}.description{margin:5px}.subjects{top:200px}.view-tools{top:200px}.control-panel{padding:10px 18px}}
 
 .solo .intro h1,.solo .intro .eyebrow,.solo .intro .description{display:none}.solo .intro{margin-top:0}@media(max-width:650px){.solo .subjects{top:108px}}
+
+@media(max-width:650px){.subjects{max-width:calc(100vw - 24px);overflow-x:auto;justify-content:flex-start;scrollbar-width:thin}.subjects button{flex:0 0 auto;padding:8px 10px}.control-row .segmented button{padding:8px 7px}}

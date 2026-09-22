@@ -2,6 +2,7 @@ import {ensureWood,projectWood,woodCommand} from '../engine/wood-runtime.js';
 import {projectWoodCounts} from '../engine/wood-materials.js';
 import {addEvent} from '../engine/core.js';
 import {forestLayout} from './forest.mjs';
+import {ensureResourceSites} from './resource-sites.mjs';
 import {shelterPoint} from './layout.mjs';
 export const clock=w=>(w.day*24+w.hour)*60+(w.minute||0);
 export const WOOD={dryWood:'branch',wetWood:'branch',woodPole:'pole',pointedPole:'pointedPole',boundSharpTool:'boundSharpTool'};
@@ -24,7 +25,7 @@ export function makeStore(w,{position,ownerId=null,kind='pile',name='Ground supp
  const s={id:id||`store-${w.settlement.nextId++}`,position:{...position},ownerId,kind,name,capacityKg,capacityVolume,access,covered,secured:false,items:{},revision:0,createdAt:clock(w),...extra};w.settlement.stores.push(s);return s;
 }
 export function ensureSettlement(w){
- if(w.settlement?.version===1)return;ensureWood(w);
+ ensureResourceSites(w);if(w.settlement?.version===1)return;ensureWood(w);
  w.settlement={version:1,nextId:1,stores:[],projects:[],incidents:[],trees:[],designs:[],revision:0};
  // The old shared drying account becomes visible at its existing location.
  const existing=w.wood.batches.filter(b=>b.holder.kind==='stored'&&b.holder.id==='camp-drying');
@@ -56,5 +57,5 @@ export function enforceCarry(w,a){
 }
 export function treeUnits(w,t){return w.wood.batches.filter(b=>b.holder.kind==='ground'&&b.holder.id===t.id).reduce((n,b)=>n+b.units,0);}
 export function settlementFrame(w){
- const s=w.settlement;if(!s)return null;return {revision:s.revision,stores:s.stores.filter(x=>x.kind!=='pile'||Object.values(x.items).some(n=>n>0)).map(x=>({...x,load:loadOf(w,x)})),projects:s.projects,trees:s.trees.map(t=>({id:t.id,position:t.position,remaining:treeUnits(w,t),initialUnits:t.initialUnits})),designs:s.designs.slice(-6),incidents:s.incidents.slice(-8)};
+ const s=w.settlement;if(!s)return null;return {revision:s.revision,stores:s.stores.filter(x=>x.kind!=='pile'||Object.values(x.items).some(n=>n>0)).map(x=>({...x,load:loadOf(w,x)})),projects:s.projects.map(({code,...p})=>p),trees:s.trees.map(t=>({id:t.id,position:t.position,remaining:treeUnits(w,t),initialUnits:t.initialUnits,pine:t.pine,height:t.height})),designs:s.designs.slice(-6),incidents:s.incidents.slice(-8)};
 }

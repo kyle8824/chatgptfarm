@@ -14,5 +14,8 @@
     "miniflare": "5.20260917.0-alpha",
     "three": "^0.180.0",
     "wrangler": "4.134.0"
+  },
+  "dependencies": {
+    "acorn": "8.15.0"
   }
 }
