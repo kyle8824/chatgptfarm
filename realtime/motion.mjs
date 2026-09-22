@@ -1,6 +1,7 @@
 import {walkable,clearSegment,walkingSpeed,distance} from '../engine/navigation.js';
 import {coordForPosition} from '../engine/spectator.js';
 import {CAMP,shelterPoint,shelterLocal} from './layout.mjs';
+import {waterBankPoints,withinWaterReach,nearestWater} from './water.mjs';
 
 export const BODY_DISTANCE=1.05;
 export const ARRIVAL_SPACE=1.5;
@@ -46,15 +47,18 @@ export function liveRoute(w,from,to){
 function freeSpace(w,a,p){let min=Infinity;for(const b of w.agents){if(b.id===a.id)continue;min=Math.min(min,distance(p,b.coordinates));if(b.task?.destination)min=Math.min(min,distance(p,b.task.destination));}return min;}
 export function chooseDestination(w,a,target,selected={}){
  const id=selected.id||'',center=coordForPosition(target,w),points=[],m=motionState(a);
+ if(id==='explore')return explorationDestination(w,a)||{...a.coordinates};
  // Eating carried food is local; there is no artificial trip back to camp.
  if(/^eat_/.test(id)&&a.inventory[id==='eat_berries'?'berries':id==='eat_tuber'?'tubers':'cookedMeat']>0)return {...a.coordinates};
- for(let i=0;i<28;i++){
+ const banks=id==='drink'?waterBankPoints(w,a.coordinates):null;
+ for(let i=0;i<(banks?.length||28);i++){
   let p;
-  if(target==='camp'&&w.structures.shelter&&['rest','seek_cover'].includes(id))p=shelterPoint((random(a)-.5)*.95,(random(a)-.5)*2.3);
+  if(banks)p=banks[i];
+  else if(target==='camp'&&w.structures.shelter&&['rest','seek_cover'].includes(id))p=shelterPoint((random(a)-.5)*.95,(random(a)-.5)*2.3);
   else if(target==='camp'&&['seek_warmth','make_fire','dry_wood_by_fire'].includes(id)){const angle=random(a)*Math.PI*2,r=1.8+random(a)*.5;p={x:CAMP.fire.x+Math.cos(angle)*r,y:CAMP.fire.y+Math.sin(angle)*r};}
   else if(['talk','seek_other','share_food'].includes(id)){const b=w.agents.find(b=>b.id!==a.id),angle=random(a)*Math.PI*2,r=1.45+random(a)*.2;p={x:(b?.coordinates.x||center.x)+Math.cos(angle)*r,y:(b?.coordinates.y||center.y)+Math.sin(angle)*r};}
   else {const angle=random(a)*Math.PI*2,r=(target==='creek'?1.5:target==='camp'?3:2.4)*Math.sqrt(random(a));p={x:center.x+Math.cos(angle)*r,y:center.y+Math.sin(angle)*r};}
-  if(!liveWalkable(w,p))continue;const space=freeSpace(w,a,p),previous=(m.arrivals||[]).slice(-3).reduce((s,q)=>s+Math.max(0,1.5-distance(q,p)),0);
+  if(!liveWalkable(w,p)||(banks&&!withinWaterReach(w,p)))continue;const space=freeSpace(w,a,p),previous=(m.arrivals||[]).slice(-3).reduce((s,q)=>s+Math.max(0,1.5-distance(q,p)),0);
   points.push({p,score:Math.min(3,space)*1.4-distance(a.coordinates,p)*.07-previous*.6+random(a)*.35,space});
  }
  points.sort((a,b)=>b.score-a.score);
@@ -64,9 +68,20 @@ export function chooseDestination(w,a,target,selected={}){
  return liveWalkable(w,a.coordinates)?{...a.coordinates}:points[0]?.p||center;
 }
 export function configureTask(w,a,{force=false}={}){
- const t=a.task;if(!t||(!force&&t.liveSpaceVersion===1))return;
+ const t=a.task;if(!t||(!force&&t.liveSpaceVersion===1&&(t.actionId!=='drink'||t.liveWaterVersion===1)))return;
  t.destination=chooseDestination(w,a,t.targetPosition,{id:t.actionId});t.path=liveRoute(w,a.coordinates,t.destination)||[];t.pathIndex=1;t.liveSpaceVersion=1;
  t.phase=distance(a.coordinates,t.destination)>.15?'travel':'work';t.egressing=!liveWalkable(w,a.coordinates);t.liveTrace=[{...a.coordinates}];
+ if(t.actionId==='drink')t.liveWaterVersion=1;
+}
+export const explorationCell=p=>`${Math.floor(p.x/4)},${Math.floor(p.y/4)}`;
+export function explorationDestination(w,a){
+ const memory=a.liveExploration??={cells:{},observations:{}},options=[],offset=random(a)*Math.PI*2;
+ for(let i=0;i<24;i++){const angle=offset+i*Math.PI/12,r=9+random(a)*7,p={x:a.coordinates.x+Math.cos(angle)*r,y:a.coordinates.y+Math.sin(angle)*r};
+  if(!liveWalkable(w,p)||freeSpace(w,a,p)<ARRIVAL_SPACE)continue;
+  const visits=memory.cells[explorationCell(p)]||0,previous=(motionState(a).arrivals||[]).reduce((n,q)=>n+Math.max(0,8-distance(q,p)),0);
+  options.push({p,score:10/(1+visits)-previous+random(a)*2});
+ }
+ options.sort((a,b)=>b.score-a.score);for(const {p}of options)if(liveRoute(w,a.coordinates,p))return p;return null;
 }
 function bodyClear(w,a,from,to){for(const b of w.agents)if(b.id!==a.id&&segmentDistance(b.coordinates,from,to)<BODY_DISTANCE-1e-6)return false;return true;}
 export function advanceLiveRoute(w,a,t,seconds){
@@ -111,7 +126,7 @@ export function separateBodies(w,seconds){
 export function faceInteraction(w,a,seconds){const m=motionState(a);m.vx=m.vy=m.speed=0;let target;
  if(['talk','share_food','seek_other'].includes(a.task?.actionId))target=w.agents.find(b=>b.id!==a.id)?.coordinates;
  else if(a.position==='camp')target=CAMP.fire;
- else if(a.position==='creek')target={x:a.coordinates.x,y:a.coordinates.y-4};
+ else if(a.task?.actionId==='drink')target=nearestWater(w,a.coordinates)?.point;
  else if(a.task)target=coordForPosition(a.task.targetPosition,w);
  if(target&&distance(a.coordinates,target)>.2)m.facing+=clamp(angleDiff(Math.atan2(target.x-a.coordinates.x,target.y-a.coordinates.y),m.facing),-seconds,seconds);
 }

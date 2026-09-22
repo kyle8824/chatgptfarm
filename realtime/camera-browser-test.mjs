@@ -27,7 +27,7 @@ async function home(page){await measure(page);await page.evaluate(()=>valley.hom
 try{
  for(const mobile of [true,false]){
   const context=await browser.newContext({viewport:mobile?{width:412,height:915}:{width:1440,height:960},isMobile:mobile,hasTouch:mobile});
-  const page=await context.newPage(),errors=[];page.on('pageerror',e=>errors.push(e.message));
+  const page=await context.newPage(),errors=[];page.on('pageerror',e=>errors.push(e.message));page.on('console',m=>{if(m.type()==='error')errors.push(m.text());});
   await page.goto(`http://127.0.0.1:${server.address().port}/`);await page.waitForFunction(()=>window.valley?.frame);await page.waitForTimeout(500);
   const cdp=await context.newCDPSession(page);
   const touch=(type,points)=>cdp.send('Input.dispatchTouchEvent',{type,touchPoints:points.map(([x,y],id)=>({id,x,y,radiusX:3,radiusY:3,force:1}))});
@@ -63,9 +63,28 @@ try{
    await touch('touchStart',[person]);await touch('touchCancel',[]);
    await touch('touchStart',[person]);await touch('touchMove',[[person[0]+40,person[1]]]);await touch('touchMove',[person]);await touch('touchEnd',[]);
    assert.equal((await measure(page)).selections,0,'multi-touch, cancellation and returning drags suppress selection');
-   await page.touchscreen.tap(...person);assert.equal((await measure(page)).selections,1,'single tap still selects a person');
+   // Aim at the current torso after the preceding camera gestures settle.
+   const tapPoint=await page.evaluate(()=>{const v=valley;v.camera.updateMatrixWorld();v.scene.updateMatrixWorld(true);const p=v.entities.get('test-person').group.position.clone();p.y+=1.04;p.project(v.camera);return[(p.x*.5+.5)*innerWidth,(-p.y*.5+.5)*innerHeight];});
+   await page.touchscreen.tap(...tapPoint);assert.equal((await measure(page)).selections,1,'single tap still selects a person');
   }
-  assert.deepEqual(errors,[]);report.push({viewport:mobile?'mobile':'desktop',pan,rotate,zoom,errors});await context.close();
+  // Staged visual fixtures use the actual renderer/models; these screenshots
+  // are close-up previews, not a claim that production villagers were posed.
+  await page.evaluate(()=>{
+   const v=valley;v.focus=null;for(const e of v.entities.values())v.scene.remove(e.group);v.entities.clear();for(const l of v.labels.values())l.remove();v.labels.clear();
+   window.modelFrame={agents:[{id:'agent-mara',name:'Mara',coordinates:{x:45,y:34},motion:{speed:0,facing:0}},{id:'agent-ivo',name:'Ivo',coordinates:{x:46.5,y:34},motion:{speed:0,facing:0}}],wildlife:[],structures:{},weather:'clear',hour:12};
+   v.accept(modelFrame);v.controls.target.set(45.75,1.6,34);v.camera.position.set(45.75,2.8,40.6);v.controls.update();window.modelTimer=setInterval(()=>v.accept(modelFrame),500);
+  });
+  await page.waitForTimeout(800);await page.screenshot({path:`realtime-qa/models-${mobile?'mobile':'desktop'}-day.png`});
+  if(mobile){await page.evaluate(()=>{modelFrame.hour=1;valley.accept(modelFrame);});await page.waitForTimeout(500);await page.screenshot({path:'realtime-qa/models-mobile-night.png'});}
+  await page.evaluate(()=>{
+   const v=valley;modelFrame.hour=12;modelFrame.agents=[{id:'agent-ivo',name:'Ivo',coordinates:{x:48,y:20.85333333333333},motion:{speed:0,facing:Math.PI},task:{actionId:'drink',phase:'work',label:'Drink from the creek'}}];
+   const mara=v.entities.get('agent-mara');v.scene.remove(mara.group);v.entities.delete('agent-mara');v.labels.get('agent-mara').remove();v.labels.delete('agent-mara');v.accept(modelFrame);
+   const e=v.entities.get('agent-ivo');e.group.position.copy(e.target);e.pos.copy(e.target);e.group.rotation.y=Math.PI;v.controls.target.set(48,.85,20.85);v.camera.position.set(50,2.6,15.7);v.controls.update();v.elapsed=.1;
+  });
+  await page.waitForTimeout(600);await page.screenshot({path:`realtime-qa/drinking-${mobile?'mobile':'desktop'}-scoop.png`});
+  await page.evaluate(()=>{valley.elapsed=1.85;});await page.waitForTimeout(600);await page.screenshot({path:`realtime-qa/drinking-${mobile?'mobile':'desktop'}-sip.png`});
+  const graphics=await page.evaluate(()=>({triangles:valley.renderer.info.render.triangles,drawCalls:valley.renderer.info.render.calls}));
+  assert.deepEqual(errors,[]);report.push({viewport:mobile?'mobile':'desktop',pan,rotate,zoom,graphics,errors});await context.close();
  }
  console.log('PASS camera: ground pan without rotation, two-finger/right-drag orbit and tilt, pinch/wheel zoom, release follow, genuine taps only.');
 }finally{await fs.writeFile('realtime-qa/camera-report.json',JSON.stringify(report,null,2));await browser.close();await new Promise(resolve=>server.close(resolve));}
