@@ -1,4 +1,51 @@
 {
   "$schema": "https://openapi.vercel.sh/vercel.json",
-  "ignoreCommand": "if git log -1 --pretty=%s | grep -q '^world: heartbeat '; then echo 'Ignoring canonical heartbeat deployment'; exit 0; fi; exit 1"
+  "ignoreCommand": "if git log -1 --pretty=%s | grep -q '^world: heartbeat '; then echo 'Ignoring canonical heartbeat deployment'; exit 0; fi; exit 1",
+  "rewrites": [
+    {
+      "source": "/",
+      "destination": "https://chatgptfarm.kyle8824.workers.dev/live/"
+    },
+    {
+      "source": "/live/:path*",
+      "destination": "https://chatgptfarm.kyle8824.workers.dev/live/:path*"
+    }
+  ],
+  "redirects": [
+    {
+      "source": "/index.html",
+      "destination": "/",
+      "permanent": false
+    },
+    {
+      "source": "/phaser.html",
+      "destination": "/",
+      "permanent": false
+    },
+    {
+      "source": "/live",
+      "destination": "/",
+      "permanent": false
+    }
+  ],
+  "headers": [
+    {
+      "source": "/",
+      "headers": [
+        {
+          "key": "Cache-Control",
+          "value": "no-store"
+        }
+      ]
+    },
+    {
+      "source": "/live/:path*",
+      "headers": [
+        {
+          "key": "Cache-Control",
+          "value": "no-store"
+        }
+      ]
+    }
+  ]
 }
