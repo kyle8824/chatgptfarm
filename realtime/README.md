@@ -74,6 +74,39 @@ can affect trust and motivate protective construction if the available building
 rules support it. These should arise from circumstances and agent decisions,
 without scheduled theft scenes or guaranteed defensive-building progression.
 
+### Physical exploration, drinking and close-up rendering
+
+The live explore action walks successive reachable routes through less-visited
+ground. It records actual distance and visited four-unit cells, continues moving
+between legs, and completes after 120 metres and at least six different cells.
+Standing or being blocked earns no progress. Partial route/progress/visit data
+is checkpointed. Legacy stationary exploration minutes remain task metadata,
+but are not presented as distance walked. Exploration records clay/reed
+discoveries only within three units of the actual place; it never runs the
+old timed east-then-west discovery outcome. This is bounded spatial exploration
+inside the existing world, not unlimited terrain generation or human cognition.
+
+Drinking chooses separate reachable bank points from the world's actual creek
+polyline and width. Every work step checks water reach before granting hydration.
+An old saved task away from the creek is rerouted without teleporting or resetting
+needs. The viewer uses the same current channel coordinates and width.
+
+Task explanations come from the decision attached to that task; a previous
+model proposal is no longer displayed as the current thought. Exploration
+progress shows measured metres/ground areas rather than a stationary timer.
+The inspector refreshes its explanation when the task or phase changes.
+
+Characters have smooth faces, eyes, brows, noses and mouths, articulated limbs,
+and action-specific drinking/gathering/resting poses. Trees use smooth curved
+foliage; leaves near the camera or obscuring its viewing location dither away.
+One-finger pan/two-finger rotation remain in place. Existing procedural trees
+are still scenery; this update does not claim a complete resource-entity mapping.
+
+`node realtime/physical-actions-test.mjs` checks measured/blocked exploration,
+checkpoint continuity, proximity discoveries, physical drinking reach and
+current-task explanations. Camera browser CI includes staged day/night model
+close-ups and a creek drinking pose. Those fixtures never change production.
+
 ### Live movement and needs
 
 Villagers reserve distinct interaction points within a destination area, use

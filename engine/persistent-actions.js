@@ -29,6 +29,7 @@ function display(a){const t=a.task;if(!t)return;a.currentAction=t.phase==='trave
 async function startTask(w,a,mind,reason,emergency=false,options={}){
  const chosen=await selectPersistentAction(w,a,mind,reason,emergency?x=>family(x.id)===(options.urgentNeed||urgentNeed(a)):null,options.candidateTransform),targetPosition=actionDestination(w,a,chosen.selected,chosen.mindResult.physicalAction),destination=options.destinationResolver?options.destinationResolver(targetPosition,chosen.selected):targetPosition===a.position?{...a.coordinates}:coordForPosition(targetPosition,w),path=(options.routeFinder||findRoute)(w,a.coordinates,destination);
  const t={origin:{...a.coordinates},id:`A-${chosen.decisionId}`,decisionId:chosen.decisionId,actionId:chosen.selected.id,label:chosen.selected.label,selected:chosen.selected,proposal:chosen.mindResult.physicalAction,source:chosen.mindResult.brainMode,model:chosen.mindResult.model||null,fallbackReason:chosen.mindResult.fallbackReason||null,emergency,targetPosition,destination,path:path||[],pathIndex:1,phase:distance(a.coordinates,destination)>.01?'travel':'work',requiredMinutes:duration(chosen.selected.id),workMinutes:0,startedAt:{day:w.day,hour:w.hour,minute:w.minute||0}};
+ t.decisionSummary=chosen.mindResult.decisionSummary;
  if(!path){outcome(w,a,t,false,'No traversable route to the selected destination.','blocked');a.currentAction='Route blocked';a.task=null;return;}
  a.task=t;display(a);
 }

@@ -28,13 +28,13 @@ export function liveCandidates(w,a,candidates){
  // Retain a real, safe fallback if every remembered resource is unavailable.
  if(!filtered.length)filtered.push({id:'rest',label:w.structures.shelter?'Rest in the shelter':'Rest in the meadow',score:1,reasons:[['no useful reachable resource action',1]]});
  return filtered.map(c=>{
-  const target=actionDestination(w,a,c),goal=coordForPosition(target,w),trip=target===a.position?0:distance(a.coordinates,goal),need=family(c.id),n=a.needs[need];
+  const target=actionDestination(w,a,c),goal=coordForPosition(target,w),trip=c.id==='explore'?12:target===a.position?0:distance(a.coordinates,goal),need=family(c.id),n=a.needs[need];
   const immediate=/^eat_/.test(c.id)&&Object.entries(a.inventory).some(([k,v])=>['berries','cookedMeat','tubers'].includes(k)&&v>0);
   const comfortPenalty=need&&n>70?(n-70)*1.2:0;
   // Travel has a cost. Equally useful nearby resources should not lose a fixed
   // alphabetical tie to the same distant thicket on every decision.
   const score=c.score-trip*(a.needs.energy<25?.45:.24)-comfortPenalty+(immediate&&a.needs.hunger<35?20:0);
-  return {...c,score,reasons:[...(c.reasons||[]),['travel effort',-trip*.24]]};
+  return {...c,label:c.id==='explore'?'Explore the surrounding valley':c.label,score,reasons:[...(c.reasons||[]),['travel effort',-trip*.24]]};
  }).sort((x,y)=>y.score-x.score||x.id.localeCompare(y.id));
 }
 export function rememberFailure(w,a,t,detail){
