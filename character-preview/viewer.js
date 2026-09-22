@@ -5,7 +5,7 @@ import {createVillager,createDeer,animateVillager,animateDeer,geometryStats} fro
 const $=s=>document.querySelector(s),scene=new T.Scene();scene.background=new T.Color('#dfebeb');scene.fog=new T.Fog('#dfebeb',12,30);
 let renderer;
 try{renderer=new T.WebGLRenderer({antialias:true,alpha:false,powerPreference:'high-performance'});}catch{ $('#failure').hidden=false;throw Error('WebGL unavailable: visible fallback shown');}
-renderer.setPixelRatio(Math.min(devicePixelRatio,1.35));renderer.setSize(innerWidth,innerHeight);renderer.shadowMap.enabled=true;renderer.shadowMap.type=T.PCFSoftShadowMap;renderer.outputColorSpace=T.SRGBColorSpace;renderer.toneMapping=T.ACESFilmicToneMapping;renderer.toneMappingExposure=1.10;$('#stage').append(renderer.domElement);
+renderer.info.autoReset=false;renderer.setPixelRatio(Math.min(devicePixelRatio,1.35));renderer.setSize(innerWidth,innerHeight);renderer.shadowMap.enabled=true;renderer.shadowMap.type=T.PCFSoftShadowMap;renderer.outputColorSpace=T.SRGBColorSpace;renderer.toneMapping=T.ACESFilmicToneMapping;renderer.toneMappingExposure=1.10;$('#stage').append(renderer.domElement);
 const camera=new T.PerspectiveCamera(35,innerWidth/innerHeight,.05,60),controls=new OrbitControls(camera,renderer.domElement);
 controls.enableDamping=true;controls.dampingFactor=.10;controls.minDistance=.48;controls.maxDistance=14;controls.maxPolarAngle=Math.PI*.49;controls.minPolarAngle=.25;controls.screenSpacePanning=true;controls.mouseButtons={LEFT:T.MOUSE.PAN,MIDDLE:T.MOUSE.DOLLY,RIGHT:T.MOUSE.ROTATE};controls.touches={ONE:T.TOUCH.PAN,TWO:T.TOUCH.DOLLY_ROTATE};
 scene.add(new T.HemisphereLight('#e9f5ff','#a0ac7c',1.8));const sun=new T.DirectionalLight('#ffe8c6',2.4);sun.position.set(-3.5,6,4.5);sun.castShadow=true;sun.shadow.mapSize.set(1024,1024);Object.assign(sun.shadow.camera,{left:-5,right:5,top:5,bottom:-5,near:.5,far:15});sun.shadow.normalBias=.022;sun.shadow.bias=-.0001;sun.shadow.radius=3;scene.add(sun);const fill=new T.DirectionalLight('#dceaf5',.9);fill.position.set(3,3,-3);scene.add(fill);
@@ -15,7 +15,7 @@ const backdrop=new T.Group();scene.add(backdrop);
 function evergreen(x,z,h){const tree=new T.Group();tree.position.set(x,0,z);backdrop.add(tree);const bark=new T.Mesh(new T.CylinderGeometry(.045,.065,h*.55,9),new T.MeshStandardMaterial({color:'#806b4b',roughness:1}));bark.position.y=h*.27;tree.add(bark);for(let i=0;i<3;i++){const y=h*(.40+i*.20),r=h*(.23-i*.04);const geo=new T.ConeGeometry(r,h*.53,14,3);const leaves=new T.Mesh(geo,new T.MeshStandardMaterial({color:['#386c50','#497950','#56864f'][i],roughness:1}));leaves.position.y=y;tree.add(leaves);}return tree;}
 for(const [x,z,h]of [[-3,-3,2.8],[3.1,-3.8,3.2],[-4.6,-6,3.6],[.8,-6,3.0],[5,-7,4],[-2,-9,4],[6,-11,4]])evergreen(x,z,h);
 for(let i=0;i<10;i++){const rock=new T.Mesh(new T.DodecahedronGeometry(.12+(i%3)*.05,1),new T.MeshStandardMaterial({color:i%2?'#8e9c8a':'#aab39d',roughness:1}));rock.scale.set(1.3,.65,.9);rock.position.set((i%2?1:-1)*(2.1+(i%4)*.46),.055,-1.8-Math.floor(i/2)*.52);backdrop.add(rock);}
-const models={mara:createVillager('Mara'),ivo:createVillager('Ivo'),deer:createDeer()};models.mara.root.position.set(.06,0,.20);models.ivo.root.position.set(-.94,0,0);models.ivo.root.scale.setScalar(1.10);models.deer.root.position.set(1.23,0,-.14);models.deer.root.rotation.y=-.90;
+const models={mara:createVillager('Mara'),ivo:createVillager('Ivo'),deer:createDeer()};models.mara.root.position.set(.06,0,.20);models.ivo.root.position.set(-.78,0,0);models.ivo.root.scale.setScalar(1.10);models.deer.root.position.set(1.03,0,-.14);models.deer.root.rotation.y=-.90;
 for(const m of Object.values(models))scene.add(m.root);
 const extras=[];let selected='together',mode='idle',paused=false,close=false,angle='front',clock=0,prev=performance.now(),lastReport=prev,frames=[],renderTimes=[];
 let desiredPosition=new T.Vector3(),desiredTarget=new T.Vector3(),transition=false;
@@ -24,7 +24,7 @@ function setView(immediate=false){
  for(const [id,obj]of Object.entries(models))obj.root.visible=together||selected===id;
  for(const e of extras)e.root.visible=together;
  document.body.classList.toggle('solo',!together);scene.updateMatrixWorld(true);
- const focus=close?m.head.getWorldPosition(new T.Vector3()):new T.Vector3(together?.05:m.root.position.x,together?.88:selected==='deer'?.70:.84,together?0:m.root.position.z);
+ const focus=close?m.head.getWorldPosition(new T.Vector3()):new T.Vector3(together?.20:m.root.position.x,together?.88:selected==='deer'?.70:.84,together?0:m.root.position.z);
  const {x,y,z}=focus;
  let distance=close?(selected==='deer'?2.2:1.4):together?(mobile?10.8:6.6):selected==='deer'?(mobile?4.8:4.3):(mobile?4.8:4.5);
  if(together&&extras.length)distance=mobile?14:9;
@@ -56,7 +56,7 @@ function animate(now){requestAnimationFrame(animate);if(hidden)return;const delt
  animateVillager(models.mara,clock,mode);animateVillager(models.ivo,clock+.5,mode);animateDeer(models.deer,clock,mode);
  extras.forEach((e,i)=>e.kind==='deer'?animateDeer(e,clock+i*.23,mode):animateVillager(e,clock+i*.23,mode));
  if(transition){const cameraBlend=1-Math.exp(-Math.min(elapsed,500)/1000*11);camera.position.lerp(desiredPosition,cameraBlend);controls.target.lerp(desiredTarget,cameraBlend);if(camera.position.distanceTo(desiredPosition)<.003)transition=false;}controls.update();
- const begin=performance.now();renderer.render(scene,camera);renderTimes.push(performance.now()-begin);frames.push(elapsed);
+ const begin=performance.now();renderer.info.reset();renderer.render(scene,camera);renderTimes.push(performance.now()-begin);frames.push(elapsed);
  if(now-lastReport>1200){const avg=frames.reduce((a,b)=>a+b,0)/frames.length,fps=1000/avg,sorted=[...frames].sort((a,b)=>a-b),p95=sorted[Math.floor(sorted.length*.95)]||0;$('#fps').textContent=`${Math.round(fps)} fps`;
   const sum=Object.entries(counts).reduce((a,[id,b])=>a+(models[id].root.visible?b.triangles:0),0)+extras.reduce((a,e)=>a+(e.root.visible?counts[e.kind].triangles:0),0);
   $('#numbers').innerHTML=`<span><strong>${(sum/1000).toFixed(1)}k</strong> model triangles</span><span><strong>${renderer.info.render.calls}</strong> draw calls incl. shadows</span><span><strong>${p95.toFixed(1)} ms</strong> frame time, 95th percentile</span><span><strong>${renderer.getPixelRatio().toFixed(2)}×</strong> pixel ratio</span>`;

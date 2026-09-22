@@ -25,7 +25,7 @@ function loft(parent,color,rings,sides=16){
  const g=new T.BufferGeometry();g.setAttribute('position',new T.Float32BufferAttribute(pos,3));g.setIndex(idx);g.computeVertexNormals();
  const side=g.toNonIndexed(),cp=[],cn=[];
  for(const end of [0,rings.length-1]){const [y,rx,rz,z=0,x=0]=rings[end],normal=end===0?-1:1;
-  for(let j=0;j<sides;j++){const a=j/sides*Math.PI*2,b=(j+1)/sides*Math.PI*2,points=[[x,y,z],[x+Math.sin(a)*rx,y,z+Math.cos(a)*rz],[x+Math.sin(b)*rx,y,z+Math.cos(b)*rz]];if(normal===1)points.reverse();for(const p of points){cp.push(...p);cn.push(0,normal,0);}}
+  for(let j=0;j<sides;j++){const a=j/sides*Math.PI*2,b=(j+1)/sides*Math.PI*2,points=[[x,y,z],[x+Math.sin(a)*rx,y,z+Math.cos(a)*rz],[x+Math.sin(b)*rx,y,z+Math.cos(b)*rz]];if(normal===-1)points.reverse();for(const p of points){cp.push(...p);cn.push(0,normal,0);}}
  }
  const cap=new T.BufferGeometry();cap.setAttribute('position',new T.Float32BufferAttribute(cp,3));cap.setAttribute('normal',new T.Float32BufferAttribute(cn,3));const merged=mergeGeometries([side,cap]);g.dispose();side.dispose();cap.dispose();return mesh(parent,merged,color);
 }
@@ -47,7 +47,7 @@ function hairLock(parent,color,points,width=.035,depth=.025){
 function scalp(parent,color,long){
  const pos=[],idx=[],n=28,m=9;
  for(let j=0;j<=m;j++)for(let i=0;i<=n;i++){
-  const a=i/n*Math.PI*2,front=Math.cos(a),edge=long?1.34+(1-front)*.40:1.16+(1-front)*.43;
+  const a=i/n*Math.PI*2,front=Math.cos(a),edge=long?1.03+(1-front)*.63:1.04+(1-front)*.49;
   const theta=.015+j/m*edge,bulge=long?1:.98;
   pos.push(Math.sin(theta)*Math.sin(a)*.140,.014+Math.cos(theta)*.179,Math.sin(theta)*Math.cos(a)*.122*bulge-.018);
  }
@@ -68,9 +68,8 @@ function face(head,{skin,hair,iris,female}){
  loft(head,skin,[[-.145,female?.036:.047,.048,.016],[-.13,female?.056:.068,.065,.014],[-.103,female?.078:.089,.081,.009],[-.060,.105,.09,.001],[0,female?.111:.116,.100,0],[.065,female?.108:.114,.10,-.004],[.12,.099,.084,-.014],[.157,.055,.049,-.018],[.168,.005,.005,-.018]],32);
  for(const s of [-1,1]){ell(head,skin,[s*.115,-.008,-.006],[.023,.036,.018]);ell(head,'#bd8569',[s*.130,-.009,.006],[.008,.021,.009]);}
  // Bridge and tip form one restrained nose; lips follow the face's surface.
- ell(head,skin,[0,.001,.100],[.009,.031,.013],18);
- ell(head,skin,[0,-.024,.109],[female?.014:.016,.014,.020],18);
- for(const s of [-1,1]){ell(head,skin,[s*.013,-.029,.106],[.008,.008,.012],12);ell(head,'#b47d61',[s*.010,-.032,.121],[.0022,.0013,.001],8);}
+ loft(head,skin,[[-.038,.006,.005,.100],[-.031,female?.013:.016,.011,.105],[-.023,female?.013:.016,.017,.106],[-.005,.009,.012,.102],[.016,.005,.005,.098],[.028,.001,.001,.098]],20);
+ for(const s of [-1,1])ell(head,'#b47d61',[s*.008,-.032,.115],[.0018,.001,.001],8);
  tube(head,'#9d6150',[[-.033,-.077,.085],[-.015,-.081,.095],[0,-.080,.098],[.015,-.078,.095],[.032,-.072,.085]],.0028,16,6);
  tube(head,'#d0977c',[[-.021,-.086,.089],[0,-.088,.095],[.021,-.083,.089]],.003,12,5);
  const eyes=[eye(head,-.044,skin,iris),eye(head,.044,skin,iris)];
@@ -82,7 +81,7 @@ function face(head,{skin,hair,iris,female}){
    hairLock(head,i%2?'#62422f':'#533525',[[x,.134,z],[s*(.135+i*.008),-.004,z],[s*(.151+i*.010),-.13,z-.014],[s*(.13+i*.012),-.24,z+.022],[s*(.152+i*.010),-.32,z-.015],[s*(.11+i*.012),-.405+i*.008,z]],.040,.031);
   }
   for(let i=0;i<5;i++)hairLock(head,i%2?'#65432f':'#543724',[[(i-2)*.043,.08,-.105],[(i-2)*.046,-.08,-.142],[(i-2)*.049,-.24,-.145],[(i-2)*.044,-.37,-.125]],.043,.034);
-  hairLock(head,'#6b4934',[[.023,.176,.028],[-.05,.139,.099],[-.12,.047,.087],[-.135,-.02,.035]],.040,.025);
+  hairLock(head,'#6b4934',[[.023,.176,.028],[-.05,.154,.099],[-.12,.062,.087],[-.135,-.02,.035]],.040,.025);
   hairLock(head,'#674530',[[.027,.176,.025],[.106,.111,.080],[.136,-.004,.02],[.145,-.13,-.017]],.035,.023);
  }else{
   for(let i=0;i<6;i++)hairLock(head,i%2?'#513825':'#493020',[[.10-i*.031,.09,.075],[.096-i*.028,.165,.072],[.025-i*.019,.185,.021],[-.03-i*.009,.149,-.033]],.029,.021);
