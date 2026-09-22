@@ -1,3 +1,4 @@
+import {activeParts,conditionOf} from '../../shared/structure-performance.js';
 import * as T from 'three';
 import {createStructureModel} from '../../shared/visuals/structure-model.js';
 import {releasedStructureLook} from '../../shared/visuals/structure-looks.js';
@@ -25,11 +26,11 @@ export class SettlementView{
  constructor(scene,elevation){this.scene=scene;this.elevation=elevation;this.objects=new Map();this.data=null;}
  base(p){return (p.purpose==='bridge'||p.spansWater)?Math.max(this.elevation(p.position.x,riverY(p.position.x)-2),this.elevation(p.position.x,riverY(p.position.x)+2))+.04:this.elevation(p.position.x,p.position.y);}
  update(data,agents=[]){if(!data)return;this.data=data;const live=new Set();
-  for(const p of data.projects){live.add(p.id);const open=!!p.storeId&&agents.some(a=>a.task?.job?.storeId===p.storeId&&a.task.phase==='work'),signature=JSON.stringify([p.parts.map(x=>[x.built,Math.floor(x.workMinutes/x.requiredMinutes*12)]),p.status,open]);let obj=this.objects.get(p.id);if(obj?.signature===signature)continue;if(obj)this.remove(p.id);
+  for(const p of data.projects){live.add(p.id);const open=!!p.storeId&&agents.some(a=>a.task?.job?.storeId===p.storeId&&a.task.phase==='work'),signature=JSON.stringify([p.parts.map(x=>[x.built,Math.floor(x.workMinutes/x.requiredMinutes*12),Math.floor(conditionOf(x)*10)]),p.status,open]);let obj=this.objects.get(p.id);if(obj?.signature===signature)continue;if(obj)this.remove(p.id);
    const g=createStructureModel(p,{open,appearance:releasedStructureLook(p)});g.position.set(p.position.x,this.base(p),p.position.y);g.userData.objectId=p.id;this.scene.add(g);
    const hit=new T.Mesh(new T.BoxGeometry(p.bounds.maxX-p.bounds.minX,1.5,p.bounds.maxZ-p.bounds.minZ),new T.MeshBasicMaterial({visible:false}));hit.position.y=.75;g.add(hit);this.objects.set(p.id,{group:g,signature});
   }
-  for(const s of data.stores){live.add(s.id);const signature=JSON.stringify([s.items,s.secured,s.revision]);let obj=this.objects.get(s.id);if(obj?.signature===signature)continue;if(obj)this.remove(s.id);
+  for(const s of data.stores){live.add(s.id);const signature=JSON.stringify([s.items,s.secured,s.revision,s.baseHeight]);let obj=this.objects.get(s.id);if(obj?.signature===signature)continue;if(obj)this.remove(s.id);
    const g=new T.Group();g.position.set(s.position.x,this.elevation(s.position.x,s.position.y)+.025,s.position.y);g.userData.objectId=s.id;this.scene.add(g);
    if(!['storage','platform'].includes(s.kind)){
     piece(g,box,s.kind==='site'?'#9f865d':'#b9a57a',[0,.025,0],[1.1,.05,.85]);
@@ -44,7 +45,7 @@ export class SettlementView{
   for(const id of this.objects.keys())if(!live.has(id))this.remove(id);
  }
  remove(id){const obj=this.objects.get(id);if(!obj)return;this.scene.remove(obj.group);obj.group.userData.disposeStructure?.();obj.group.traverse(m=>{if(m.isMesh&&!m.material.visible){m.geometry.dispose();m.material.dispose();}});this.objects.delete(id);}
- elevationAt(x,z){for(const p of this.data?.projects||[])for(const part of p.parts){if(!part.built||part.kind!=='deck'||part.center[1]+part.size[1]/2>.65)continue;const [cx,y,cz]=part.center,[sx,sy,sz]=part.size;if(Math.abs(x-p.position.x-cx)<=sx/2+.05&&Math.abs(z-p.position.y-cz)<=sz/2+.05)return this.base(p)+y+sy/2;}return this.elevation(x,z);}
+ elevationAt(x,z){for(const p of this.data?.projects||[])for(const part of p.parts){if(!activeParts(p).has(part.id)||part.kind!=='deck'||part.center[1]+part.size[1]/2>.65)continue;const [cx,y,cz]=part.center,[sx,sy,sz]=part.size;if(Math.abs(x-p.position.x-cx)<=sx/2+.05&&Math.abs(z-p.position.y-cz)<=sz/2+.05)return this.base(p)+y+sy/2;}return this.elevation(x,z);}
 }
 export function updateCargo(person,inventory){const signature=JSON.stringify(inventory||{});if(person.cargoSignature===signature)return;person.cargoSignature=signature;const r=person.rig;if(!r)return;
  if(r.cargo)r.cargoAnchor.remove(r.cargo);r.cargo=new T.Group();r.cargoAnchor.add(r.cargo);drawContents(r.cargo,inventory,{carried:true,limit:8});r.bag.visible=Object.values(inventory||{}).some(v=>v>0);

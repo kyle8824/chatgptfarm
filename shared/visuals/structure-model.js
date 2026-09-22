@@ -1,3 +1,4 @@
+import {conditionOf,activeParts} from '../structure-performance.js';
 import * as T from 'three';
 import {mergeGeometries} from 'three/addons/utils/BufferGeometryUtils.js';
 import {normalizeStructureLook} from './structure-appearance.js';
@@ -41,9 +42,10 @@ function componentGeometry(part){
 // This is used by BOTH the world and the workshop. Geometry comes exclusively
 // from physical parts. Recorded technique controls the mesh. A look affects shader inputs only.
 export function createStructureModel(project,{stage='construction',appearance={},open=false}={}){
- const group=new T.Group(),look=normalizeStructureLook(appearance),materials=new Map(),owned=[];
- const material=part=>{const key=part.material+!!componentGeometry(part).getAttribute('color');if(materials.has(key))return materials.get(key);
+ const active=activeParts(project),group=new T.Group(),look=normalizeStructureLook(appearance),materials=new Map(),owned=[];
+ const material=part=>{const wear=stage==='construction'?Math.floor(conditionOf(part)*10)/10:1,key=part.material+!!componentGeometry(part).getAttribute('color')+wear;if(materials.has(key))return materials.get(key);
   const m=new T.MeshStandardMaterial({color:look[part.material],roughness:look.roughness,vertexColors:!!componentGeometry(part).getAttribute('color')});
+  if(wear<.85)m.color.lerp(new T.Color('#625e4c'),(1-wear)*.5);
   m.onBeforeCompile=shader=>{shader.uniforms.structureGrain={value:look.grain};shader.vertexShader='uniform float structureGrain;\n'+shader.vertexShader;shader.vertexShader=shader.vertexShader.replace('#include <color_vertex>','#include <color_vertex>\n#ifdef USE_COLOR\nvColor = mix(vec3(1.0), vColor, structureGrain);\n#endif');};
   m.customProgramCacheKey=()=> 'structure-grain-v1';materials.set(key,m);owned.push(m);return m;
  };
@@ -51,6 +53,7 @@ export function createStructureModel(project,{stage='construction',appearance={}
   if(stage==='design'||part.built||part.invested){let parent=group,center=part.center;
    if(open&&part.kind==='roof'&&project.purpose==='storage'){parent=new T.Group();parent.position.set(part.center[0],part.center[1],part.center[2]-part.size[2]/2);parent.rotation.x=-1.15;group.add(parent);center=[0,0,part.size[2]/2];}
    const mesh=new T.Mesh(componentGeometry(part),material(part));mesh.position.set(...center);mesh.scale.set(...part.size);mesh.castShadow=mesh.receiveShadow=true;mesh.userData.partId=part.id;parent.add(mesh);
+   if(stage==='construction'&&part.built&&!active.has(part.id)){mesh.scale.y=Math.min(.12,mesh.scale.y);mesh.position.y=.06;mesh.rotation.y=.12;mesh.rotation.z=.035;}
    if(stage==='construction'&&!part.built){mesh.scale.y*=Math.max(.08,Math.min(1,part.workMinutes/part.requiredMinutes||0));mesh.position.y=part.center[1]-part.size[1]/2+mesh.scale.y/2;}
   }
   if(stage==='construction'&&!part.built){const geometry=new T.EdgesGeometry(part.shape==='cylinder'?cylinder:box),m=new T.LineBasicMaterial({color:'#bfa868',transparent:true,opacity:.35}),line=new T.LineSegments(geometry,m);line.position.set(...part.center);line.scale.set(...part.size);group.add(line);owned.push(geometry,m);}

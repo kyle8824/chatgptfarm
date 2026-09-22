@@ -57,11 +57,11 @@ export function integrateWood(ledger,toHour,conditionsFor){
     const c=conditionsFor(copy(b.holder));
     if(!c||!Number.isFinite(c.temperatureC)||!Number.isFinite(c.humidity)||c.humidity<0||c.humidity>1||!Number.isFinite(c.airflow)||c.airflow<0||typeof c.raining!=='boolean'||typeof c.covered!=='boolean')throw Error('Invalid wood exposure');
     const ratio=b.waterKg/b.dryKg;
-    const rain=c.raining&&!c.covered;
-    const equilibrium=rain?.8:.08+.12*c.humidity;
+    const rain=c.raining?Math.max(0,Math.min(1,c.rainExposure??(c.covered?0:1))):0;
+    const dryEquilibrium=.08+.12*c.humidity,equilibrium=dryEquilibrium+(.8-dryEquilibrium)*rain;
     const warmth=Math.max(.05,Math.min(2,(c.temperatureC+5)/25));
     const airflow=Math.max(.1,Math.min(3,c.airflow));
-    const rate=rain?.18:.06*warmth*airflow;
+    const rate=.18*rain+.06*warmth*airflow*(1-rain);
     return {b,waterKg:b.dryKg*(equilibrium+(ratio-equilibrium)*Math.exp(-rate*elapsed))};
   });
   for(const {b,waterKg} of updates){ledger.environmentWaterExchangeKg+=waterKg-b.waterKg;b.waterKg=waterKg;}
