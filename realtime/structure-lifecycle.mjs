@@ -1,3 +1,4 @@
+import {walkable} from '../engine/navigation.js';
 import {conditionOf,qualityOf,activeParts,structurePerformance,cargoAllowance,clamp01} from '../shared/structure-performance.js';
 import {addEvent,remember} from '../engine/core.js';
 import {loadOf,clock} from './holdings.mjs';
@@ -33,7 +34,7 @@ export function advanceStructures(w,seconds){
  const s=w.settlement;if(!s)return;s.wearSeconds=(s.wearSeconds||0)+seconds;if(s.wearSeconds<60)return;
  const elapsed=s.wearSeconds;s.wearSeconds=0;
  for(const p of s.projects){
-  const occupied=w.agents.some(a=>occupiesCrossing(p,a));
+  const occupied=w.agents.some(a=>!walkable(w,a.coordinates)&&occupiesCrossing(p,a));
   for(const part of p.parts.filter(x=>x.built)){
    // Activate at current time. Never invent past wear or earned skill on load.
    part.durability??={version:1,origin:'legacy-estimate',quality:qualityOf(part),condition:1,builtAt:clock(w),useWear:0};

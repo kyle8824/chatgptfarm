@@ -27,6 +27,7 @@ assert(damp(.2)>damp(.9),'better roofing has a material benefit, not only a labe
 const bridgeRaw={build:true,name:'Branch crossing',purpose:'cross the creek',siteId:'crossing-48',rationale:'A route to the other bank.',code:Array.from({length:5},(_,i)=>`part(${JSON.stringify({id:'deck-'+i,kind:'deck',material:'timber',center:[0,.1,2.4-i*1.2],size:[1.4,.2,1.2],requires:i?['deck-'+(i-1)]:[]})});`).join('\n')};
 const bw=fresh(),ba=bw.agents[0];ba.coordinates={x:48,y:24};const bridge=built(bw,bridgeRaw),middle={...bridge.position};ba.coordinates={x:48,y:bridge.position.y+4};ba.inventory.stones=12;
 assert(liveRoute(bw,ba.coordinates,{x:48,y:bridge.position.y-4}),'unloaded geometric route exists');assert(!liveRoute(bw,ba.coordinates,{x:48,y:bridge.position.y-4},ba),'actor carrying a load beyond the rating cannot route onto it');
+ba.coordinates.y=bridge.position.y+2.7;assert(!onDeck(bw,middle,ba),'standing on a dry bank section does not bypass the cargo gate');
 noteCargoLimits(bw,ba);assert(Object.values(bridge.observations).some(o=>o.kind==='load-limit'));const memory=ba.memories.length;noteCargoLimits(bw,ba);assert.equal(ba.memories.length,memory,'repeated checks do not spam memories');
 for(const part of bridge.parts){part.finish='hewn';part.durability.quality=.9;}
 assert(liveRoute(bw,ba.coordinates,{x:48,y:bridge.position.y-4},ba),'stronger workmanship supports the same real carried load');

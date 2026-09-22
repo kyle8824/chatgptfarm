@@ -1,3 +1,4 @@
+import {walkable} from '../engine/navigation.js';
 import {activeParts,cargoAllowance,surfaceProtection} from '../shared/structure-performance.js';
 import {loadOf} from './holdings.mjs';
 // Pure geometry shared by server navigation and the renderer.
@@ -5,7 +6,7 @@ export function partBounds(project,part){const [x,y,z]=part.center,[sx,sy,sz]=pa
 const inside=(b,part,p,pad=0)=>{const r=partBounds(b,part);return p.x>=r.minX+.12-pad&&p.x<=r.maxX-.12+pad&&p.y>=r.minZ-.05-pad&&p.y<=r.maxZ+.05+pad;};
 export function onDeck(w,p,actor=null){return (w.settlement?.projects||[]).some(b=>{
  if(!(b.purpose==='bridge'||b.spansWater))return false;
- const incumbent=actor&&b.parts.some(x=>x.built&&x.kind==='deck'&&inside(b,x,actor.coordinates,.15)),active=activeParts(b);
+ const incumbent=actor&&!walkable(w,actor.coordinates)&&b.parts.some(x=>x.built&&x.kind==='deck'&&inside(b,x,actor.coordinates,.15)),active=activeParts(b);
  if(b.closing&&!incumbent)return false;
  return b.parts.some(part=>active.has(part.id)&&part.kind==='deck'&&inside(b,part,p)&&(incumbent||!actor||loadOf(w,actor).mass<=cargoAllowance(b,part)+1e-6));
 });}
