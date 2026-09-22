@@ -16,7 +16,14 @@ function componentGeometry(part){
  const geometry=mergeGeometries(geos);geos.forEach(g=>g.dispose());components.set(key,geometry);return geometry;
 }
 export function drawContents(group,inventory,{carried=false,limit=20}={}){
- let index=0;for(const [key,value]of Object.entries(inventory||{})){for(let n=0;n<Math.min(Math.floor(value),carried?3:8)&&index<limit;n++,index++){
+ let index=0,packIndex=0,woodIndex=0;for(const [key,value]of Object.entries(inventory||{})){for(let n=0;n<Math.min(Math.floor(value),carried?3:8)&&index<limit;n++,index++){
+  if(carried){
+   // Tie wood against the pack; small food/stones sit at its opening. The
+   // settlement's ground-pile grid would leave these floating off a small rig.
+   if(/Wood|Pole/.test(key)){const m=piece(group,log,key==='wetWood'?'#73563b':'#a58456',[0,.18+(woodIndex%3)*.075,-Math.floor(woodIndex/3)*.07],[.48,.48,.48]);m.rotation.z=Math.PI/2;woodIndex++;}
+   else{const color=/berries/.test(key)?'#b75245':/Meat|tubers/.test(key)?'#bb9465':key==='clay'?'#ae805b':key==='reeds'||key==='cordage'?'#b4a66e':'#929a92';piece(group,ball,color,[(packIndex%3-1)*.066,.382+Math.floor(packIndex/3)*.04,.060],[.040,.035,.038]);packIndex++;}
+   continue;
+  }
   const x=((index%4)-1.5)*.20,y=Math.floor(index/8)*.16+.1,z=(Math.floor(index/4)%2-.5)*.22;
   if(/Wood|Pole/.test(key)){const m=piece(group,log,key==='wetWood'?'#73563b':'#a58456',[x,y,z],[1,carried?.65:1,1]);m.rotation.z=Math.PI/2;m.rotation.y=.2;}
   else if(/berries|Meat|tubers/.test(key))piece(group,ball,key==='berries'?'#b75245':'#bb9465',[x,y,z],[.105,.075,.09]);
@@ -54,5 +61,5 @@ export class SettlementView{
  elevationAt(x,z){for(const p of this.data?.projects||[])if(p.purpose==='bridge')for(const part of p.parts){if(!part.built||part.kind!=='deck')continue;const [cx,y,cz]=part.center,[sx,sy,sz]=part.size;if(Math.abs(x-p.position.x-cx)<=sx/2+.05&&Math.abs(z-p.position.y-cz)<=sz/2+.05)return this.base(p)+y+sy/2;}return this.elevation(x,z);}
 }
 export function updateCargo(person,inventory){const signature=JSON.stringify(inventory||{});if(person.cargoSignature===signature)return;person.cargoSignature=signature;const r=person.rig;if(!r)return;
- if(r.cargo)r.body.remove(r.cargo);r.cargo=new T.Group();r.cargo.position.set(0,1.18,-.36);r.body.add(r.cargo);drawContents(r.cargo,inventory,{carried:true,limit:8});r.bag.visible=Object.values(inventory||{}).some(v=>v>0);
+ if(r.cargo)r.cargoAnchor.remove(r.cargo);r.cargo=new T.Group();r.cargoAnchor.add(r.cargo);drawContents(r.cargo,inventory,{carried:true,limit:8});r.bag.visible=Object.values(inventory||{}).some(v=>v>0);
 }

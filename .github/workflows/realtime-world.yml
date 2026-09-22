@@ -1,14 +1,14 @@
 name: Realtime world verification
 on:
   push:
-    branches: [overhaul/live-world-3d, fix/live-personal-space, fix/camera-pan, fix/physical-actions, feature/physical-settlement, fix/storage-write-budget, release/main-domain]
+    branches: [overhaul/live-world-3d, fix/live-personal-space, fix/camera-pan, fix/physical-actions, feature/physical-settlement, fix/storage-write-budget, release/main-domain, release/models-map-controls]
   workflow_dispatch:
 permissions:
   contents: read
 jobs:
   verify:
     runs-on: ubuntu-latest
-    timeout-minutes: 12
+    timeout-minutes: 20
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
@@ -16,7 +16,7 @@ jobs:
           node-version: '22'
       - run: npm ci --prefix cloudflare
       - run: npm test && node realtime/test.mjs && node realtime/loading-test.mjs && node realtime/persistence-test.mjs && node realtime/promotion-test.mjs && node realtime/behavior-test.mjs && node realtime/physical-actions-test.mjs && node realtime/settlement-test.mjs && node realtime/design-planner-test.mjs && node realtime/workerd-test.mjs
-      - run: node cloudflare/build.mjs
+      - run: node cloudflare/build.mjs && node realtime/visual-assets-test.mjs
       - run: npm install --no-save playwright@1.55.0 && npx playwright install --with-deps chromium
       - run: node realtime/camera-browser-test.mjs && node realtime/settlement-browser-test.mjs
       - run: |

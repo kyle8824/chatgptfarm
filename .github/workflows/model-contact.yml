@@ -1,0 +1,27 @@
+name: Model contact verification
+on:
+  push:
+    branches: [release/models-map-controls]
+    paths: ['web/live/people.js', 'web/live/settlement.js', 'realtime/visual-assets-test.mjs', '.github/workflows/model-contact.yml']
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  contacts:
+    runs-on: ubuntu-latest
+    timeout-minutes: 8
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - run: npm ci --prefix cloudflare
+      - run: node realtime/visual-assets-test.mjs
+      - run: npm install --no-save playwright@1.55.0 && npx playwright install --with-deps chromium
+      - name: Render hands, feet and carried supplies in the valley
+        run: MODEL_POSES_ONLY=1 node realtime/camera-browser-test.mjs
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: model-contact-evidence
+          path: realtime-qa/
