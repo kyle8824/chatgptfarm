@@ -5,3 +5,7 @@ cloudflare/node_modules/
 cloudflare/public/
 cloudflare/.wrangler/
 cloudflare/.dev.vars
+
+structure-workshop/evidence/
+
+character-preview/node_modules
