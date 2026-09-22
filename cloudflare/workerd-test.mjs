@@ -34,5 +34,8 @@ try{
  assert.equal((await request('/pause',auth)).status,200);
  assert.equal((await(await request('/health')).json()).alarmAt,null);
  assert.equal((await request('/resume',auth)).status,200);
+ options.workers[0].bindings.ORIGINAL_WORLD_ARCHIVED='true';await mf.dispose();mf=new Miniflare({...convertV4MiniflareOptions(options),resourcePersistencePath:path.join(temporary,'state')});
+ assert.equal((await request('/resume',auth)).status,409,'retired original cannot be restarted through the old setup page');
+ assert.equal((await request('/start',auth)).status,409,'retired original cannot be initialized again');
  console.log('PASS actual Cloudflare workerd: auth, one-time import, automatic alarm, moving wildlife, SQLite persistence across restart, pause/resume');
 }finally{await mf.dispose();await fs.rm(temporary,{recursive:true,force:true});}

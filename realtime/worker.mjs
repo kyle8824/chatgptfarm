@@ -2,7 +2,7 @@ import {DurableObject} from 'cloudflare:workers';
 import {RealtimeController} from './world.mjs';
 import {unavailableResponse} from '../cloudflare/failure.mjs';
 import {BUILD_INFO} from '../cloudflare/build-info.mjs';
-const json=data=>Response.json(data,{headers:{'Cache-Control':'no-store'}});
+const json=data=>Response.json(data,{headers:{'Cache-Control':'no-store','Access-Control-Allow-Origin':'*'}});
 export class LiveValley extends DurableObject{
  constructor(ctx,env){super(ctx,env);this.env=env;this.clients=new Set();this.controller=new RealtimeController(ctx.storage,{ai:env.AI||null});ctx.blockConcurrencyWhile(async()=>{try{if(await this.restore())this.startLoop();}catch{/* Keep the object alive so fetch can report the failure. */}});}
  async restore(){if(this.bootError&&Date.now()<this.bootRetryAt)throw this.bootError;try{const record=await this.controller.load();this.bootError=null;return record;}catch(e){this.bootError=e;this.bootRetryAt=Date.now()+30000;throw e;}}
