@@ -1,14 +1,14 @@
 name: Structure workshop verification
 on:
   push:
-    branches: [feature/structure-workshop, feature/structure-workshop-runtime]
+    branches: [feature/structure-workshop, feature/structure-workshop-runtime, feature/earned-craft, feature/earned-craft-runtime]
   workflow_dispatch:
 permissions:
   contents: read
 jobs:
   workshop:
     runs-on: ubuntu-latest
-    timeout-minutes: 12
+    timeout-minutes: 20
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
@@ -26,6 +26,8 @@ jobs:
         run: |
           npm ci --prefix cloudflare
           npm install --no-save playwright@1.55.0
+          node realtime/craft-test.mjs
+          node realtime/open-construction-test.mjs
           node realtime/settlement-test.mjs
           node cloudflare/build.mjs
           node realtime/settlement-browser-test.mjs
