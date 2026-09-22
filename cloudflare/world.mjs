@@ -11,6 +11,7 @@ export class WorldController {
   }
   serial(operation){const job=this.queue.then(operation);this.queue=job.catch(()=>{});return job;}
   async load(){if(this.record===undefined)this.record=await readCheckpoint(this.storage);return this.record;}
+  recover(){return this.serial(async()=>{const r=await this.load();if(!r||r.paused)return;const alarm=await this.storage.getAlarm();if(alarm===null||alarm<=this.now())await this.storage.setAlarm(this.now()+1000);});}
   alarmTime(r){return r.paused?null:Math.max(this.now()+1000,r.next?r.current.end:Math.min(r.current.end,r.current.start+5000));}
   async persist(r,completed=null){await writeCheckpoint(this.storage,r,this.alarmTime(r),completed);this.record=structuredClone(r);}
   async initialize(seed){return this.serial(async()=>{

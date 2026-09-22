@@ -2,6 +2,7 @@ import {prepare,step} from './elapsed.mjs';
 import {retrieveDecisionContext} from '../engine/runtime.js';
 import {walkable,clearSegment} from '../engine/navigation.js';
 import {readCheckpoint,writeCheckpoint} from '../cloudflare/checkpoint.mjs';
+import {worldFailure} from '../cloudflare/failure.mjs';
 import {liveCandidates} from './behavior.mjs';
 import {ensureSettlement,settlementFrame,loadOf,CARRY} from './holdings.mjs';
 import {designContext,DESIGN_SYSTEM,validateBlueprint,adoptBlueprint} from './blueprints.mjs';
@@ -14,6 +15,7 @@ export function parseDecision(result,choices){
  return {actionId:p.actionId,goal:p.goal.slice(0,180),intent:p.intent.slice(0,260),decisionSummary:p.decisionSummary.slice(0,260)};
 }
 export const RATE=6;
+export const CHECKPOINT_MS=15000;
 export function compact(w){
  w.dna=w.dna.slice(-80);for(const d of w.dna)delete d.evidence;
  w.history=w.history.slice(0,140);
@@ -37,25 +39,31 @@ export function wildlifeStep(w,seconds){
  }
 }
 export class RealtimeController{
- constructor(storage,{now=Date.now,ai=null}={}){this.storage=storage;this.now=now;this.ai=ai;this.queue=Promise.resolve();this.proposals=new Map();this.jobs=new Map();this.lastSaved=0;this.lastAiCheck=0;this.error=null;}
+ constructor(storage,{now=Date.now,ai=null}={}){this.storage=storage;this.now=now;this.ai=ai;this.queue=Promise.resolve();this.proposals=new Map();this.jobs=new Map();this.lastSaved=0;this.lastAiCheck=0;this.error=null;this.checkpointIntervalMs=CHECKPOINT_MS;this.persistenceRetryAt=0;this.nextAlarmAt=0;}
  serial(fn){const p=this.queue.then(fn);this.queue=p.catch(()=>{});return p;}
- async load(){if(this.record===undefined){this.record=await readCheckpoint(this.storage);if(this.record)ensureSettlement(this.record.world);for(const [id,p] of Object.entries(this.record?.pendingDecisions||{}))if(p.expires>this.now())this.proposals.set(id,p);}return this.record;}
+ async load(){if(this.record===undefined){this.record=await readCheckpoint(this.storage);if(this.record){ensureSettlement(this.record.world);this.lastSaved=this.record.checkpointAt||0;this.checkpointIntervalMs=Math.max(CHECKPOINT_MS,this.record.checkpointIntervalMs||0);this.nextAlarmAt=this.lastSaved+this.checkpointIntervalMs;}for(const [id,p] of Object.entries(this.record?.pendingDecisions||{}))if(p.expires>this.now())this.proposals.set(id,p);}return this.record;}
  async initialize(seed){if(await this.load())return;const now=this.now(),w=prepare(seed);compact(w);w.meta.actionRulesVersion='realtime-2';w.meta.liveFork={sourceDay:w.day,sourceHour:w.hour,sourceTick:seed.meta.tickNumber,createdAt:now};
   for(const a of w.agents){delete a.runtimeMotion;delete a.motionPath;}
   this.record={version:1,world:w,lastWallTime:now,createdAt:now,revision:0,unattendedSteps:0,alarmCount:0,lastAlarmAt:null,rate:RATE,ai:{date:new Date(now).toISOString().slice(0,10),calls:0,succeeded:0,applied:0,rejected:0,lastError:null},lastDecisionAt:{}};
   await this.save();
  }
- async save(){await writeCheckpoint(this.storage,this.record,this.now()+1000);this.lastSaved=this.now();}
- async advance(target,viewers=0){const r=this.record;if(!r)return;let n=0;
+ async save(){if(this.now()<this.persistenceRetryAt)throw Error(this.error||'Persistence unavailable');const at=this.now();try{
+  const bytes=await writeCheckpoint(this.storage,{...this.record,checkpointAt:at,checkpointIntervalMs:this.checkpointIntervalMs},at+this.checkpointIntervalMs);
+  this.lastSaved=at;this.nextAlarmAt=at+this.checkpointIntervalMs;this.record.checkpointAt=at;this.persistenceRetryAt=0;
+  // Keep routine live-world writes near 30,000 rows/day as checkpoints grow.
+  // AI reservations still save immediately and remain inside their own cap.
+  this.checkpointIntervalMs=Math.max(CHECKPOINT_MS,Math.ceil((Math.ceil(bytes/64000)+2)*86400000/30000));
+ }catch(e){this.error=e.message;this.persistenceRetryAt=at+worldFailure(e,at).retryAfterSeconds*1000;throw e;}}
+ async advance(target,viewers=0){const r=this.record;if(!r)return false;if(this.persistenceRetryAt){if(target<this.persistenceRetryAt)return false;await this.save();}let n=0;
   while(r.lastWallTime<target&&n++<300){const wall=Math.min(100,target-r.lastWallTime);r.lastWallTime+=wall;
    const adapter={decide:async c=>{const p=this.proposals.get(c.agent.id);this.proposals.delete(c.agent.id);if(r.pendingDecisions)delete r.pendingDecisions[c.agent.id];if(!p||p.expires<this.now())throw Object.assign(Error('Reflex policy'),{code:this.ai?'between_model_decisions':'ai_not_configured'});if(!c.candidates.some(x=>x.id===p.actionId)){r.ai.rejected++;throw Object.assign(Error('Stale action'),{code:'model_action_no_longer_available'});}r.ai.applied++;const a=r.world.agents.find(a=>a.id===c.agent.id);if(a?.liveThought)a.liveThought.status='applied';return p;}};
    await step(r.world,wall/1000*r.rate,{mind:adapter,wallTime:r.lastWallTime,fallbackReason:this.ai?'between_model_decisions':'ai_not_configured'});wildlifeStep(r.world,wall/1000*r.rate);r.revision++;if(!viewers)r.unattendedSteps++;
   }
-  if(target-this.lastSaved>=1000){compact(r.world);await this.save();}
+  if(target-this.lastSaved>=this.checkpointIntervalMs){compact(r.world);await this.save();return true;}return false;
  }
- pulse(viewers=0){return this.serial(async()=>{try{await this.advance(this.now(),viewers);this.error=null;}catch(e){this.error=e.message;throw e;}});}
- alarm(viewers=0){return this.serial(async()=>{try{await this.load();if(!this.record)return;this.record.alarmCount++;this.record.lastAlarmAt=this.now();await this.advance(this.now(),viewers);await this.save();this.error=null;}catch(e){this.error=e.message;await this.storage.setAlarm(this.now()+2000);throw e;}});}
- async requestDecisions(){if(!this.ai||this.now()-this.lastAiCheck<10000||!this.record)return;this.lastAiCheck=this.now();void this.requestDesigns();
+ pulse(viewers=0){return this.serial(async()=>{try{await this.advance(this.now(),viewers);if(!this.persistenceRetryAt)this.error=null;}catch(e){this.error=e.message;throw e;}});}
+ alarm(viewers=0){return this.serial(async()=>{try{await this.load();if(!this.record)return;this.record.alarmCount++;this.record.lastAlarmAt=this.now();const saved=await this.advance(this.now(),viewers);if(!saved&&this.nextAlarmAt<=this.now()&&!this.persistenceRetryAt)await this.save();if(!this.persistenceRetryAt)this.error=null;}catch(e){this.error=e.message;try{await this.storage.setAlarm(Math.max(this.now()+30000,this.persistenceRetryAt));}catch{/* Provider limits can block alarm writes too; fetch/timer will retry. */}throw e;}});}
+ async requestDecisions(){if(!this.ai||this.persistenceRetryAt||this.now()-this.lastAiCheck<10000||!this.record)return;this.lastAiCheck=this.now();void this.requestDesigns();
   for(const a of this.record.world.agents){const pending=this.proposals.get(a.id);if(pending?.expires<=this.now()){this.proposals.delete(a.id);if(this.record.pendingDecisions)delete this.record.pendingDecisions[a.id];}
    const failed=this.record.decisionFailures?.[a.id]||(!this.record.decisionFailures&&this.record.ai.lastError);const cooldown=failed?120000:1800000;
    if(this.jobs.has(a.id)||this.proposals.has(a.id)||this.now()-(this.record.lastDecisionAt[a.id]||0)<cooldown)continue;
@@ -89,6 +97,6 @@ export class RealtimeController{
     w.settlement.designs.push({at:this.now(),agentId:id,status:project?'accepted':'deferred',projectId:project?.id||null,model:MODEL,reason:project?.rationale||String(raw.rationale||'No useful new structure proposed.').slice(0,350)});w.settlement.designs=w.settlement.designs.slice(-30);await this.save();});
   }catch(e){await this.serial(async()=>{const reason=String(e.message||'design_provider_error').slice(0,2400);(this.record.designFailures??={})[id]=reason;if(raw?.build===true&&Array.isArray(raw.parts)&&raw.parts.length<=28&&JSON.stringify(raw).length<=40000)(this.record.designDrafts??={})[id]=raw;const s=this.record.world.settlement;s.designs.push({at:this.now(),agentId:id,status:'rejected',model:MODEL,reason:reason.slice(0,400)});s.designs=s.designs.slice(-30);await this.save();});}
  }
- frame(viewers=0){const r=this.record,w=r.world,now=this.now();return {type:'state',groundRecent:Object.values(w.liveGround?.cells||{}).sort((a,b)=>b.sequence-a.sequence).slice(0,24),day:w.day,hour:w.hour,minute:w.minute,weather:w.weather,temperature:w.temperature,structures:w.structures,resources:w.resources,settlement:settlementFrame(w),agents:w.agents.map(a=>({id:a.id,name:a.name,coordinates:a.coordinates,motion:a.locomotion?{speed:a.locomotion.speed,facing:a.locomotion.facing}:null,needs:a.needs,inventory:a.inventory,carrying:{...loadOf(w,a),capacity:CARRY},currentAction:a.currentAction,position:a.position,task:a.task?{id:a.task.id,actionId:a.task.actionId,label:a.task.label,phase:a.task.phase,workMinutes:a.task.workMinutes,requiredMinutes:a.task.requiredMinutes,source:a.task.source,model:a.task.model,job:a.task.selected?.job||null,progress:a.task.progress||null,interactionReady:a.task.interactionReady,decisionSummary:a.task.decisionSummary||null}:null,mind:{brainMode:a.mind.brainMode,decisionSummary:a.mind.decisionSummary,currentGoal:a.mind.currentGoal,fallbackReason:a.mind.fallbackReason},thought:a.liveThought,memories:a.memories.slice(0,5).map(m=>({text:m.text,day:m.day,hour:m.hour})),memoryCount:a.memories.length})),wildlife:(w.ecologySystem?.wildlife||[]).filter(a=>a.active).map(a=>({id:a.id,species:a.species,position:a.position,behavior:a.behavior})),history:w.history.slice(0,12).map(e=>({id:e.id,title:e.title,detail:e.detail,day:e.day,hour:e.hour})),runtime:{environment:'independent-live-fork',transport:'websocket',execution:'elapsed-only',revision:r.revision,serverTime:now,computedThrough:r.lastWallTime,lagMs:Math.max(0,now-r.lastWallTime),rate:r.rate,viewers,unattendedSteps:r.unattendedSteps,alarmCount:r.alarmCount,lastAlarmAt:r.lastAlarmAt,createdAt:r.createdAt,status:this.error?'error':now-r.lastWallTime>3000?'catching-up':'running',error:this.error,futureFrames:0,ai:{configured:!!this.ai,model:this.ai?MODEL:null,...r.ai},origin:w.meta.liveFork}};}
+ frame(viewers=0){const r=this.record,w=r.world,now=this.now();return {type:'state',groundRecent:Object.values(w.liveGround?.cells||{}).sort((a,b)=>b.sequence-a.sequence).slice(0,24),day:w.day,hour:w.hour,minute:w.minute,weather:w.weather,temperature:w.temperature,structures:w.structures,resources:w.resources,settlement:settlementFrame(w),agents:w.agents.map(a=>({id:a.id,name:a.name,coordinates:a.coordinates,motion:a.locomotion?{speed:a.locomotion.speed,facing:a.locomotion.facing}:null,needs:a.needs,inventory:a.inventory,carrying:{...loadOf(w,a),capacity:CARRY},currentAction:a.currentAction,position:a.position,task:a.task?{id:a.task.id,actionId:a.task.actionId,label:a.task.label,phase:a.task.phase,workMinutes:a.task.workMinutes,requiredMinutes:a.task.requiredMinutes,source:a.task.source,model:a.task.model,job:a.task.selected?.job||null,progress:a.task.progress||null,interactionReady:a.task.interactionReady,decisionSummary:a.task.decisionSummary||null}:null,mind:{brainMode:a.mind.brainMode,decisionSummary:a.mind.decisionSummary,currentGoal:a.mind.currentGoal,fallbackReason:a.mind.fallbackReason},thought:a.liveThought,memories:a.memories.slice(0,5).map(m=>({text:m.text,day:m.day,hour:m.hour})),memoryCount:a.memories.length})),wildlife:(w.ecologySystem?.wildlife||[]).filter(a=>a.active).map(a=>({id:a.id,species:a.species,position:a.position,behavior:a.behavior})),history:w.history.slice(0,12).map(e=>({id:e.id,title:e.title,detail:e.detail,day:e.day,hour:e.hour})),runtime:{environment:'independent-live-fork',transport:'websocket',execution:'elapsed-only',revision:r.revision,serverTime:now,computedThrough:r.lastWallTime,lagMs:Math.max(0,now-r.lastWallTime),rate:r.rate,viewers,unattendedSteps:r.unattendedSteps,alarmCount:r.alarmCount,lastAlarmAt:r.lastAlarmAt,createdAt:r.createdAt,status:this.persistenceRetryAt?'persistence-blocked':this.error?'error':now-r.lastWallTime>3000?'catching-up':'running',error:this.error,persistence:{checkpointAt:this.lastSaved||null,intervalMs:this.checkpointIntervalMs,retryAt:this.persistenceRetryAt||null},futureFrames:0,ai:{configured:!!this.ai,model:this.ai?MODEL:null,...r.ai},origin:w.meta.liveFork}};}
  geometry(){const w=this.record.world;return {bounds:w.worldModel.bounds,objects:w.worldModel.objects.filter(o=>o.position).map(o=>({id:o.id,type:o.type,position:o.position,geometry:o.geometry,state:o.state})),sites:Object.values(w.regions?.sites||{}).map(s=>({id:s.id,position:s.position,label:s.label})),surfaceHistory:w.surfaceHistory,groundWear:Object.values(w.liveGround?.cells||{})};}
 }
