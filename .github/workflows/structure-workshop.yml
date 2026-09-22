@@ -27,6 +27,7 @@ jobs:
           npm ci --prefix cloudflare
           npm install --no-save playwright@1.55.0
           node realtime/craft-test.mjs
+          node realtime/hewn-construction-test.mjs
           node realtime/open-construction-test.mjs
           node realtime/settlement-test.mjs
           node cloudflare/build.mjs

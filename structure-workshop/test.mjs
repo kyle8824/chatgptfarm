@@ -17,6 +17,7 @@ const module=await import('data:text/javascript;base64,'+Buffer.from(result.outp
 const modelA=module.createStructureModel(p,{stage:'design'}),modelB=module.createStructureModel(p,{stage:'design',appearance:look.appearance});
 const geometry=m=>{m.updateMatrixWorld(true);const parts=[];m.traverse(x=>{if(x.isMesh)parts.push({id:x.userData.partId,position:x.position.toArray(),scale:x.scale.toArray(),vertices:Array.from(x.geometry.attributes.position.array)});});return parts;};
 assert.deepEqual(geometry(modelA),geometry(modelB),'appearance edits retain every physical vertex and part transform');
+assert(modelA.children.reduce((n,x)=>n+(x.geometry?.index?.count||x.geometry?.attributes?.position?.count||0)/3,0)<15000,'rough example stays within a mobile geometry budget');
 assert.equal(modelA.children.filter(x=>x.isMesh).length,p.parts.length);assert.equal(structureSignature(p),structureSignature(progressed));
 assert.equal(modelB.children[0].material.color.getHexString(),'315347');modelA.userData.disposeStructure();modelB.userData.disposeStructure();
 console.log('PASS appearance-only schema, geometry invariance, design binding, construction progress, resource accounting, cached catalog and shared renderer');
