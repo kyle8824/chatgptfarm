@@ -90,7 +90,7 @@ export function animatePerson(e,time,dt,walking,fresh){
   else if(gather)armAngle=-.8+Math.sin(time*2.5+side)*.25;
   else if(rest)armAngle=-.35;
   else if(eat&&side===1){armAngle=-1.9;elbowAngle=-1.15;}
-  approach(arm.rotation,'x',armAngle);approach(arm.rotation,'z',drink?-side*.42:0);approach(elbow.rotation,'x',elbowAngle);
+  approach(arm.rotation,'x',armAngle);approach(arm.rotation,'z',drink?-side*(.42+sip*.30):0);approach(elbow.rotation,'x',elbowAngle);
  }
  approach(r.head.rotation,'x',drink?-.1:gather?.16:0);
  const blink=((time+e.blinkOffset)%4.9)<.13;for(const eye of r.eyes)eye.scale.y=blink?.12:1;
