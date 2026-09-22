@@ -28,7 +28,7 @@ export class MapGestureControls extends OrbitControls {
   const plane=this.gesture.plane,anchor=this.rayAt(old).intersectPlane(plane,new T.Vector3());if(!anchor){this.rebase();return;}
   if(now.count===2&&old.distance>8&&now.distance>8){
    const distance=this.object.position.distanceTo(this.target),scale=this.enableZoom?T.MathUtils.clamp(distance*old.distance/now.distance,this.minDistance,this.maxDistance)/distance:1;
-   const yaw=this.enableRotate?-Math.atan2(Math.sin(now.angle-old.angle),Math.cos(now.angle-old.angle)):0,q=new T.Quaternion().setFromAxisAngle(this.object.up,yaw);
+   const yaw=this.enableRotate?Math.atan2(Math.sin(now.angle-old.angle),Math.cos(now.angle-old.angle)):0,q=new T.Quaternion().setFromAxisAngle(this.object.up,yaw);
    for(const p of [this.object.position,this.target])p.sub(anchor).multiplyScalar(scale).applyQuaternion(q).add(anchor);
    this.object.lookAt(this.target);this.object.updateMatrixWorld();
   }

@@ -55,7 +55,7 @@ try{
    const projected=await page.evaluate(()=>{valley.camera.updateMatrixWorld();const p=gestureAnchor.clone().project(valley.camera);return[(p.x*.5+.5)*innerWidth,(-p.y*.5+.5)*innerHeight];});
    assert(Math.hypot(projected[0]-202,projected[1]-448)<2,'midpoint stays anchored during combined pinch/twist/pan');
    await touch('touchEnd',[]);after=await measure(page);
-   assert(Math.abs(after.azimuth-before.azimuth)>.4,'finger twist changes yaw');
+   assert(after.azimuth-before.azimuth>.4,'world rotation follows the clockwise finger twist');
    assert(Math.abs(after.polar-before.polar)<.001,'twist does not accidentally tilt');
    assert(after.distance<before.distance*.7,'pinch works during the same twist');
    // Parallel two-finger translation pans without silently becoming rotation.
