@@ -5,7 +5,7 @@ const box=new T.BoxGeometry(1,1,1),cylinder=new T.CylinderGeometry(.5,.5,1,14),c
 function tint(g,shade){const colors=[];for(let v=0;v<g.attributes.position.count;v++){const variation=shade*(.90+(v%7)*.025);colors.push(variation,variation,variation);}g.setAttribute('color',new T.Float32BufferAttribute(colors,3));return g;}
 function branch(seed=0,hewn=false){
  const g=new T.CylinderGeometry(.43,.49,1,hewn?10:9,5),p=g.attributes.position;
- for(let i=0;i<p.count;i++){const y=p.getY(i),bend=Math.sin((y+.5)*Math.PI*1.7+seed)*.035,taper=1+(Math.sin(y*13+seed)*.035);p.setXYZ(i,p.getX(i)*taper+bend,y,p.getZ(i)*taper);}
+ for(let i=0;i<p.count;i++){const y=p.getY(i),bend=Math.sin((y+.5)*Math.PI*1.7+seed)*(hewn?.018:.10),taper=1+(Math.sin(y*13+seed)*(hewn?.02:.085));p.setXYZ(i,p.getX(i)*taper+bend,y,p.getZ(i)*taper);}
  g.computeVertexNormals();return tint(g,.78+(seed%4)*.045);
 }
 function componentGeometry(part){
@@ -19,7 +19,7 @@ function componentGeometry(part){
    const size=[1,1,1],offset=[0,0,0];size[axis]=1/count*.98;offset[axis]=-.5+(i+.5)/count;
    let g;
    if(hewn){g=new T.BoxGeometry(...size);g.translate(...offset);tint(g,.90+((i*7+3)%11)*.019);}
-   else {g=branch(i);if(part.kind!=='wall')g.rotateX(Math.PI/2);g.scale(...size);g.translate(...offset);}
+   else {g=branch(i);if(part.kind!=='wall')g.rotateX(Math.PI/2);const along=part.kind==='wall'?1:2;size[along]=.88+((i*7+2)%11)*.012;size[axis]*=.84+((i*3)%7)*.035;offset[along]=((i*5)%7-3)*.011;g.scale(...size);g.translate(...offset);}
    geos.push(g);
   }
   // Fibers lie across the rough mat; folded/joined material stays inside its envelope.
