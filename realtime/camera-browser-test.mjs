@@ -79,9 +79,10 @@ try{
   await page.evaluate(()=>{
    const v=valley;modelFrame.hour=12;modelFrame.agents=[{id:'agent-ivo',name:'Ivo',coordinates:{x:48,y:20.85333333333333},motion:{speed:0,facing:Math.PI},task:{actionId:'drink',phase:'work',label:'Drink from the creek'}}];
    const mara=v.entities.get('agent-mara');v.scene.remove(mara.group);v.entities.delete('agent-mara');v.labels.get('agent-mara').remove();v.labels.delete('agent-mara');v.accept(modelFrame);
-   const e=v.entities.get('agent-ivo');e.group.position.copy(e.target);e.pos.copy(e.target);e.group.rotation.y=Math.PI;v.controls.target.set(48,.85,20.85);v.camera.position.set(50,2.6,15.7);v.controls.update();
+   const e=v.entities.get('agent-ivo');e.group.position.copy(e.target);e.pos.copy(e.target);e.group.rotation.y=Math.PI;v.controls.target.set(48,.85,20.85);v.camera.position.set(50,2.6,15.7);v.controls.update();v.elapsed=.1;
   });
-  await page.waitForTimeout(900);await page.screenshot({path:`realtime-qa/drinking-${mobile?'mobile':'desktop'}.png`});
+  await page.waitForTimeout(600);await page.screenshot({path:`realtime-qa/drinking-${mobile?'mobile':'desktop'}-scoop.png`});
+  await page.evaluate(()=>{valley.elapsed=1.85;});await page.waitForTimeout(600);await page.screenshot({path:`realtime-qa/drinking-${mobile?'mobile':'desktop'}-sip.png`});
   const graphics=await page.evaluate(()=>({triangles:valley.renderer.info.render.triangles,drawCalls:valley.renderer.info.render.calls}));
   assert.deepEqual(errors,[]);report.push({viewport:mobile?'mobile':'desktop',pan,rotate,zoom,graphics,errors});await context.close();
  }

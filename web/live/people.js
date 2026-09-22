@@ -45,7 +45,7 @@ export function createPerson(id,name){
  for(const side of [-1,1]){
   const leg=new T.Group();leg.position.set(side*.14,.76,0);group.add(leg);
   part(leg,new T.CapsuleGeometry(.089,.18,4,12),pants,0,-.12,0);
-  const knee=new T.Group();knee.position.set(0,-.30,0);leg.add(knee);knees.push(knee);
+  const knee=new T.Group();knee.position.set(0,-.30,0);leg.add(knee);knees.push(knee);sphere(knee,pants,0,0,0,.079);
   part(knee,new T.CapsuleGeometry(.077,.17,4,12),pants,0,-.12,0);
   part(knee,new RoundedBoxGeometry(.20,.18,.32,3,.055),leather,0,-.36,.055);
   part(knee,new RoundedBoxGeometry(.205,.05,.325,2,.02),sole,0,-.43,.055);
@@ -64,19 +64,34 @@ export function createPerson(id,name){
  return {group,limbs,kind:'human',pos:null,target:null,walk:0,rig:{body,torso,head,eyes,knees,elbows,bag},blinkOffset:mara?1:3};
 }
 export function animatePerson(e,time,dt,walking,fresh){
- const r=e.rig;if(!r||!fresh)return;const action=e.action,working=fresh&&e.phase==='work',drink=working&&action==='drink',gather=working&&/^(gather_|forage:|survey:)/.test(action||''),rest=working&&action==='rest',eat=working&&action?.startsWith('eat_'),crouch=drink||gather;
- const blend=Math.min(1,dt*8),approach=(o,k,n)=>o[k]+=(n-o[k])*blend;
- approach(r.body.position,'y',rest?-.42:crouch?-.30:0);approach(r.body.rotation,'x',crouch?.36:rest?-.08:0);
- r.torso.scale.y=1+(fresh?Math.sin(time*1.8)*.008:0);
- for(let i=0;i<e.limbs.length;i++){
-  const arm=i%2===1,side=i<2?-1:1;
-  let angle=walking?Math.sin(e.walk+(i%2?Math.PI:0)+(i>=2?Math.PI:0))*.46:0;
-  if(crouch)angle=arm?(drink?-1.05+Math.sin(time*2)*.12:-.7+Math.sin(time*2.5+side)*.25):-.7;
-  if(rest)angle=arm?-.35:-1.25;if(eat&&arm&&side===1)angle=-1.65+Math.sin(time*2)*.12;
-  approach(e.limbs[i].rotation,'x',angle);if(arm)approach(e.limbs[i].rotation,'z',drink?-side*.35:0);
+ const r=e.rig;if(!r||!fresh)return;const action=e.action,working=e.phase==='work',drink=working&&action==='drink',gather=working&&/^(gather_|forage:|survey:)/.test(action||''),rest=working&&action==='rest',eat=working&&action?.startsWith('eat_');
+ const blend=Math.min(1,dt*10),approach=(o,k,n)=>o[k]+=(n-o[k])*blend,clamp=n=>Math.max(0,Math.min(1,n)),ease=n=>{n=clamp(n);return n*n*(3-2*n);};
+ const cycle=(time*.28)%1,sip=drink?(cycle<.7?ease((cycle-.25)/.20):1-ease((cycle-.7)/.3)):0;
+ const hip=drink?.35:gather?.43:rest?.30:.76,lean=drink?1.85-sip*1.60:gather?.7:rest?-.08:0;
+ // Rotate around the hips. Feet stay on the bank while the torso leans out
+ // over the water; the scoop and sip stages use the same articulated arms.
+ approach(r.body.rotation,'x',lean);approach(r.body.position,'y',hip-.76*Math.cos(lean));approach(r.body.position,'z',-.76*Math.sin(lean));
+ r.torso.scale.y=1+Math.sin(time*1.8)*.008;
+ for(let sideIndex=0;sideIndex<2;sideIndex++){
+  const side=sideIndex===0?-1:1,leg=e.limbs[sideIndex*2],arm=e.limbs[sideIndex*2+1],knee=r.knees[sideIndex],elbow=r.elbows[sideIndex];
+  approach(leg.position,'y',hip);
+  if(drink||gather||rest){
+   // Two-bone leg geometry solved to a planted sole, rather than scaling or
+   // lifting the character's body and leaving floating boots.
+   const forward=rest?.36:.08,down=hip-.03,upper=.30,lower=.43;
+   const bend=-Math.acos(Math.max(-1,Math.min(1,(forward*forward+down*down-upper*upper-lower*lower)/(2*upper*lower))));
+   const thigh=Math.atan2(forward,down)-Math.atan2(lower*Math.sin(bend),upper+lower*Math.cos(bend));
+   approach(leg.rotation,'x',-thigh);approach(knee.rotation,'x',-bend);
+  }else{
+   const swing=walking?Math.sin(e.walk+sideIndex*Math.PI)*.46:0;approach(leg.rotation,'x',swing);approach(knee.rotation,'x',walking?Math.max(0,-swing)*.5:0);
+  }
+  let armAngle=walking?-Math.sin(e.walk+sideIndex*Math.PI)*.46:0,elbowAngle=0;
+  if(drink){armAngle=-lean-sip*1.65;elbowAngle=-.08-sip*1.12;}
+  else if(gather)armAngle=-.8+Math.sin(time*2.5+side)*.25;
+  else if(rest)armAngle=-.35;
+  else if(eat&&side===1){armAngle=-1.9;elbowAngle=-1.15;}
+  approach(arm.rotation,'x',armAngle);approach(arm.rotation,'z',drink?-side*.42:0);approach(elbow.rotation,'x',elbowAngle);
  }
- for(const knee of r.knees)approach(knee.rotation,'x',rest?1.4:crouch?1.2:walking?Math.max(0,Math.sin(e.walk))*.25:0);
- for(const elbow of r.elbows)approach(elbow.rotation,'x',drink?-.55:eat?-.7:0);
- approach(r.head.rotation,'x',drink?.22:gather?.16:0);
- const blink=fresh&&((time+e.blinkOffset)%4.9)<.13;for(const eye of r.eyes)eye.scale.y=blink?.12:1;
+ approach(r.head.rotation,'x',drink?-.1:gather?.16:0);
+ const blink=((time+e.blinkOffset)%4.9)<.13;for(const eye of r.eyes)eye.scale.y=blink?.12:1;
 }
