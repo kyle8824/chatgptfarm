@@ -5,13 +5,12 @@ import {BUILD_INFO} from './build-info.mjs';
 import {unavailableResponse} from './failure.mjs';
 const json=(data,status=200)=>Response.json(data,{status,headers:{
   'Cache-Control':'no-store',
-  // The public site remains on Vercel during the domain migration and reads
-  // this public spectator state. Administrative POSTs still require the key.
+  // Both viewers read public state. Administrative POSTs require the key.
   'Access-Control-Allow-Origin':'*'
 }});
 export class FarmWorld extends DurableObject {
   constructor(ctx,env){super(ctx,env);this.world=new WorldController(ctx.storage,env);this.env=env;}
-  async alarm(){await this.world.alarm();}
+  async alarm(){try{await this.world.alarm();}catch(e){if(this.env.ORIGINAL_WORLD_ARCHIVED==='true'){console.error('Original archive save deferred',e.message);return;}throw e;}}
   async fetch(request){
     const path=new URL(request.url).pathname;
     try{
@@ -24,7 +23,7 @@ export class FarmWorld extends DurableObject {
         const evidence=await this.world.evidence(tick);
         return evidence?json(evidence):json({error:'No completed evidence for this tick'},404);
       }
-      if(request.method==='GET'&&path==='/health')return json({...await this.world.health(),build:BUILD_INFO});
+      if(request.method==='GET'&&path==='/health')return json({...await this.world.health(),archivedByDeployment:this.env.ORIGINAL_WORLD_ARCHIVED==='true',build:BUILD_INFO});
       if(request.method==='GET'&&path==='/state'){
         const state=await this.world.snapshot();
         if(state)state.runtime.build=BUILD_INFO;
@@ -32,6 +31,7 @@ export class FarmWorld extends DurableObject {
       }
       if(request.method!=='POST'||!['/start','/pause','/resume'].includes(path))return json({error:'Not found'},404);
       if(!this.env.ADMIN_KEY||request.headers.get('Authorization')!==`Bearer ${this.env.ADMIN_KEY}`)return json({error:'Incorrect setup password'},401);
+      if(this.env.ORIGINAL_WORLD_ARCHIVED==='true'&&['/start','/resume'].includes(path))return json({error:'The original world is archived. The public world is available at /live/.'},409);
       if(path==='/pause')return json(await this.world.pause());
       if(path==='/resume')return json(await this.world.resume());
       if((await this.world.health()).initialized)return json({error:'Already initialized; existing history preserved'},409);

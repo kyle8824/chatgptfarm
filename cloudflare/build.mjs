@@ -9,12 +9,13 @@ for(const file of ['phaser-world.css','phaser-world-v1.js'])await fs.copyFile(ne
 let html=await fs.readFile(new URL('phaser.html',root),'utf8');
 html=html.replace('<script src="phaser-world-v1.js', '<script>window.CHATGPTFARM_RUNTIME_URL=location.origin;</script><script src="phaser-world-v1.js');
 html=html.replace('<body>','<body><script>if(location.hostname.endsWith(".workers.dev"))addEventListener("DOMContentLoaded",()=>{const a=document.createElement("a");a.href="/setup.html";a.textContent="Preview setup";a.style.cssText="position:fixed;bottom:8px;left:8px;z-index:10000;background:#17251b;color:white;padding:8px;border-radius:8px";document.body.append(a)})</script>');
-await fs.writeFile(new URL('index.html',out),html);
+await fs.mkdir(new URL('legacy/',out),{recursive:true});
+await fs.writeFile(new URL('legacy/index.html',out),html.replace('href="phaser-world.css','href="/phaser-world.css').replace('src="phaser-world-v1.js','src="/phaser-world-v1.js'));
 await fs.copyFile(new URL('./setup.html',import.meta.url),new URL('setup.html',out));
 console.log('Built Cloudflare living-world assets');
-// The separate live world is served by the existing Worker without changing
-// the original FarmWorld namespace, object name, or front page.
+// Both the public domain and Worker viewer use the same existing live world.
 const {build}=await import('esbuild');
 await fs.mkdir(new URL('live/',out),{recursive:true});
 for(const file of ['index.html','style.css'])await fs.copyFile(new URL(`web/live/${file}`,root),new URL(`live/${file}`,out));
+await fs.copyFile(new URL('web/live/index.html',root),new URL('index.html',out));
 await build({entryPoints:[new URL('web/live/client.js',root).pathname],bundle:true,format:'esm',minify:true,outfile:new URL('live/client.js',out).pathname,nodePaths:[new URL('node_modules/',import.meta.url).pathname],target:'es2022'});

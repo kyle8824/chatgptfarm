@@ -1,8 +1,11 @@
 # Live valley (/live/)
 
 An independent continuation of the existing ChatGPTFarm world. The original
-`FarmWorld` class, `WORLD` binding, `preview-v1` object, original root viewer,
-and canonical world file remain intact. Never replace either world with a seed
+`FarmWorld` class, `WORLD` binding, `preview-v1` object, and canonical world
+file remain intact. The original viewer is retained at the Worker’s `/legacy/`
+path; the original simulation is retired by `ORIGINAL_WORLD_ARCHIVED=true`.
+Its checkpoint is paused durably when storage permits. The main domain and
+Worker root now display this same existing LiveValley world. Never replace either world with a seed
 on reload or deploy, and never import the live fork back into the original.
 
 ## Execution contract
