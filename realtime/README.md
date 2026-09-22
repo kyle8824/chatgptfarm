@@ -87,6 +87,9 @@ materials and earlier supporting dependencies. Geometry, connectivity, sites,
 per-part carrying feasibility, material cost and supported functionality are
 validated. There are no prefab structure IDs or executable eval/JavaScript.
 The model may defer building; failed designs remain visibly rejected in state.
+Rejected programs and their measured validation errors persist for the next
+repair attempt, so the model can correct its own geometry instead of guessing
+which earlier plan failed. An accepted repair still grants no materials or work.
 There are limits of two unfinished projects and twelve total projects.
 
 An accepted plan provides no supplies and no functional building. Villagers
