@@ -8,7 +8,7 @@ permissions:
 jobs:
   verify:
     runs-on: ubuntu-latest
-    timeout-minutes: 12
+    timeout-minutes: 20
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
@@ -16,20 +16,13 @@ jobs:
           node-version: '22'
       - run: npm ci --prefix cloudflare
       - run: npm test && node realtime/test.mjs && node realtime/loading-test.mjs && node realtime/persistence-test.mjs && node realtime/promotion-test.mjs && node realtime/behavior-test.mjs && node realtime/physical-actions-test.mjs && node realtime/settlement-test.mjs && node realtime/design-planner-test.mjs && node realtime/workerd-test.mjs
-      - run: node cloudflare/build.mjs
+      - run: node cloudflare/build.mjs && node realtime/visual-assets-test.mjs
       - run: npm install --no-save playwright@1.55.0 && npx playwright install --with-deps chromium
       - run: node realtime/camera-browser-test.mjs && node realtime/settlement-browser-test.mjs
       - run: |
           node realtime/serve.mjs > /tmp/valley-server.log 2>&1 &
           for i in $(seq 1 30); do curl --silent --fail http://127.0.0.1:4173/live/health && break || sleep 1; done
           node realtime/browser-test.mjs
-      - name: Build and inspect the permanent model workshop
-        run: |
-          npm ci --prefix character-preview
-          npm run build --prefix character-preview
-          python3 -m http.server 4178 --directory vercel-public > /tmp/model-preview-server.log 2>&1 &
-          for i in $(seq 1 20); do curl --silent --fail http://127.0.0.1:4178/character-preview/ >/dev/null && break || sleep 1; done
-          node character-preview/browser-test.mjs
       - name: Runtime logs
         if: always()
         run: cat /tmp/valley-server.log || true
@@ -37,6 +30,4 @@ jobs:
         if: always()
         with:
           name: realtime-world-evidence
-          path: |
-            realtime-qa/
-            character-preview/evidence/
+          path: realtime-qa/

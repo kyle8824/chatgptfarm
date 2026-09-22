@@ -9,3 +9,5 @@
 .settlement-list{margin:0 0 2rem;padding-bottom:1.5rem;border-bottom:1px solid #71857555}.place-link{display:block;width:100%;text-align:left;color:inherit;background:#b5c99212;border:1px solid #b5c99240;border-radius:12px;padding:12px 15px;margin:9px 0;font:inherit}.place-link small{display:block;opacity:.72;margin-top:4px}#inspect-content details{margin-top:22px}#inspect-content summary{cursor:pointer}#inspect-content li{margin:10px 0}
 
 #loading{padding:24px;text-align:center}#loading p{max-width:370px;line-height:1.6}#connection-retry{margin-top:14px;padding:12px 24px;border-radius:12px;background:#d0dda9;color:#173c30;font-weight:600;min-height:44px}#connection-retry[hidden]{display:none}#loading.failed .loading-orbit{animation:none;border-color:#ccb179}
+
+.workshop-link{display:inline-block;margin-top:16px;padding:10px 2px;color:#d0dda9;font-size:13px;text-underline-offset:4px}.workshop-link:focus-visible{outline:2px solid #eae2b4;outline-offset:4px}
