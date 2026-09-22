@@ -1,4 +1,5 @@
-export const WORLD_ORIGIN='https://chatgptfarm.kyle8824.workers.dev';
+// The existing main-domain /live rewrite keeps snapshot reads same-origin.
+export const WORLD_BASE='/live';
 export const SNAPSHOT_KEY='chatgptfarm-structure-catalog-v1';
 export function validProject(p){
  return !!p&&typeof p.id==='string'&&typeof p.name==='string'&&Array.isArray(p.parts)&&p.parts.length>0&&p.parts.length<=48&&p.parts.every(x=>typeof x.id==='string'&&['post','beam','deck','wall','roof'].includes(x.kind)&&['timber','stone','reeds','clay'].includes(x.material)&&Array.isArray(x.center)&&x.center.length===3&&x.center.every(n=>Number.isFinite(n)&&Math.abs(n)<=10)&&Array.isArray(x.size)&&x.size.length===3&&x.size.every(n=>Number.isFinite(n)&&n>0&&n<=6)&&Number.isFinite(x.materialUnits)&&x.materialUnits>=0);
