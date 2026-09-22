@@ -1,10 +1,13 @@
 import {DurableObject} from 'cloudflare:workers';
 import {RealtimeController} from './world.mjs';
+import {unavailableResponse} from '../cloudflare/failure.mjs';
+import {BUILD_INFO} from '../cloudflare/build-info.mjs';
 const json=data=>Response.json(data,{headers:{'Cache-Control':'no-store'}});
 export class LiveValley extends DurableObject{
- constructor(ctx,env){super(ctx,env);this.env=env;this.clients=new Set();this.controller=new RealtimeController(ctx.storage,{ai:env.AI||null});ctx.blockConcurrencyWhile(async()=>{if(await this.controller.load())this.startLoop();});}
+ constructor(ctx,env){super(ctx,env);this.env=env;this.clients=new Set();this.controller=new RealtimeController(ctx.storage,{ai:env.AI||null});ctx.blockConcurrencyWhile(async()=>{try{if(await this.restore())this.startLoop();}catch{/* Keep the object alive so fetch can report the failure. */}});}
+ async restore(){if(this.bootError&&Date.now()<this.bootRetryAt)throw this.bootError;try{const record=await this.controller.load();this.bootError=null;return record;}catch(e){this.bootError=e;this.bootRetryAt=Date.now()+30000;throw e;}}
  startLoop(){if(this.timer)return;this.timer=setInterval(()=>{if(this.busy)return;this.busy=true;this.controller.pulse(this.clients.size).then(()=>{this.broadcast();void this.controller.requestDecisions();}).catch(e=>console.error('Live world pulse',e.message)).finally(()=>this.busy=false);},100);}
- async initialize(){if(await this.controller.load())return;const response=await this.env.WORLD.getByName('preview-v1').fetch('https://original/state');if(!response.ok)throw Error('Original world unavailable; fork was not initialized');const seed=await response.json();
+ async initialize(){if(await this.restore()){this.startLoop();return;}const response=await this.env.WORLD.getByName('preview-v1').fetch('https://original/state');if(!response.ok)throw Error('Original world unavailable; fork was not initialized');const seed=await response.json();
   const bytes=new Uint8Array(await new Response(new Blob([JSON.stringify(seed)]).stream().pipeThrough(new CompressionStream('gzip'))).arrayBuffer());
   await this.ctx.storage.transaction(async tx=>{for(let i=0;i<bytes.length;i+=64000)await tx.put(`origin:${i/64000}`,bytes.slice(i,i+64000));await tx.put('origin:manifest',{bytes:bytes.length,chunks:Math.ceil(bytes.length/64000),sourceTick:seed.meta.tickNumber,at:Date.now()});});
   await this.controller.initialize(seed);this.startLoop();
@@ -22,8 +25,8 @@ export class LiveValley extends DurableObject{
   }
   if(request.method!=='GET')return new Response('Method not allowed',{status:405});
   if(path==='/live/geometry')return json(this.controller.geometry());
-  if(path==='/live/health')return json(this.controller.frame(this.clients.size).runtime);
+  if(path==='/live/health')return json({...this.controller.frame(this.clients.size).runtime,build:BUILD_INFO});
   if(path==='/live/state')return json({...this.controller.frame(this.clients.size),constructionDrafts:Object.entries(this.controller.record.designDrafts||{}).map(([agentId,program])=>({agentId,program,validation:this.controller.record.designFailures?.[agentId]||null}))});
   return new Response('Not found',{status:404});
- }catch(e){console.error('Live world',e.message);return Response.json({error:'Live world temporarily unavailable; saved world retained.'},{status:503,headers:{'Cache-Control':'no-store'}});}}
+ }catch(e){console.error('Live world',e.message);return unavailableResponse(e,{diagnostic:new URL(request.url).pathname==='/live/health',build:BUILD_INFO});}}
 }

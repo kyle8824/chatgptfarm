@@ -2,6 +2,7 @@ export {LiveValley} from '../realtime/worker.mjs';
 import {DurableObject} from 'cloudflare:workers';
 import {WorldController} from './world.mjs';
 import {BUILD_INFO} from './build-info.mjs';
+import {unavailableResponse} from './failure.mjs';
 const json=(data,status=200)=>Response.json(data,{status,headers:{
   'Cache-Control':'no-store',
   // The public site remains on Vercel during the domain migration and reads
@@ -35,16 +36,16 @@ export class FarmWorld extends DurableObject {
       const response=await fetch('https://raw.githubusercontent.com/kyle8824/chatgptfarm/main/world/state.json', {cache:'no-store',signal:AbortSignal.timeout(10000)});
       if(!response.ok)throw Error('Could not read the saved GitHub world');
       return json(await this.world.initialize(await response.json()));
-    }catch(error){console.error('Farm runtime:',error.message);return json({error:'World operation failed; saved state retained. Check Worker logs.'},503);}
+    }catch(error){console.error('Farm runtime:',error.message);return unavailableResponse(error,{diagnostic:path==='/health',build:BUILD_INFO});}
   }
 }
 export default {
   async fetch(request,env){
     const path=new URL(request.url).pathname;
-    if(['/live/ws','/live/state','/live/health','/live/geometry'].includes(path))return env.LIVE_VALLEY.getByName('live-valley-v1').fetch(request);
+    if(['/live/ws','/live/state','/live/health','/live/geometry'].includes(path)){try{return await env.LIVE_VALLEY.getByName('live-valley-v1').fetch(request);}catch(e){return unavailableResponse(e,{diagnostic:path==='/live/health',build:BUILD_INFO});}}
     if(path==='/live')return Response.redirect(new URL('/live/',request.url),302);
     if(['/state','/health','/evidence','/start','/pause','/resume'].includes(path)){
-      return env.WORLD.getByName('preview-v1').fetch(request);
+      try{return await env.WORLD.getByName('preview-v1').fetch(request);}catch(e){return unavailableResponse(e,{diagnostic:path==='/health',build:BUILD_INFO});}
     }
     return env.ASSETS.fetch(request);
   }
