@@ -42,7 +42,7 @@ those features are implemented.
 
 Workers AI binding `AI` supplies `@cf/meta/llama-3.3-70b-instruct-fp8-fast`. Each person
 requests a proposal every 30 wall minutes (failed calls retry after two minutes), with a total hard cap of
-96 calls per UTC day. Routine action requests have bounded input and 180 output tokens. Construction requests have a 2,600-token output bound and at most 16 calls/day, included in the same 96-call cap. Calls
+96 calls per UTC day. Routine action requests have bounded input and 180 output tokens. Construction requests have a 2,600-token output bound and at most 24 calls/day, included in the same 96-call cap. Calls
 are reserved durably before sending. Calls never block physical simulation.
 Only a currently available action can be applied at a task boundary; urgent
 needs and NPC rules continue between calls. Failed or stale proposals do not
@@ -89,7 +89,9 @@ validated. There are no prefab structure IDs or executable eval/JavaScript.
 The model may defer building; failed designs remain visibly rejected in state.
 Rejected programs and their measured validation errors persist for the next
 repair attempt, so the model can correct its own geometry instead of guessing
-which earlier plan failed. An accepted repair still grants no materials or work.
+which earlier plan failed. Related geometry errors are returned together. Floor
+and lid panels can cover a complete enclosure together; gaps do not create
+usable storage. An accepted repair still grants no materials or work.
 There are limits of two unfinished projects and twelve total projects.
 
 An accepted plan provides no supplies and no functional building. Villagers

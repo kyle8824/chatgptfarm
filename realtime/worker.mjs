@@ -23,7 +23,7 @@ export class LiveValley extends DurableObject{
   if(request.method!=='GET')return new Response('Method not allowed',{status:405});
   if(path==='/live/geometry')return json(this.controller.geometry());
   if(path==='/live/health')return json(this.controller.frame(this.clients.size).runtime);
-  if(path==='/live/state')return json(this.controller.frame(this.clients.size));
+  if(path==='/live/state')return json({...this.controller.frame(this.clients.size),constructionDrafts:Object.entries(this.controller.record.designDrafts||{}).map(([agentId,program])=>({agentId,program,validation:this.controller.record.designFailures?.[agentId]||null}))});
   return new Response('Not found',{status:404});
  }catch(e){console.error('Live world',e.message);return Response.json({error:'Live world temporarily unavailable; saved world retained.'},{status:503,headers:{'Cache-Control':'no-store'}});}}
 }
