@@ -74,6 +74,8 @@ export function advanceLiveRoute(w,a,t,seconds){
  while(t.pathIndex<t.path.length&&distance(a.coordinates,t.path[t.pathIndex])<.16)t.pathIndex++;
  if(t.pathIndex>=t.path.length){m.vx=m.vy=m.speed=0;return {arrived:true};}
  const p=a.coordinates,next=t.path[t.pathIndex],remaining=distance(p,next),heading=Math.atan2(next.x-p.x,next.y-p.y);
+ if(t.progressIndex!==t.pathIndex||remaining<(t.progressDistance??Infinity)-.04){t.progressIndex=t.pathIndex;t.progressDistance=remaining;m.stalledSeconds=0;}else m.stalledSeconds=(m.stalledSeconds||0)+seconds;
+ if(m.stalledSeconds>4){const path=liveRoute(w,p,t.destination);if(path){t.path=path;t.pathIndex=1;t.progressIndex=null;}m.stalledSeconds=0;m.vx=m.vy=m.speed=0;return {waiting:true};}
  const pace=.92+(hash(a.id)%160)/1000,maxSpeed=walkingSpeed(w,a)/(w.worldModel.bounds.metersPerUnit||2)*pace;
  const end=t.pathIndex===t.path.length-1,speed=Math.min(maxSpeed,(m.speed||0)+seconds*1.3,end?Math.max(.10,remaining*1.3):maxSpeed),length=Math.min(remaining,speed*seconds);
  let best=null;
