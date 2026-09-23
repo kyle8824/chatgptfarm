@@ -7,6 +7,8 @@ import {addEvent,relationship} from '../engine/core.js';
 import {configureTask} from './motion.mjs';
 import {settlementCandidates} from './settlement.mjs';
 import {clock as liveClock,roomFor} from './holdings.mjs';
+import {explorationMotivation} from './exploration.mjs';
+import {freeTimeCandidates} from './free-time.mjs';
 
 const clock=w=>(w.day*24+w.hour)*60+(w.minute||0);
 const resourceFor={gather_dry_wood:'dryWood',gather_wet_wood:'wetWood',gather_berries:'berries',gather_stones:'stones',gather_clay:'clay',gather_reeds:'reeds'};
@@ -26,7 +28,7 @@ function knownUnavailable(w,a,id){
  return false;
 }
 export function liveCandidates(w,a,candidates){
- const filtered=candidates.filter(c=>!['store_wet_wood','collect_dried_wood'].includes(c.id)&&(c.id!=='make_fire'||a.inventory.dryWood>0)&&(c.id!=='dry_wood_by_fire'||a.inventory.wetWood>0)&&(c.id!=='seek_cover'||(a.coverUntil||0)<clock(w))&&!knownUnavailable(w,a,c.id)&&(!resourceFor[c.id]||!w.settlement||roomFor(w,a,resourceFor[c.id])>0)&&(!['talk','seek_other','share_food'].includes(c.id)||(a.socialUntil||0)<clock(w)));
+ const filtered=candidates.filter(c=>!['store_wet_wood','collect_dried_wood','talk','seek_other'].includes(c.id)&&(c.id!=='make_fire'||a.inventory.dryWood>0)&&(c.id!=='dry_wood_by_fire'||a.inventory.wetWood>0)&&(c.id!=='seek_cover'||(a.coverUntil||0)<clock(w))&&!knownUnavailable(w,a,c.id)&&(!resourceFor[c.id]||!w.settlement||roomFor(w,a,resourceFor[c.id])>0)&&(!['share_food'].includes(c.id)||(a.socialUntil||0)<clock(w)));
  // Retain a real, safe fallback if every remembered resource is unavailable.
  if(!filtered.length)filtered.push({id:'rest',label:w.structures.shelter?'Rest in the shelter':'Rest in the meadow',score:1,reasons:[['no useful reachable resource action',1]]});
  const ordinary=filtered.map(c=>{
@@ -38,7 +40,9 @@ export function liveCandidates(w,a,candidates){
   const other=w.agents.find(b=>b.id!==a.id),trust=other?relationship(w,a,other)?.trust??34:34,socialPenalty=['talk','seek_other','share_food'].includes(c.id)?Math.max(0,35-trust)*(c.id==='share_food'?1.6:.7):0;
   const score=c.score-trip*(a.needs.energy<25?.45:.24)-comfortPenalty-socialPenalty+(immediate&&a.needs.hunger<35?20:0);
   return {...c,label:c.id==='explore'?'Explore the surrounding valley':c.label,score,reasons:[...(c.reasons||[]),['travel effort',-trip*.24]]};
- });return [...ordinary,...settlementCandidates(w,a)].sort((x,y)=>y.score-x.score||x.id.localeCompare(y.id));
+ });
+ const exploration=explorationMotivation(w,a),all=[...ordinary,...settlementCandidates(w,a),...freeTimeCandidates(w,a)].filter(c=>c.id!=='explore'||exploration.allowed).map(c=>c.id==='explore'?{...c,score:c.score-exploration.penalty,explanation:exploration.reason,reasons:[...(c.reasons||[]),['remembered exploration yield',-exploration.penalty]]}:c).sort((x,y)=>y.score-x.score||x.id.localeCompare(y.id));
+ return all.length?all.filter((c,i)=>all.findIndex(x=>x.id===c.id)===i):[{id:'rest',label:'Rest and reconsider',score:1,reasons:[['no useful available action',1]]}];
 }
 export function rememberFailure(w,a,t,detail){
  const key=resourceFor[t.actionId];if(key)a.resourceObservations??={};
