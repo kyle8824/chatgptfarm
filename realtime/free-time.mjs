@@ -11,7 +11,7 @@ import {liveClear,motionState} from './motion.mjs';
 import {findMaterialSource,interactionPoint} from './settlement.mjs';
 import {toolPlan} from './crafting.mjs';
 import {explorationMotivation} from './exploration.mjs';
-import {comfortCandidates,comfortContext,workComfortRest} from './comfort.mjs';
+import {comfortCandidates,comfortContext,workComfortRest,usefulRestChoice} from './comfort.mjs';
 
 const initial=()=>({company:55,enjoyment:55,mastery:55,cooldowns:{},seen:{}});
 export const comfortable=a=>a.needs.hunger>55&&a.needs.hydration>55&&a.needs.energy>45&&a.needs.warmth>35;
@@ -34,12 +34,20 @@ const owned=(w,a,item)=>(a.inventory[item]||0)+(w.settlement?.stores||[]).filter
 const practiceOptions=[['cordage','fiberwork',4],['woodPole','woodworking',2],['sharpStone','stoneworking',1],['boundSharpTool','hafting',1]];
 
 export function freeTimeCandidates(w,a){
- if(a.needs.hunger<=35||a.needs.hydration<=35||a.needs.energy<=40)return [];
+ if(a.needs.hunger<=35||a.needs.hydration<=35||a.needs.energy<=25)return [];
  const f=a.freeTime||initial(),now=clock(w),result=leisureReady(w,a)?comfortCandidates(w,a,{relax:true}).filter(c=>leisureReady(w,a,c.job.destination)):[],curiosity=a.traits.curiosity,cooperation=a.traits.cooperation;
  const offer=(id,label,score,job,reason)=>result.push({id,label,score,reasons:[[reason,score]],job:{...job,freeTime:true,reason}});
  // Quiet leisure remains possible even after other interests have been met.
  if(leisureReady(w,a))offer('leisure:relax','Relax and enjoy the surroundings',5+(100-a.needs.energy)*.18+(100-f.enjoyment)*.12,{kind:'relax',minutes:20,destination:{...a.coordinates}},'Take an unhurried break while immediate needs are met.');
  if((f.cooldowns.practice||0)<=now){
+  // Reuse an actual cord or tool for technique drills. Owning enough tools
+  // should end redundant manufacture, not end learning for the rest of life.
+  for(const [item,skill,label]of [['cordage','fiberwork','Practice tying and releasing reliable knots'],['boundSharpTool','hafting','Practice securing and balancing the hafted tool']]){
+   const store=a.inventory[item]>0?null:w.settlement?.stores.find(s=>(s.ownerId===a.id||s.access==='shared')&&s.items[item]>0&&distance(a.coordinates,s.position)<12);
+   if(!a.inventory[item]&&!store)continue;
+   const destination=store?interactionPoint(w,a,store.position):{...a.coordinates};if(!destination)continue;
+   offer('technique:'+skill,label,18+curiosity*8+(100-f.mastery)*.24-distance(a.coordinates,destination)*.25,{kind:'practice_technique',item,skill,storeId:store?.id,practice:{item,skill},destination,minutes:12},'Practice with an existing physical tool or cord, then put it back; no duplicate tools or free materials.');
+  }
   const options=practiceOptions.filter(([item,,cap])=>owned(w,a,item)<cap&&(item!=='sharpStone'||!owned(w,a,'boundSharpTool'))).map(([item,skill])=>{
    const last=a.craftPractice?.[skill]?.last,failed=last?.success===false&&(w.day-last.day)*24+w.hour-last.hour<12;
    return {item,skill,score:12+curiosity*9+(100-f.mastery)*.28+(failed?7:0)+(f.practice?.item===item?9:0)-Math.min(8,(a.craftPractice?.[skill]?.minutes||0)/30)};
@@ -78,7 +86,7 @@ export function freeTimeCandidates(w,a){
    const destination=interactionPoint(w,a,seen.position);if(destination&&leisureReady(w,a,destination))offer('leisure:visit:'+b.id,'Look for '+b.name+' where last seen',10+(100-f.company)*.35,{kind:'visit',partnerId:b.id,destination,minutes:.1},'Look at a remembered location; the other person may have moved.');
   }
  }
- return result.filter(c=>!a.liveFailures?.[c.id]||now-a.liveFailures[c.id].at>=90);
+ return result.filter(c=>usefulRestChoice(w,a,c)&&(!a.liveFailures?.[c.id]||now-a.liveFailures[c.id].at>=90));
 }
 export function beginFreeTime(w,a,t){
  if(t.selected?.job?.practice){const f=ensureFreeTime(a);if(!f.practice||f.practice.item!==t.selected.job.practice.item)f.practice={...t.selected.job.practice,at:clock(w)};}
@@ -86,7 +94,7 @@ export function beginFreeTime(w,a,t){
 export function finishFreeTime(w,a,t,result){
  const j=t.selected?.job;if(!j?.practice)return;
  const f=ensureFreeTime(a);
- if(j.kind==='craft'){
+ if(j.kind==='craft'||j.kind==='practice_technique'&&t.workMinutes>0){
   f.mastery=clamp(f.mastery+(result.success===false?12:35));f.enjoyment=clamp(f.enjoyment+8);
   f.cooldowns.practice=clock(w)+90;delete f.practice;
   remember(w,a,`I practiced ${j.practice.skill}. ${result.detail}`,{importance:5,tags:['practice',j.practice.skill],confidence:.95});

@@ -38,7 +38,7 @@ p=prepare(JSON.parse(JSON.stringify(p)));pa=p.agents[0];const done=workSettlemen
 assert(done.done);assert.equal(pa.craftPractice.fiberwork.minutes,5);assert(pa.inventory.reeds<3);assert(pa.freeTime.cooldowns.practice>clock(p));
 assert(!freeTimeCandidates(p,pa).some(c=>c.job.practice),'practice satisfaction prevents back-to-back attempts');
 pa.freeTime.cooldowns.practice=0;makeStore(p,{ownerId:pa.id,position:pa.coordinates,items:{cordage:4,woodPole:2,sharpStone:1,boundSharpTool:1}});
-assert(!freeTimeCandidates(p,pa).some(c=>c.job.practice),'owned finished goods also cap redundant practice production');
+assert(!freeTimeCandidates(p,pa).some(c=>c.job.practice&&c.job.kind!=='practice_technique'),'owned finished goods also cap redundant practice production');
 
 // Both people must be available, within reach, and stay there. A game is one
 // shared session; a restart cannot reroll completed rounds or award twice.
@@ -55,7 +55,7 @@ assert(gb.freeTime.company>company);assert.equal(workFreeTime(g,gb,gb.task,1).de
 assert(progressText({task:ga.task}).includes('5 / 5'));assert(taskExplanation({task:{...ga.task,job:ga.task.selected.job,reason:ga.task.selected.job.reason}}).text.includes('stone beats shears'));
 const interrupted=fixture(),[ia,ib]=interrupted.agents,invite=freeTimeCandidates(interrupted,ia).find(c=>c.job.kind==='hand_game');ia.coordinates={...invite.job.destination};ia.task=task(ia,invite);workFreeTime(interrupted,ia,ia.task,2);const fun=ia.freeTime.enjoyment;ib.coordinates.x+=8;assert.equal(workFreeTime(interrupted,ia,ia.task,8).success,false);assert.equal(ia.freeTime.enjoyment,fun,'departure cannot grant finished-game enjoyment');
 const busy=fixture(),[ba,bb]=busy.agents;bb.task={actionId:'drink'};assert(!freeTimeCandidates(busy,ba).some(c=>c.job.partnerId===bb.id),'productive/necessary work is not hijacked');bb.task=null;bb.needs.hydration=9;assert(!freeTimeCandidates(busy,ba).some(c=>c.job.partnerId===bb.id),'urgent needs prevent participation');
-const urgent=fixture(),ua=urgent.agents[0];ua.task=task(ua,freeTimeCandidates(urgent,ua).find(c=>c.job.kind==='relax'));ua.needs.hydration=9;await step(urgent,.6);assert.equal(ua.task.actionId,'drink','urgent survival interrupts leisure');
+const urgent=fixture(),ua=urgent.agents[0];ua.task=task(ua,{id:'leisure:relax',label:'Old quiet break',job:{kind:'relax',minutes:20,destination:{...ua.coordinates}}});ua.needs.hydration=9;await step(urgent,.6);assert.equal(ua.task.actionId,'drink','urgent survival interrupts leisure');
 
 // End-to-end rules choose varied useful activity in a fully familiar valley.
 const life=fixture(),counts={},ids=life.agents.map(a=>a.id);for(const person of life.agents){familiar(person);person.liveExploration.trips=[{at:clock(life),newCells:0,discoveries:0,weather:life.weather},{at:clock(life),newCells:0,discoveries:0,weather:life.weather}];person.freeTime.enjoyment=15;person.freeTime.company=35;person.freeTime.mastery=40;advanceFreeTime(life,person,.6);}

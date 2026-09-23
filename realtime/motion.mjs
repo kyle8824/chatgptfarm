@@ -102,6 +102,7 @@ export function chooseDestination(w,a,target,selected={}){
 }
 export function configureTask(w,a,{force=false}={}){
  const t=a.task;if(!t||(!force&&t.liveSpaceVersion===1&&(t.actionId!=='drink'||t.liveWaterVersion===1)&&(t.actionId!=='rest'||t.liveRestVersion===1)))return;
+ if(force)delete t.routeProgress; // Resuming after another real errand starts a new journey.
  if(t.actionId==='rest'){
   t.targetPosition=actionDestination(w,a,{id:'rest'});t.liveRestVersion=1;
   t.label=t.targetPosition==='camp'&&w.structures.shelter?'Rest under the camp shelter':t.targetPosition==='camp'&&w.structures.fire?'Rest beside the camp fire':'Rest here on the ground';
@@ -129,11 +130,22 @@ export function advanceLiveRoute(w,a,t,seconds){
  while(t.pathIndex<t.path.length&&distance(a.coordinates,t.path[t.pathIndex])<.16)t.pathIndex++;
  if(t.pathIndex>=t.path.length){m.vx=m.vy=m.speed=0;return {arrived:true};}
  const p=a.coordinates,next=t.path[t.pathIndex],remaining=distance(p,next),heading=Math.atan2(next.x-p.x,next.y-p.y);
+ // Measure the whole remaining journey across replans. Reaching a fresh
+ // waypoint index is not evidence of progress toward the destination.
+ const goal=`${t.destination.x},${t.destination.y}`;
+ let routeLeft=remaining;for(let i=t.pathIndex+1;i<t.path.length;i++)routeLeft+=distance(t.path[i-1],t.path[i]);
+ if(t.routeProgress?.goal!==goal)t.routeProgress={goal,best:routeLeft,stalled:0};
+ const progress=t.routeProgress;
+ if(routeLeft<progress.best-.25){progress.best=routeLeft;progress.stalled=0;}else progress.stalled+=seconds;
+ if(progress.stalled>=90){m.vx=m.vy=m.speed=0;return {blocked:true};}
  if(t.progressIndex!==t.pathIndex||remaining<(t.progressDistance??Infinity)-.04){t.progressIndex=t.pathIndex;t.progressDistance=remaining;m.stalledSeconds=0;}else m.stalledSeconds=(m.stalledSeconds||0)+seconds;
- if(m.stalledSeconds>3){const path=liveRoute(w,p,t.destination,a);if(path){t.path=path;t.pathIndex=1;t.progressIndex=null;t.detours=(t.detours||0)+1;}else t.blockedSeconds=(t.blockedSeconds||0)+3;
+ if(m.stalledSeconds>Math.max(3,seconds*2)){const path=liveRoute(w,p,t.destination,a);if(path){t.path=path;t.pathIndex=1;t.progressIndex=null;t.detours=(t.detours||0)+1;}else t.blockedSeconds=(t.blockedSeconds||0)+m.stalledSeconds;
   m.stalledSeconds=0;m.vx=m.vy=m.speed=0;if(t.blockedSeconds>90)return {blocked:true};return {waiting:true};}
  const pace=.92+(hash(a.id)%160)/1000,maxSpeed=walkingSpeed(w,a)/(w.worldModel.bounds.metersPerUnit||2)*pace*crossingPace(w,a)*(a.life?.stage==='toddler'?.6:a.life?.stage==='child'?.8:a.life?.stage==='elder'?.85:1);
- const end=t.pathIndex===t.path.length-1,speed=Math.min(maxSpeed,(m.speed||0)+seconds*1.3,end?Math.max(.10,remaining*1.3):maxSpeed),length=Math.min(remaining,speed*seconds);
+ // Turn before stepping around a tight corner. A minimum forward speed
+ // combined with a bounded turn used to circle small intermediate waypoints.
+ if(!t.egressing&&Math.abs(angleDiff(heading,m.facing))>.55){m.facing+=clamp(angleDiff(heading,m.facing),-seconds*2.5,seconds*2.5);m.vx=m.vy=m.speed=0;return {waiting:true};}
+ const end=t.pathIndex===t.path.length-1,speed=Math.min(maxSpeed,(m.speed||0)+seconds*1.3,Math.max(.10,remaining*1.3)),length=Math.min(remaining,speed*seconds);
  let best=null;
  for(const offset of [0,.3,-.3,.65,-.65,1,-1,1.4,-1.4,1.7,-1.7,2,-2]){
   const angle=heading+offset,turn=angleDiff(angle,m.facing),steered=m.speed>.02&&!t.egressing?m.facing+clamp(turn,-seconds*2.5,seconds*2.5):angle;

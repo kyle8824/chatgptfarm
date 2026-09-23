@@ -1,4 +1,5 @@
 import {campsOf,campLayout} from '../shared/frontier.js';
+export const FIRE_WARMTH_PER_HOUR=180;
 // Transitional hourly model. Location labels are authoritative until travel
 // exposure is integrated; renderer coordinates must not drive world physics.
 export function thermalExposure(world, agent) {
@@ -8,7 +9,8 @@ export function thermalExposure(world, agent) {
   const coldLoss = world.temperature < 50 ? 5 : world.temperature < 58 ? 2 : 0;
   const rainLoss = world.weather === 'rain' && !sheltered ? 3 : 0;
   const shelterProtection = sheltered ? Math.min(coldLoss, 2) : 0;
-  const fireGain = camps&&p?Math.max(0,...camps.filter(c=>c.structures.fire).map(c=>10*Math.max(0,Math.min(1,(4-Math.hypot(p.x-c.fire.x,p.y-c.fire.y))/1.8)))):atCamp && world.structures.fire ? 10 : 0;
+  const heatRate=world.meta?.actionRulesVersion==='realtime-2'?FIRE_WARMTH_PER_HOUR:10;
+  const fireGain = camps&&p?Math.max(0,...camps.filter(c=>c.structures.fire).map(c=>heatRate*Math.max(0,Math.min(1,(4-Math.hypot(p.x-c.fire.x,p.y-c.fire.y))/1.8)))):atCamp && world.structures.fire ? heatRate : 0;
   return {coldLoss, rainLoss, shelterProtection, fireGain,
     net: fireGain + shelterProtection - coldLoss - rainLoss,
     location: agent.position, sheltered, model: 'hourly-location-v1'};

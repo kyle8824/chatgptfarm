@@ -129,7 +129,12 @@ export function adoptBlueprint(w,a,design,model){
  if(!design)return null;if(householdProjects(w,a).length>=12||householdProjects(w,a).filter(p=>p.status!=='complete').length>=2||w.settlement.projects.some(p=>p.ownerId===a.id&&p.status!=='complete'))throw Error('Construction capacity reached');
  const p={...design,id:`project-${w.settlement.nextId++}`,ownerId:a.id,...(a.householdId?{householdId:a.householdId}:{}),designer:a.name,model,source:'ai',createdAt:clock(w),status:'planned',revision:0};
  const stockPositions=[{x:p.bounds.maxX+1,y:p.bounds.maxZ+1},{x:p.bounds.minX-1,y:p.bounds.maxZ+1},{x:p.bounds.maxX+1,y:p.bounds.minZ-1},{x:p.bounds.minX-1,y:p.bounds.minZ-1}],stockPosition=stockPositions.find(q=>liveWalkable(w,q)&&liveRoute(w,a.coordinates,q,a));if(!stockPosition)throw Error('No reachable material staging area');
- p.stockpileId=makeStore(w,{position:stockPosition,ownerId:a.id,access:p.access,kind:'site',name:`Materials for ${p.name}`,capacityKg:260,capacityVolume:480,projectId:p.id}).id;
+ // Reuse a finished project's rack where it was physically put aside. Its
+ // identity, coordinates and any remaining supplies are retained, not moved
+ // to the new drawing's corner or duplicated on each design request.
+ const spare=w.settlement.stores.filter(s=>s.kind==='site'&&s.ownerId===a.id&&distance(s.position,p.position)<24&&w.settlement.projects.find(old=>old.id===s.projectId)?.status==='complete'&&liveRoute(w,a.coordinates,s.position,a)).sort((x,y)=>distance(x.position,p.position)-distance(y.position,p.position))[0];
+ if(spare){spare.previousProjects=[...(spare.previousProjects||[]),spare.projectId];spare.projectId=p.id;spare.access=p.access;spare.name=`Materials for ${p.name}`;spare.revision++;p.stockpileId=spare.id;}
+ else p.stockpileId=makeStore(w,{position:stockPosition,ownerId:a.id,access:p.access,kind:'site',name:`Materials for ${p.name}`,capacityKg:260,capacityVolume:480,projectId:p.id}).id;
  w.settlement.projects.push(p);w.settlement.revision++;remember(w,a,`I designed ${p.name}: ${p.rationale}`,{importance:8,tags:['construction','design'],source:`design:${p.id}`});
  addEvent(w,'construction-design',`${a.name} designed ${p.name}`,`${p.rationale} The ${p.parts.length} parts are a plan; materials still need to be carried here and assembled.`,{agentId:a.id,projectId:p.id});return p;
 }
