@@ -38,6 +38,17 @@ export function comfortCandidates(w,a,{relax=false}={}){
  return result;
 }
 export const isRestingTask=t=>t?.actionId==='rest'||['rest','relax'].includes(t?.selected?.job?.kind);
+export function willingToRest(w,a,job=null,position=a.coordinates){
+ if(a.needs.energy<=30)return true;
+ const place=restPlace(w,{...a,coordinates:position},job);if(!place)return false;
+ // Exhaustion can justify bad ground. Low spirits and discomfort otherwise
+ // motivate a change, instead of another fully-rested quiet-time timer.
+ return place.score>=45||((a.happiness?.value??55)>=55&&a.needs.energy<65);
+}
+export function usefulRestChoice(w,a,c){
+ if(c.id!=='rest'&&!['rest','relax'].includes(c.job?.kind))return true;
+ return willingToRest(w,a,c.job,c.job?.destination||a.coordinates);
+}
 export function workComfortRest(w,a,t,minutes){
  const j=t.selected?.job,place=restPlace(w,a,j);
  if(j?.kind==='rest'&&j.projectId&&!j.surfaceId&&!coverEffectiveness(w,a.coordinates))return {done:true,success:false,detail:'This structure no longer provides shelter at the resting place.'};

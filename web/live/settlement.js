@@ -31,15 +31,15 @@ export class SettlementView{
    const g=createStructureModel(p,{open,appearance:releasedStructureLook(p)});g.position.set(p.position.x,this.base(p),p.position.y);g.userData.objectId=p.id;this.scene.add(g);
    const hit=new T.Mesh(new T.BoxGeometry(p.bounds.maxX-p.bounds.minX,1.5,p.bounds.maxZ-p.bounds.minZ),new T.MeshBasicMaterial({visible:false}));hit.position.y=.75;g.add(hit);this.objects.set(p.id,{group:g,signature});
   }
-  for(const s of data.stores){live.add(s.id);const signature=JSON.stringify([s.items,s.secured,s.revision,s.baseHeight]);let obj=this.objects.get(s.id);if(obj?.signature===signature)continue;if(obj)this.remove(s.id);
+  for(const s of data.stores){live.add(s.id);const signature=JSON.stringify([s.items,s.secured,s.revision,s.baseHeight,s.folded]);let obj=this.objects.get(s.id);if(obj?.signature===signature)continue;if(obj)this.remove(s.id);
    const g=new T.Group();g.position.set(s.position.x,this.elevation(s.position.x,s.position.y)+.025,s.position.y);g.userData.objectId=s.id;this.scene.add(g);
    if(!['storage','platform'].includes(s.kind)){
     piece(g,box,s.kind==='site'?'#9f865d':'#b9a57a',[0,.025,0],[1.1,.05,.85]);
-    for(const x of [-.6,.6])for(const z of [-.48,.48])piece(g,box,'#8c6945',[x,.20,z],[.055,.4,.055]);
+    for(const x of [-.6,.6])for(const z of [-.48,.48])piece(g,box,'#8c6945',[x,s.folded?.06:.20,z],[.055,s.folded?.08:.4,.055]);
    }
    const contents=new T.Group();contents.position.y=s.baseHeight??(s.kind==='storage'?.3:.07);g.add(contents);drawContents(contents,s.items);
    // A small ownership pennant is visible, while inspection supplies names.
-   piece(g,box,s.ownerId?.endsWith('mara')?'#c99a68':s.ownerId?'#80b1b1':'#d7d4b0',[-.48,.42,-.37],[.18,.22,.025]);
+   if(!s.folded)piece(g,box,s.ownerId?.endsWith('mara')?'#c99a68':s.ownerId?'#80b1b1':'#d7d4b0',[-.48,.42,-.37],[.18,.22,.025]);
    if(s.secured)piece(g,box,'#d9b872',[0,.58,.55],[.12,.16,.07]);
    const hit=new T.Mesh(new T.BoxGeometry(1.3,1.1,1.2),new T.MeshBasicMaterial({visible:false}));hit.position.y=.55;g.add(hit);this.objects.set(s.id,{group:g,signature});
   }

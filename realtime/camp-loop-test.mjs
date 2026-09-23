@@ -29,7 +29,7 @@ const positions={
 };
 for(const a of w.agents){
  a.coordinates={...positions[a.id]};a.position=a.id==='agent-mara'?'camp':'travel';
- a.needs={hunger:95,hydration:90,energy:45,warmth:0};a.locomotion=null;a.suspendedTasks=[];
+ a.needs={hunger:95,hydration:90,energy:15,warmth:0};a.locomotion=null;a.suspendedTasks=[];
  if(a.id==='agent-oren'){a.knownCamps=['ochre-vale'];a.campId='ochre-vale';}
  a.task={id:`old-rest:${a.id}`,actionId:'rest',label:'Rest here on the ground',selected:{id:'rest',label:'Rest here on the ground'},targetPosition:a.id==='agent-ivo'?'creek':'meadow',source:'fallback',origin:{...a.coordinates},destination:{...a.coordinates},path:[{...a.coordinates}],pathIndex:1,phase:a.id==='agent-mara'?'work':'travel',workMinutes:10,requiredMinutes:60,liveSpaceVersion:1};
 }
@@ -38,13 +38,13 @@ for(const a of w.agents)if(a.id!=='agent-mara')configureTask(householdWorld(w,a)
 // this active task once, not require him to finish another orbit first.
 const ivo=w.agents.find(a=>a.id==='agent-ivo');
 ivo.task.targetPosition='creek';ivo.task.destination={x:48,y:24};ivo.task.path=liveRoute(householdWorld(w,ivo),ivo.coordinates,ivo.task.destination,ivo)||[];ivo.task.pathIndex=1;ivo.task.phase='travel';delete ivo.task.liveRestVersion;
-const track=Object.fromEntries(w.agents.map(a=>[a.id,{walked:0,returns:new Set(),maxRest:10,maxEnergy:45}]));
+const track=Object.fromEntries(w.agents.map(a=>[a.id,{walked:0,returns:new Set(),maxRest:10,maxEnergy:15}]));
 for(let i=0;i<360;i++){
  const previous=Object.fromEntries(w.agents.map(a=>[a.id,{...a.coordinates}]));await step(w,6);
  for(const a of w.agents){const t=track[a.id];t.walked+=distance(previous[a.id],a.coordinates);t.maxEnergy=Math.max(t.maxEnergy,a.needs.energy);if(a.task?.actionId==='rest')t.maxRest=Math.max(t.maxRest,a.task.workMinutes);if(a.task?.actionId.startsWith('return_warmth:'))t.returns.add(a.task.id);}
  if(i===180)w=prepare(JSON.parse(JSON.stringify(w)));
 }
-const summary=Object.entries(track).map(([id,t])=>({id,walked:t.walked,returns:t.returns.size,restGain:t.maxRest-10,energyGain:t.maxEnergy-45}));
+const summary=Object.entries(track).map(([id,t])=>({id,walked:t.walked,returns:t.returns.size,restGain:t.maxRest-10,energyGain:t.maxEnergy-15}));
 console.log(JSON.stringify(summary));
 for(const t of summary){assert(t.restGain>15,`${t.id} must actually rest instead of orbiting: ${JSON.stringify(t)}`);assert(t.energyGain>5);assert(t.returns<=1,`${t.id} repeatedly returns to the same camp`);assert(t.walked<60,`${t.id} circles instead of settling`);}
 assert(w.agents.slice(0,2).every(a=>a.thermalExposure.sheltered),'Mara and Ivo use their real shelter');

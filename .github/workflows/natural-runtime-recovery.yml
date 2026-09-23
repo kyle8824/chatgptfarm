@@ -17,6 +17,8 @@ jobs:
       - run: npm ci --prefix cloudflare
       - name: Verify bounded routing, elapsed recovery and preserved checkpoints
         run: |
+          node realtime/ambition-test.mjs
+          node realtime/resource-visual-test.mjs
           node realtime/navigation-recovery-test.mjs
           node realtime/physical-actions-test.mjs
           node realtime/frontier-economy-test.mjs

@@ -1,5 +1,6 @@
 import {coldPreparationCandidates,coldPreparationAvailable} from './cold-preparation.mjs';
 import {interestBonus} from './happiness.mjs';
+import {isRestingTask,willingToRest,usefulRestChoice} from './comfort.mjs';
 import {naturalWorld} from '../shared/landscape.js';
 import {economyCandidates} from './regional-economy.mjs';
 import {parentingCandidates,familyFoodNeed} from './parenting.mjs';
@@ -63,8 +64,8 @@ export function liveCandidates(w,a,candidates){
  });
  const familyNeed=familyFoodNeed(w,a);
  const returning=returnCandidate(w,a),exploration=explorationMotivation(w,a),all=[...ordinary,...coldPreparationCandidates(w,a),...settlementCandidates(w,a),...freeTimeCandidates(w,a),...parentingCandidates(w,a),...economyCandidates(w,a),...(returning?[returning]:[])].filter(c=>c.id!=='explore'||exploration.allowed).map(c=>c.id==='explore'?{...c,score:c.score-exploration.penalty,explanation:exploration.reason,reasons:[...(c.reasons||[]),['remembered exploration yield',-exploration.penalty]]}:c).map(c=>familyNeed&&/^(gather_berries|forage:|survey:|retrieve_food:)/.test(c.id)?{...c,score:c.score+familyNeed,explanation:'Collect finite food for a dependent child.'}:c).sort((x,y)=>y.score-x.score||x.id.localeCompare(y.id));
- const useful=all.filter(c=>!(family(c.id)==='energy'&&a.needs.energy>=85)).map(c=>{const bonus=interestBonus(a,c);return {...c,score:c.score+bonus,reasons:[...(c.reasons||[]),['personal interest and recent satisfaction',bonus]]};}).filter(c=>c.score>0).sort((x,y)=>y.score-x.score||x.id.localeCompare(y.id));
- return useful.length?useful.filter((c,i)=>useful.findIndex(x=>x.id===c.id)===i):a.needs.energy<85?[{id:'rest',label:'Rest and reconsider',score:1,reasons:[['no useful available action',1]]}]:[{id:'leisure:relax',label:'Take a quiet break',score:1,reasons:[['no useful activity within reach',1]],job:{kind:'relax',minutes:10,destination:{...a.coordinates},reason:'Pause briefly and reconsider available activities.'}}];
+ const useful=all.filter(c=>!(family(c.id)==='energy'&&a.needs.energy>=85)&&usefulRestChoice(w,a,c)&&!knownUnavailable(w,a,c.id)).map(c=>{const bonus=interestBonus(a,c);return {...c,score:c.score+bonus,reasons:[...(c.reasons||[]),['personal interest and recent satisfaction',bonus]]};}).filter(c=>c.score>0).sort((x,y)=>y.score-x.score||x.id.localeCompare(y.id));
+ return useful.length?useful.filter((c,i)=>useful.findIndex(x=>x.id===c.id)===i):willingToRest(w,a)?[{id:'rest',label:'Rest and reconsider',score:1,reasons:[['no useful available action',1]]}]:[{id:'reconsider',label:'Pause to reconsider available work',score:1,reasons:[['no useful reachable activity',1]],job:{kind:'reconsider',minutes:2,destination:{...a.coordinates}}}];
 }
 export function rememberFailure(w,a,t,detail){
  const key=resourceFor[t.actionId];if(key)a.resourceObservations??={};
@@ -74,6 +75,8 @@ export function rememberFailure(w,a,t,detail){
 }
 export function retireObsoleteTask(w,a){
  const t=a.task;if(!t)return;
+ if(isRestingTask(t)&&!willingToRest(w,a,t.selected?.job,t.destination||a.coordinates)){outcome(w,a,t,true,`${a.name} leaves an uncomfortable break to look for useful work or a more enjoyable activity.`,'superseded');a.task=null;return;}
+ if(t.actionId==='seek_warmth'&&a.needs.warmth>=80){outcome(w,a,t,true,`${a.name} is warm enough to get on with the day.`);a.task=null;return;}
  if(family(t.actionId)==='energy'&&a.needs.energy>=85){outcome(w,a,t,true,`${a.name} has recovered enough energy and is ready for another activity.`);a.task=null;return;}
  let reason;if(t.actionId==='build_shelter'&&w.structures.shelter)reason='A shelter is now available here; reconsider the next useful cold-recovery step.';if(['store_wet_wood','collect_dried_wood'].includes(t.actionId))reason='Storage now requires a physical visit to its container; choosing a handling task.';
  if(knownUnavailable(w,a,t.actionId))reason='The remembered resource is unavailable; reconsidering another useful action.';
