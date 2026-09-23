@@ -30,6 +30,10 @@ const before=totals(w.wood),seedTime=clock(w);
 assert.equal(a.inventory.wetWood,2);assert(!candidateActions(view(),a).some(c=>c.id==='build_shelter'));
 assert.equal(liveUrgency(view(),a),'warmth');
 assert(coldPreparationCandidates(view(),a).some(c=>c.job.kind==='take'&&c.job.quantity===2));
+// Work in progress is not completed protection, and an unseen worker cannot
+// make this person's own preparation disappear from their choices.
+const unseen={id:'unseen-builder',coordinates:{x:h.x,y:h.y},task:{actionId:'build_shelter'}};w.agents.push(unseen);
+assert(coldPreparationCandidates(view(),a).some(c=>c.job.kind==='take'&&c.job.quantity===2));w.agents.pop();
 const completed=new Set();let builtAt=null;
 for(let i=0;i<2400;i++){
  await step(w,6);

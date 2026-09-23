@@ -18,8 +18,8 @@ export function coldPreparationCandidates(w,a){
  // Carry usable fuel first, walking to the actual store to take it.
  if(a.inventory.dryWood<1)for(const s of stores.filter(s=>s.items.dryWood>=1).sort((s,t)=>distance(a.coordinates,s.position)-distance(a.coordinates,t.position)))if(roomFor(w,a,'dryWood')&&offer('prepare_warmth:fuel:'+s.id,'Collect dry fuel to light the camp fire',{kind:'take',storeId:s.id,item:'dryWood',quantity:2,minutes:.5},s.position,146))return result;
  if(a.inventory.dryWood>=1&&w.structures.shelter)return result;
- const builder=w.agents.some(b=>b.id!==a.id&&b.task?.actionId==='build_shelter'&&distance(b.coordinates,camp.shelter)<9);
- const needsShelter=!w.structures.shelter&&!builder;
+ const needsShelter=!w.structures.shelter; // Distant workers do not supply remote knowledge or protection.
+
  if(needsShelter&&raw>=4)return result; // Existing build/return actions use it.
  const drying=stores.filter(s=>s.covered);
  if(w.structures.shelter&&a.inventory.wetWood>0&&!drying.some(s=>(s.items.wetWood||0)>=2)){
