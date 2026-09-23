@@ -16,6 +16,7 @@ for(const a of frame.agents.slice(2))assert.equal(personProvider(frame,a).model,
 const readyEnv={...env,OPENAI_API_KEY:'test-secret-not-real'};
 const ready=providerSummary(r,readyEnv,ai,now).households[0];assert.equal(ready.status,'configured');assert.equal(ready.availability,'daily_limit');assert.equal(ready.callsToday,42);assert.equal(canRequestProvider(r,providerFor(r.world,mara,readyEnv,ai),'action',now),false,'switching providers does not grant extra calls');
 assert.match(providerMarkup(frame,mara),/OpenAI · GPT-5.6 Luna/);assert.match(providerMarkup(frame,mara),/Awaiting API key/);assert.match(providerMarkup(frame,mara),/Current action uses autonomous behavior rules/);
+const llama=frame.agents[2];assert.match(providerMarkup(frame,llama),/9,500/);assert(!providerMarkup(frame,llama).includes('24/day'));
 const inherited={...mara,id:'child',householdId:ivo.householdId};assert.equal(personProvider(frame,inherited).provider,'openai');
 // Configured routing and the source of an already-saved task are distinct.
 const oldTask={...mara,task:{source:'ai',model:LLAMA_MODEL}};assert.match(providerMarkup(frame,oldTask),/Current action chosen by Llama 3.3 70B/);

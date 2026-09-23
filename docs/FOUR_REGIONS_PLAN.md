@@ -87,3 +87,11 @@ Long-distance settlement growth remains emergent. Rivers require physical
 crossings; ridges and ravines can also be circumvented through wilderness.
 Climbing currently supports built treads, not animated vertical rope ladders.
 Automatic whole-building extensions and natural mortality remain future work.
+
+## Subsequent free-allowance policy — 2026-09-23
+
+Kyle explicitly requested using nearly all available free Llama inference
+instead of preserving the historical 96-call global / 24-call household cap.
+That supersedes the Llama budget restriction above. The new 9,500-neuron shared
+daily target, accounting, pacing and migration are described in
+[AI_FREE_ALLOWANCE.md](AI_FREE_ALLOWANCE.md). OpenAI limits remain separate.
