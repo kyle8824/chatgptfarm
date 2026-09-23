@@ -2,10 +2,13 @@ import {homeFor} from '../shared/frontier.js';
 export const LLAMA_MODEL='@cf/meta/llama-3.3-70b-instruct-fp8-fast';
 const positive=v=>Number.isFinite(Number(v))&&Number(v)>0;
 export function providerFor(w,a,env={},ai=null){
- const home=homeFor(w,a),provider=home?.provider||'cloudflare';
+ const home=homeFor(w,a),householdId=home?.id||'willow-basin';
+ // Deployment configuration can move the comparison to the original pair
+ // without changing anyone's ancestry, home, saved work, or consumed quota.
+ const provider=env.OPENAI_HOUSEHOLD?(householdId===env.OPENAI_HOUSEHOLD?'openai':'cloudflare'):home?.provider||'cloudflare';
  if(provider==='cloudflare')return {provider,model:LLAMA_MODEL,configured:!!ai,householdId:home?.id||'willow-basin'};
- const configured=!!env.OPENAI_API_KEY&&!!env.OPENAI_MODEL&&positive(env.OPENAI_DAILY_USD)&&positive(env.OPENAI_INPUT_USD_PER_MILLION)&&positive(env.OPENAI_OUTPUT_USD_PER_MILLION);
- return {provider:'openai',model:env.OPENAI_MODEL||null,configured,householdId:home.id,dailyUsd:Number(env.OPENAI_DAILY_USD)||0,inputRate:Number(env.OPENAI_INPUT_USD_PER_MILLION)||0,outputRate:Number(env.OPENAI_OUTPUT_USD_PER_MILLION)||0};
+ const missing=['OPENAI_API_KEY','OPENAI_MODEL'].filter(k=>!env[k]).concat(['OPENAI_DAILY_USD','OPENAI_INPUT_USD_PER_MILLION','OPENAI_OUTPUT_USD_PER_MILLION'].filter(k=>!positive(env[k])));
+ return {provider:'openai',model:env.OPENAI_MODEL||null,configured:missing.length===0,missing,householdId,dailyUsd:Number(env.OPENAI_DAILY_USD)||0,inputRate:Number(env.OPENAI_INPUT_USD_PER_MILLION)||0,outputRate:Number(env.OPENAI_OUTPUT_USD_PER_MILLION)||0};
 }
 // Cheap, read-only eligibility before perception, routes or building sites.
 // The serialized reservation still checks the exact payload cost before use.
@@ -54,4 +57,16 @@ export async function runProvider(route,payload,{ai,env={},fetcher=fetch}){
  const text=(data.output||[]).filter(x=>x.type==='message').flatMap(x=>x.content||[]).filter(x=>x.type==='output_text').map(x=>x.text).join('');if(!text)throw Object.assign(Error('openai_no_output'),{providerResult:data});
  return {...data,response:text};
 }
-export function providerSummary(record,env,ai,now){return {households:(record.world.frontier?.homes||[{id:'willow-basin'}]).map(h=>{const route=providerFor(record.world,{householdId:h.id},env,ai);return {id:h.id,provider:route.provider,model:route.model,status:route.configured?'configured':'awaiting configuration',callsToday:record.ai.households?.[h.id]?.calls||0,designCallsToday:record.ai.households?.[h.id]?.designCalls||0,totals:record.providerUsage?.totals[h.id]||null,projects:record.world.settlement.projects.filter(p=>(p.householdId||'willow-basin')===h.id).map(p=>({id:p.id,status:p.status,partsBuilt:p.parts.filter(x=>x.built).length,partsTotal:p.parts.length,uses:p.feedback?.uses||0}))};}),openaiToday:record.providerUsage?.days[new Date(now).toISOString().slice(0,10)]||null,rateMismatch:record.providerUsage?.rateMismatch||false,allocation:record.world.frontier?{perHousehold:24,designPerHousehold:6,actionsPerHousehold:18}:null};}
+export function providerSummary(record,env,ai,now){
+ const date=new Date(now).toISOString().slice(0,10),today=record.ai.date===date;
+ const day=record.providerUsage?.days[date]||null;
+ return {
+  households:(record.world.frontier?.homes||[{id:'willow-basin'}]).map(h=>{
+   const route=providerFor(record.world,{householdId:h.id},env,ai);
+   const usage=today?(record.ai.households?.[h.id]||(!record.ai.households&&h.id==='willow-basin'?{calls:record.ai.calls,designCalls:record.designBudget?.date===date?record.designBudget.calls:0}:null)):null;
+   const actionAvailable=canRequestProvider(record,route,'action',now),designAvailable=canRequestProvider(record,route,'design',now);
+   const availability=!route.configured?'awaiting_configuration':route.provider==='openai'&&record.providerUsage?.rateMismatch?'price_check':route.provider==='openai'&&(day?.reservedUsd||0)>=route.dailyUsd?'spend_limit':!actionAvailable&&!designAvailable?'daily_limit':'ready';
+   return {id:h.id,provider:route.provider,model:route.model,status:route.configured?'configured':'awaiting configuration',missingConfiguration:route.missing||[],availability,actionAvailable,designAvailable,callsToday:usage?.calls||0,designCallsToday:usage?.designCalls||0,totals:record.providerUsage?.totals[h.id]||null,projects:record.world.settlement.projects.filter(p=>(p.householdId||'willow-basin')===h.id).map(p=>({id:p.id,status:p.status,partsBuilt:p.parts.filter(x=>x.built).length,partsTotal:p.parts.length,uses:p.feedback?.uses||0}))};
+  }),openaiToday:day,openaiDailyUsd:positive(env.OPENAI_DAILY_USD)?Number(env.OPENAI_DAILY_USD):0,rateMismatch:record.providerUsage?.rateMismatch||false,allocation:record.world.frontier?{perHousehold:24,designPerHousehold:6,actionsPerHousehold:18}:null
+ };
+}
