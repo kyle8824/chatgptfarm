@@ -1,7 +1,7 @@
 name: Focused live runtime recovery
 on:
   push:
-    branches: [fix/runtime-recovery]
+    branches: [fix/runtime-recovery, fix/recovery-step-cap]
   workflow_dispatch:
 permissions:
   contents: read
@@ -17,5 +17,10 @@ jobs:
           cache: npm
           cache-dependency-path: cloudflare/package-lock.json
       - run: npm ci --prefix cloudflare
+      - name: Verify bounded outage recovery and checkpoint preservation
+        run: |
+          node realtime/recovery-test.mjs
+          node realtime/persistence-test.mjs
+          node realtime/loading-test.mjs
       - name: Verify actual Worker timers, alarms, sockets and durable restart
         run: node realtime/workerd-test.mjs

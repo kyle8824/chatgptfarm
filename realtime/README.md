@@ -16,7 +16,10 @@ on reload or deploy, and never import the live fork back into the original.
   When over 30 seconds behind, recovery uses at most 1 second wall time /
   6 simulated seconds per physical step; it does not skip elapsed time.
   Bursts yield to the event loop every four steps and check a 40 ms elapsed
-  processing budget after yielding. A single step can exceed that soft budget.
+  processing budget after yielding, plus a hard cap of 12 steps even when
+  Cloudflare freezes its CPU timing clock. A single step can exceed the soft
+  time budget. The next timer is scheduled only after the current pulse ends,
+  avoiding accumulated interval callbacks during expensive recovery.
   Fresh AI proposals are deferred until the server is within three seconds
   of the present. The viewer holds during recovery instead of displaying
   compressed backlog movement as normal live motion.
