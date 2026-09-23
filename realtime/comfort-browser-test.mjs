@@ -22,7 +22,9 @@ try{for(const mobile of [true,false]){
  await page.goto(`http://127.0.0.1:${server.address().port}/`);await page.waitForFunction(()=>window.valley?.frame?.agents.length);assert(!(await page.locator('.hint').textContent()).includes('unavailable'));
  for(const kind of ['ground','seat','mat','bed']){
   await page.evaluate(kind=>{window.currentComfortFrame=comfortFrames[kind];valley.focus=null;const a=currentComfortFrame.agents[0],x=a.coordinates.x,z=a.coordinates.y;valley.controls.target.set(x,.6,z);valley.camera.position.set(x+2.8,3.2,z+4.8);valley.controls.update();document.querySelector('.eyebrow').textContent='ISOLATED COMFORT FIXTURE';},kind);
-  await page.waitForTimeout(1000);
+  // Software WebGL may render only a few frames per second. Wait for the
+  // actual animation to settle instead of assuming a wall-clock frame rate.
+  await page.waitForFunction(kind=>{const a=valley.frame.agents[0],e=valley.entities.get(a.id),s=a.restSupport,hip=kind==='ground'?.095:(s?.height||0)/e.group.scale.y+(kind==='seat'?.08:.11),tilt=['bed','mat'].includes(kind)?-Math.PI/2:0;return s?.posture===({ground:'ground',seat:'seat',mat:'lie',bed:'lie'})[kind]&&Math.abs(e.model.hips.position.y-hip)<.008&&Math.abs(e.model.hips.rotation.x-tilt)<.008;},kind,{timeout:30000});
   const pose=await page.evaluate(()=>{const a=valley.frame.agents[0],e=valley.entities.get(a.id);return {hip:e.model.hips.position.y,tilt:e.model.hips.rotation.x,scale:e.group.scale.y,support:a.restSupport,base:e.group.position.y,structureBase:a.restSupport?.projectId?valley.settlementView.objects.get(a.restSupport.projectId).group.position.y:null};});
   if(kind==='ground'){assert(pose.hip<.13,'bare ground pose sits on the ground, not an invisible chair');assert(Math.abs(pose.tilt)<.01);}
   else if(kind==='seat'){assert(Math.abs(pose.hip*pose.scale-pose.support.height-.08*pose.scale)<.01);assert(Math.abs(pose.base-pose.structureBase)<.01,'seat height is not added twice');}
