@@ -1,0 +1,21 @@
+name: Focused live runtime recovery
+on:
+  push:
+    branches: [fix/runtime-recovery]
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  runtime:
+    runs-on: ubuntu-latest
+    timeout-minutes: 6
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: npm
+          cache-dependency-path: cloudflare/package-lock.json
+      - run: npm ci --prefix cloudflare
+      - name: Verify actual Worker timers, alarms, sockets and durable restart
+        run: node realtime/workerd-test.mjs

@@ -13,16 +13,22 @@ export function motionState(a){return a.locomotion??={seed:hash(a.id),vx:0,vy:0,
 function random(a){const m=motionState(a);m.seed=(Math.imul(m.seed,1664525)+1013904223)>>>0;return m.seed/4294967296;}
 const angleDiff=(a,b)=>Math.atan2(Math.sin(a-b),Math.cos(a-b));
 function segmentDistance(p,a,b){const dx=b.x-a.x,dy=b.y-a.y,t=clamp(((p.x-a.x)*dx+(p.y-a.y)*dy)/(dx*dx+dy*dy||1),0,1);return distance(p,{x:a.x+t*dx,y:a.y+t*dy});}
-export function liveWalkable(w,p,actor=null){
+export function liveWalkable(w,p,actor=null,checkTrees=true){
  if((!walkable(w,p)&&!onDeck(w,p,actor))||distance(p,CAMP.fire)<CAMP.fire.radius||structureBlocks(w,p))return false;
- for(const tree of w.settlement?.trees||[])if(!tree.depleted&&distance(p,tree.position)<.43)return false;
+ if(checkTrees)for(const tree of w.settlement?.trees||[])if(!tree.depleted&&(p.x-tree.position.x)**2+(p.y-tree.position.y)**2<.43**2)return false;
  if(w.structures.shelter){const q=shelterLocal(p),s=CAMP.shelter;
   // Two roof/wall footprints. Both gable entrances remain open.
   if(Math.abs(q.y)<s.halfLength+.4&&Math.abs(q.x)>.72&&Math.abs(q.x)<s.halfWidth+.43)return false;
  }
  return true;
 }
-export const liveClear=(w,a,b,actor=null)=>clearSegment(w,a,b,(world,p)=>liveWalkable(world,p,actor));
+export function liveClear(w,a,b,actor=null){
+ // Check each trunk once against the whole segment, rather than rescanning
+ // every tree at every quarter-unit sample. This also closes sampling gaps.
+ const dx=b.x-a.x,dy=b.y-a.y,length2=dx*dx+dy*dy;
+ for(const tree of w.settlement?.trees||[]){if(tree.depleted)continue;const p=tree.position,t=clamp(((p.x-a.x)*dx+(p.y-a.y)*dy)/(length2||1),0,1);if((p.x-a.x-t*dx)**2+(p.y-a.y-t*dy)**2<.43**2)return false;}
+ return clearSegment(w,a,b,(world,p)=>liveWalkable(world,p,actor,false));
+}
 export function liveRoute(w,from,to,actor=null){
  if(!liveWalkable(w,to,actor))return null;let start=from,escape=null;
  // Old versions could save bodies inside a roof or fire footprint. Walk out
@@ -42,8 +48,8 @@ export function liveRoute(w,from,to,actor=null){
   points.push(...structureWaypoints(w));
   for(const b of others)for(let i=0;i<12;i++)points.push({x:b.coordinates.x+Math.cos(i/6*Math.PI)*1.38,y:b.coordinates.y+Math.sin(i/6*Math.PI)*1.38});
   for(const tree of (w.settlement?.trees||[]).filter(t=>!t.depleted&&segmentDistance(t.position,start,to)<1.5).slice(0,16))for(let i=0;i<8;i++)points.push({x:tree.position.x+Math.cos(i/4*Math.PI)*.7,y:tree.position.y+Math.sin(i/4*Math.PI)*.7});
-  const costs=points.map(()=>Infinity),previous=[],done=new Set();costs[0]=0;
-  while(done.size<points.length){let i=-1;for(let n=0;n<points.length;n++)if(!done.has(n)&&(i<0||costs[n]<costs[i]))i=n;if(i<0||!Number.isFinite(costs[i]))break;if(i===1){path=[];while(i!==undefined){path.unshift(points[i]);i=previous[i];}break;}done.add(i);
+  const costs=points.map(()=>Infinity),heuristic=points.map(p=>distance(p,to)),previous=[],done=new Set();costs[0]=0;
+  while(done.size<points.length){let i=-1;for(let n=0;n<points.length;n++)if(!done.has(n)&&(i<0||costs[n]+heuristic[n]<costs[i]+heuristic[i]))i=n;if(i<0||!Number.isFinite(costs[i]))break;if(i===1){path=[];while(i!==undefined){path.unshift(points[i]);i=previous[i];}break;}done.add(i);
    for(let j=0;j<points.length;j++)if(!done.has(j)&&clear(points[i],points[j])){const cost=costs[i]+distance(points[i],points[j]);if(cost<costs[j]){costs[j]=cost;previous[j]=i;}}
   }
  }

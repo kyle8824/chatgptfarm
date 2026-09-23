@@ -14,6 +14,7 @@ c.start();Socket.instances.at(-1).open();advance(12000);await new Promise(r=>set
 const old=c.socket;c.retryNow();assert.notEqual(c.socket,old);old.message({type:'state',runtime:{},agents:[]});assert.equal(frames.length,0,'retired sockets cannot replace the current world');
 c.socket.open();c.socket.message({type:'state',runtime:{revision:4},agents:[]});assert.equal(frames.length,1);advance(12000);assert.equal(c.socket.readyState,1,'receiving real state cancels the initial timeout');c.stop();assert.equal(callbacks.size,0);
 assert.equal(worldFailure(Error('Exceeded daily limit for rows written')).code,'hosting_limit');assert.equal(worldFailure(Error('Exceeded allowed rows written in Durable Objects free tier.'),Date.UTC(2026,8,22,23,59)).retryAfterSeconds,60);assert.equal(worldFailure(Error('database or disk is full: SQLITE_FULL')).code,'storage_full');assert(!worldFailure(Error('token=secret https://example.com/private')).detail.includes('secret'));
+assert.equal(worldFailure(Error('Durable Object exceeded its CPU time limit and was reset.')).code,'runtime_overloaded','CPU exhaustion is not misreported as the daily storage allowance');
 const temp=await fs.mkdtemp(path.join(os.tmpdir(),'valley-load-test-'));
 assert.equal(worldFailure(Error('Exceeded allowed rows written in Durable Objects free tier.'),Date.UTC(2026,8,23,0,1)).retryAfterSeconds,300,'a rejection after midnight cannot postpone recovery to the following day');
 try{

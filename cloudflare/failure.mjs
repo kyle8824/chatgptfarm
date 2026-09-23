@@ -5,6 +5,7 @@ export function worldFailure(error,now=Date.now()){
  const quota=/exceeded.*(?:limit|quota|allowed|free tier)|(?:limit|quota).*exceeded|daily.*limit|too many.*(?:rows|requests)/i.test(detail);
  const daily=quota&&(/daily/i.test(detail)||/free tier/i.test(detail)&&/rows|requests|duration/i.test(detail));
  const full=/SQLITE_FULL|database or disk is full/i.test(detail);
+ if(/CPU time limit/i.test(detail))return {code:'runtime_overloaded',error:'The world server restarted after exceeding its processing limit. Reconnecting to the saved world.',detail,retryAfterSeconds:30};
  // A quota rejection just after midnight must not defer recovery for another
  // entire day. Probe at most every five minutes, or at the next UTC reset.
  const untilReset=Math.ceil((Date.UTC(new Date(now).getUTCFullYear(),new Date(now).getUTCMonth(),new Date(now).getUTCDate()+1)-now)/1000);

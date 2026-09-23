@@ -12,7 +12,14 @@ on reload or deploy, and never import the live fork back into the original.
 
 - `LiveValley` owns one authoritative in-memory simulation and SQLite checkpoint.
 - A 100 ms server timer executes only elapsed wall time at 6x simulation speed.
-  Each substep is at most 100 ms wall time / 0.6 simulated seconds.
+  Normal substeps are at most 100 ms wall time / 0.6 simulated seconds.
+  When over 30 seconds behind, recovery uses at most 1 second wall time /
+  6 simulated seconds per physical step; it does not skip elapsed time.
+  Bursts yield to the event loop every four steps and check a 40 ms elapsed
+  processing budget after yielding. A single step can exceed that soft budget.
+  Fresh AI proposals are deferred until the server is within three seconds
+  of the present. The viewer holds during recovery instead of displaying
+  compressed backlog movement as normal live motion.
 - A separately persisted Durable Object alarm (normally every 15 seconds) advances and saves the
   world with no viewers, and wakes it after eviction. Platform scheduling is
   best effort, not hard real-time. Catch-up is limited to past elapsed time.
