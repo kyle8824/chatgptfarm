@@ -7,6 +7,18 @@ export function providerFor(w,a,env={},ai=null){
  const configured=!!env.OPENAI_API_KEY&&!!env.OPENAI_MODEL&&positive(env.OPENAI_DAILY_USD)&&positive(env.OPENAI_INPUT_USD_PER_MILLION)&&positive(env.OPENAI_OUTPUT_USD_PER_MILLION);
  return {provider:'openai',model:env.OPENAI_MODEL||null,configured,householdId:home.id,dailyUsd:Number(env.OPENAI_DAILY_USD)||0,inputRate:Number(env.OPENAI_INPUT_USD_PER_MILLION)||0,outputRate:Number(env.OPENAI_OUTPUT_USD_PER_MILLION)||0};
 }
+// Cheap, read-only eligibility before perception, routes or building sites.
+// The serialized reservation still checks the exact payload cost before use.
+export function canRequestProvider(record,route,kind,now){
+ if(!route.configured)return false;
+ const date=new Date(now).toISOString().slice(0,10),today=record.ai.date===date;
+ const calls=today?record.ai.calls:0,designCalls=record.designBudget?.date===date?record.designBudget.calls:0;
+ const households=today?(record.ai.households??{'willow-basin':{calls,designCalls}}):{};
+ const h=households[route.householdId]||{calls:0,designCalls:0};
+ if(calls>=96||kind==='design'&&designCalls>=24||record.world.frontier&&(h.calls>=24||kind==='design'&&h.designCalls>=6||kind==='action'&&h.calls-h.designCalls>=18))return false;
+ if(route.provider==='openai'&&(record.providerUsage?.rateMismatch||(record.providerUsage?.days?.[date]?.reservedUsd||0)>=route.dailyUsd))return false;
+ return true;
+}
 export function reserveProvider(record,a,route,kind,payload,now){
  if(!route.configured)return null;const date=new Date(now).toISOString().slice(0,10),r=record;
  if(r.ai.date!==date){r.ai.date=date;r.ai.calls=0;r.ai.households={};}
@@ -14,7 +26,7 @@ export function reserveProvider(record,a,route,kind,payload,now){
  // Preserve calls already consumed before this release. No budget reset.
  r.ai.households??={'willow-basin':{calls:r.ai.calls,designCalls:r.designBudget.calls}};
  const h=r.ai.households[route.householdId]??={calls:0,designCalls:0};
- if(r.ai.calls>=96||kind==='design'&&r.designBudget.calls>=24||r.world.frontier&&(h.calls>=24||kind==='design'&&h.designCalls>=6||kind==='action'&&h.calls-h.designCalls>=18))return null;
+ if(!canRequestProvider(record,route,kind,now))return null;
  r.providerUsage??={days:{},records:[],totals:{}};const day=r.providerUsage.days[date]??={reservedUsd:0,reportedUsd:0};
  // A conservative reservation uses UTF-8 bytes (plus framing), output ceiling
  // and explicit configured rates. Unknown/failed requests keep reservations.

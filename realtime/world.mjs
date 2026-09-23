@@ -1,5 +1,5 @@
 import {reorganizeLandscape} from './landscape-migration.mjs';
-import {providerFor,reserveProvider,recordProviderResult,runProvider,providerSummary} from './providers.mjs';
+import {providerFor,canRequestProvider,reserveProvider,recordProviderResult,runProvider,providerSummary} from './providers.mjs';
 import {expandFrontier,frontierFrame,householdWorld} from './frontier.mjs';
 import {householdProjects} from './blueprints.mjs';
 import {ensureLife,isAdult,lifeSummary,relationshipsFor} from './life.mjs';
@@ -71,7 +71,8 @@ export class RealtimeController{
  pulse(viewers=0){return this.serial(async()=>{try{await this.advance(this.now(),viewers);if(!this.persistenceRetryAt)this.error=null;}catch(e){this.error=e.message;throw e;}});}
  alarm(viewers=0){return this.serial(async()=>{try{await this.load();if(!this.record)return;this.record.alarmCount++;this.record.lastAlarmAt=this.now();const saved=await this.advance(this.now(),viewers);if(!saved&&this.nextAlarmAt<=this.now()&&!this.persistenceRetryAt)await this.save();if(!this.persistenceRetryAt)this.error=null;}catch(e){this.error=e.message;try{await this.storage.setAlarm(Math.max(this.now()+30000,this.persistenceRetryAt));}catch{/* Provider limits can block alarm writes too; fetch/timer will retry. */}throw e;}});}
  async requestDecisions(){if((!this.ai&&!this.env.OPENAI_API_KEY)||this.persistenceRetryAt||this.now()-this.lastAiCheck<10000||!this.record||this.now()-this.record.lastWallTime>3000)return;this.lastAiCheck=this.now();void this.requestDesigns();
-  for(const a of this.record.world.agents){if(!providerFor(this.record.world,a,this.env,this.ai).configured)continue;if(!isAdult(this.record.world,a))continue;const pending=this.proposals.get(a.id);if(pending?.expires<=this.now()){this.proposals.delete(a.id);if(this.record.pendingDecisions)delete this.record.pendingDecisions[a.id];}
+  for(const a of this.record.world.agents){const route=providerFor(this.record.world,a,this.env,this.ai);if(!route.configured||!isAdult(this.record.world,a))continue;const pending=this.proposals.get(a.id);if(pending?.expires<=this.now()){this.proposals.delete(a.id);if(this.record.pendingDecisions)delete this.record.pendingDecisions[a.id];}
+   if(!canRequestProvider(this.record,route,'action',this.now()))continue;
    const failed=this.record.decisionFailures?.[a.id]||(!this.record.decisionFailures&&this.record.ai.lastError);const cooldown=failed?120000:1800000;
    if(this.jobs.has(a.id)||this.proposals.has(a.id)||this.now()-(this.record.lastDecisionAt[a.id]||0)<cooldown)continue;
    const view=householdWorld(this.record.world,a),context=retrieveDecisionContext(view,a);const choices=liveCandidates(view,a,context.candidates).slice(0,8).map(x=>({id:x.id,label:x.label,reason:x.job?.reason||x.explanation||null}));
@@ -90,7 +91,7 @@ export class RealtimeController{
  async requestDesigns(){
   const w=this.record.world;ensureSettlement(w);if(!w.frontier&&w.settlement.projects.filter(p=>p.status!=='complete').length>=2)return;
   for(const a of w.agents){
-   if(!providerFor(w,a,this.env,this.ai).configured||!isAdult(w,a)||householdProjects(w,a).filter(p=>p.status!=='complete').length>=2)continue;
+   if(!canRequestProvider(this.record,providerFor(w,a,this.env,this.ai),'design',this.now())||!isAdult(w,a)||householdProjects(w,a).filter(p=>p.status!=='complete').length>=2)continue;
    const key=`design:${a.id}`,last=this.record.lastDesignAt?.[a.id]||0,cooldown=this.record.designFailures?.[a.id]?180000:3600000;
    if(this.jobs.has(key)||this.now()-last<cooldown||Math.min(a.needs.hunger,a.needs.hydration,a.needs.energy)<20||w.settlement.projects.some(p=>p.ownerId===a.id&&p.status!=='complete'))continue;
    const context=designContext(householdWorld(w,a),a);if(!context.sites.length)continue;

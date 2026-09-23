@@ -25,6 +25,8 @@ jobs:
           node realtime/loading-test.mjs
           node realtime/connection-status-test.mjs
           node realtime/remote-survival-test.mjs
+          node realtime/planner-budget-test.mjs
+          node realtime/provider-test.mjs
           LANDSCAPE_STEPS=1200 node realtime/natural-landscape-test.mjs
       - name: Verify the expanded world in the actual Worker runtime
         run: |
