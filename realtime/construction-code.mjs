@@ -51,5 +51,8 @@ export function runConstructionCode(source,context={}){
    default:throw Error('Unsupported construction statement '+n.type);
   }
  }
- stmt(ast,root);return {parts,code:source,codeVersion:CONSTRUCTION_CODE_VERSION,instructions:16000-fuel};
+ // Supplied bindings live outside the program's lexical scope, as ordinary
+ // JavaScript parameters/globals would. A local `site` is not host mutation;
+ // the resulting geometry is still validated against the authoritative site.
+ stmt(ast,new Scope(root));return {parts,code:source,codeVersion:CONSTRUCTION_CODE_VERSION,instructions:16000-fuel};
 }
