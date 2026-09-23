@@ -12,6 +12,7 @@ import {settlementCandidates} from './settlement.mjs';
 import {clock as liveClock,roomFor} from './holdings.mjs';
 import {explorationMotivation} from './exploration.mjs';
 import {freeTimeCandidates} from './free-time.mjs';
+import {coldRecovery,returnCandidate} from './thermal-return.mjs';
 
 const clock=w=>(w.day*24+w.hour)*60+(w.minute||0);
 const resourceFor={gather_dry_wood:'dryWood',gather_wet_wood:'wetWood',gather_berries:'berries',gather_stones:'stones',gather_clay:'clay',gather_reeds:'reeds'};
@@ -22,11 +23,14 @@ export function liveUrgency(w,a){
  // An unfixable cold deficit must not indefinitely veto water, food and rest.
  // Shelter reduces exposure; it does not generate heat.
  if(n.hydration<12)return 'hydration';if(n.hunger<12)return 'hunger';if(n.energy<12)return 'energy';
- // Camp heat/fuel is only actionable within the same local range used below.
- // Otherwise a distant fire repeatedly interrupts food/rest, while the
- // replacement chooser cannot offer any action that reaches that fire.
+ const sustaining=family(a.task?.actionId||'');
+ // Finish a useful meal/drink/rest before the cold goal takes over again.
+ if(['hydration','hunger','energy'].includes(sustaining)&&n[sustaining]<35)return sustaining;
+ if(n.hydration<20)return 'hydration';if(n.hunger<20)return 'hunger';if(n.energy<20)return 'energy';
+ // Immediate fire use stays local. A distant cold traveler instead needs a
+ // real return task, including its route, interruptions and failure cooldown.
  const heatAvailable=canUseCamp(w,a)&&(w.structures.fire||a.inventory.dryWood>0||storedFuel(w)>0);
- if(n.warmth<20&&heatAvailable)return 'warmth';
+ if(coldRecovery(a)&&(heatAvailable||returnCandidate(w,a)))return 'warmth';
  return ['hydration','hunger','energy'].filter(k=>n[k]<20).sort((x,y)=>n[x]-n[y])[0]||null;
 }
 function knownUnavailable(w,a,id){
@@ -50,7 +54,7 @@ export function liveCandidates(w,a,candidates){
   return {...c,label:c.id==='rest'&&naturalWorld(w)&&distance(a.coordinates,coordForPosition('camp',w))>18?'Rest here on the ground':c.id==='explore'?'Explore the surrounding valley':c.label,score,reasons:[...(c.reasons||[]),['travel effort',-trip*.24]]};
  });
  const familyNeed=familyFoodNeed(w,a);
- const exploration=explorationMotivation(w,a),all=[...ordinary,...settlementCandidates(w,a),...freeTimeCandidates(w,a),...parentingCandidates(w,a),...economyCandidates(w,a)].filter(c=>c.id!=='explore'||exploration.allowed).map(c=>c.id==='explore'?{...c,score:c.score-exploration.penalty,explanation:exploration.reason,reasons:[...(c.reasons||[]),['remembered exploration yield',-exploration.penalty]]}:c).map(c=>familyNeed&&/^(gather_berries|forage:|survey:|retrieve_food:)/.test(c.id)?{...c,score:c.score+familyNeed,explanation:'Collect finite food for a dependent child.'}:c).sort((x,y)=>y.score-x.score||x.id.localeCompare(y.id));
+ const returning=returnCandidate(w,a),exploration=explorationMotivation(w,a),all=[...ordinary,...settlementCandidates(w,a),...freeTimeCandidates(w,a),...parentingCandidates(w,a),...economyCandidates(w,a),...(returning?[returning]:[])].filter(c=>c.id!=='explore'||exploration.allowed).map(c=>c.id==='explore'?{...c,score:c.score-exploration.penalty,explanation:exploration.reason,reasons:[...(c.reasons||[]),['remembered exploration yield',-exploration.penalty]]}:c).map(c=>familyNeed&&/^(gather_berries|forage:|survey:|retrieve_food:)/.test(c.id)?{...c,score:c.score+familyNeed,explanation:'Collect finite food for a dependent child.'}:c).sort((x,y)=>y.score-x.score||x.id.localeCompare(y.id));
  return all.length?all.filter((c,i)=>all.findIndex(x=>x.id===c.id)===i):[{id:'rest',label:'Rest and reconsider',score:1,reasons:[['no useful available action',1]]}];
 }
 export function rememberFailure(w,a,t,detail){
@@ -70,6 +74,7 @@ export function retireObsoleteTask(w,a){
   if(a.position==='camp'&&['hydration','hunger','energy'].some(k=>a.needs[k]<35))reason='Already under cover; attending to other needs.';
  }
  if(t.actionId==='seek_warmth'&&!w.structures.fire)reason='The fire is out; this task can no longer warm anyone.';
+ if(t.actionId==='explore'&&coldRecovery(a))reason='Too cold for optional exploration; recover warmth before another trip.';
  if(t.actionId==='seek_other'){
   const other=otherAgent(w,a);
   if(other&&distance(a.coordinates,other.coordinates)<2.1){a.socialUntil=clock(w)+90;outcome(w,a,t,true,`${a.name} found ${other.name} nearby; the search is finished.`);a.task=null;return;}

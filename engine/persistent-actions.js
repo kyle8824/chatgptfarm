@@ -13,6 +13,7 @@ const consume={eat_berries:{item:'berries',gain:28,need:'hunger'},eat_cooked_mea
 const duration=id=>consume[id]?10:id==='drink'?10:id==='rest'?60:id==='seek_warmth'?45:id==='seek_cover'?30:id==='build_shelter'?180:id==='dry_wood_by_fire'?60:/^survey:/.test(id)?35:/^physical:/.test(id)?60:30;
 export function actionDestination(w,a,selected,proposal){
  const id=selected.id;
+ if(selected.job?.kind==='return_warmth')return w.frontier?.homes.find(h=>h.id===selected.job.campId)?.name||'known camp';
  if(/^(survey|forage):/.test(id))return id.slice(id.indexOf(':')+1);
  if(id.startsWith('physical:')){const c=retrieveDecisionContext(w,a),o=c.affordances.objects.find(x=>x.id===proposal?.primaryObjectId);return o?.kind==='place'?o.position:a.position;}
  if(consume[id])return id==='eat_berries'&&!a.inventory.berries?'berries':a.position;
@@ -22,7 +23,7 @@ export function actionDestination(w,a,selected,proposal){
  if(id==='seek_other')return otherAgent(w,a)?.position||a.position;
  return {drink:'creek',gather_berries:'berries',gather_dry_wood:'log',gather_wet_wood:'log',gather_stones:'stones',gather_clay:'clay',gather_reeds:'reeds',make_fire:'camp',build_shelter:'camp',dry_wood_by_fire:'camp',store_wet_wood:'camp',collect_dried_wood:'camp',seek_warmth:'camp',seek_cover:'camp',explore:'edge'}[id]||a.position;
 }
-function family(id){if(/^(eat_|retrieve_food:|forage:|survey:|gather_berries)/.test(id))return 'hunger';if(id==='drink')return 'hydration';if(/^(retrieve_fuel:|harvest_fuel:|seek_warmth|seek_cover|make_fire|dry_wood_by_fire|store_wet_wood|gather_.*wood|collect_dried_wood)/.test(id))return 'warmth';if(id==='rest'||id.startsWith('rest_at:'))return 'energy';return null;}
+function family(id){if(/^(eat_|retrieve_food:|forage:|survey:|gather_berries)/.test(id))return 'hunger';if(id==='drink')return 'hydration';if(/^(return_warmth:|retrieve_fuel:|harvest_fuel:|seek_warmth|seek_cover|make_fire|dry_wood_by_fire|store_wet_wood|gather_.*wood|collect_dried_wood)/.test(id))return 'warmth';if(id==='rest'||/^(rest_at:|rest_on:)/.test(id))return 'energy';return null;}
 function urgentNeed(a){return Object.entries(a.needs).filter(([k,v])=>['hydration','hunger','warmth','energy'].includes(k)&&v<20).sort((a,b)=>a[1]-b[1]||a[0].localeCompare(b[0]))[0]?.[0]||null;}
 function outcome(w,a,task,success,detail,status='completed'){
  const dna=w.dna.find(d=>d.decision_id===task.decisionId);if(dna)dna.physics.outcome={success,detail,status,workMinutes:task.workMinutes};
@@ -33,7 +34,7 @@ async function startTask(w,a,mind,reason,emergency=false,options={}){
  const chosen=await selectPersistentAction(w,a,mind,reason,emergency?x=>family(x.id)===(options.urgentNeed||urgentNeed(a)):null,options.candidateTransform),targetPosition=actionDestination(w,a,chosen.selected,chosen.mindResult.physicalAction),destination=options.destinationResolver?options.destinationResolver(targetPosition,chosen.selected):targetPosition===a.position?{...a.coordinates}:coordForPosition(targetPosition,w),path=(options.routeFinder||findRoute)(w,a.coordinates,destination);
  const t={origin:{...a.coordinates},id:`A-${chosen.decisionId}`,decisionId:chosen.decisionId,actionId:chosen.selected.id,label:chosen.selected.label,selected:chosen.selected,proposal:chosen.mindResult.physicalAction,source:chosen.mindResult.brainMode,model:chosen.mindResult.model||null,fallbackReason:chosen.mindResult.fallbackReason||null,emergency,targetPosition,destination,path:path||[],pathIndex:1,phase:distance(a.coordinates,destination)>.01?'travel':'work',requiredMinutes:duration(chosen.selected.id),workMinutes:0,startedAt:{day:w.day,hour:w.hour,minute:w.minute||0}};
  t.decisionSummary=chosen.mindResult.decisionSummary;
- if(!path){outcome(w,a,t,false,'No traversable route to the selected destination.','blocked');a.currentAction='Route blocked';a.task=null;return;}
+ if(!path){options.onRouteFailure?.(t);outcome(w,a,t,false,'No traversable route to the selected destination.','blocked');a.currentAction='Route blocked';a.task=null;return;}
  a.task=t;display(a);
 }
 function interrupt(w,a,need){

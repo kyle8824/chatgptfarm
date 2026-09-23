@@ -97,6 +97,9 @@ export function chooseDestination(w,a,target,selected={}){
 }
 export function configureTask(w,a,{force=false}={}){
  const t=a.task;if(!t||(!force&&t.liveSpaceVersion===1&&(t.actionId!=='drink'||t.liveWaterVersion===1)))return;
+ // Resuming after food/water may start elsewhere. Rebuild the incremental
+ // journey there, never route back to the original planning position.
+ if(t.selected?.job?.kind==='return_warmth'){if(force)delete t.returnJourney;t.destination={...a.coordinates};t.path=[{...a.coordinates}];t.phase='planning';t.liveSpaceVersion=1;return;}
  t.destination=chooseDestination(w,a,t.targetPosition,{...t.selected,id:t.actionId});t.path=liveRoute(w,a.coordinates,t.destination,a)||[];t.pathIndex=1;t.liveSpaceVersion=1;
  t.phase=distance(a.coordinates,t.destination)>.15?'travel':'work';t.egressing=!liveWalkable(w,a.coordinates);t.liveTrace=[{...a.coordinates}];
  if(t.actionId==='drink')t.liveWaterVersion=1;

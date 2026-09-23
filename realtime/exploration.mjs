@@ -4,9 +4,11 @@ import {coordForPosition} from '../engine/spectator.js';
 import {distance} from '../engine/navigation.js';
 import {advanceLiveRoute,explorationCell,explorationDestination,liveRoute,liveWalkable,motionState} from './motion.mjs';
 import {clock} from './holdings.mjs';
+import {coldRecovery} from './thermal-return.mjs';
 
 const discoveries=(w,a)=>Object.keys(a.liveExploration?.observations||{}).length+(w.resourceSites?.nodes||[]).filter(n=>n.knownBy?.includes(a.id)).length;
 export function explorationMotivation(w,a){
+ if(coldRecovery(a))return {allowed:false,penalty:0,reason:'Recover warmth before optional exploration.',lastTrip:a.liveExploration?.trips?.at(-1)||null};
  const trips=a.liveExploration?.trips||[],last=trips.at(-1),age=last?clock(w)-last.at:Infinity;
  // Only remembered outcomes influence this judgment; there is no omniscient
  // percentage of the map/resources that remain undiscovered.
