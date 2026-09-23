@@ -28,7 +28,7 @@ function assemblyPoint(w,a,p,part){
  return interactionPoint(w,a,{x,y},{radius:.8,extra:options,accept:q=>Math.hypot(Math.max(b.minX-q.x,q.x-b.maxX,0),Math.max(b.minZ-q.y,q.y-b.maxZ,0))<=1.6&&(!(p.purpose==='storage'||p.affordances?.storage?.enclosed)||q.x<=bb.minX-.4||q.x>=bb.maxX+.4||q.y<=bb.minZ-.4||q.y>=bb.maxZ+.4)});
 }
 export function materialNeed(p,material){return p.parts.filter(x=>!x.invested&&x.material===material).reduce((n,x)=>n+x.materialUnits,0);}
-function findMaterialSource(w,a,material){
+export function findMaterialSource(w,a,material){
  const sources=[];for(const s of w.settlement.stores)if(allowed(a,s)&&s.kind!=='site'&&units(s,material)>0)sources.push({kind:'take',storeId:s.id,position:s.position,item:materialKeys[material].find(k=>s.items[k]>0)});
  if(material==='timber')for(const t of w.settlement.trees)if(treeUnits(w,t)>0&&(a.inventory.boundSharpTool>0||!(t.handGathered>=1)))sources.push({kind:'harvest',treeId:t.id,position:t.position,item:'wetWood'});
  if(material==='timber'){const log=w.worldModel.objects.find(o=>o.type==='fallen_tree');if(log)for(const item of ['dryWood','wetWood'])if(w.resources[item]>0)sources.push({kind:'fallen',position:log.position,item});}
@@ -88,6 +88,7 @@ export function settlementCandidates(w,a){
  const nextPart=projects[0]?.parts.find(x=>!x.built&&x.requires.every(id=>projects[0].parts.find(t=>t.id===id)?.built)),food=FOOD.find(k=>a.inventory[k]>0),tool=a.inventory.boundSharpTool?'boundSharpTool':'sharpStone';
  const keep=Object.fromEntries(Object.keys(a.inventory).map(k=>[k,k===food?2:projects.length?(k===tool?1:0):['sharpStone','boundSharpTool','firedVessel'].includes(k)?1:0]));
  for(const [key,n]of Object.entries(craftKeep))keep[key]=Math.max(keep[key]||0,n);
+ if(a.freeTime?.practice&&clock(w)-a.freeTime.practice.at<240)for(const key of ['stones','reeds','cordage','woodPole','sharpStone','boundSharpTool','dryWood','wetWood'])keep[key]=Math.max(keep[key]||0,Math.min(a.inventory[key]||0,{stones:2,reeds:3,cordage:1,woodPole:1,sharpStone:1,boundSharpTool:1,dryWood:1,wetWood:1}[key]));
  if(nextPart&&!nextPart.invested){let n=nextPart.materialUnits;for(const k of materialKeys[nextPart.material]){keep[k]=Math.min(n,a.inventory[k]||0);n-=keep[k];}}
  const depositKeys=Object.entries(a.inventory).filter(([k,n])=>n>(keep[k]||0)).map(([k])=>k);
  const assemblyLoadBlocked=projects.some(p=>{const part=p.parts.find(x=>!x.built&&!x.invested&&x.requires.every(id=>p.parts.find(t=>t.id===id)?.built));if(!part)return false;const key=materialKeys[part.material][0];return roomFor(w,a,key)+units(a,part.material)<part.materialUnits;});

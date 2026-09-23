@@ -23,8 +23,10 @@ function aimBones(joint,lowerJoint,target,upper,lower,pole,blend){
  joint.quaternion.slerp(shoulderQ,blend);lowerJoint.quaternion.slerp(foreQ,blend);
 }
 
+export function personAction(task){const kind=task?.job?.kind;return ['relax','rest'].includes(kind)?'rest':kind==='conversation'?'conversation':kind==='hand_game'?'hand_game':kind==='study'?'observe':kind==='visit'?'visit':kind==='assemble'||kind==='repair'?'building':kind==='harvest'?'gather_timber':kind?'handling_supplies':task?.actionId;}
+
 export function animatePerson(e,time,dt,walking,fresh){
- if(!fresh)return;const m=e.model,work=e.phase==='work'&&!walking,drink=work&&e.action==='drink',gather=work&&/^(gather_|forage:|survey:|building|handling_supplies)/.test(e.action||''),rest=work&&e.action==='rest',eat=work&&/^eat_/.test(e.action||'');
+ if(!fresh)return;const m=e.model,work=e.phase==='work'&&!walking,drink=work&&e.action==='drink',gather=work&&/^(gather_|forage:|survey:|building|handling_supplies)/.test(e.action||''),rest=work&&e.action==='rest',social=work&&['conversation','hand_game'].includes(e.action),eat=work&&/^eat_/.test(e.action||'');
  const blend=1-Math.exp(-dt*10),cycle=(time*.28)%1,ease=x=>{x=T.MathUtils.clamp(x,0,1);return x*x*(3-2*x);},sip=drink?(cycle<.7?ease((cycle-.25)/.20):1-ease((cycle-.7)/.3)):0;
  let scoopHip=.35;
  if(drink&&e.waterPoint){m.root.updateMatrixWorld(true);const water=m.root.worldToLocal(e.waterPoint.clone()),forward=water.z-.418*Math.sin(1.85),side=Math.abs(water.x)+(m.female?.183:.217)-.034,maxDrop=Math.sqrt(Math.max(.01,.52*.52-forward*forward-side*side));scoopHip=T.MathUtils.clamp(water.y+maxDrop-.418*Math.cos(1.85),.16,.35);}
@@ -46,9 +48,9 @@ export function animatePerson(e,time,dt,walking,fresh){
   if(walking)leg.userData.foot.quaternion.identity();else leg.userData.foot.quaternion.copy(leg.quaternion).multiply(shin.quaternion).invert();
   if(drink){const target=scoop.clone().lerp(mouth,sip);target.x+=(i?1:-1)*.034;aimBones(arm,fore,target,.25,.30,new T.Vector3((i?1:-1)*.7,-.8,.35),blend);}
   else{
-   const armAngle=gather?-.75+Math.sin(time*3+i*.3)*.24:rest?-.30:eat&&i===1?-1.9:walking?Math.sin(phase)*.32:Math.sin(time+i)*.015;
+   const armAngle=social?-.45+Math.sin(time*1.8+i)*.2:gather?-.75+Math.sin(time*3+i*.3)*.24:rest?-.30:eat&&i===1?-1.9:walking?Math.sin(phase)*.32:Math.sin(time+i)*.015;
    arm.rotation.x=approach(arm.rotation.x,armAngle,blend);arm.rotation.y=approach(arm.rotation.y,0,blend);arm.rotation.z=approach(arm.rotation.z,(i?1:-1)*.065,blend);
-   fore.rotation.x=approach(fore.rotation.x,gather?-.70:eat&&i===1?-1.15:-.06,blend);fore.rotation.y=approach(fore.rotation.y,0,blend);fore.rotation.z=approach(fore.rotation.z,0,blend);
+   fore.rotation.x=approach(fore.rotation.x,social?-.65:gather?-.70:eat&&i===1?-1.15:-.06,blend);fore.rotation.y=approach(fore.rotation.y,0,blend);fore.rotation.z=approach(fore.rotation.z,0,blend);
   }
  }
  const blink=(time+e.blinkOffset)%5.3<.1;m.eyes.forEach(eye=>eye.scale.y=blink?.09:1);

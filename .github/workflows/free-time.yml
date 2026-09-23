@@ -1,0 +1,39 @@
+name: Purposeful free time verification
+on:
+  push:
+    branches: [fix/purposeful-free-time]
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    timeout-minutes: 8
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - run: npm ci --prefix cloudflare
+      - name: Verify learning, free time, survival, and saved-world continuity
+        run: |
+          node realtime/free-time-test.mjs
+          node realtime/physical-actions-test.mjs
+          node realtime/craft-test.mjs
+          node realtime/behavior-test.mjs
+          node realtime/persistence-test.mjs
+          node realtime/recovery-test.mjs
+          node realtime/workerd-test.mjs
+          git diff --exit-code -- world/state.json
+      - name: Build and verify desktop/mobile activity rendering
+        run: |
+          node cloudflare/build.mjs
+          npm install --no-save playwright@1.55.0
+          npx playwright install --with-deps chromium
+          node realtime/free-time-browser-test.mjs
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: free-time-evidence
+          path: realtime-qa/free-time-*
+          retention-days: 7
