@@ -15,12 +15,17 @@ import {freeTimeCandidates} from './free-time.mjs';
 
 const clock=w=>(w.day*24+w.hour)*60+(w.minute||0);
 const resourceFor={gather_dry_wood:'dryWood',gather_wet_wood:'wetWood',gather_berries:'berries',gather_stones:'stones',gather_clay:'clay',gather_reeds:'reeds'};
+const LOCAL_ACTION_RANGE=30;
+const canUseCamp=(w,a)=>!naturalWorld(w)||distance(a.coordinates,coordForPosition('camp',w))<=LOCAL_ACTION_RANGE;
 export function liveUrgency(w,a){
  const n=a.needs;
  // An unfixable cold deficit must not indefinitely veto water, food and rest.
  // Shelter reduces exposure; it does not generate heat.
  if(n.hydration<12)return 'hydration';if(n.hunger<12)return 'hunger';if(n.energy<12)return 'energy';
- const heatAvailable=w.structures.fire||a.inventory.dryWood>0||storedFuel(w)>0;
+ // Camp heat/fuel is only actionable within the same local range used below.
+ // Otherwise a distant fire repeatedly interrupts food/rest, while the
+ // replacement chooser cannot offer any action that reaches that fire.
+ const heatAvailable=canUseCamp(w,a)&&(w.structures.fire||a.inventory.dryWood>0||storedFuel(w)>0);
  if(n.warmth<20&&heatAvailable)return 'warmth';
  return ['hydration','hunger','energy'].filter(k=>n[k]<20).sort((x,y)=>n[x]-n[y])[0]||null;
 }
@@ -31,7 +36,7 @@ function knownUnavailable(w,a,id){
  return false;
 }
 export function liveCandidates(w,a,candidates){
- const filtered=candidates.filter(c=>{if(naturalWorld(w)&&(resourceFor[c.id]||['make_fire','build_shelter','dry_wood_by_fire','seek_warmth','seek_cover'].includes(c.id)))return distance(a.coordinates,coordForPosition(actionDestination(w,a,c),w))<=30;return true;}).filter(c=>!['store_wet_wood','collect_dried_wood','talk','seek_other'].includes(c.id)&&(c.id!=='make_fire'||a.inventory.dryWood>0)&&(c.id!=='dry_wood_by_fire'||a.inventory.wetWood>0)&&(c.id!=='seek_cover'||(a.coverUntil||0)<clock(w))&&(!w.frontier||!resourceFor[c.id]||w.resources[resourceFor[c.id]]>0)&&!knownUnavailable(w,a,c.id)&&(!resourceFor[c.id]||!w.settlement||roomFor(w,a,resourceFor[c.id])>0)&&(!['share_food'].includes(c.id)||(a.socialUntil||0)<clock(w)));
+ const filtered=candidates.filter(c=>{if(naturalWorld(w)&&(resourceFor[c.id]||['make_fire','build_shelter','dry_wood_by_fire','seek_warmth','seek_cover'].includes(c.id)))return distance(a.coordinates,coordForPosition(actionDestination(w,a,c),w))<=LOCAL_ACTION_RANGE;return true;}).filter(c=>!['store_wet_wood','collect_dried_wood','talk','seek_other'].includes(c.id)&&(c.id!=='make_fire'||a.inventory.dryWood>0)&&(c.id!=='dry_wood_by_fire'||a.inventory.wetWood>0)&&(c.id!=='seek_cover'||(a.coverUntil||0)<clock(w))&&(!w.frontier||!resourceFor[c.id]||w.resources[resourceFor[c.id]]>0)&&!knownUnavailable(w,a,c.id)&&(!resourceFor[c.id]||!w.settlement||roomFor(w,a,resourceFor[c.id])>0)&&(!['share_food'].includes(c.id)||(a.socialUntil||0)<clock(w)));
  // Retain a real, safe fallback if every remembered resource is unavailable.
  if(!filtered.length)filtered.push({id:'rest',label:w.structures.shelter?'Rest in the shelter':'Rest in the meadow',score:1,reasons:[['no useful reachable resource action',1]]});
  const ordinary=filtered.map(c=>{
