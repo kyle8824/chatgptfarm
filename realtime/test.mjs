@@ -13,6 +13,6 @@ assert.throws(()=>parseDecision({response:{...proposal,actionId:'invent-resource
 let runs=0;same.ai={run:async(model,input)=>{runs++;assert.equal(model,MODEL);assert.equal(input.response_format.type,'json_schema');return {response:proposal};}};
 const id=same.record.world.agents[0].id;await same.makeDecision(id,'{}',choices);
 assert.equal(runs,1);assert.equal(same.record.ai.succeeded,1);
-const restored=new RealtimeController(storage,{now:()=>now,ai:same.ai});await restored.load();assert.equal(restored.proposals.get(id).actionId,'rest','pending decisions survive restart');
-same.record.ai.calls=96;await same.makeDecision(id,'{}',choices);assert.equal(runs,1,'daily cap includes retries');
-console.log('PASS structured model responses; action validation; durable pending decisions; hard daily call cap');
+const restored=new RealtimeController(storage,{now:()=>now,ai:same.ai});await restored.load();assert.deepEqual(restored.record.cloudflareUsage,same.record.cloudflareUsage,'neuron reservations survive durable checkpoint reload');assert.equal(restored.proposals.get(id).actionId,'rest','pending decisions survive restart');
+same.record.cloudflareUsage.days[new Date(now).toISOString().slice(0,10)].reservedNeurons=9500;await same.makeDecision(id,'{}',choices);assert.equal(runs,1,'neuron budget includes retries');
+console.log('PASS structured model responses; action validation; durable pending decisions; durable daily neuron cap');

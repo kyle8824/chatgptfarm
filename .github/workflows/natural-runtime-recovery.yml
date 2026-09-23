@@ -28,6 +28,7 @@ jobs:
           node realtime/thermal-return-test.mjs
           node realtime/cold-preparation-test.mjs
           node realtime/camp-loop-test.mjs
+          node realtime/cloudflare-budget-test.mjs
           node realtime/planner-budget-test.mjs
           node realtime/provider-test.mjs
           node realtime/provider-display-test.mjs

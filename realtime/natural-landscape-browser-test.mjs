@@ -29,7 +29,7 @@ try{for(const mobile of [true,false]){
  await page.locator('#home').click();assert.equal(await page.locator('#region-select').inputValue(),'willow-basin');assert.equal(await page.locator('#person-select').inputValue(),'');assert.equal(await page.evaluate(()=>valley.focus),null);
  const bounds=await page.locator('.viewer-controls').boundingBox();assert(bounds.y> (mobile?915:960)*.75);assert(bounds.height<85);
  const trees=await page.evaluate(()=>valley.frame.settlement.trees.length);await page.evaluate(()=>{fixtureFrame.settlement.trees=fixtureFrame.settlement.trees.slice(0,1);fixtureFrame.settlement.treesPartial=true;});await page.waitForFunction(()=>valley.frame.settlement.treesPartial);assert.equal(await page.evaluate(()=>valley.frame.settlement.trees.length),trees,'partial frames preserve static trees');
- await page.locator('#connection').click();assert.match(await page.locator('#proof').textContent(),/awaiting configuration/);assert.match(await page.locator('#proof').textContent(),/96 maximum/);assert.deepEqual(errors,[]);await context.close();
+ await page.locator('#connection').click();assert.match(await page.locator('#proof').textContent(),/awaiting configuration/);assert.match(await page.locator('#proof').textContent(),/9,500 neurons tracked/);assert.deepEqual(errors,[]);await context.close();
 }}
 finally{await fs.writeFile('realtime-qa/natural-browser-report.json',JSON.stringify(report,null,2));await browser.close();await new Promise(r=>server.close(r));}
 console.log('PASS actual WebGL natural landscape on mobile/desktop; unchanged home camera; compact bottom selectors; all people available everywhere; person follow and details; no page errors or horizontal overflow');

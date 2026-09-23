@@ -61,14 +61,22 @@ those features are implemented.
 
 ## Cognition
 
-Workers AI binding `AI` supplies `@cf/meta/llama-3.3-70b-instruct-fp8-fast`. Each person
-requests a proposal every 30 wall minutes (failed calls retry after two minutes), with a total hard cap of
-96 calls per UTC day. Routine action requests have bounded input and 180 output tokens. Construction requests have a 2,600-token output bound and at most 24 calls/day, included in the same 96-call cap. Calls
-are reserved durably before sending. Calls never block physical simulation.
-Only a currently available action can be applied at a task boundary; urgent
-needs and NPC rules continue between calls. Failed or stale proposals do not
-become AI-controlled actions. UI/health show actual calls, successes, applied
-proposals and errors. A configured binding is not proof of successful inference.
+Workers AI binding `AI` supplies `@cf/meta/llama-3.3-70b-instruct-fp8-fast`.
+Llama planning uses a shared 9,500-neuron UTC-day target, with durable worst-case
+reservations reconciled against returned token usage. It has no fixed global
+or household call-count cap. Usage is paced across the day and split between
+action and construction opportunities; unused portions open to either purpose
+after 18:00 UTC. See `docs/AI_FREE_ALLOWANCE.md` for rates and accounting limits.
+Actions remain eligible every 30 real minutes; designs every 60. Failed Llama
+requests now respect those same intervals instead of retrying every 2–3 minutes.
+Routine responses are bounded to 180 output tokens, construction to 2,600.
+OpenAI retains its 24 calls / 18 actions / 6 designs per household and separate
+configured dollar ceiling. Llama usage cannot consume OpenAI's call allowance.
+Calls never block physical simulation. Only a currently available action can
+be applied at a task boundary; urgent needs and NPC rules continue between
+calls. Failed or stale proposals do not become AI-controlled actions. UI/health
+show actual calls, successes, applied proposals, tracked neurons and errors.
+A configured binding is not proof of successful inference.
 
 This is bounded model planning plus an NPC survival system. Construction uses model-written declarative programs interpreted by physical rules, not unrestricted model-generated JavaScript. Reflection, richer ecology and long-term survival balance remain unfinished. The valley renderer is stylized 3D, not photorealistic.
 
@@ -100,8 +108,9 @@ owner's concern and subsequent design context; protective designs are possible,
 not guaranteed.
 
 A separate asynchronous model call may propose a structure once per wall hour
-per person, retrying rejected proposals after three minutes. Calls are reserved
-before inference, share the existing hard cap, and never block simulation.
+per person. Failed Llama designs wait the same hour; OpenAI retains its
+three-minute retry interval. Calls reserve their provider-specific allowance
+before inference and never block simulation.
 A program names its purpose/site and 4–28 individual box primitives, dimensions,
 materials and earlier supporting dependencies. Geometry, connectivity, sites,
 per-part carrying feasibility, material cost and supported functionality are
