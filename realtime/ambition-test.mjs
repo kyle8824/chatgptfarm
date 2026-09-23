@@ -88,4 +88,15 @@ const fetch=settlementCandidates(blocked,a).find(c=>c.id.startsWith('fetch_tool:
 a.coordinates={...fetch.job.destination};const handling={selected:fetch,requiredMinutes:.5,workMinutes:0},skill=a.craftPractice.fiberwork.minutes;
 assert(!workSettlement(blocked,a,handling,.25).done);assert.equal(a.inventory.cordage,0);assert(workSettlement(blocked,a,handling,.25).success);
 assert.equal(a.inventory.cordage+bindings.items.cordage,3);assert(a.inventory.cordage>0);assert.equal(a.craftPractice.fiberwork.minutes,skill,'fetching an existing binding grants no crafting experience');
+// Completing that prerequisite must not turn its binding into spare cargo.
+// Exercise a real deposit and subsequent assembly, not only a candidate label.
+a.inventory.rawClayVessel=(a.inventory.rawClayVessel||0)+1;
+const deposit=settlementCandidates(blocked,a).find(c=>c.job?.kind==='deposit');assert(deposit);assert.equal(deposit.job.keep.cordage,1);
+a.coordinates={...deposit.job.destination};assert(workSettlement(blocked,a,{selected:deposit,requiredMinutes:.75,workMinutes:0},.75).success);
+assert.equal(a.inventory.cordage,1,'ordinary cargo handling keeps the fetched binding for the planned part');
+assert(!settlementCandidates(blocked,a).some(c=>c.id.startsWith('fetch_tool:')&&c.job.item==='cordage'),'do not refetch the same binding');
+const part=p.parts.find(x=>!x.built);a.inventory.reeds=part.materialUnits;
+const assemble=settlementCandidates(blocked,a).find(c=>c.job?.kind==='assemble'&&c.job.partId===part.id);assert(assemble);
+a.coordinates={...assemble.job.destination};assert(workSettlement(blocked,a,{selected:assemble,requiredMinutes:part.requiredMinutes,workMinutes:0},part.requiredMinutes).success);
+assert(part.built,'the reserved binding supports actual construction');assert.equal(a.inventory.cordage,0,'assembly consumes its binding exactly once');
 console.log(JSON.stringify({result:'PASS bounded Ronan route, replanning watchdog, unhappy rest refusal, exhausted recovery, finite reusable practice, fast local heat and physical rack reuse',ronan:result}));
