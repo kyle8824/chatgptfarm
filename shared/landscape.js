@@ -74,3 +74,5 @@ export function naturalWaypoints(a,b){
  if(Math.min(a.x,b.x)<-187&&Math.max(a.x,b.x)>-285&&Math.min(a.y,b.y)<-211&&Math.max(a.y,b.y)>-260)points.push({x:-287,y:-212},{x:-183,y:-215});
  return points;
 }
+
+export function naturalStructureBase(p){const water=p.spansWater||p.purpose==='bridge'?waterSample(p.position.x,p.position.y):null;return water?water.level+.44:landHeight(p.position.x,p.position.y);}

@@ -1,4 +1,4 @@
-import {naturalWorld,landHeight,cliffEdge} from '../shared/landscape.js';
+import {naturalWorld,landHeight,cliffEdge,naturalStructureBase} from '../shared/landscape.js';
 import {terraceAt,terrainEdge,FRONTIER_OBSTACLES} from '../shared/frontier.js';
 import {activeParts,cargoAllowance} from '../shared/structure-performance.js';
 import {loadOf} from './holdings.mjs';
@@ -10,7 +10,7 @@ export function treadHeight(w,p,actor=null){
   for(const part of project.parts){if(!active.has(part.id)||part.kind!=='deck'||!['timber','stone'].includes(part.material)||part.size[0]<1.1||part.size[2]<.3)continue;const[x,y,z]=part.center,[sx,sy,sz]=part.size;if(Math.abs(p.x-project.position.x-x)>sx/2-.12||Math.abs(p.y-project.position.y-z)>sz/2+.03)continue;if(actor&&loadOf(w,actor).mass>cargoAllowance(project,part))continue;height=Math.max(height,projectBase(w,project)+y+sy/2);}
  }return height;
 }
-export function projectBase(w,p){if(!naturalWorld(w))return 0;return p.spansWater?Math.max(landHeight(p.position.x,p.position.y-2),landHeight(p.position.x,p.position.y+2))+.04:landHeight(p.position.x,p.position.y);}
+export function projectBase(w,p){if(!naturalWorld(w))return 0;return naturalStructureBase(p);}
 export function clearHeight(w,a,b,actor=null){
  if(naturalWorld(w)){const d=Math.hypot(b.x-a.x,b.y-a.y),n=Math.max(1,Math.ceil(d*6));let prior=treadHeight(w,a,actor);for(let i=1;i<=n;i++){const p={x:a.x+(b.x-a.x)*i/n,y:a.y+(b.y-a.y)*i/n},h=treadHeight(w,p,actor),onBuilt=w.settlement.projects.some(s=>(s.climbsTerrain||s.spansWater)&&activeParts(s).size>0&&Math.hypot(s.position.x-p.x,s.position.y-p.y)<5);if(Math.abs(h-prior)>(onBuilt?.46:.045+d/n*.65))return false;prior=h;}return true;}
  if(!w.frontier)return true;const r=FRONTIER_OBSTACLES.find(r=>r.kind==='terrace');if((Math.max(a.x,b.x)<r.minX-5||Math.min(a.x,b.x)>r.maxX+5||Math.max(a.y,b.y)<r.minY-8||Math.min(a.y,b.y)>r.maxY+5)&&!w.settlement.projects.some(p=>p.climbsTerrain))return true;

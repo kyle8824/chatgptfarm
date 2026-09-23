@@ -1,3 +1,4 @@
+import {naturalStructureBase} from '../../shared/landscape.js';
 import {activeParts,conditionOf} from '../../shared/structure-performance.js';
 import * as T from 'three';
 import {createStructureModel} from '../../shared/visuals/structure-model.js';
@@ -24,7 +25,7 @@ export function drawContents(group,inventory,{carried=false,limit=20}={}){
 }
 export class SettlementView{
  constructor(scene,elevation){this.scene=scene;this.elevation=elevation;this.objects=new Map();this.data=null;}
- base(p){return (p.purpose==='bridge'||p.spansWater)?Math.max(this.elevation(p.position.x,p.position.y-2),this.elevation(p.position.x,p.position.y+2))+.04:this.elevation(p.position.x,p.position.y);}
+ base(p){if(this.natural)return naturalStructureBase(p);return (p.purpose==='bridge'||p.spansWater)?Math.max(this.elevation(p.position.x,p.position.y-2),this.elevation(p.position.x,p.position.y+2))+.04:this.elevation(p.position.x,p.position.y);}
  update(data,agents=[]){if(!data)return;this.data=data;const live=new Set();
   for(const p of data.projects){live.add(p.id);const open=!!p.storeId&&agents.some(a=>a.task?.job?.storeId===p.storeId&&a.task.phase==='work'),signature=JSON.stringify([p.parts.map(x=>[x.built,Math.floor(x.workMinutes/x.requiredMinutes*12),Math.floor(conditionOf(x)*10)]),p.status,open]);let obj=this.objects.get(p.id);if(obj?.signature===signature)continue;if(obj)this.remove(p.id);
    const g=createStructureModel(p,{open,appearance:releasedStructureLook(p)});g.position.set(p.position.x,this.base(p),p.position.y);g.userData.objectId=p.id;this.scene.add(g);
