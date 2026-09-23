@@ -8,7 +8,9 @@ export function createPerson(id,name,life=null){
  const m=createVillager(life?(life.sex==='female'?'Mara':'Ivo'):name),group=m.root;group.userData.agentId=id;group.scale.setScalar(personScale(name,life));
  const hit=new T.Mesh(new T.CapsuleGeometry(.30,1.10,4,8),new T.MeshBasicMaterial({visible:false}));hit.position.y=.88;group.add(hit);
  const cargoAnchor=new T.Group();cargoAnchor.position.set(0,0,-.215);m.torso.add(cargoAnchor);
- return {group,model:m,kind:'human',pos:null,target:null,walk:0,blinkOffset:name==='Mara'?1.2:3.1,rig:{body:m.torso,hips:m.hips,torso:m.torso,head:m.head,eyes:m.eyes,bag:m.bag,cargoAnchor},limbs:[m.legs[0],m.arms[0],m.legs[1],m.arms[1]]};
+ const sling=new T.Group(),cloth=new T.MeshStandardMaterial({color:'#a8b5a0',roughness:1});m.torso.add(sling);sling.visible=false;
+ for(const side of [-1,1]){const curve=new T.CatmullRomCurve3([[side*.15,.45,-.10],[side*.19,.47,.08],[side*.18,.30,.39],[side*.11,.10,.43],[0,.07,.35]].map(p=>new T.Vector3(...p))),strap=new T.Mesh(new T.TubeGeometry(curve,18,.032,6,false),cloth);strap.castShadow=true;sling.add(strap);}
+ return {group,model:m,kind:'human',pos:null,target:null,walk:0,blinkOffset:name==='Mara'?1.2:3.1,rig:{body:m.torso,hips:m.hips,torso:m.torso,head:m.head,eyes:m.eyes,bag:m.bag,cargoAnchor,sling},limbs:[m.legs[0],m.arms[0],m.legs[1],m.arms[1]]};
 }
 export function personScale(name,life){const grown=(life?life.sex==='male':name==='Ivo')?1.10:1;return grown*(life&&life.ageYears<18?.48+life.ageYears/18*.52:1);}
 function createInfant(id,name){
