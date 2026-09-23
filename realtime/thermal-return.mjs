@@ -3,22 +3,27 @@ import {distance} from '../engine/navigation.js';
 import {clock} from './holdings.mjs';
 import {advanceLiveRoute,motionState} from './motion.mjs';
 import {beginReturnRoute,advanceReturnRoute} from './return-route.mjs';
+import {knownCampProtection} from './frontier-knowledge.mjs';
 
 export const coldRecovery=a=>a.needs.warmth<20||!!a.thermalGoal&&a.needs.warmth<45;
+function usefulCamps(w,a){
+ return (w.frontier?.homes||[]).filter(h=>h.id===a.householdId||a.knownCamps?.includes(h.id)).filter(h=>{
+  const seen=knownCampProtection(w,a,h);
+  return seen.shelter||seen.fire||seen.fuel||a.inventory.dryWood>=1;
+ });
+}
+export const usefulReturnCamp=(w,a,id)=>usefulCamps(w,a).some(h=>h.id===id);
 export function updateThermalGoal(w,a){
  if(a.needs.warmth>=45){delete a.thermalGoal;return;}
  if(!naturalWorld(w)||!coldRecovery(a))return;
  // A starting camp is known. Other camps must actually have been encountered;
  // ancestry does not forbid choosing a nearer camp or keep someone there.
- const known=w.frontier.homes.filter(h=>h.id===a.householdId||a.knownCamps?.includes(h.id));
- if(!known.some(h=>h.id===a.thermalGoal?.campId)){
-  const h=known.sort((h,j)=>distance(a.coordinates,h)-distance(a.coordinates,j))[0];
-  if(h)a.thermalGoal={campId:h.id,startedAt:clock(w)};
- }
+ const known=usefulCamps(w,a),h=known.find(h=>h.id===a.thermalGoal?.campId)||known.sort((h,j)=>distance(a.coordinates,h)-distance(a.coordinates,j))[0];
+ a.thermalGoal={...a.thermalGoal,campId:h?.id||null,startedAt:a.thermalGoal?.startedAt??clock(w)};
 }
 export function returnCamp(w,a){
  if(!naturalWorld(w)||!coldRecovery(a))return null;
- const known=w.frontier?.homes.filter(h=>h.id===a.householdId||a.knownCamps?.includes(h.id))||[];
+ const known=usefulCamps(w,a);
  // A newly encountered nearby camp can replace the old destination.
  return known.find(h=>distance(a.coordinates,h)<18)||known.find(h=>h.id===a.thermalGoal?.campId)||known.sort((h,j)=>distance(a.coordinates,h)-distance(a.coordinates,j))[0]||null;
 }
