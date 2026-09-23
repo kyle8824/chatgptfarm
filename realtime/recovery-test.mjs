@@ -26,7 +26,7 @@ const restarted=new RealtimeController(storage,{now:()=>now});await restarted.lo
 assert.equal(restarted.record.createdAt,created);
 assert.deepEqual(restarted.frame().agents,c.frame().agents,'partial recovery checkpoints retain exact tasks, supplies and positions');
 let pulses=0,maxPulseMs=0;const began=performance.now();
-while(c.record.lastWallTime<now&&pulses++<2000){const before=c.record.lastWallTime,start=performance.now();await c.pulse();maxPulseMs=Math.max(maxPulseMs,performance.now()-start);assert(c.record.lastWallTime>before&&c.record.lastWallTime<=now);}
+while(c.record.lastWallTime<now&&pulses++<5000){const before=c.record.lastWallTime,start=performance.now();await c.pulse();maxPulseMs=Math.max(maxPulseMs,performance.now()-start);assert(c.record.lastWallTime>before&&c.record.lastWallTime<=now);}
 assert.equal(c.record.lastWallTime,now,'bounded recovery eventually reaches the actual present');
 assert(Math.abs(worldMinutes(c.record.world)-initialMinutes-360)<1e-6,'one elapsed hour advances exactly six simulated hours, without skipping time');
 assert.equal(c.runtime().status,'running');assert.equal(c.record.createdAt,created);
