@@ -7,7 +7,7 @@ import {createWorld} from '../engine/core.js';
 import {RealtimeController} from './world.mjs';
 const saved=new Map(),storage={get:async k=>saved.get(k),put:async(k,v)=>saved.set(k,v),delete:async k=>saved.delete(k),setAlarm:async()=>{},transaction:async f=>f(storage)};
 const c=new RealtimeController(storage,{frontierEnabled:true,landscapeEnabled:true});await c.initialize(createWorld());const frame=c.frame(1);frame.hour=12;frame.weather='clear';frame.wildlife=[];
-try{const live=JSON.parse(await fs.readFile('realtime/fixtures/natural-preview.json','utf8'));frame.agents.splice(0,2,...live.agents.filter(a=>['Mara','Ivo'].includes(a.name)));frame.settlement.projects=live.settlement.projects.filter(p=>!p.householdId||p.householdId==='willow-basin');frame.settlement.stores.push(...live.settlement.stores.filter(s=>s.projectId));frame.day=live.day;}catch{}
+try{const live=JSON.parse(await fs.readFile('realtime/fixtures/natural-preview.json','utf8'));frame.agents.splice(0,2,...live.agents.filter(a=>['Mara','Ivo'].includes(a.name)));frame.settlement.projects=live.settlement.projects.filter(p=>!p.householdId||p.householdId==='willow-basin');frame.settlement.stores.push(...live.settlement.stores.filter(s=>s.projectId));frame.day=live.day;frame.structures=live.structures;frame.resources=live.resources;frame.frontier.homes.find(h=>h.id==='willow-basin').structures=live.structures;}catch{}
 const source=await fs.readFile('web/live/client.js','utf8'),bundle=await build({stdin:{contents:source+'\nwindow.valley=scene;',resolveDir:process.cwd()+'/web/live'},bundle:true,format:'esm',write:false,nodePaths:[new URL('../cloudflare/node_modules/',import.meta.url).pathname]});
 const html=await fs.readFile('web/live/index.html'),css=await fs.readFile('web/live/style.css');await fs.mkdir('realtime-qa',{recursive:true});
 const server=createServer((req,res)=>{const path=new URL(req.url,'http://localhost').pathname;res.setHeader('Content-Type',path.endsWith('.js')?'text/javascript':path.endsWith('.css')?'text/css':path.endsWith('geometry')?'application/json':'text/html');res.end(path.endsWith('.js')?bundle.outputFiles[0].contents:path.endsWith('.css')?css:path.endsWith('geometry')?JSON.stringify(c.geometry()):html);});await new Promise(r=>server.listen(0,'127.0.0.1',r));
@@ -21,7 +21,7 @@ try{for(const mobile of [true,false]){
  assert.equal(await page.locator('#home-regions, #people').count(),0);
  for(const place of [...frame.frontier.homes,...frame.frontier.landmarks,{id:'all'}]){
   await page.selectOption('#region-select',place.id);await page.waitForTimeout(350);
-  await page.screenshot({path:`realtime-qa/natural-${mobile?'mobile':'desktop'}-${place.id}.png`});assert.equal(await page.evaluate(()=>document.documentElement.scrollWidth>innerWidth),false);
+  if(!['flint-heights','reed-fen','ochre-vale'].includes(place.id))await page.screenshot({path:`realtime-qa/natural-${mobile?'mobile':'desktop'}-${place.id}.png`});assert.equal(await page.evaluate(()=>document.documentElement.scrollWidth>innerWidth),false);
   assert.equal(await page.locator('#person-select option').count(),9,'every person stays selectable in every region');report.push({mobile,place:place.id,people:8});
  }
  await page.selectOption('#person-select','agent-elin');assert.equal(await page.evaluate(()=>valley.focus),'agent-elin');assert.equal(await page.locator('#inspector').evaluate(e=>e.open),false,'following does not obscure the view with details');

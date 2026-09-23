@@ -73,7 +73,7 @@ export const naturalWorld=w=>(w?.frontier?.landscapeVersion||0)>=2;
 export function mapBounds(w){const b=w?.worldModel?.bounds||{};return {minX:b.minX??0,minY:b.minY??0,maxX:b.maxX??b.width??100,maxY:b.maxY??b.height??100};}
 export function insideBounds(w,p,pad=0){const b=mapBounds(w);return p.x>=b.minX+pad&&p.x<=b.maxX-pad&&p.y>=b.minY+pad&&p.y<=b.maxY-pad;}
 export function naturalWaypoints(a,b){
- const points=[];for(const lake of LAKES){const near=segmentProjection(lake.x,lake.z,[a.x,a.y],[b.x,b.y]);if(near.distance>Math.max(lake.rx,lake.rz)+12)continue;for(let i=0;i<lake.points.length;i+=8){const [x,z]=lake.points[i],dx=x-lake.x,dz=z-lake.z,len=Math.hypot(dx,dz);points.push({x:x+dx/len*2,y:z+dz/len*2});}}
+ const points=[];for(const lake of LAKES){const near=segmentProjection(lake.x,lake.z,[a.x,a.y],[b.x,b.y]);if(near.distance>Math.max(lake.rx,lake.rz)+12)continue;for(let i=0;i<lake.points.length;i+=4){const [x,z]=lake.points[i],dx=x-lake.x,dz=z-lake.z,len=Math.hypot(dx,dz);points.push({x:x+dx/len*2,y:z+dz/len*2});}}
  if(Math.min(a.x,b.x)<-187&&Math.max(a.x,b.x)>-285&&Math.min(a.y,b.y)<-211&&Math.max(a.y,b.y)>-260)points.push({x:-287,y:-212},{x:-183,y:-215});
  return points;
 }
