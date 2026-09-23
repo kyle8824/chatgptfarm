@@ -11,8 +11,14 @@ export function frontierElevation(x,z,original){
  return h;
 }
 export function frontierTerrain(elevation){
- const g=new T.PlaneGeometry(520,520,260,260);g.rotateX(-Math.PI/2);const p=g.attributes.position,colors=[],color=new T.Color();
- for(let i=0;i<p.count;i++){const x=p.getX(i)+250,z=p.getZ(i)+250,h=elevation(x,z),home=HOME_REGIONS.reduce((best,r)=>Math.hypot(x-r.x,z-r.y)<Math.hypot(x-best.x,z-best.y)?r:best,HOME_REGIONS[0]);p.setXYZ(i,x,h,z);color.set(Math.abs(z-riverAt(GREAT_RIVER,x))<3?'#9d9c7e':home.color);color.offsetHSL(0,0,(Math.sin(x*.33)*Math.cos(z*.23))*.035);colors.push(color.r,color.g,color.b);}
+ const g=new T.PlaneGeometry(520,520,260,260);g.rotateX(-Math.PI/2);const p=g.attributes.position,colors=[],color=new T.Color(),palette=HOME_REGIONS.map(home=>({home,color:new T.Color(home.color)}));
+ for(let i=0;i<p.count;i++){
+  const x=p.getX(i)+250,z=p.getZ(i)+250,h=elevation(x,z);p.setXYZ(i,x,h,z);
+  color.setRGB(0,0,0);let total=0;for(const region of palette){const weight=1/(1800+(x-region.home.x)**2+(z-region.home.y)**2)**1.5;total+=weight;color.r+=region.color.r*weight;color.g+=region.color.g*weight;color.b+=region.color.b*weight;}color.multiplyScalar(1/total);
+  const obstacle=FRONTIER_OBSTACLES.find(r=>pointIn({x,y:z},r));if(obstacle)color.lerp(new T.Color(obstacle.kind==='ravine'?'#696a5c':'#9a9780'),.7);
+  if(Math.abs(z-riverAt(GREAT_RIVER,x))<3)color.set('#9d9c7e');
+  color.offsetHSL(0,0,Math.sin(x*.057+Math.sin(z*.023)*3)*Math.sin(z*.083+x*.012)*.018);colors.push(color.r,color.g,color.b);
+ }
  g.setAttribute('color',new T.Float32BufferAttribute(colors,3));g.computeVertexNormals();return g;
 }
 function riverMesh(points,material,y=-.12){const positions=[],indices=[];for(let i=1;i<points.length;i++){const a=points[i-1],b=points[i];for(const [x,z]of [a,b])positions.push(x,y,z-1.25,x,y,z+1.25);const n=(i-1)*4;indices.push(n,n+1,n+2,n+1,n+3,n+2);}const g=new T.BufferGeometry();g.setAttribute('position',new T.Float32BufferAttribute(positions,3));g.setIndex(indices);g.computeVertexNormals();return new T.Mesh(g,material);}
