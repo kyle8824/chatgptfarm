@@ -18,8 +18,12 @@ export function installNaturalWater(view){
  // Remove the old infinitely extrapolated creek ribbon; all water now uses
  // the exact server polylines and lake shores, including the original creek.
  for(const o of [...view.scene.children])if(o.material===view.waterMat)view.scene.remove(o);
+ const originalWater=view.waterMat.clone();originalWater.uniforms.time=view.waterMat.uniforms.time;
+ // Opaque new water surfaces avoid dark rectangular double-blending where a
+ // stream meets a lake. Keep the original clear creek and its visible fish.
+ view.waterMat.fragmentShader=view.waterMat.fragmentShader.replace('vec4(col,.62)','vec4(col,1.0)');view.waterMat.transparent=false;view.waterMat.depthWrite=true;view.waterMat.needsUpdate=true;
  view.waterMat.uniforms.deep.value.set('#1f6376');view.waterMat.uniforms.shallow.value.set('#83b9b0');
- for(const s of STREAMS){const mesh=new T.Mesh(streamGeometry(s),view.waterMat);mesh.userData.landscapeWater=s.id;view.scene.add(mesh);}
+ for(const s of STREAMS){const mesh=new T.Mesh(streamGeometry(s),s.homeId==='willow-basin'?originalWater:view.waterMat);mesh.userData.landscapeWater=s.id;view.scene.add(mesh);}
  for(const l of LAKES){const shape=new T.Shape();l.points.forEach(([x,z],i)=>i?shape.lineTo(x,-z):shape.moveTo(x,-z));shape.closePath();const g=new T.ShapeGeometry(shape);g.rotateX(-Math.PI/2);const mesh=new T.Mesh(g,view.waterMat);mesh.position.y=l.level;mesh.userData.landscapeWater=l.id;view.scene.add(mesh);}
  // Foam lies where the descending shared water surface reaches the pool.
  const foam=new T.Mesh(new T.CircleGeometry(1.3,24),new T.MeshBasicMaterial({color:'#e1eee4',transparent:true,opacity:.3,depthWrite:false}));foam.rotation.x=-Math.PI/2;foam.scale.set(1,.6,1);foam.position.set(-218,4.43,-216.4);view.scene.add(foam);view.waterfallFoam=foam;
