@@ -14,6 +14,7 @@ export const items=o=>o.inventory||o.items;
 export function loadOf(w,o){
  let mass=0,volume=0;for(const [k,n]of Object.entries(items(o)||{})){const unit=ITEM[k]||[1,1];if(!WOOD[k])mass+=n*unit[0];volume+=n*unit[1];}
  const h=holder(o);for(const b of w.wood?.batches||[])if(b.holder.kind===h.kind&&b.holder.id===h.id)mass+=b.dryKg+b.waterKg;
+ if(o.inventory)for(const c of w.agents||[])if(c.life?.carriedBy===o.id){const age=(c.life.ageAtEpoch||0)+(clock(w)-(c.life.ageEpoch??c.life.bornAt))/((w.lifecycle?.yearDays||60)*1440);mass+=3.5+Math.max(0,Math.min(1,age))*6.5;volume+=4;}
  return {mass,volume};
 }
 export function capacity(o){return o.inventory?CARRY:{mass:o.capacityKg,volume:o.capacityVolume};}

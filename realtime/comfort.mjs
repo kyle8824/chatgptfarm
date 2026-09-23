@@ -10,7 +10,7 @@ export const ensureComfort=a=>a.comfort??={value:55,uncomfortableMinutes:0,lastR
 function protection(w,p){const q=shelterLocal(p);return Math.max(w.structures.shelter&&Math.abs(q.x)<CAMP.shelter.halfWidth&&Math.abs(q.y)<CAMP.shelter.halfLength?.85:0,coverEffectiveness(w,p));}
 function available(w,a,p,s){
  if(p.ownerId!==a.id&&p.access!=='shared')return false;
- if(w.agents.some(b=>b.id!==a.id&&(distance(b.coordinates,s.position)<1.1||b.task?.selected?.job?.surfaceId===s.id&&b.task.selected.job.projectId===p.id)))return false;
+ if(w.agents.some(b=>b.id!==a.id&&!b.life?.carriedBy&&(distance(b.coordinates,s.position)<1.1||b.task?.selected?.job?.surfaceId===s.id&&b.task.selected.job.projectId===p.id)))return false;
  // A stocked supply platform is not an empty bed or seat.
  if(w.settlement.stores.some(store=>store.projectId===p.id&&Object.values(store.items).some(n=>n>0)))return false;
  return liveWalkable(w,s.position);
