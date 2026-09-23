@@ -1,0 +1,15 @@
+import assert from 'node:assert/strict';
+import {createWorld} from '../engine/core.js';
+import {prepare} from './elapsed.mjs';
+import {expandFrontier} from './frontier.mjs';
+import {reorganizeLandscape} from './landscape-migration.mjs';
+import {liveRoute,liveClear} from './motion.mjs';
+const w=prepare(createWorld());expandFrontier(w);reorganizeLandscape(w);
+const a=w.agents[0],from={x:30,y:-232},to={x:30,y:-262};a.coordinates=from;
+assert(!liveClear(w,from,to,a),'the pond blocks the direct walk');
+const route=liveRoute(w,from,to,a);
+assert(route?.length>2,'bounded search still finds the walk around the pond');
+for(let i=1;i<route.length;i++)assert(liveClear(w,route[i-1],route[i],a),'every accepted edge has real clearance');
+const bank={x:-326,y:19},opposite={x:-326,y:26};a.coordinates=bank;
+assert.equal(liveRoute(w,bank,opposite,a),null,'an unbridged creek does not become walkable');
+console.log('PASS bounded natural routing retains a reachable pond detour and rejects an unbridged crossing');

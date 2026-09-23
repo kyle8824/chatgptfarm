@@ -61,7 +61,7 @@ export class RealtimeController{
    // Resolved promises alone do not yield to incoming requests or alarms.
    // Yield real event-loop turns so recovery cannot starve the CPU refresh
    // and checkpoint alarms. Keep the ordinary 100 ms physical step near now.
-   if(n%4===0){await this.yieldToHost();if(this.budgetNow()-started>=PULSE_BUDGET_MS)break;}
+   await this.yieldToHost();if(this.budgetNow()-started>=PULSE_BUDGET_MS)break;
   }
   if(target-this.lastSaved>=this.checkpointIntervalMs){compact(r.world);await this.save();return true;}return false;
  }

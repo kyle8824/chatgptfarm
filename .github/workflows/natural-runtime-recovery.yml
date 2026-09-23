@@ -1,0 +1,30 @@
+name: Natural runtime recovery
+on:
+  push:
+    branches: [fix/natural-runtime-overload]
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  runtime:
+    runs-on: ubuntu-latest
+    timeout-minutes: 12
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - run: npm ci --prefix cloudflare
+      - name: Verify bounded routing, elapsed recovery and preserved checkpoints
+        run: |
+          node realtime/navigation-recovery-test.mjs
+          node realtime/physical-actions-test.mjs
+          node realtime/recovery-test.mjs
+          node realtime/persistence-test.mjs
+          node realtime/loading-test.mjs
+          LANDSCAPE_STEPS=1200 node realtime/natural-landscape-test.mjs
+      - name: Verify the expanded world in the actual Worker runtime
+        run: |
+          TEST_FRONTIER=1 TEST_LANDSCAPE=1 node realtime/workerd-test.mjs
+          npm run check --prefix cloudflare
+          git diff --exit-code -- world/state.json
