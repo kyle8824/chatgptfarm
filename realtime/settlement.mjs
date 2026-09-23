@@ -20,7 +20,7 @@ const units=(s,material)=>materialKeys[material].reduce((n,k)=>n+(s.items?.[k]||
 export function interactionPoint(w,a,position,{radius=1.15,extra=[],accept=()=>true}={}){
  const options=[...extra];for(let i=0;i<12;i++){const ang=i*Math.PI/6;options.push({x:position.x+Math.sin(ang)*radius,y:position.y+Math.cos(ang)*radius});}
  options.sort((p,q)=>distance(p,a.coordinates)-distance(q,a.coordinates));
- for(const p of options){if(!accept(p)||!liveWalkable(w,p)||w.agents.some(b=>b.id!==a.id&&(distance(p,b.coordinates)<1.1||b.task?.destination&&distance(p,b.task.destination)<1.1)))continue;if(liveRoute(w,a.coordinates,p,a))return p;}return null;
+ for(const p of options){if(!accept(p)||!liveWalkable(w,p)||w.agents.some(b=>b.id!==a.id&&!b.life?.carriedBy&&(distance(p,b.coordinates)<1.1||b.task?.destination&&distance(p,b.task.destination)<1.1)))continue;if(liveRoute(w,a.coordinates,p,a))return p;}return null;
 }
 function assemblyPoint(w,a,p,part){
  const b=partBounds(p,part),x=Math.max(b.minX,Math.min(b.maxX,a.coordinates.x)),y=Math.max(b.minZ,Math.min(b.maxZ,a.coordinates.y));

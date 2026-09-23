@@ -1,3 +1,4 @@
+import {parentingCandidates,familyFoodNeed} from './parenting.mjs';
 import {candidateActions} from '../engine/decision.js';
 import {actionDestination,family,outcome,display} from '../engine/persistent-actions.js';
 import {coordForPosition} from '../engine/spectator.js';
@@ -41,7 +42,8 @@ export function liveCandidates(w,a,candidates){
   const score=c.score-trip*(a.needs.energy<25?.45:.24)-comfortPenalty-socialPenalty+(immediate&&a.needs.hunger<35?20:0);
   return {...c,label:c.id==='explore'?'Explore the surrounding valley':c.label,score,reasons:[...(c.reasons||[]),['travel effort',-trip*.24]]};
  });
- const exploration=explorationMotivation(w,a),all=[...ordinary,...settlementCandidates(w,a),...freeTimeCandidates(w,a)].filter(c=>c.id!=='explore'||exploration.allowed).map(c=>c.id==='explore'?{...c,score:c.score-exploration.penalty,explanation:exploration.reason,reasons:[...(c.reasons||[]),['remembered exploration yield',-exploration.penalty]]}:c).sort((x,y)=>y.score-x.score||x.id.localeCompare(y.id));
+ const familyNeed=familyFoodNeed(w,a);
+ const exploration=explorationMotivation(w,a),all=[...ordinary,...settlementCandidates(w,a),...freeTimeCandidates(w,a),...parentingCandidates(w,a)].filter(c=>c.id!=='explore'||exploration.allowed).map(c=>c.id==='explore'?{...c,score:c.score-exploration.penalty,explanation:exploration.reason,reasons:[...(c.reasons||[]),['remembered exploration yield',-exploration.penalty]]}:c).map(c=>familyNeed&&/^(gather_berries|forage:|survey:|retrieve_food:)/.test(c.id)?{...c,score:c.score+familyNeed,explanation:'Collect finite food for a dependent child.'}:c).sort((x,y)=>y.score-x.score||x.id.localeCompare(y.id));
  return all.length?all.filter((c,i)=>all.findIndex(x=>x.id===c.id)===i):[{id:'rest',label:'Rest and reconsider',score:1,reasons:[['no useful available action',1]]}];
 }
 export function rememberFailure(w,a,t,detail){
