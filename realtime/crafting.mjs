@@ -26,10 +26,10 @@ export function toolPlan(a,item,depth=0){
 }
 export function preparationFor(a,part){
  const spec=constructionSpec(part);
- if(spec.tool&&!a.inventory[spec.tool])return toolPlan(a,spec.tool);
+ if(spec.tool&&!a.inventory[spec.tool])return {...toolPlan(a,spec.tool),goal:spec.tool,goalQuantity:1};
  // Useful practice produces actual worked poles; these retain their wood mass.
  if(spec.skill&&practiceMinutes(a,spec.skill)<spec.minutes)return toolPlan(a,'woodPole');
- if(!part.invested&&spec.binding>(a.inventory.cordage||0))return toolPlan(a,'cordage');
+ if(!part.invested&&spec.binding>(a.inventory.cordage||0))return {...toolPlan(a,'cordage'),goal:'cordage',goalQuantity:spec.binding-(a.inventory.cordage||0)};
  return null;
 }
 export function craftTool(w,a,item){
