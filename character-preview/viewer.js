@@ -2,12 +2,12 @@ import * as T from 'three';
 import {MapGestureControls} from '../shared/visuals/map-controls.js';
 import {createVillager,createAnimal,animateVillager,animateAnimal,geometryStats} from './models.js';
 
-const $=s=>document.querySelector(s),scene=new T.Scene();scene.background=new T.Color('#dfebeb');scene.fog=new T.Fog('#dfebeb',12,30);
+const $=s=>document.querySelector(s),scene=new T.Scene();scene.background=new T.Color('#dfebeb');scene.fog=new T.Fog('#dfebeb',30,75);
 let renderer;
 try{renderer=new T.WebGLRenderer({antialias:true,alpha:false,powerPreference:'high-performance'});}catch{ $('#failure').hidden=false;throw Error('WebGL unavailable: visible fallback shown');}
 renderer.info.autoReset=false;renderer.setPixelRatio(Math.min(devicePixelRatio,1.35));renderer.setSize(innerWidth,innerHeight);renderer.shadowMap.enabled=true;renderer.shadowMap.type=T.PCFSoftShadowMap;renderer.outputColorSpace=T.SRGBColorSpace;renderer.toneMapping=T.ACESFilmicToneMapping;renderer.toneMappingExposure=1.10;$('#stage').append(renderer.domElement);
-const camera=new T.PerspectiveCamera(35,innerWidth/innerHeight,.05,60),controls=new MapGestureControls(camera,renderer.domElement,{planeMode:'screen'});
-controls.enableDamping=true;controls.dampingFactor=.10;controls.minDistance=.48;controls.maxDistance=20;controls.maxPolarAngle=Math.PI*.49;controls.minPolarAngle=.25;controls.screenSpacePanning=true;controls.mouseButtons={LEFT:T.MOUSE.PAN,MIDDLE:T.MOUSE.DOLLY,RIGHT:T.MOUSE.ROTATE};
+const camera=new T.PerspectiveCamera(35,innerWidth/innerHeight,.05,100),controls=new MapGestureControls(camera,renderer.domElement,{planeMode:'screen'});
+controls.enableDamping=true;controls.dampingFactor=.10;controls.minDistance=.48;controls.maxDistance=50;controls.maxPolarAngle=Math.PI*.49;controls.minPolarAngle=.25;controls.screenSpacePanning=true;controls.mouseButtons={LEFT:T.MOUSE.PAN,MIDDLE:T.MOUSE.DOLLY,RIGHT:T.MOUSE.ROTATE};
 scene.add(new T.HemisphereLight('#e9f5ff','#a0ac7c',1.8));const sun=new T.DirectionalLight('#ffe8c6',2.4);sun.position.set(-3.5,6,4.5);sun.castShadow=true;sun.shadow.mapSize.set(1024,1024);Object.assign(sun.shadow.camera,{left:-5,right:5,top:5,bottom:-5,near:.5,far:15});sun.shadow.normalBias=.022;sun.shadow.bias=-.0001;sun.shadow.radius=3;scene.add(sun);const fill=new T.DirectionalLight('#dceaf5',.9);fill.position.set(3,3,-3);scene.add(fill);
 const groundMat=new T.MeshStandardMaterial({color:'#90a577',roughness:1});const ground=new T.Mesh(new T.PlaneGeometry(80,80),groundMat);ground.rotation.x=-Math.PI/2;ground.receiveShadow=true;scene.add(ground);
 // Simple background vegetation shares the models' matte materials and soft edges.
@@ -37,7 +37,11 @@ function setView(immediate=false){
  const focus=close?m.head.getWorldPosition(new T.Vector3()):new T.Vector3(together?.65:m.root.position.x,together?.88:selected==='deer'?.70:selected==='bear'?.62:selected==='rabbit'?.25:selected==='fish'?.65:.84,together?-.2:m.root.position.z);
  const {x,y,z}=focus;
  let distance=close?(selected==='deer'?2.2:selected==='bear'?2:selected==='rabbit'?.8:selected==='fish'?.6:1.4):together?(mobile?17:10):selected==='rabbit'?(mobile?1.9:1.7):selected==='fish'?(mobile?1.5:1.3):selected==='bear'?(mobile?5.6:5):selected==='deer'?(mobile?4.8:4.3):(mobile?4.8:4.5);
- if(together&&extras.length)distance=mobile?20:12;
+ if(together){
+  const bounds=new T.Box3();for(const model of [...Object.values(models),...extras])if(model.root.visible)bounds.union(new T.Box3().setFromObject(model.root));
+  const halfWidth=Math.max(x-bounds.min.x,bounds.max.x-x)+.35,halfDepth=Math.max(z-bounds.min.z,bounds.max.z-z);
+  distance=Math.max(distance,halfWidth/(Math.tan(camera.fov*Math.PI/360)*camera.aspect)+halfDepth);
+ }
  const theta=(angle==='side'?Math.PI/2:angle==='back'?Math.PI:0)+(together?0:m.root.rotation.y);
  desiredTarget.set(x,y,z);desiredPosition.set(x+Math.sin(theta)*distance,y+distance*(close?.045:together?.20:.085),z+Math.cos(theta)*distance);
  // View offset reserves room for header and controls without tilting the faces.
@@ -70,7 +74,7 @@ function animate(now){requestAnimationFrame(animate);if(hidden)return;const delt
  if(now-lastReport>1200){const avg=frames.reduce((a,b)=>a+b,0)/frames.length,fps=1000/avg,sorted=[...frames].sort((a,b)=>a-b),p95=sorted[Math.floor(sorted.length*.95)]||0;$('#fps').textContent=`${Math.round(fps)} fps`;
   const sum=Object.entries(counts).reduce((a,[id,b])=>a+(models[id].root.visible?b.triangles:0),0)+extras.reduce((a,e)=>a+(e.root.visible?counts[e.kind].triangles:0),0);
   $('#numbers').innerHTML=`<span><strong>${(sum/1000).toFixed(1)}k</strong> model triangles</span><span><strong>${renderer.info.render.calls}</strong> draw calls incl. shadows</span><span><strong>${p95.toFixed(1)} ms</strong> frame time, 95th percentile</span><span><strong>${renderer.getPixelRatio().toFixed(2)}×</strong> pixel ratio</span>`;
-  window.previewMetrics={fps,p95FrameMs:p95,renderSubmitMs:renderTimes.reduce((a,b)=>a+b,0)/renderTimes.length,counts,drawCalls:renderer.info.render.calls,renderedTriangles:renderer.info.render.triangles,pixelRatio:renderer.getPixelRatio(),population:Object.values(models).filter(m=>m.root.visible).length+extras.filter(m=>m.root.visible).length,mode,selected,quality:$('#quality').value,animationTime:clock,camera:{position:camera.position.toArray(),target:controls.target.toArray()},previewOnly:true};frames=[];renderTimes=[];lastReport=now;
+  window.previewMetrics={fps,p95FrameMs:p95,renderSubmitMs:renderTimes.reduce((a,b)=>a+b,0)/renderTimes.length,counts,drawCalls:renderer.info.render.calls,renderedTriangles:renderer.info.render.triangles,pixelRatio:renderer.getPixelRatio(),population:Object.values(models).filter(m=>m.root.visible).length+extras.filter(m=>m.root.visible).length,mode,selected,quality:$('#quality').value,animationTime:clock,camera:{position:camera.position.toArray(),target:controls.target.toArray()},projectedSubjects:Object.fromEntries(Object.entries(models).filter(([,m])=>m.root.visible).map(([id,m])=>{const b=new T.Box3().setFromObject(m.root),corners=[];for(const x of [b.min.x,b.max.x])for(const y of [b.min.y,b.max.y])for(const z of [b.min.z,b.max.z])corners.push(new T.Vector3(x,y,z).project(camera).x);return [id,{minX:Math.min(...corners),maxX:Math.max(...corners)}];})),previewOnly:true};frames=[];renderTimes=[];lastReport=now;
  }
 }
 setView(true);requestAnimationFrame(animate);

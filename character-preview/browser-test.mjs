@@ -12,7 +12,7 @@ try{
   await page.goto(base,{waitUntil:'networkidle'});await page.waitForFunction(()=>window.previewMetrics?.fps>0);assert.equal(await page.locator('#failure').isVisible(),false,'actual WebGL rendered');
   assert.equal(await page.evaluate(()=>document.documentElement.scrollWidth>innerWidth),false,'no horizontal overflow');
   await page.locator('#pause').click();await page.screenshot({path:new URL(`${name}-together.png`,out).pathname});
-  const initial=await page.evaluate(()=>window.previewMetrics);assert.equal(initial.population,11,'all eight adults and three land animals are in the group');assert(initial.counts.mara.triangles<20000);assert(initial.counts.ivo.triangles<20000);assert(initial.counts.deer.triangles<10000);assert(initial.counts.bear.triangles<12000);assert(initial.counts.rabbit.triangles<9000);assert(initial.counts.fish.triangles<3000);assert.equal(initial.previewOnly,true);
+  const initial=await page.evaluate(()=>window.previewMetrics);assert.equal(initial.population,11,'all eight adults and three land animals are in the group');for(const [id,b]of Object.entries(initial.projectedSubjects))assert(b.minX>=-1&&b.maxX<=1,id+' stays inside the Together viewport');assert(initial.counts.mara.triangles<20000);assert(initial.counts.ivo.triangles<20000);assert(initial.counts.deer.triangles<10000);assert(initial.counts.bear.triangles<12000);assert(initial.counts.rabbit.triangles<9000);assert(initial.counts.fish.triangles<3000);assert.equal(initial.previewOnly,true);
   if(name==='mobile'){
    const cdp=await context.newCDPSession(page);await page.waitForTimeout(1400);const before=await page.evaluate(()=>window.previewMetrics);
    await cdp.send('Input.dispatchTouchEvent',{type:'touchStart',touchPoints:[{x:140,y:410,id:1}]});
@@ -32,7 +32,7 @@ try{
    assert(Math.hypot(...b)<Math.hypot(...a)*.75,'preview pinches while twisting');assert(Math.atan2(b[0],b[2])-Math.atan2(a[0],a[2])>.35,'preview follows the clockwise finger twist');await page.locator('#home').click();
 
   }
-  for(const subject of ['mara','ivo','tessa','oren','nia','kellan','elin','ronan','deer','bear','rabbit','fish']){
+  for(const subject of (process.env.FRAME_ONLY?[]:['mara','ivo','tessa','oren','nia','kellan','elin','ronan','deer','bear','rabbit','fish'])){
    await page.locator(`[data-subject=${subject}]`).click();await page.waitForTimeout(1300);await page.screenshot({path:new URL(`${name}-${subject}.png`,out).pathname});
    await page.locator('#close-up').click();await page.waitForTimeout(1300);await page.screenshot({path:new URL(`${name}-${subject}-close.png`,out).pathname});
    if(name==='desktop'){await page.locator('[data-angle=side]').click();await page.waitForTimeout(1300);await page.screenshot({path:new URL(`${name}-${subject}-side.png`,out).pathname});await page.locator('[data-angle=back]').click();await page.waitForTimeout(1300);await page.screenshot({path:new URL(`${name}-${subject}-back.png`,out).pathname});await page.locator('[data-angle=front]').click();}

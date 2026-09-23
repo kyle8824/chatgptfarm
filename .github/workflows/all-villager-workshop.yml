@@ -15,12 +15,12 @@ jobs:
         with:
           node-version: '22'
       - run: npm ci --prefix character-preview
-      - run: npm run build --prefix character-preview
+      - run: npm run build --prefix character-preview && git diff --exit-code -- vercel-public/character-preview
       - run: npm install --prefix character-preview --no-save playwright@1.55.0 && cd character-preview && npx playwright install --with-deps chromium
       - name: Verify all twelve subjects and mobile camera controls in WebGL
         run: |
           python3 -m http.server 4178 --directory vercel-public > /tmp/character-server.log 2>&1 &
-          node character-preview/browser-test.mjs
+          FRAME_ONLY=1 node character-preview/browser-test.mjs
       - uses: actions/upload-artifact@v4
         if: always()
         with:

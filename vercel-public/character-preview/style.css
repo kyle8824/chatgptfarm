@@ -8,3 +8,5 @@
 
 .workshop-nav{display:flex;gap:8px;pointer-events:auto}.workshop-nav a{display:flex;align-items:center;min-height:44px;padding:12px 18px;border-radius:30px;color:inherit;text-decoration:none;font-size:14px;touch-action:manipulation}.workshop-nav a[aria-current="page"]{background:#e5eadf;color:var(--green);font-weight:650}.workshop-nav a:hover{background:#e5ebdf}header{gap:8px}
 @media(max-width:650px){header{padding:14px 16px}.brand{font-size:16px}.mark{font-size:23px;margin-right:4px}.workshop-nav{gap:2px}.workshop-nav a{padding:9px 8px;font-size:11px;min-height:40px}}
+
+.subjects{max-width:calc(100vw - 100px);overflow-x:auto;justify-content:flex-start;scrollbar-width:thin}.subjects button{flex:0 0 auto}@media(max-width:650px){.subjects{max-width:calc(100vw - 24px)}}
