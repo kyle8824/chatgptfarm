@@ -1,0 +1,28 @@
+name: All villager workshop verification
+on:
+  push:
+    branches: [fix/all-villager-workshop]
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  characters:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - run: npm ci --prefix character-preview
+      - run: npm run build --prefix character-preview
+      - run: npm install --prefix character-preview --no-save playwright@1.55.0 && cd character-preview && npx playwright install --with-deps chromium
+      - name: Verify all twelve subjects and mobile camera controls in WebGL
+        run: |
+          python3 -m http.server 4178 --directory vercel-public > /tmp/character-server.log 2>&1 &
+          node character-preview/browser-test.mjs
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: all-villager-workshop-evidence
+          path: character-preview/evidence/
