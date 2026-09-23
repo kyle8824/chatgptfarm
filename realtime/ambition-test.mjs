@@ -64,4 +64,15 @@ const before={id:s.id,position:{...s.position},count:blocked.settlement.stores.l
 const code="for(let x=0;x<2;x++)for(let z=0;z<2;z++)part({id:'mat'+x+z,kind:'deck',material:'reeds',center:[(x-.5)*.5,.04,(z-.5)*1.1],size:[.5,.08,1.1],requires:[]});";
 const design=validateBlueprint(blocked,a,{build:true,name:'Soft resting mat',purpose:'comfort',rationale:'Improve uncomfortable ground rest',siteId:buildingSites(blocked,a).find(s=>!s.spansWater).id,access:'private',code});const p=adoptBlueprint(blocked,a,design,'isolated-test');
 assert.equal(p.stockpileId,before.id);assert.deepEqual(s.position,before.position);assert.equal(blocked.settlement.stores.length,before.count);assert(s.folded,'adopting a drawing cannot unfold the rack');assert(settlementCandidates(blocked,a).some(c=>c.id==='unfold_rack:'+s.id));
+// Live beds were blocked on making cord while finished shared cord already
+// existed. Fetch it physically before seeking more raw reeds.
+const unfold=settlementCandidates(blocked,a).find(c=>c.id==='unfold_rack:'+s.id);a.coordinates={...unfold.job.destination};assert(workSettlement(blocked,a,{selected:unfold,requiredMinutes:1.5,workMinutes:0},1.5).success);
+a.inventory.cordage=0;
+const bindings=makeStore(blocked,{position:{...a.coordinates},ownerId:'other-person',access:'private',items:{cordage:3}});
+assert(!settlementCandidates(blocked,a).some(c=>c.job?.storeId===bindings.id&&c.job?.item==='cordage'),'private bindings stay private');
+bindings.access='shared';
+const fetch=settlementCandidates(blocked,a).find(c=>c.id.startsWith('fetch_tool:')&&c.job.storeId===bindings.id);assert(fetch,'use already-made shared bindings before repeating their raw recipe');
+a.coordinates={...fetch.job.destination};const handling={selected:fetch,requiredMinutes:.5,workMinutes:0},skill=a.craftPractice.fiberwork.minutes;
+assert(!workSettlement(blocked,a,handling,.25).done);assert.equal(a.inventory.cordage,0);assert(workSettlement(blocked,a,handling,.25).success);
+assert.equal(a.inventory.cordage+bindings.items.cordage,3);assert(a.inventory.cordage>0);assert.equal(a.craftPractice.fiberwork.minutes,skill,'fetching an existing binding grants no crafting experience');
 console.log(JSON.stringify({result:'PASS bounded Ronan route, replanning watchdog, unhappy rest refusal, exhausted recovery, finite reusable practice, fast local heat and physical rack reuse',ronan:result}));

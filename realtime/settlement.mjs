@@ -53,6 +53,13 @@ export function settlementCandidates(w,a){
   if(!plan)return;
   // Preserve carried inputs through the ordinary cargo deposit flow.
   for(const key of ['stones','reeds','cordage','woodPole','sharpStone','boundSharpTool','dryWood','wetWood'])craftKeep[key]=Math.max(craftKeep[key]||0,Math.min(a.inventory[key]||0,{stones:2,reeds:3,cordage:1,woodPole:1,sharpStone:1,boundSharpTool:1,dryWood:1,wetWood:1}[key]));
+  // A binding/tool already made by real work can be fetched. Recursing
+  // straight into its raw recipe stranded builds beside stocked containers.
+  if(plan.goal){
+   craftKeep[plan.goal]=Math.max(craftKeep[plan.goal]||0,a.inventory[plan.goal]||0);
+   const stores=w.settlement.stores.filter(s=>knownPlace(w,a,s)&&allowed(a,s)&&s.items[plan.goal]>0&&distance(a.coordinates,s.position)<45&&(s.kind!=='site'||s.projectId===p?.id||w.settlement.projects.find(p=>p.id===s.projectId)?.status==='complete')).sort((s,t)=>distance(a.coordinates,s.position)-distance(a.coordinates,t.position));
+   for(const s of stores){if(!roomFor(w,a,plan.goal))break;const before=result.length;offer(`fetch_tool:${p?.id||'practice'}:${s.id}:${plan.goal}`,`Collect stored ${plan.goal} for ${p?.name||'the work'}`,score+4,{kind:'take',projectId:p?.id,storeId:s.id,item:plan.goal,quantity:plan.goalQuantity||1,minutes:.5},s.position);if(result.length>before)return;}
+  }
   if(plan.craft){const id=`craft:${plan.craft}`;if(!a.liveFailures?.[id]||clock(w)-a.liveFailures[id].at>=10)result.push({id,label:plan.label,score,reasons:[['construction prerequisite',score]],job:{kind:'craft',item:plan.craft,projectId:p?.id,destination:{...a.coordinates},minutes:plan.minutes}});return;}
   const material={stones:'stone',reeds:'reeds',timber:'timber'}[plan.item];
   if(!material)return;
