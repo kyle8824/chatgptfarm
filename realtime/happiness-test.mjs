@@ -56,16 +56,16 @@ host.needs.hunger=3;host.inventory.berries=2;await step(w,6);assert.equal(host.t
 host.needs={hunger:95,hydration:95,energy:95,warmth:0};host.coordinates={x:85,y:34};host.task={actionId:'supply:test',selected:{job:{kind:'gather',projectId:'test',destination:{x:90,y:34}}}};
 assert.equal(returnCandidate(view,host),null);host.task.selected.job.destination={x:140,y:34};assert(returnCandidate(view,host));
 
-// All eight observed fully-rested people leave energy-rest and carry out
-// useful work. Finite carried reeds are transferred from their local stock;
+// All eight fully-rested people with warmth above the emergency threshold
+// leave energy-rest and carry out useful work. Finite carried reeds are transferred from their local stock;
 // this is an isolated fixture and makes no production inventory changes.
 w=prepare(createWorld());expandFrontier(w);reorganizeLandscape(w);w.weather='rain';w.temperature=40;w.liveWeatherUntil=w.day*24+w.hour+6;
 w.structures.shelter=true;w.structures.fire=false;w.wood.legacyFireUntil=null;
 for(const b of w.wood.batches)if(b.form==='branch')b.waterKg=b.dryKg*.55;
 for(const [i,p] of w.agents.entries()){
- const h=w.frontier.homes.find(h=>h.id===p.householdId);p.coordinates=i<2?{x:66,y:33.6+i*1.8}:{x:h.x+(i%2?2:-2),y:h.y};p.position='camp';p.needs={hunger:95,hydration:95,energy:100,warmth:0};
+ const h=w.frontier.homes.find(h=>h.id===p.householdId);p.coordinates=i<2?{x:66,y:33.6+i*1.8}:{x:h.x+(i%2?2:-2),y:h.y};p.position='camp';p.needs={hunger:95,hydration:95,energy:100,warmth:45};
  p.suspendedTasks=[];p.task={id:'stale:'+p.id,actionId:'rest',label:'Rest',phase:'work',workMinutes:15,requiredMinutes:60};
- ensureFreeTime(p);p.freeTime.enjoyment=0;p.freeTime.company=0;p.freeTime.mastery=0;ensureHappiness(p);p.happiness.preferences.learning=90;
+ ensureFreeTime(p);p.freeTime.enjoyment=0;p.freeTime.company=0;p.freeTime.mastery=0;ensureHappiness(p);p.happiness.preferences.learning=90;p.freeTime.cooldowns.social=(w.day*24+w.hour)*60+w.minute+60;
  const v=householdWorld(w,p);v.resources.reeds-=3;p.inventory.reeds=3;
 }
 const activities=Object.fromEntries(w.agents.map(p=>[p.id,new Set()]));
@@ -73,6 +73,6 @@ for(let i=0;i<200;i++){
  await step(w,6);for(const p of w.agents){if(p.task)activities[p.id].add(p.task.selected?.job?.kind||p.task.actionId);assert(!(p.needs.energy>90&&p.task?.actionId==='rest'));}
  if(i===100)w=prepare(JSON.parse(JSON.stringify(w)));
 }
-for(const p of w.agents){assert(activities[p.id].has('craft'),p.id+' must perform useful practice');assert(p.craftPractice?.fiberwork?.minutes>0);assert(p.happiness.activityMinutes.learning>0);assert(p.needs.warmth<1,'no invented warmth');}
+for(const p of w.agents){assert(activities[p.id].has('craft'),p.id+' must perform useful practice');assert(p.craftPractice?.fiberwork?.minutes>0);assert(p.happiness.activityMinutes.learning>0);assert(p.needs.warmth<=45,'no invented warmth');}
 await fs.mkdir('realtime-qa',{recursive:true});await fs.writeFile('realtime-qa/happiness-person.json',JSON.stringify({...w.agents[0],happiness:happinessContext(w.agents[0])}));
 console.log(JSON.stringify({result:'PASS individual persistent likes; repeat saturation; actual-work rewards; restart idempotence; cold sheltered games; satisfied rest ends; urgent food wins; bounded supply trips; all eight practice',activities:Object.fromEntries(Object.entries(activities).map(([id,s])=>[id,[...s]]))}));

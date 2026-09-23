@@ -26,6 +26,7 @@ jobs:
           node realtime/connection-status-test.mjs
           node realtime/remote-survival-test.mjs
           node realtime/thermal-return-test.mjs
+          node realtime/cold-preparation-test.mjs
           node realtime/camp-loop-test.mjs
           node realtime/planner-budget-test.mjs
           node realtime/provider-test.mjs

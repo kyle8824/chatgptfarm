@@ -54,7 +54,7 @@ export function fuelFire(w,a,count=Math.min(2,a.inventory.dryWood)){
   woodCommand(w,a,{to:{kind:'stored',id:homeAccount(w,'camp-fire')},quantity:count,category:'dryWood',outputForm:'fuel',reason:'load fire with carried fuel'});
   w.structures.fire=true;
 }
-export function shelterWood(w,a){return woodCommand(w,a,{to:{kind:'stored',id:homeAccount(w,'camp-shelter')},quantity:4,category:'dryWood',outputForm:'shelter-component',reason:'retain wood in shelter'});}
+export function shelterWood(w,a){return woodCommand(w,a,{to:{kind:'stored',id:homeAccount(w,'camp-shelter')},quantity:4,category:'any',outputForm:'shelter-component',reason:'retain wood in shelter'});}
 export function transformWood(w,a,key,outputForm){
   if((a.inventory[key]||0)<1)return false;
   return woodCommand(w,a,{category:key==='dryWood'||key==='wetWood'?key:'any',inputForm:forms[key]||'branch',outputForm,reason:`shape ${key} into ${outputForm}`});

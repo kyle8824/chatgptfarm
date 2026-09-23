@@ -1,4 +1,4 @@
-import {REGIONAL_ITEMS} from '../shared/frontier.js';
+import {REGIONAL_ITEMS,campsOf,homeAccount} from '../shared/frontier.js';
 import {ensureWood,projectWood,woodCommand} from '../engine/wood-runtime.js';
 import {projectWoodCounts} from '../engine/wood-materials.js';
 import {addEvent} from '../engine/core.js';
@@ -28,7 +28,7 @@ export function makeStore(w,{position,ownerId=null,kind='pile',name='Ground supp
  const s={id:id||`store-${w.settlement.nextId++}`,position:{...position},ownerId,kind,name,capacityKg,capacityVolume,access,covered,secured:false,items:{},revision:0,createdAt:clock(w),...extra};w.settlement.stores.push(s);return s;
 }
 export function ensureSettlement(w){
- ensureResourceSites(w);if(w.settlement?.version===1)return;ensureWood(w);
+ ensureResourceSites(w);if(w.settlement?.version===1){ensureCampDryingStores(w);return;}ensureWood(w);
  w.settlement={version:1,nextId:1,stores:[],projects:[],incidents:[],trees:[],designs:[],revision:0};
  // The old shared drying account becomes visible at its existing location.
  const existing=w.wood.batches.filter(b=>b.holder.kind==='stored'&&b.holder.id==='camp-drying');
@@ -42,6 +42,14 @@ export function ensureSettlement(w){
  }
  w.settlement.migration={at:clock(w),standingTimberUnits:w.settlement.trees.reduce((n,t)=>n+t.timber,0),note:'Existing visible trees now have finite harvestable biomass; old inventories and wood accounts retained.'};
  syncHoldings(w);for(const a of w.agents)enforceCarry(w,a);
+}
+// A physically completed primitive shelter gains an empty, visible drying
+// location. This exposes the existing camp account without granting supplies.
+export function ensureCampDryingStores(w){
+ for(const c of campsOf(w))if(c.structures.shelter){
+  const id=homeAccount({homeContext:c.home},'camp-drying');
+  if(!w.settlement.stores.some(s=>s.id===id))makeStore(w,{id,position:shelterPoint(.35,.7,null,c.home),kind:'pile',name:'Sheltered wood pile',access:'shared',covered:true});
+ }
 }
 export function transferItems(w,from,to,key,count,{respectCapacity=true,reason='physical transfer'}={}){
  count=Math.min(Math.floor(count),Math.floor(items(from)[key]||0),respectCapacity?roomFor(w,to,key):Infinity);if(count<=0)return 0;
