@@ -10,14 +10,15 @@ import {liveUrgency,liveCandidates,retireObsoleteTask,resumeLiveTask,rememberFai
 import {advanceExploration} from './exploration.mjs';
 import {withinWaterReach} from './water.mjs';
 import {ensureSettlement,enforceCarry,syncHoldings,clock} from './holdings.mjs';
-import {workSettlement,noticeMissingSupplies} from './settlement.mjs';
+import {workSettlement,noticeMissingSupplies,recordStructureUse} from './settlement.mjs';
 import {builtCover,coverEffectiveness} from './structures.mjs';
 import {ensureFreeTime,advanceFreeTime,beginFreeTime,finishFreeTime,isFreeTimeJob,workFreeTime} from './free-time.mjs';
+import {ensureComfort,isRestingTask,workComfortRest} from './comfort.mjs';
 
 export function prepare(seed){
  const w=migrateWorld(structuredClone(seed));delete w.runtime;
  w.meta.persistentActions=1;w.meta.actionRulesVersion='realtime-2';w.minute=Number(w.minute||0);
- for(const a of w.agents){a.coordinates||=coordForPosition(a.position,w);delete a.runtimeMotion;ensureFreeTime(a);}
+ for(const a of w.agents){a.coordinates||=coordForPosition(a.position,w);delete a.runtimeMotion;ensureFreeTime(a);ensureComfort(a);}
  ensureSettlement(w);
  return w;
 }
@@ -31,6 +32,7 @@ export async function step(w,seconds,{mind=null,fallbackReason='no_provider',wal
  if((w.day*24+w.hour)%2)agents.reverse();
  for(const a of agents){
   advanceFreeTime(w,a,seconds);
+  ensureComfort(a);a.restSupport=null;
   retireObsoleteTask(w,a);if(!a.task)noteCargoLimits(w,a);
   noticeMissingSupplies(w,a);
   const urgent=liveUrgency(w,a);
@@ -50,7 +52,7 @@ export async function step(w,seconds,{mind=null,fallbackReason='no_provider',wal
    a.position='travel';positionBefore='travel';const movement=advanceLiveRoute(w,a,t,seconds);
    if(movement.blocked){outcome(w,a,t,false,'Route changed while travelling.','blocked');rememberFailure(w,a,t,'Route remains blocked; try another useful task before retrying.');a.task=null;}
    else if(movement.arrived){a.position=t.targetPosition;t.phase='work';recordSurfaceUse(w,a,t.origin,t.destination,t.actionId);}
-  }else if(t){faceInteraction(w,a,seconds);const result=isFreeTimeJob(t)?workFreeTime(w,a,t,minutes):t.selected?.job?workSettlement(w,a,t,minutes):work(w,a,t,minutes);if(result.done){finishFreeTime(w,a,t,result);outcome(w,a,t,result.success!==false,result.detail);if(result.success===false)rememberFailure(w,a,t,result.detail);if(['talk','seek_other'].includes(t.actionId))a.socialUntil=clock(w)+90;if(t.actionId==='seek_cover')a.coverUntil=clock(w)+45;a.task=null;}}
+  }else if(t){faceInteraction(w,a,seconds);const result=isRestingTask(t)?workComfortRest(w,a,t,minutes):isFreeTimeJob(t)?workFreeTime(w,a,t,minutes):t.selected?.job?workSettlement(w,a,t,minutes):work(w,a,t,minutes);if(isRestingTask(t)&&t.workMinutes>0&&t.selected?.job?.projectId)recordStructureUse(w,a,w.settlement.projects.find(p=>p.id===t.selected.job.projectId),'rest');if(result.done){finishFreeTime(w,a,t,result);outcome(w,a,t,result.success!==false,result.detail);if(result.success===false)rememberFailure(w,a,t,result.detail);if(['talk','seek_other'].includes(t.actionId))a.socialUntil=clock(w)+90;if(t.actionId==='seek_cover')a.coverUntil=clock(w)+45;a.task=null;}}
   enforceCarry(w,a);
   const ratio=seconds/3600,n=a.needs;
   n.hydration=clamp(n.hydration-(a.inventory.firedVessel>0?5.5:6.5)*ratio);n.hunger=clamp(n.hunger-4.2*ratio);n.energy=clamp(n.energy-2.8*ratio-(positionBefore==='travel'?3.6*ratio:0));

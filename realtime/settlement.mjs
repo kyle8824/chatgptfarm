@@ -12,6 +12,7 @@ import {woodCommand,projectWood} from '../engine/wood-runtime.js';
 import {clock,FOOD,WOOD,CARRY,loadOf,roomFor,makeStore,ownPile,transferItems,syncHoldings,treeUnits} from './holdings.mjs';
 import {liveWalkable,liveRoute,liveClear,ARRIVAL_SPACE} from './motion.mjs';
 import {partBounds} from './structures.mjs';
+import {comfortCandidates} from './comfort.mjs';
 const storeBy=(w,id)=>w.settlement.stores.find(s=>s.id===id);
 const allowed=(a,s)=>s.ownerId===a.id||s.access==='shared'||!s.ownerId;
 const materialKeys={timber:['dryWood','wetWood'],stone:['stones'],reeds:['reeds'],clay:['clay']};
@@ -36,7 +37,7 @@ export function findMaterialSource(w,a,material){
  return sources.sort((x,y)=>distance(a.coordinates,x.position)-distance(a.coordinates,y.position));
 }
 export function settlementCandidates(w,a){
- if(!w.settlement)return [];const result=[],l=loadOf(w,a),full=l.mass>CARRY.mass*.72||l.volume>CARRY.volume*.72;
+ if(!w.settlement)return [];const result=comfortCandidates(w,a),l=loadOf(w,a),full=l.mass>CARRY.mass*.72||l.volume>CARRY.volume*.72;
  const offer=(id,label,score,job,position,opts={})=>{if(a.liveFailures?.[id]&&clock(w)-a.liveFailures[id].at<10)return;const store=job.storeId?storeBy(w,job.storeId):null;const destination=interactionPoint(w,a,position,{...opts,radius:store?.radius?store.radius+.65:opts.radius||1.15});if(destination)result.push({id,label,score:score-distance(a.coordinates,destination)*.18,reasons:[['physical task',score]],job:{...job,destination,position}});};
  const craftKeep={};
  const offerPreparation=(plan,p,score=74)=>{
@@ -71,7 +72,7 @@ export function settlementCandidates(w,a){
   offer(`retrieve_food:${s.id}:${edible}`,`${mine?'Collect':'Take'} ${edible} from ${s.name}`,need-penalty+(mine?8:(8-a.needs.hunger)*9),{kind:'take',storeId:s.id,item:edible,quantity:2,minutes:.5,theft:!mine},s.position);
  }
  const projects=w.settlement.projects.filter(p=>{const owner=w.agents.find(b=>b.id===p.ownerId);return p.status!=='complete'&&(p.ownerId===a.id||p.access==='shared'&&(!owner||(relationship(w,a,owner)?.trust??34)>=20));}).sort((p,q)=>(p.ownerId===a.id?0:1)-(q.ownerId===a.id?0:1));
- for(const p of projects){const stock=storeBy(w,p.stockpileId),base=53+(p.ownerId===a.id?4:0),ready=p.parts.find(part=>!part.built&&part.requires.every(id=>p.parts.find(x=>x.id===id)?.built)&&(!part.worker||part.worker===a.id||!w.agents.some(b=>b.id===part.worker&&b.task?.selected?.job?.partId===part.id&&b.task?.selected?.job?.projectId===p.id)));
+ for(const p of projects){const stock=storeBy(w,p.stockpileId),base=53+(p.ownerId===a.id?4:0)+(p.affordances?.restSurfaces?.length?Math.max(0,65-(a.comfort?.value??55))*.3:0),ready=p.parts.find(part=>!part.built&&part.requires.every(id=>p.parts.find(x=>x.id===id)?.built)&&(!part.worker||part.worker===a.id||!w.agents.some(b=>b.id===part.worker&&b.task?.selected?.job?.partId===part.id&&b.task?.selected?.job?.projectId===p.id)));
   const preparation=ready&&preparationFor(a,ready);if(preparation){offerPreparation(preparation,p);continue;}
   if(ready&&!(a.liveFailures?.[`build:${p.id}:${ready.id}`]&&clock(w)-a.liveFailures[`build:${p.id}:${ready.id}`].at<10)&&(ready.invested||units(a,ready.material)>=ready.materialUnits)){
    const destination=assemblyPoint(w,a,p,ready);if(destination)result.push({id:`build:${p.id}:${ready.id}`,label:`Assemble ${ready.id} · ${p.name}`,score:base+12,reasons:[['planned construction',base]],job:{kind:'assemble',projectId:p.id,partId:ready.id,destination,minutes:ready.requiredMinutes}});

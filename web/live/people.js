@@ -30,7 +30,10 @@ export function animatePerson(e,time,dt,walking,fresh){
  const blend=1-Math.exp(-dt*10),cycle=(time*.28)%1,ease=x=>{x=T.MathUtils.clamp(x,0,1);return x*x*(3-2*x);},sip=drink?(cycle<.7?ease((cycle-.25)/.20):1-ease((cycle-.7)/.3)):0;
  let scoopHip=.35;
  if(drink&&e.waterPoint){m.root.updateMatrixWorld(true);const water=m.root.worldToLocal(e.waterPoint.clone()),forward=water.z-.418*Math.sin(1.85),side=Math.abs(water.x)+(m.female?.183:.217)-.034,maxDrop=Math.sqrt(Math.max(.01,.52*.52-forward*forward-side*side));scoopHip=T.MathUtils.clamp(water.y+maxDrop-.418*Math.cos(1.85),.16,.35);}
- const hip=drink?scoopHip:gather?.56:rest?.38:.813,lean=drink?1.85-sip*1.60:gather?.62:rest?-.08:0;
+ const posture=rest?(e.restSupport?.posture||'ground'):null,lying=posture==='lie',seat=posture==='seat',scale=e.group.scale.y||1;
+ const hip=drink?scoopHip:gather?.56:lying?(e.restSupport.height||0)/scale+.11:seat?(e.restSupport.height||0)/scale+.08:rest?.095:.813,lean=drink?1.85-sip*1.60:gather?.62:rest&&!lying?-.08:0;
+ m.hips.rotation.x=approach(m.hips.rotation.x,lying?-Math.PI/2:0,blend);
+ m.bag.rotation.y=approach(m.bag.rotation.y,lying?Math.PI:0,blend);if(e.rig.cargoAnchor){e.rig.cargoAnchor.position.z=lying?.215:-.215;e.rig.cargoAnchor.rotation.y=lying?Math.PI:0;}
  m.hips.position.y=approach(m.hips.position.y,hip+(walking?Math.abs(Math.sin(e.walk))*.010:0),blend);m.torso.rotation.x=approach(m.torso.rotation.x,lean,blend);
  m.head.rotation.x=approach(m.head.rotation.x,drink?-.12:gather?.12:0,blend);m.head.rotation.y=Math.sin(time*.55+e.blinkOffset)*(walking?.02:.05);
  let scoop,mouth;
@@ -38,8 +41,8 @@ export function animatePerson(e,time,dt,walking,fresh){
  for(let i=0;i<2;i++){
   const leg=m.legs[i],shin=leg.userData.shin,arm=m.arms[i],fore=arm.userData.fore,phase=e.walk+i*Math.PI;
   let thigh=0,knee=0;
-  if(drink||gather||rest){
-   const upper=.365,lower=.34,forward=rest?.32:drink?.12:.06,down=m.hips.position.y-.015-.093;
+  if(drink||gather||rest&&!lying){
+   const upper=.365,lower=.34,forward=rest?(seat?.34:.66):drink?.12:.06,down=m.hips.position.y-.015-.093;
    const bend=-Math.acos(T.MathUtils.clamp((forward*forward+down*down-upper*upper-lower*lower)/(2*upper*lower),-.999,.999));
    thigh=-(Math.atan2(forward,down)-Math.atan2(lower*Math.sin(bend),upper+lower*Math.cos(bend)));knee=-bend;
   }else if(walking){thigh=-Math.sin(phase)*.38;knee=Math.max(0,Math.cos(phase))*.43;}

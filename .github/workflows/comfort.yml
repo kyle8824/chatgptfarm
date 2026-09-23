@@ -1,0 +1,40 @@
+name: Physical comfort verification
+on:
+  push:
+    branches: [feature/physical-comfort]
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    timeout-minutes: 8
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - run: npm ci --prefix cloudflare
+      - name: Verify physical comfort, design, construction and existing behavior
+        run: |
+          node realtime/comfort-test.mjs
+          node realtime/design-planner-test.mjs
+          node realtime/free-time-test.mjs
+          node realtime/physical-actions-test.mjs
+          node realtime/behavior-test.mjs
+          node realtime/structure-lifecycle-test.mjs
+          node realtime/persistence-test.mjs
+          node realtime/workerd-test.mjs
+          git diff --exit-code -- world/state.json
+      - name: Verify actual client and physical resting poses
+        run: |
+          node cloudflare/build.mjs
+          npm install --no-save playwright@1.55.0
+          npx playwright install --with-deps chromium
+          node realtime/comfort-browser-test.mjs
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: comfort-evidence
+          path: realtime-qa/comfort-*
+          retention-days: 7
