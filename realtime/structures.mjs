@@ -1,3 +1,4 @@
+import {treadHeight} from './climbing.mjs';
 import {walkable} from '../engine/navigation.js';
 import {activeParts,cargoAllowance,surfaceProtection} from '../shared/structure-performance.js';
 import {loadOf} from './holdings.mjs';
@@ -12,12 +13,12 @@ export function onDeck(w,p,actor=null){return (w.settlement?.projects||[]).some(
 });}
 export function crossingPace(w,a){for(const b of w.settlement?.projects||[])if(b.spansWater||b.purpose==='bridge')for(const part of b.parts)if(part.built&&part.kind==='deck'&&inside(b,part,a.coordinates))return .4+.5*(part.durability?.quality??.45)*(part.durability?.condition??1);return 1;}
 export function structureBlocks(w,p){
- for(const b of w.settlement?.projects||[]){const active=activeParts(b);for(const part of b.parts){if(!active.has(part.id))continue;const r=partBounds(b,part),vertical=['wall','post'].includes(part.kind)&&part.size[1]>=.5,bodyHeightPanel=['deck','beam','roof'].includes(part.kind)&&r.top>.65&&r.bottom<1.35;if(!vertical&&!bodyHeightPanel)continue;if(p.x>r.minX-.25&&p.x<r.maxX+.25&&p.y>r.minZ-.25&&p.y<r.maxZ+.25)return true;}}
+ for(const b of w.settlement?.projects||[]){const active=activeParts(b);for(const part of b.parts){if(!active.has(part.id))continue;const r=partBounds(b,part),feet=b.climbsTerrain?treadHeight(w,p):0,vertical=['wall','post'].includes(part.kind)&&part.size[1]>=.5&&r.top>feet+.3&&r.bottom<feet+1.35,bodyHeightPanel=['deck','beam','roof'].includes(part.kind)&&r.top>feet+.65&&r.bottom<feet+1.35;if(!vertical&&!bodyHeightPanel)continue;if(p.x>r.minX-.25&&p.x<r.maxX+.25&&p.y>r.minZ-.25&&p.y<r.maxZ+.25)return true;}}
  return false;
 }
 export function structureWaypoints(w){const points=[];for(const b of w.settlement?.projects||[]){
   const bb=b.bounds;for(const x of [bb.minX-.65,bb.maxX+.65])for(const y of [bb.minZ-.65,bb.maxZ+.65])points.push({x,y});
-  if((b.purpose==='bridge'||b.spansWater)){for(const part of b.parts.filter(p=>p.kind==='deck'&&activeParts(b).has(p.id))){const r=partBounds(b,part),x=(r.minX+r.maxX)/2;for(const y of [r.minZ,r.maxZ,(r.minZ+r.maxZ)/2])points.push({x,y});}points.push({x:b.position.x,y:bb.minZ-.5},{x:b.position.x,y:bb.maxZ+.5});}
+  if((b.purpose==='bridge'||b.spansWater||b.climbsTerrain)){for(const part of b.parts.filter(p=>p.kind==='deck'&&activeParts(b).has(p.id))){const r=partBounds(b,part),x=(r.minX+r.maxX)/2;for(const y of [r.minZ,r.maxZ,(r.minZ+r.maxZ)/2])points.push({x,y});}points.push({x:b.position.x,y:bb.minZ-.5},{x:b.position.x,y:bb.maxZ+.5});}
  }return points;}
 export function coverEffectiveness(w,p){let protection=0;for(const b of w.settlement?.projects||[])if(b.status==='complete'&&(b.purpose==='shelter'||b.affordances?.restPoints?.length))for(const part of b.parts){if(!activeParts(b).has(part.id)||part.kind!=='roof'||part.center[1]-part.size[1]/2<1.35)continue;const r=partBounds(b,part);if(p.x>=r.minX&&p.x<=r.maxX&&p.y>=r.minZ&&p.y<=r.maxZ)protection=Math.max(protection,surfaceProtection(part));}return protection;}
 export const builtCover=(w,p)=>coverEffectiveness(w,p)>0;

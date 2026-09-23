@@ -1,3 +1,6 @@
+import {clearHeight} from './climbing.mjs';
+import {campLayout,campsOf,terrainWaypoints,terrainEdge} from '../shared/frontier.js';
+import {otherAgent} from '../engine/core.js';
 import {recordCrossingWear,noteCargoLimits} from './structure-lifecycle.mjs';
 import {walkable,clearSegment,walkingSpeed,distance} from '../engine/navigation.js';
 import {coordForPosition} from '../engine/spectator.js';
@@ -14,9 +17,9 @@ function random(a){const m=motionState(a);m.seed=(Math.imul(m.seed,1664525)+1013
 const angleDiff=(a,b)=>Math.atan2(Math.sin(a-b),Math.cos(a-b));
 function segmentDistance(p,a,b){const dx=b.x-a.x,dy=b.y-a.y,t=clamp(((p.x-a.x)*dx+(p.y-a.y)*dy)/(dx*dx+dy*dy||1),0,1);return distance(p,{x:a.x+t*dx,y:a.y+t*dy});}
 export function liveWalkable(w,p,actor=null,checkTrees=true){
- if((!walkable(w,p)&&!onDeck(w,p,actor))||distance(p,CAMP.fire)<CAMP.fire.radius||structureBlocks(w,p))return false;
+ if((!walkable(w,p)&&!onDeck(w,p,actor))||structureBlocks(w,p))return false;
  if(checkTrees)for(const tree of w.settlement?.trees||[])if(!tree.depleted&&(p.x-tree.position.x)**2+(p.y-tree.position.y)**2<.43**2)return false;
- if(w.structures.shelter){const q=shelterLocal(p),s=CAMP.shelter;
+ for(const camp of campsOf(w)){if(distance(p,camp.fire)<camp.fire.radius)return false;if(!camp.structures.shelter)continue;const q=shelterLocal(p,w,camp.home),s=camp.shelter;
   // Two roof/wall footprints. Both gable entrances remain open.
   if(Math.abs(q.y)<s.halfLength+.4&&Math.abs(q.x)>.72&&Math.abs(q.x)<s.halfWidth+.43)return false;
  }
@@ -25,6 +28,7 @@ export function liveWalkable(w,p,actor=null,checkTrees=true){
 export function liveClear(w,a,b,actor=null){
  // Check each trunk once against the whole segment, rather than rescanning
  // every tree at every quarter-unit sample. This also closes sampling gaps.
+ if(!clearHeight(w,a,b,actor))return false;
  const dx=b.x-a.x,dy=b.y-a.y,length2=dx*dx+dy*dy;
  for(const tree of w.settlement?.trees||[]){if(tree.depleted)continue;const p=tree.position,t=clamp(((p.x-a.x)*dx+(p.y-a.y)*dy)/(length2||1),0,1);if((p.x-a.x-t*dx)**2+(p.y-a.y-t*dy)**2<.43**2)return false;}
  return clearSegment(w,a,b,(world,p)=>liveWalkable(world,p,actor,false));
@@ -37,14 +41,13 @@ export function liveRoute(w,from,to,actor=null){
   outer:for(let r=.25;r<=4;r+=.25)for(let i=0;i<24;i++){const p={x:from.x+Math.cos(i/24*Math.PI*2)*r,y:from.y+Math.sin(i/24*Math.PI*2)*r};if(liveWalkable(w,p)){start=p;escape=p;break outer;}}
   if(!escape)return null;
  }
- const others=actor?w.agents.filter(b=>b.id!==actor.id&&!b.life?.carriedBy):[],clear=(a,b)=>liveClear(w,a,b,actor)&&others.every(o=>segmentDistance(o.coordinates,a,b)>=Math.min(BODY_DISTANCE+.08,distance(o.coordinates,a)-.001));
+ const others=actor?w.agents.filter(b=>b.id!==actor.id&&!b.life?.carriedBy&&segmentDistance(b.coordinates,start,to)<6):[],clear=(a,b)=>liveClear(w,a,b,actor)&&others.every(o=>segmentDistance(o.coordinates,a,b)>=Math.min(BODY_DISTANCE+.08,distance(o.coordinates,a)-.001));
  let path;
  if(clear(start,to))path=[start,to];
  else{
   // Visibility routing through real doorway/corner clearances avoids grid
   // quantization and remains cheap enough for the running server.
-  const points=[start,to];for(const x of [-2.65,0,2.65])for(const y of [-2.5,2.5])points.push(shelterPoint(x,y));points.push(shelterPoint(0,0));
-  for(let i=0;i<12;i++)points.push({x:CAMP.fire.x+Math.cos(i/12*Math.PI*2)*1.6,y:CAMP.fire.y+Math.sin(i/12*Math.PI*2)*1.6});
+  const points=[start,to,...terrainWaypoints(w,start,to)];for(const camp of campsOf(w)){if(segmentDistance(camp.fire,start,to)>10)continue;for(const x of [-2.65,0,2.65])for(const y of [-2.5,2.5])points.push(shelterPoint(x,y,w,camp.home));points.push(shelterPoint(0,0,w,camp.home));for(let i=0;i<12;i++)points.push({x:camp.fire.x+Math.cos(i/12*Math.PI*2)*1.6,y:camp.fire.y+Math.sin(i/12*Math.PI*2)*1.6});}
   points.push(...structureWaypoints(w));
   for(const b of others)for(let i=0;i<12;i++)points.push({x:b.coordinates.x+Math.cos(i/6*Math.PI)*1.38,y:b.coordinates.y+Math.sin(i/6*Math.PI)*1.38});
   for(const tree of (w.settlement?.trees||[]).filter(t=>!t.depleted&&segmentDistance(t.position,start,to)<1.5).slice(0,16))for(let i=0;i<8;i++)points.push({x:tree.position.x+Math.cos(i/4*Math.PI)*.7,y:tree.position.y+Math.sin(i/4*Math.PI)*.7});
@@ -59,7 +62,7 @@ export function liveRoute(w,from,to,actor=null){
 }
 function freeSpace(w,a,p){let min=Infinity;for(const b of w.agents){if(b.id===a.id||b.life?.carriedBy)continue;min=Math.min(min,distance(p,b.coordinates));if(b.task?.destination)min=Math.min(min,distance(p,b.task.destination));}return min;}
 export function chooseDestination(w,a,target,selected={}){
- const id=selected.id||'',center=coordForPosition(target,w),points=[],m=motionState(a);
+ const CAMP=campLayout(w),id=selected.id||'',center=coordForPosition(target,w),points=[],m=motionState(a);
  if(selected.job?.destination)return {...selected.job.destination};
  if(id==='explore')return explorationDestination(w,a)||{...a.coordinates};
  // Eating carried food is local; there is no artificial trip back to camp.
@@ -68,9 +71,9 @@ export function chooseDestination(w,a,target,selected={}){
  for(let i=0;i<(banks?.length||28);i++){
   let p;
   if(banks)p=banks[i];
-  else if(target==='camp'&&w.structures.shelter&&['rest','seek_cover'].includes(id))p=shelterPoint((random(a)-.5)*.95,(random(a)-.5)*2.3);
+  else if(target==='camp'&&w.structures.shelter&&['rest','seek_cover'].includes(id))p=shelterPoint((random(a)-.5)*.95,(random(a)-.5)*2.3,w);
   else if(target==='camp'&&['seek_warmth','make_fire','dry_wood_by_fire'].includes(id)){const angle=random(a)*Math.PI*2,r=1.8+random(a)*.5;p={x:CAMP.fire.x+Math.cos(angle)*r,y:CAMP.fire.y+Math.sin(angle)*r};}
-  else if(['talk','seek_other','share_food'].includes(id)){const b=w.agents.find(b=>b.id!==a.id),angle=random(a)*Math.PI*2,r=1.45+random(a)*.2;p={x:(b?.coordinates.x||center.x)+Math.cos(angle)*r,y:(b?.coordinates.y||center.y)+Math.sin(angle)*r};}
+  else if(['talk','seek_other','share_food'].includes(id)){const b=otherAgent(w,a),angle=random(a)*Math.PI*2,r=1.45+random(a)*.2;p={x:(b?.coordinates.x||center.x)+Math.cos(angle)*r,y:(b?.coordinates.y||center.y)+Math.sin(angle)*r};}
   else {const angle=random(a)*Math.PI*2,r=(target==='creek'?1.5:target==='camp'?3:2.4)*Math.sqrt(random(a));p={x:center.x+Math.cos(angle)*r,y:center.y+Math.sin(angle)*r};}
   if(!liveWalkable(w,p)||(banks&&!withinWaterReach(w,p)))continue;const space=freeSpace(w,a,p),previous=(m.arrivals||[]).slice(-3).reduce((s,q)=>s+Math.max(0,1.5-distance(q,p)),0);
   points.push({p,score:Math.min(3,space)*1.4-distance(a.coordinates,p)*.07-previous*.6+random(a)*.35,space});
@@ -145,8 +148,8 @@ export function faceInteraction(w,a,seconds){const m=motionState(a);m.vx=m.vy=m.
  if(a.task?.selected?.job?.childId)target=w.agents.find(b=>b.id===a.task.selected.job.childId)?.coordinates;
  else if(a.task?.selected?.job?.partnerId)target=w.agents.find(b=>b.id===a.task.selected.job.partnerId)?.coordinates;
  else if(a.task?.selected?.job){const j=a.task.selected.job,p=w.settlement?.projects.find(p=>p.id===j.projectId),part=p?.parts.find(x=>x.id===j.partId);target=part?{x:p.position.x+part.center[0],y:p.position.y+part.center[2]}:j.position;}
- else if(['talk','share_food','seek_other'].includes(a.task?.actionId))target=w.agents.find(b=>b.id!==a.id)?.coordinates;
- else if(a.position==='camp')target=CAMP.fire;
+ else if(['talk','share_food','seek_other'].includes(a.task?.actionId))target=otherAgent(w,a)?.coordinates;
+ else if(a.position==='camp')target=campLayout(w).fire;
  else if(a.task?.actionId==='drink')target=nearestWater(w,a.coordinates)?.point;
  else if(a.task)target=coordForPosition(a.task.targetPosition,w);
  if(target&&distance(a.coordinates,target)>.2)m.facing+=clamp(angleDiff(Math.atan2(target.x-a.coordinates.x,target.y-a.coordinates.y),m.facing),-seconds,seconds);

@@ -1,3 +1,4 @@
+import {otherAgent} from './core.js';
 import {migrateWorld,clamp,finishHour,updateWeather,addEvent,remember} from './core.js';
 import {selectPersistentAction,executeKnown,retrieveDecisionContext} from './runtime.js';
 import {resolvePhysicalAction} from './physics.js';
@@ -15,8 +16,8 @@ export function actionDestination(w,a,selected,proposal){
  if(id.startsWith('physical:')){const c=retrieveDecisionContext(w,a),o=c.affordances.objects.find(x=>x.id===proposal?.primaryObjectId);return o?.kind==='place'?o.position:a.position;}
  if(consume[id])return id==='eat_berries'&&!a.inventory.berries?'berries':a.position;
  if(id==='rest')return w.structures.shelter||w.structures.fire?'camp':'meadow';
- if(id==='share_food')return w.agents.find(x=>x.id!==a.id)?.position||a.position;
- if(id==='seek_other')return w.agents.find(x=>x.id!==a.id)?.position||a.position;
+ if(id==='share_food')return otherAgent(w,a)?.position||a.position;
+ if(id==='seek_other')return otherAgent(w,a)?.position||a.position;
  return {drink:'creek',gather_berries:'berries',gather_dry_wood:'log',gather_wet_wood:'log',gather_stones:'stones',gather_clay:'clay',gather_reeds:'reeds',make_fire:'camp',build_shelter:'camp',dry_wood_by_fire:'camp',store_wet_wood:'camp',collect_dried_wood:'camp',seek_warmth:'camp',seek_cover:'camp',explore:'edge'}[id]||a.position;
 }
 function family(id){if(/^(eat_|retrieve_food:|forage:|survey:|gather_berries)/.test(id))return 'hunger';if(id==='drink')return 'hydration';if(/^(retrieve_fuel:|harvest_fuel:|seek_warmth|seek_cover|make_fire|dry_wood_by_fire|store_wet_wood|gather_.*wood|collect_dried_wood)/.test(id))return 'warmth';if(id==='rest'||id.startsWith('rest_at:'))return 'energy';return null;}

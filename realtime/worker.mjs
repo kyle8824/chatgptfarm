@@ -4,7 +4,7 @@ import {unavailableResponse} from '../cloudflare/failure.mjs';
 import {BUILD_INFO} from '../cloudflare/build-info.mjs';
 const json=data=>Response.json(data,{headers:{'Cache-Control':'no-store','Access-Control-Allow-Origin':'*'}});
 export class LiveValley extends DurableObject{
- constructor(ctx,env){super(ctx,env);this.env=env;this.clients=new Set();this.controller=new RealtimeController(ctx.storage,{ai:env.AI||null});ctx.blockConcurrencyWhile(async()=>{try{if(await this.restore())this.startLoop();}catch{/* Keep the object alive so fetch can report the failure. */}});}
+ constructor(ctx,env){super(ctx,env);this.env=env;this.clients=new Set();this.controller=new RealtimeController(ctx.storage,{ai:env.AI||null,env,frontierEnabled:env.FOUR_REGIONS_ENABLED==='true'});ctx.blockConcurrencyWhile(async()=>{try{if(await this.restore())this.startLoop();}catch{/* Keep the object alive so fetch can report the failure. */}});}
  async restore(){if(this.bootError&&Date.now()<this.bootRetryAt)throw this.bootError;try{const record=await this.controller.load();this.bootError=null;return record;}catch(e){this.bootError=e;this.bootRetryAt=Date.now()+30000;throw e;}}
  startLoop(){if(this.loopStarted)return;this.loopStarted=true;const tick=async()=>{try{await this.controller.pulse(this.clients.size);this.broadcast();void this.controller.requestDecisions();}catch(e){console.error('Live world pulse',e.message);}finally{this.timer=setTimeout(tick,100);}};this.timer=setTimeout(tick,100);}
  async initialize(){if(await this.restore()){this.startLoop();return;}const response=await this.env.WORLD.getByName('preview-v1').fetch('https://original/state');if(!response.ok)throw Error('Original world unavailable; fork was not initialized');const seed=await response.json();
@@ -13,7 +13,7 @@ export class LiveValley extends DurableObject{
   await this.controller.initialize(seed);this.startLoop();
  }
  async alarm(){await this.controller.alarm(this.clients.size);this.startLoop();this.broadcast();void this.controller.requestDecisions();}
- broadcast(){if(!this.clients.size)return;const text=JSON.stringify(this.controller.frame(this.clients.size));for(const ws of this.clients){try{ws.send(text);}catch{this.clients.delete(ws);}}}
+ broadcast(){if(!this.clients.size)return;const text=JSON.stringify(this.controller.frame(this.clients.size,{includeTrees:false}));for(const ws of this.clients){try{ws.send(text);}catch{this.clients.delete(ws);}}}
  async fetch(request){try{await this.initialize();const url=new URL(request.url),path=url.pathname;
   if(path==='/live/ws'){
    if(request.headers.get('Upgrade')?.toLowerCase()!=='websocket')return new Response('WebSocket required',{status:426});

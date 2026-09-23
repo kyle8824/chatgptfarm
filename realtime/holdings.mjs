@@ -1,3 +1,4 @@
+import {REGIONAL_ITEMS} from '../shared/frontier.js';
 import {ensureWood,projectWood,woodCommand} from '../engine/wood-runtime.js';
 import {projectWoodCounts} from '../engine/wood-materials.js';
 import {addEvent} from '../engine/core.js';
@@ -7,6 +8,7 @@ import {shelterPoint} from './layout.mjs';
 export const clock=w=>(w.day*24+w.hour)*60+(w.minute||0);
 export const WOOD={dryWood:'branch',wetWood:'branch',woodPole:'pole',pointedPole:'pointedPole',boundSharpTool:'boundSharpTool'};
 export const ITEM={berries:[.3,.5],tubers:[.5,.6],rawMeat:[.6,.6],cookedMeat:[.5,.5],stones:[1.2,.6],clay:[1,.6],reeds:[.2,1],cordage:[.2,.3],sharpStone:[.4,.3],rawClayVessel:[1.5,3],firedVessel:[1.4,3],dryWood:[1.12,3],wetWood:[1.55,3],woodPole:[1.12,4],pointedPole:[1.12,4],boundSharpTool:[1.3,3]};
+Object.assign(ITEM,Object.fromEntries(Object.entries(REGIONAL_ITEMS).map(([k,v])=>[k,[v.mass,v.volume]])));
 export const CARRY={mass:18,volume:24};
 export const FOOD=['berries','cookedMeat','tubers'];
 export const holder=o=>({kind:o.inventory?'carried':'stored',id:o.id});
@@ -57,6 +59,6 @@ export function enforceCarry(w,a){
  if(dropped)addEvent(w,'storage',`${a.name} puts down an oversized load`,'The excess is now a visible, owned pile at their feet; nothing was discarded.',{agentId:a.id,storeId:pile.id});
 }
 export function treeUnits(w,t){return w.wood.batches.filter(b=>b.holder.kind==='ground'&&b.holder.id===t.id).reduce((n,b)=>n+b.units,0);}
-export function settlementFrame(w){
- const s=w.settlement;if(!s)return null;return {revision:s.revision,stores:s.stores.filter(x=>x.kind!=='pile'||Object.values(x.items).some(n=>n>0)).map(x=>({...x,load:loadOf(w,x)})),projects:s.projects.map(({code,...p})=>p),trees:s.trees.map(t=>({id:t.id,position:t.position,remaining:treeUnits(w,t),initialUnits:t.initialUnits,pine:t.pine,height:t.height})),designs:s.designs.slice(-6),incidents:s.incidents.slice(-8)};
+export function settlementFrame(w,{includeTrees=true}={}){
+ const s=w.settlement;if(!s)return null;return {revision:s.revision,stores:s.stores.filter(x=>x.kind!=='pile'||Object.values(x.items).some(n=>n>0)).map(x=>({...x,load:loadOf(w,x)})),projects:s.projects.map(({code,...p})=>p),treesPartial:!includeTrees,trees:s.trees.filter(t=>includeTrees||t.depleted||t.handGathered||t.timber!==t.initialUnits||treeUnits(w,t)<t.initialUnits).map(t=>({id:t.id,position:t.position,remaining:treeUnits(w,t),initialUnits:t.initialUnits,pine:t.pine,height:t.height})),designs:s.designs.slice(-6),incidents:s.incidents.slice(-8)};
 }

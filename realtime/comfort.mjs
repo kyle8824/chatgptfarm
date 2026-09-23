@@ -7,7 +7,7 @@ import {liveWalkable,liveRoute,motionState} from './motion.mjs';
 import {restSurfaces} from './rest-surfaces.mjs';
 
 export const ensureComfort=a=>a.comfort??={value:55,uncomfortableMinutes:0,lastRest:null,lastMemoryAt:null};
-function protection(w,p){const q=shelterLocal(p);return Math.max(w.structures.shelter&&Math.abs(q.x)<CAMP.shelter.halfWidth&&Math.abs(q.y)<CAMP.shelter.halfLength?.85:0,coverEffectiveness(w,p));}
+function protection(w,p){const q=shelterLocal(p,w);return Math.max(w.structures.shelter&&Math.abs(q.x)<CAMP.shelter.halfWidth&&Math.abs(q.y)<CAMP.shelter.halfLength?.85:0,coverEffectiveness(w,p));}
 function available(w,a,p,s){
  if(p.ownerId!==a.id&&p.access!=='shared')return false;
  if(w.agents.some(b=>b.id!==a.id&&!b.life?.carriedBy&&(distance(b.coordinates,s.position)<1.1||b.task?.selected?.job?.surfaceId===s.id&&b.task.selected.job.projectId===p.id)))return false;

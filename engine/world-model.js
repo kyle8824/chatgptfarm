@@ -1,3 +1,4 @@
+import {homeFor} from '../shared/frontier.js';
 export const WORLD_MODEL_VERSION='object-field-1.0';
 
 const FIXED={
@@ -47,7 +48,7 @@ export function ensureWorldModel(w){
 }
 
 export function findWorldObject(w,id){return w.worldModel?.objects?.find(o=>o.id===id)||null}
-export function worldObjectForZone(w,zone){return w.worldModel?.objects?.find(o=>o.zone===zone&&o.parentId===null)||null}
+export function worldObjectForZone(w,zone){return w.worldModel?.objects?.find(o=>o.zone===zone&&o.parentId===null&&(!w.homeContext||(o.homeId||'willow-basin')===w.homeContext.id))||null}
 export function addObjectHistory(w,obj,type,detail,meta={}){obj.history||=[];obj.history.push({day:w.day,hour:w.hour,type,detail,...meta});if(obj.history.length>80)obj.history=obj.history.slice(-80)}
 
 function structureEntity(w,id,type,label,active,position,physical){let o=findWorldObject(w,id);if(!o){o={id,kind:'structure',type,label,zone:position.zone,position:{x:position.x,y:position.y},geometry:{shape:'structure'},physical:{...physical},material:{},state:{active:!!active},parentId:null,childrenIds:[],resolution:{level:'object',componentsInstantiated:true},provenance:{created:now(w),source:'legacy-structure-migration'},history:[]};w.worldModel.objects.push(o)}o.state.active=!!active;return o}

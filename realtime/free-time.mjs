@@ -56,7 +56,7 @@ export function freeTimeCandidates(w,a){
    if(!ready(w,b,kind))continue;
    if(romanceKinds.includes(kind)){
     if(!willingRomance(w,a,b,kind))continue;
-    const q=shelterLocal(b.coordinates),covered=w.structures.shelter&&Math.abs(q.x)<CAMP.shelter.halfWidth&&Math.abs(q.y)<CAMP.shelter.halfLength||coverEffectiveness(w,b.coordinates)>.5;
+    const q=shelterLocal(b.coordinates,w),covered=w.structures.shelter&&Math.abs(q.x)<CAMP.shelter.halfWidth&&Math.abs(q.y)<CAMP.shelter.halfLength||coverEffectiveness(w,b.coordinates)>.5;
     if(kind==='private_time'&&(!covered||w.agents.some(p=>p.id!==a.id&&p.id!==b.id&&distance(p.coordinates,b.coordinates)<4)))continue;
     const destination=interactionPoint(w,a,b.coordinates,{radius:1.6});if(!destination)continue;
     const titles={courtship:'Spend affectionate time with ',commitment:'Talk about becoming a couple with ',family_plan:'Talk about starting a family with ',private_time:'Spend private time with '};
@@ -106,7 +106,7 @@ export function workFreeTime(w,a,t,minutes){
  const b=w.agents.find(b=>b.id===j.partnerId);
  if(!b||distance(a.coordinates,b.coordinates)>2.4||!liveClear(w,a.coordinates,b.coordinates))return fail('The other person is no longer close enough to take part.');
  if(j.kind==='private_time'){
-  const covered=p=>{const q=shelterLocal(p);return w.structures.shelter&&Math.abs(q.x)<CAMP.shelter.halfWidth&&Math.abs(q.y)<CAMP.shelter.halfLength||coverEffectiveness(w,p)>.5;};
+  const covered=p=>{const q=shelterLocal(p,w);return w.structures.shelter&&Math.abs(q.x)<CAMP.shelter.halfWidth&&Math.abs(q.y)<CAMP.shelter.halfLength||coverEffectiveness(w,p)>.5;};
   if(!covered(a.coordinates)||!covered(b.coordinates)||w.agents.some(p=>p.id!==a.id&&p.id!==b.id&&Math.min(distance(p.coordinates,a.coordinates),distance(p.coordinates,b.coordinates))<4))return fail('There is no longer a sheltered, private place for this shared time.');
  }
  if(j.hostId){

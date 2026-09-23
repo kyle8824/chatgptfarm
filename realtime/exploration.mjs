@@ -1,3 +1,4 @@
+import {homeFor} from '../shared/frontier.js';
 import {remember,addEvent} from '../engine/core.js';
 import {coordForPosition} from '../engine/spectator.js';
 import {distance} from '../engine/navigation.js';
@@ -31,11 +32,12 @@ function nextLeg(w,a,t){const destination=explorationDestination(w,a);if(!destin
 export function advanceExploration(w,a,t,seconds){
  const memory=a.liveExploration??={cells:{},observations:{}};
  if(!t.exploration){
-  t.exploration={distance:0,targetDistance:120,cells:{},movingSeconds:0,newCells:0,discoveryStart:discoveries(w,a)};
+  const provisioned=w.frontier&&(a.inventory.berries||0)+(a.inventory.cookedMeat||0)+(a.inventory.tubers||0)>=3&&a.inventory.firedVessel>0&&a.needs.energy>75;
+  t.exploration={distance:0,targetDistance:provisioned?480:120,cells:{},movingSeconds:0,newCells:0,discoveryStart:discoveries(w,a)};
   // Preserve the old timer as historical task metadata; it is not evidence of
   // ground covered and must not appear as measured exploration progress.
   t.legacyStationaryMinutes=t.workMinutes||0;t.workMinutes=0;
-  t.targetPosition='basin';t.label='Explore the surrounding valley';
+  t.targetPosition='basin';t.label=provisioned?'Explore beyond familiar ground with provisions':'Explore the surrounding valley';
   memory.cells[explorationCell(a.coordinates)]??=1;
   if(!nextLeg(w,a,t))return {done:true,success:false,detail:'No traversable route to explore from here.'};
  }

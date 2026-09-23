@@ -14,7 +14,7 @@ class Scope{
 }
 export function runConstructionCode(source,context={}){
  if(typeof source!=='string'||!source.trim()||source.length>14000)throw Error('Construction code must be 1–14000 characters');
- const ast=parse(source,{ecmaVersion:2022,sourceType:'script'}),root=new Scope(),parts=[];let fuel=16000,depth=0;
+ const ast=parse(source,{ecmaVersion:2022,sourceType:'script'}),root=new Scope(),parts=[],localArrays=new WeakSet();let fuel=16000,depth=0;
  const native=fn=>({native:fn}),math=Object.create(null);
  for(const key of ['min','max','abs','floor','ceil','round','sin','cos','sqrt'])math[key]=native((...args)=>Math[key](...args));math.PI=Math.PI;
  root.define('Math',math,true);root.define('site',structuredClone(context.site||{}),true);root.define('materials',structuredClone(context.materials||{}),true);
@@ -25,9 +25,10 @@ export function runConstructionCode(source,context={}){
   switch(n.type){
    case 'Literal':if(n.regex||n.bigint)throw Error('Unsupported construction literal');return bounded(n.value);
    case 'Identifier':return s.get(n.name);
-   case 'ArrayExpression':if(n.elements.length>128)throw Error('Construction array too large');return n.elements.map(x=>expr(x,s));
+   case 'ArrayExpression':{if(n.elements.length>128)throw Error('Construction array too large');const a=n.elements.map(x=>expr(x,s));localArrays.add(a);return a;}
+   case 'TemplateLiteral':return bounded(n.quasis.map((q,i)=>q.value.cooked+(i<n.expressions.length?String(expr(n.expressions[i],s)):'')).join(''));
    case 'ObjectExpression':{const o=Object.create(null);if(n.properties.length>32)throw Error('Construction object too large');for(const p of n.properties){if(p.type!=='Property'||p.kind!=='init'||p.method||p.computed)throw Error('Only plain construction properties are supported');const key=p.key.name??p.key.value;if(forbidden.has(key))throw Error('Forbidden construction property');o[key]=expr(p.value,s);}return o;}
-   case 'MemberExpression':{const o=expr(n.object,s),key=n.computed?expr(n.property,s):n.property.name;if(forbidden.has(String(key))||o==null||!Object.hasOwn(o,key))throw Error('Unknown or forbidden construction property');return o[key];}
+   case 'MemberExpression':{const o=expr(n.object,s),key=n.computed?expr(n.property,s):n.property.name;if(key==='push'&&Array.isArray(o)&&localArrays.has(o))return native((...v)=>{if(o.length+v.length>128)throw Error('Construction array too large');return o.push(...v);});if(forbidden.has(String(key))||o==null||!Object.hasOwn(o,key))throw Error('Unknown or forbidden construction property');return o[key];}
    case 'BinaryExpression':{const a=expr(n.left,s),b=expr(n.right,s);let v;switch(n.operator){case '+':v=a+b;break;case '-':v=a-b;break;case '*':v=a*b;break;case '/':v=a/b;break;case '%':v=a%b;break;case '<':return a<b;case '<=':return a<=b;case '>':return a>b;case '>=':return a>=b;case '===':case '==':return a===b;case '!==':case '!=':return a!==b;default:throw Error('Unsupported construction operator '+n.operator);}return bounded(v);}
    case 'LogicalExpression':{const a=expr(n.left,s);return n.operator==='&&'?(a&&expr(n.right,s)):n.operator==='||'?(a||expr(n.right,s)):n.operator==='??'?(a??expr(n.right,s)):(()=>{throw Error('Unsupported logical operator');})();}
    case 'UnaryExpression':{const a=expr(n.argument,s);if(n.operator==='!')return !a;if(n.operator==='-')return bounded(-a);if(n.operator==='+')return bounded(+a);throw Error('Unsupported construction unary operator');}

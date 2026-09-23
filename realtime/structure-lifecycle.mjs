@@ -40,7 +40,7 @@ export function advanceStructures(w,seconds){
    part.durability??={version:1,origin:'legacy-estimate',quality:qualityOf(part),condition:1,builtAt:clock(w),useWear:0};
    const d=part.durability,before=d.condition;if(before<=.12&&!(occupied&&(p.spansWater||p.purpose==='bridge')))continue;
    const weather=w.weather==='rain'?part.material==='clay'?3:1.8:1,base={timber:.035,reeds:.1,stone:.006,clay:.12}[part.material]||.04;
-   d.condition=clamp01(before-elapsed/86400*base*weather/Math.max(.2,d.quality)-(d.useWear||0));d.useWear=0;
+   d.condition=clamp01(before-elapsed/86400*base*weather*(part.sealant?.kind==='pine-resin'?.7:1)/Math.max(.2,d.quality)-(d.useWear||0));d.useWear=0;
    if(d.condition<=.12&&occupied&&(p.spansWater||p.purpose==='bridge')){d.condition=.121;p.closing=true;}
    else if(d.condition<=.12)d.condition=0;
    if(before>.12&&d.condition===0)addEvent(w,'structure-failed',`${part.id} in ${p.name} failed`,'The material remains at the site, but this component and its dependent pieces no longer provide support.',{projectId:p.id});
