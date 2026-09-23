@@ -1,3 +1,4 @@
+import {coldPreparationCandidates,coldPreparationAvailable} from './cold-preparation.mjs';
 import {interestBonus} from './happiness.mjs';
 import {naturalWorld} from '../shared/landscape.js';
 import {economyCandidates} from './regional-economy.mjs';
@@ -6,7 +7,7 @@ import {candidateActions} from '../engine/decision.js';
 import {actionDestination,family,outcome,display} from '../engine/persistent-actions.js';
 import {coordForPosition} from '../engine/spectator.js';
 import {distance} from '../engine/navigation.js';
-import {storedFuel} from '../engine/wood-runtime.js';
+import {storedFuel,storedWood} from '../engine/wood-runtime.js';
 import {addEvent,relationship,otherAgent} from '../engine/core.js';
 import {configureTask} from './motion.mjs';
 import {settlementCandidates} from './settlement.mjs';
@@ -31,7 +32,8 @@ export function liveUrgency(w,a){
  // Immediate fire use stays local. A distant cold traveler instead needs a
  // real return task, including its route, interruptions and failure cooldown.
  const heatAvailable=canUseCamp(w,a)&&(w.structures.fire||a.inventory.dryWood>0||storedFuel(w)>0);
- if(coldRecovery(a)&&(heatAvailable||returnCandidate(w,a)))return 'warmth';
+ const preparing=a.task?.selected?.job?.coldPreparation||!w.structures.shelter&&a.inventory.dryWood+a.inventory.wetWood>=4&&canUseCamp(w,a)||(!a.task||a.task.selected?.job?.kind==='relax')&&coldPreparationAvailable(w,a);
+ if(coldRecovery(a)&&(heatAvailable||preparing||returnCandidate(w,a)))return 'warmth';
  return ['hydration','hunger','energy'].filter(k=>n[k]<20).sort((x,y)=>n[x]-n[y])[0]||null;
 }
 function knownUnavailable(w,a,id){
@@ -46,7 +48,7 @@ export function liveCandidates(w,a,candidates){
  // Quiet activity under cover and useful preparation remain possible while
  // wet fuel dries; reachable heat and urgent survival still take priority.
  if(shelterRecovery&&a.needs.energy<85&&!candidates.some(c=>c.id==='rest'))candidates=[...candidates,{id:'rest',label:'Rest under cover while usable fuel is needed',score:18+(100-a.needs.energy)*.45,reasons:[['recover energy under cover',18]]}];
- const filtered=candidates.filter(c=>{if(naturalWorld(w)&&(resourceFor[c.id]||['make_fire','build_shelter','dry_wood_by_fire','seek_warmth','seek_cover'].includes(c.id)))return distance(a.coordinates,coordForPosition(actionDestination(w,a,c),w))<=LOCAL_ACTION_RANGE;return true;}).filter(c=>!['store_wet_wood','collect_dried_wood','talk','seek_other'].includes(c.id)&&(c.id!=='make_fire'||a.inventory.dryWood>0)&&(c.id!=='dry_wood_by_fire'||a.inventory.wetWood>0)&&(c.id!=='seek_cover'||(a.coverUntil||0)<clock(w))&&(!w.frontier||!resourceFor[c.id]||w.resources[resourceFor[c.id]]>0)&&!knownUnavailable(w,a,c.id)&&(!resourceFor[c.id]||!w.settlement||roomFor(w,a,resourceFor[c.id])>0)&&(!['share_food'].includes(c.id)||(a.socialUntil||0)<clock(w)));
+ const filtered=candidates.filter(c=>{if(naturalWorld(w)&&(resourceFor[c.id]||['make_fire','build_shelter','dry_wood_by_fire','seek_warmth','seek_cover'].includes(c.id)))return distance(a.coordinates,coordForPosition(actionDestination(w,a,c),w))<=LOCAL_ACTION_RANGE;return true;}).filter(c=>!['store_wet_wood','collect_dried_wood','talk','seek_other'].includes(c.id)&&(c.id!=='gather_wet_wood'||!w.structures.shelter||storedWood(w).wetWood<2)&&(c.id!=='make_fire'||a.inventory.dryWood>0)&&(c.id!=='dry_wood_by_fire'||a.inventory.wetWood>0)&&(c.id!=='seek_cover'||(a.coverUntil||0)<clock(w))&&(!w.frontier||!resourceFor[c.id]||w.resources[resourceFor[c.id]]>0)&&!knownUnavailable(w,a,c.id)&&(!resourceFor[c.id]||!w.settlement||roomFor(w,a,resourceFor[c.id])>0)&&(!['share_food'].includes(c.id)||(a.socialUntil||0)<clock(w)));
  // Retain a real, safe fallback if every remembered resource is unavailable.
  if(!filtered.length)filtered.push({id:'rest',label:w.structures.shelter?'Rest in the shelter':'Rest in the meadow',score:1,reasons:[['no useful reachable resource action',1]]});
  const ordinary=filtered.map(c=>{
@@ -60,7 +62,7 @@ export function liveCandidates(w,a,candidates){
   return {...c,label:c.id==='rest'&&naturalWorld(w)&&distance(a.coordinates,coordForPosition('camp',w))>18?'Rest here on the ground':c.id==='rest'&&shelterRecovery?'Rest under cover while usable fuel is needed':c.id==='explore'?'Explore the surrounding valley':c.label,score,reasons:[...(c.reasons||[]),['travel effort',-trip*.24]]};
  });
  const familyNeed=familyFoodNeed(w,a);
- const returning=returnCandidate(w,a),exploration=explorationMotivation(w,a),all=[...ordinary,...settlementCandidates(w,a),...freeTimeCandidates(w,a),...parentingCandidates(w,a),...economyCandidates(w,a),...(returning?[returning]:[])].filter(c=>c.id!=='explore'||exploration.allowed).map(c=>c.id==='explore'?{...c,score:c.score-exploration.penalty,explanation:exploration.reason,reasons:[...(c.reasons||[]),['remembered exploration yield',-exploration.penalty]]}:c).map(c=>familyNeed&&/^(gather_berries|forage:|survey:|retrieve_food:)/.test(c.id)?{...c,score:c.score+familyNeed,explanation:'Collect finite food for a dependent child.'}:c).sort((x,y)=>y.score-x.score||x.id.localeCompare(y.id));
+ const returning=returnCandidate(w,a),exploration=explorationMotivation(w,a),all=[...ordinary,...coldPreparationCandidates(w,a),...settlementCandidates(w,a),...freeTimeCandidates(w,a),...parentingCandidates(w,a),...economyCandidates(w,a),...(returning?[returning]:[])].filter(c=>c.id!=='explore'||exploration.allowed).map(c=>c.id==='explore'?{...c,score:c.score-exploration.penalty,explanation:exploration.reason,reasons:[...(c.reasons||[]),['remembered exploration yield',-exploration.penalty]]}:c).map(c=>familyNeed&&/^(gather_berries|forage:|survey:|retrieve_food:)/.test(c.id)?{...c,score:c.score+familyNeed,explanation:'Collect finite food for a dependent child.'}:c).sort((x,y)=>y.score-x.score||x.id.localeCompare(y.id));
  const useful=all.filter(c=>!(family(c.id)==='energy'&&a.needs.energy>=85)).map(c=>{const bonus=interestBonus(a,c);return {...c,score:c.score+bonus,reasons:[...(c.reasons||[]),['personal interest and recent satisfaction',bonus]]};}).filter(c=>c.score>0).sort((x,y)=>y.score-x.score||x.id.localeCompare(y.id));
  return useful.length?useful.filter((c,i)=>useful.findIndex(x=>x.id===c.id)===i):a.needs.energy<85?[{id:'rest',label:'Rest and reconsider',score:1,reasons:[['no useful available action',1]]}]:[{id:'leisure:relax',label:'Take a quiet break',score:1,reasons:[['no useful activity within reach',1]],job:{kind:'relax',minutes:10,destination:{...a.coordinates},reason:'Pause briefly and reconsider available activities.'}}];
 }
@@ -73,7 +75,7 @@ export function rememberFailure(w,a,t,detail){
 export function retireObsoleteTask(w,a){
  const t=a.task;if(!t)return;
  if(family(t.actionId)==='energy'&&a.needs.energy>=85){outcome(w,a,t,true,`${a.name} has recovered enough energy and is ready for another activity.`);a.task=null;return;}
- let reason;if(['store_wet_wood','collect_dried_wood'].includes(t.actionId))reason='Storage now requires a physical visit to its container; choosing a handling task.';
+ let reason;if(t.actionId==='build_shelter'&&w.structures.shelter)reason='A shelter is now available here; reconsider the next useful cold-recovery step.';if(['store_wet_wood','collect_dried_wood'].includes(t.actionId))reason='Storage now requires a physical visit to its container; choosing a handling task.';
  if(knownUnavailable(w,a,t.actionId))reason='The remembered resource is unavailable; reconsidering another useful action.';
  if(t.actionId==='seek_cover'&&t.phase==='work'){
   // Taking cover is accomplished on arrival. Remaining there is a location,

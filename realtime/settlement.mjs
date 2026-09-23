@@ -34,7 +34,7 @@ function assemblyPoint(w,a,p,part){
 }
 export function materialNeed(p,material){return p.parts.filter(x=>!x.invested&&x.material===material).reduce((n,x)=>n+x.materialUnits,0);}
 export function findMaterialSource(w,a,material){
- const sources=[];for(const s of w.settlement.stores)if(knownPlace(w,a,s)&&allowed(a,s)&&s.kind!=='site'&&units(s,material)>0)sources.push({kind:'take',storeId:s.id,position:s.position,item:materialKeys[material].find(k=>s.items[k]>0)});
+ const sources=[];for(const s of w.settlement.stores)if(knownPlace(w,a,s)&&allowed(a,s)&&s.kind!=='site'&&units(s,material)>0&&!(material==='timber'&&a.needs.warmth<40&&s.id===homeAccount(w,'camp-drying')&&units(s,'timber')<=2))sources.push({kind:'take',storeId:s.id,position:s.position,item:materialKeys[material].find(k=>s.items[k]>0)});
  if(material==='timber')for(const t of w.settlement.trees)if(knownPlace(w,a,t)&&treeUnits(w,t)>0&&(a.inventory.boundSharpTool>0||!(t.handGathered>=1)))sources.push({kind:'harvest',treeId:t.id,position:t.position,item:'wetWood'});
  if(material==='timber'){const log=w.worldModel.objects.find(o=>o.type==='fallen_tree'&&(!w.homeContext||(o.homeId||'willow-basin')===w.homeContext.id));if(log)for(const item of ['dryWood','wetWood'])if(w.resources[item]>0)sources.push({kind:'fallen',position:log.position,item});}
  for(const node of materialSources(w,material,a))sources.push({kind:'gather',nodeId:node.nodeId,resource:node.resource,position:node.position,item:node.item,sourceId:node.id});
@@ -95,6 +95,8 @@ export function settlementCandidates(w,a){
  for(const [key,n]of Object.entries(craftKeep))keep[key]=Math.max(keep[key]||0,n);
  if(a.freeTime?.practice&&clock(w)-a.freeTime.practice.at<240)for(const key of ['stones','reeds','cordage','woodPole','sharpStone','boundSharpTool','dryWood','wetWood'])keep[key]=Math.max(keep[key]||0,Math.min(a.inventory[key]||0,{stones:2,reeds:3,cordage:1,woodPole:1,sharpStone:1,boundSharpTool:1,dryWood:1,wetWood:1}[key]));
  if(nextPart&&!nextPart.invested){let n=nextPart.materialUnits;for(const k of materialKeys[nextPart.material]){keep[k]=Math.min(n,a.inventory[k]||0);n-=keep[k];}}
+ // Keep the raw branches needed for a basic shelter through ordinary cargo handling.
+ if(a.needs.warmth<40&&!w.structures.shelter){let reserve=4;for(const k of ['dryWood','wetWood']){keep[k]=Math.max(keep[k]||0,Math.min(reserve,a.inventory[k]||0));reserve-=Math.min(reserve,a.inventory[k]||0);}}
  const depositKeys=Object.entries(a.inventory).filter(([k,n])=>n>(keep[k]||0)).map(([k])=>k);
  const assemblyLoadBlocked=projects.some(p=>{const part=p.parts.find(x=>!x.built&&!x.invested&&x.requires.every(id=>p.parts.find(t=>t.id===id)?.built));if(!part)return false;const key=materialKeys[part.material][0];return roomFor(w,a,key)+units(a,part.material)<part.materialUnits;});
  if(depositKeys.length){const preferred=w.settlement.stores.filter(s=>(!naturalWorld(w)||knownPlace(w,a,s)&&distance(a.coordinates,s.position)<40)&&s.kind!=='site'&&allowed(a,s)&&depositKeys.some(k=>roomFor(w,s,k))).sort((x,y)=>(['storage','platform'].includes(x.kind)?0:20)-(['storage','platform'].includes(y.kind)?0:20)+distance(x.position,a.coordinates)-distance(y.position,a.coordinates));
@@ -102,9 +104,6 @@ export function settlementCandidates(w,a){
   const s=preferred[0];if(s)offer(`deposit:${s.id}`,`Put supplies in ${s.name}`,assemblyLoadBlocked?96:full&&!usingLoad?86:projects.length?8:27,{kind:'deposit',storeId:s.id,keep,minutes:.75},s.position);
   else if(full||assemblyLoadBlocked)result.push({id:'put_down_load',label:'Put down unrelated cargo for the building work',score:96,reasons:[['carrying space',96]],job:{kind:'put_down',keep,destination:{...a.coordinates},minutes:.75}});
  }
- // Real fuel collection from activated trees is available even when the old
- // log is exhausted. Wet timber remains wet until it dries physically.
- if(a.inventory.dryWood+a.inventory.wetWood<2&&!projects.length&&a.needs.warmth<40&&!w.structures.fire&&!a.liveFailures?.harvest_cold){const source=findMaterialSource(w,a,'timber').find(s=>s.kind==='harvest');if(source&&roomFor(w,a,source.item))offer(`harvest_fuel:${source.treeId}`,'Collect a branch for shelter-drying',38,{...source,quantity:2,minutes:3},source.position);}
  for(const animal of w.ecologySystem?.wildlife||[])if(animal.active&&animal.species!=='fish'&&distance(a.coordinates,animal.position)>=6&&distance(a.coordinates,animal.position)<=12&&liveClear(w,a.coordinates,animal.position)&&(a.animalStudies?.[animal.id]??-Infinity)+120<clock(w)){
   result.push({id:'study:'+animal.id,label:'Observe '+(animal.label||animal.species)+' from a distance',score:20+a.traits.curiosity*10,reasons:[['learn animal behavior',20]],job:{kind:'study',animalId:animal.id,destination:{...a.coordinates},minutes:2}});break;
  }
