@@ -1,7 +1,7 @@
 name: Natural runtime recovery
 on:
   push:
-    branches: [fix/natural-runtime-overload]
+    branches: [fix/natural-runtime-overload, fix/openai-household]
   workflow_dispatch:
 permissions:
   contents: read
@@ -29,6 +29,7 @@ jobs:
           node realtime/camp-loop-test.mjs
           node realtime/planner-budget-test.mjs
           node realtime/provider-test.mjs
+          node realtime/provider-display-test.mjs
           LANDSCAPE_STEPS=1200 node realtime/natural-landscape-test.mjs
       - name: Verify the expanded world in the actual Worker runtime
         run: |

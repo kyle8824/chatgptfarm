@@ -1,0 +1,25 @@
+import assert from 'node:assert/strict';
+import {createWorld} from '../engine/core.js';
+import {RealtimeController} from './world.mjs';
+import {providerFor,providerSummary,canRequestProvider,LLAMA_MODEL} from './providers.mjs';
+import {modelName,personProvider,providerStatus,providerMarkup} from '../web/live/provider-view.js';
+const saved=new Map(),storage={get:async k=>saved.get(k),put:async(k,v)=>saved.set(k,v),delete:async k=>saved.delete(k),setAlarm:async()=>{},transaction:async f=>f(storage)};
+let now=Date.UTC(2026,8,23,12);
+const env={OPENAI_HOUSEHOLD:'willow-basin',OPENAI_MODEL:'gpt-5.6-luna',OPENAI_DAILY_USD:'.10',OPENAI_INPUT_USD_PER_MILLION:'.20',OPENAI_OUTPUT_USD_PER_MILLION:'1.20'},ai={run:async()=>{throw Error('No live calls in display test');}};
+const c=new RealtimeController(storage,{now:()=>now,ai,env,frontierEnabled:true});await c.initialize(createWorld());
+const r=c.record,date=new Date(now).toISOString().slice(0,10),mara=r.world.agents[0],ivo=r.world.agents[1];
+r.ai={...r.ai,date,calls:78,households:{'willow-basin':{calls:42,designCalls:24},'flint-heights':{calls:18,designCalls:0},'reed-fen':{calls:18,designCalls:0}}};r.designBudget={date,calls:24};
+const before=JSON.stringify(r),frame=c.frame(),h=personProvider(frame,mara);
+assert.equal(h.model,'gpt-5.6-luna');assert.deepEqual(h.missingConfiguration,['OPENAI_API_KEY']);assert.equal(providerStatus(h),'Awaiting API key');assert.equal(h.callsToday,42);
+assert.equal(personProvider(frame,ivo).provider,'openai');assert.equal(frame.frontier.homes[0].provider,'openai');assert.equal(frame.frontier.homes[3].provider,'cloudflare');assert.equal(JSON.stringify(r),before,'display does not migrate ancestry or reset spent quotas');
+for(const a of frame.agents.slice(2))assert.equal(personProvider(frame,a).model,LLAMA_MODEL);
+const readyEnv={...env,OPENAI_API_KEY:'test-secret-not-real'};
+const ready=providerSummary(r,readyEnv,ai,now).households[0];assert.equal(ready.status,'configured');assert.equal(ready.availability,'daily_limit');assert.equal(ready.callsToday,42);assert.equal(canRequestProvider(r,providerFor(r.world,mara,readyEnv,ai),'action',now),false,'switching providers does not grant extra calls');
+assert.match(providerMarkup(frame,mara),/OpenAI · GPT-5.6 Luna/);assert.match(providerMarkup(frame,mara),/Awaiting API key/);assert.match(providerMarkup(frame,mara),/Current action uses autonomous behavior rules/);
+const inherited={...mara,id:'child',householdId:ivo.householdId};assert.equal(personProvider(frame,inherited).provider,'openai');
+// Configured routing and the source of an already-saved task are distinct.
+const oldTask={...mara,task:{source:'ai',model:LLAMA_MODEL}};assert.match(providerMarkup(frame,oldTask),/Current action chosen by Llama 3.3 70B/);
+frame.runtime.providers.households[0].model='<img onerror=bad>';assert(!providerMarkup(frame,mara).includes('<img'));assert.equal(modelName(LLAMA_MODEL),'Llama 3.3 70B');
+now+=86400000;const tomorrow=providerSummary(r,readyEnv,ai,now).households[0];assert.equal(tomorrow.callsToday,0);assert.equal(tomorrow.availability,'ready');assert.equal(r.ai.calls,78,'UTC rollover display stays read-only');
+assert.equal(JSON.stringify(providerSummary(r,readyEnv,ai,now)).includes(readyEnv.OPENAI_API_KEY),false);
+console.log('PASS live provider display, original-pair routing, unchanged ancestry and used quotas, old-task provenance, UTC rollover, escaped labels and no secret disclosure');
