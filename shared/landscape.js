@@ -45,11 +45,11 @@ function pond(id,name,x,z,rx,rz,level,seed){const points=[];for(let i=0;i<64;i++
 export const LAKES=[pond('stillwater','Stillwater Lake',-124,-155,46,31,2.8,1),pond('upper-pool','Fern Pool',-239,-245,13,9,10.8,3),pond('reed-pond','Reedwater Pond',26,-244,17,11,.6,5),pond('marsh-pool','Marsh Pool',57,-273,9,14,.45,8),pond('woodland-pool','Woodland Pool',-86,-55,9,6,1.4,2),pond('ochre-pool','Ochre Spring',-288,-337,7,5,5.88,4)];
 // [x,z,water height,half-width]. The drop is a real non-walkable watercourse.
 export const STREAMS=[
- {id:'headwater',name:'Fernwater',points:[[-280,-290,13,1.1],[-265,-278,12,1.2],[-252,-261,11,1.35],[-245,-252,10.8,1.5],[-235,-237,10.8,1.5],[-225,-228,10.5,1.25],[-218,-217.5,9.8,1.6],[-218,-216.8,4.4,1.8],[-207,-204,3.8,1.8],[-190,-199,3.2,1.7],[-167,-183,2.8,2]]},
+ {id:'headwater',name:'Fernwater',points:[[-280,-290,13,1.1],[-265,-278,12,1.2],[-252,-261,11,1.35],[-245,-252,10.8,1.5],[-235,-237,10.8,1.5],[-225,-228,10.5,1.25],[-218,-217.5,9.8,1.6],[-218,-216.8,4.4,1.8],[-207,-204,3.8,1.8],[-190,-199,3.2,1.7],[-167,-183,2.8,2],[-150,-168,2.8,2]]},
  {id:'longwater',name:'The Longwater',points:[[-86,-146,2.8,2],[-72,-132,2.6,2],[-68,-117,2.3,2],[-52,-103,1.9,1.8],[-47,-85,1.5,1.8],[-39,-69,1.2,1.5],[-32,-49,.85,1.3],[-18,-31,.45,1.25],[-15,-12,.12,1.25],[-1,17.36,-.12,1.25],[0,17.5,-.12,1.25]]},
  ...NATURAL_REGIONS.map(r=>({id:r.id+'-creek',name:r.name+' creek',homeId:r.id,points:[[0,17.5],[12,19.2],[27,17.4],[43,19.6],[58,18.2],[72,19.4],[86,19.1],[100,21.2]].map(([x,z])=>[x+r.x-64,z+r.y-34,(r.id==='flint-heights'?8:r.id==='ochre-vale'?6:0)-.12,1.25])})),
  {id:'flint-run',name:'Fellbrook',points:[[-288,-52,22,1],[-286,-32,13,1.1],[-295,-12,9.8,1.15],[-294,22.2,7.88,1.25]]},
- {id:'fen-run',name:'Reedwater Run',points:[[23,-344,-.12,1.1],[19,-321,.05,1.1],[29,-301,.2,1.1],[41,-289,.45,1.2],[50,-279,.45,1.2]]}
+ {id:'fen-run',name:'Reedwater Run',points:[[23,-345.9125,-.12,1.1],[19,-321,.05,1.1],[29,-301,.2,1.1],[41,-289,.45,1.2],[50,-279,.45,1.2]]}
 ];
 export function pointInPolygon(x,z,points){let inside=false;for(let i=0,j=points.length-1;i<points.length;j=i++){const[a,b]=points[i],[c,d]=points[j];if((b>z)!==(d>z)&&x<(c-a)*(z-b)/(d-b)+a)inside=!inside;}return inside;}
 export function segmentProjection(x,z,a,b){const dx=b[0]-a[0],dz=b[1]-a[1],t=clamp(((x-a[0])*dx+(z-a[1])*dz)/(dx*dx+dz*dz||1));const qx=mix(a[0],b[0],t),qz=mix(a[1],b[1],t);return {x:qx,z:qz,t,distance:Math.hypot(x-qx,z-qz)};}

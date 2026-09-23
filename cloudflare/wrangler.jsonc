@@ -36,7 +36,7 @@
   ],
   "triggers": {"crons": ["*/15 * * * *"]},
   "keep_vars": true,
-  "vars": {"ORIGINAL_WORLD_ARCHIVED": "true", "FOUR_REGIONS_ENABLED": "true"},
+  "vars": {"ORIGINAL_WORLD_ARCHIVED": "true", "FOUR_REGIONS_ENABLED": "true", "NATURAL_LANDSCAPE_ENABLED": "true"},
   "observability": {
     "enabled": true
   },
