@@ -17,9 +17,11 @@ export function motionState(a){return a.locomotion??={seed:hash(a.id),vx:0,vy:0,
 function random(a){const m=motionState(a);m.seed=(Math.imul(m.seed,1664525)+1013904223)>>>0;return m.seed/4294967296;}
 const angleDiff=(a,b)=>Math.atan2(Math.sin(a-b),Math.cos(a-b));
 function segmentDistance(p,a,b){const dx=b.x-a.x,dy=b.y-a.y,t=clamp(((p.x-a.x)*dx+(p.y-a.y)*dy)/(dx*dx+dy*dy||1),0,1);return distance(p,{x:a.x+t*dx,y:a.y+t*dy});}
+const treeGrids=new WeakMap();
+function nearbyTrees(w,p){const trees=w.settlement?.trees||[];if(!naturalWorld(w))return trees;let index=treeGrids.get(trees);if(!index||index.count!==trees.length){index={count:trees.length,cells:new Map()};for(const t of trees){const key=`${Math.floor(t.position.x/8)},${Math.floor(t.position.y/8)}`;if(!index.cells.has(key))index.cells.set(key,[]);index.cells.get(key).push(t);}treeGrids.set(trees,index);}const out=[];for(let x=Math.floor((p.x-.43)/8);x<=Math.floor((p.x+.43)/8);x++)for(let y=Math.floor((p.y-.43)/8);y<=Math.floor((p.y+.43)/8);y++)out.push(...(index.cells.get(`${x},${y}`)||[]));return out;}
 export function liveWalkable(w,p,actor=null,checkTrees=true){
  if((!walkable(w,p)&&!onDeck(w,p,actor))||structureBlocks(w,p))return false;
- if(checkTrees)for(const tree of w.settlement?.trees||[])if(!tree.depleted&&(p.x-tree.position.x)**2+(p.y-tree.position.y)**2<.43**2)return false;
+ if(checkTrees)for(const tree of nearbyTrees(w,p))if(!tree.depleted&&(p.x-tree.position.x)**2+(p.y-tree.position.y)**2<.43**2)return false;
  for(const camp of campsOf(w)){if(distance(p,camp.fire)<camp.fire.radius)return false;if(!camp.structures.shelter)continue;const q=shelterLocal(p,w,camp.home),s=camp.shelter;
   // Two roof/wall footprints. Both gable entrances remain open.
   if(Math.abs(q.y)<s.halfLength+.4&&Math.abs(q.x)>.72&&Math.abs(q.x)<s.halfWidth+.43)return false;

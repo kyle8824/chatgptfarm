@@ -35,19 +35,20 @@ export function baseGround(x,z){
  // Low wetlands and gently sheltered founding clearings join the terrain.
  h=mix(h,.8,smooth(75,15,Math.hypot((x-35)*.8,z+270))*.85);
  for(const r of NATURAL_REGIONS){const lx=x-r.x+64,lz=z-r.y+34;
-  if(lx>=-15&&lx<=115&&lz>=-15&&lz<=92){const t=smooth(-15,0,lx)*(1-smooth(100,115,lx))*smooth(-15,0,lz)*(1-smooth(78,92,lz));const level=r.id==='flint-heights'?8:r.id==='ochre-vale'?6:0;h=mix(h,originalGround(lx,lz)+level,t);}
+  const radius=Math.hypot((lx-64)*.9,lz-34),t=1-smooth(14,64,radius);if(t>0){const level=r.id==='flint-heights'?8:r.id==='ochre-vale'?6:0;h=mix(h,originalGround(lx,lz)+level,t);}
  }
  return h;
 }
 export const cliffEdge=x=>-219+8*Math.sin((x+255)*.038);
 export function escarpmentHeight(x,z){const edge=cliffEdge(x);return 3.2*smooth(-285,-267,x)*(1-smooth(-206,-187,x))*smooth(edge-43,edge-20,z)*(1-smooth(edge-.17,edge+.17,z));}
 function pond(id,name,x,z,rx,rz,level,seed){const points=[];for(let i=0;i<64;i++){const a=i/64*Math.PI*2,r=1+.08*Math.sin(a*3+seed)+.045*Math.cos(a*5-seed);points.push([x+Math.cos(a)*rx*r,z+Math.sin(a)*rz*r]);}return {id,name,kind:'lake',x,z,rx,rz,level,points};}
-export const LAKES=[pond('stillwater','Stillwater Lake',-124,-155,46,31,2.8,1),pond('upper-pool','Fern Pool',-239,-245,13,9,10.8,3),pond('reed-pond','Reedwater Pond',26,-244,17,11,.6,5),pond('marsh-pool','Marsh Pool',57,-273,9,14,.45,8),pond('woodland-pool','Woodland Pool',-86,-55,9,6,1.4,2)];
+export const LAKES=[pond('stillwater','Stillwater Lake',-124,-155,46,31,2.8,1),pond('upper-pool','Fern Pool',-239,-245,13,9,10.8,3),pond('reed-pond','Reedwater Pond',26,-244,17,11,.6,5),pond('marsh-pool','Marsh Pool',57,-273,9,14,.45,8),pond('woodland-pool','Woodland Pool',-86,-55,9,6,1.4,2),pond('ochre-pool','Ochre Spring',-288,-337,7,5,5.88,4)];
 // [x,z,water height,half-width]. The drop is a real non-walkable watercourse.
 export const STREAMS=[
- {id:'headwater',name:'Fernwater',points:[[-280,-290,13,1.1],[-265,-278,12,1.2],[-252,-261,11,1.35],[-245,-252,10.8,1.5],[-235,-237,10.8,1.5],[-225,-228,10.5,1.25],[-218,-218,9.8,1.6],[-218,-214,4.4,1.8],[-207,-204,3.8,1.8],[-190,-199,3.2,1.7],[-167,-183,2.8,2]]},
+ {id:'headwater',name:'Fernwater',points:[[-280,-290,13,1.1],[-265,-278,12,1.2],[-252,-261,11,1.35],[-245,-252,10.8,1.5],[-235,-237,10.8,1.5],[-225,-228,10.5,1.25],[-218,-217.5,9.8,1.6],[-218,-216.8,4.4,1.8],[-207,-204,3.8,1.8],[-190,-199,3.2,1.7],[-167,-183,2.8,2]]},
  {id:'longwater',name:'The Longwater',points:[[-86,-146,2.8,2],[-72,-132,2.6,2],[-68,-117,2.3,2],[-52,-103,1.9,1.8],[-47,-85,1.5,1.8],[-39,-69,1.2,1.5],[-32,-49,.85,1.3],[-18,-31,.45,1.25],[-15,-12,.12,1.25],[-1,17.36,-.12,1.25],[0,17.5,-.12,1.25]]},
  ...NATURAL_REGIONS.map(r=>({id:r.id+'-creek',name:r.name+' creek',homeId:r.id,points:[[0,17.5],[12,19.2],[27,17.4],[43,19.6],[58,18.2],[72,19.4],[86,19.1],[100,21.2]].map(([x,z])=>[x+r.x-64,z+r.y-34,(r.id==='flint-heights'?8:r.id==='ochre-vale'?6:0)-.12,1.25])})),
+ {id:'flint-run',name:'Fellbrook',points:[[-288,-52,22,1],[-286,-32,13,1.1],[-295,-12,9.8,1.15],[-294,22.2,7.88,1.25]]},
  {id:'fen-run',name:'Reedwater Run',points:[[23,-344,-.12,1.1],[19,-321,.05,1.1],[29,-301,.2,1.1],[41,-289,.45,1.2],[50,-279,.45,1.2]]}
 ];
 export function pointInPolygon(x,z,points){let inside=false;for(let i=0,j=points.length-1;i<points.length;j=i++){const[a,b]=points[i],[c,d]=points[j];if((b>z)!==(d>z)&&x<(c-a)*(z-b)/(d-b)+a)inside=!inside;}return inside;}
@@ -63,7 +64,9 @@ export function landHeight(x,z){
  // Preserve the established ground and all original buildings exactly.
  if(preservedValley(x,z))return originalGround(x,z);
  let h=baseGround(x,z)+escarpmentHeight(x,z);const water=waterSample(x,z);
- if(water){const bank=water.level+.12+Math.max(0,water.edge)*.38;if(water.edge<0)h=Math.min(h,water.level-.65-Math.min(1.6,-water.edge*.18));else if(water.edge<9)h=mix(bank,h,smooth(1,9,water.edge));}
+ if(water){const e=water.edge,shore=water.level-.65+1.3*smooth(-1.5,2.5,e);if(e<0)h=shore-Math.min(1.6,Math.max(0,-e-1.5)*.15);else if(e<16)h=mix(shore,h,smooth(2.5,16,e));}
+ // Continue the unchanged founding ground into its surroundings gradually.
+ const dx=Math.max(-3-x,x-104,0),dz=Math.max(-3-z,z-84,0),d=Math.hypot(dx,dz);if(d<15){const ox=Math.max(-3,Math.min(104,x)),oz=Math.max(-3,Math.min(84,z));h=mix(originalGround(ox,oz),h,smooth(0,15,d));}
  return h;
 }
 export const naturalWorld=w=>(w?.frontier?.landscapeVersion||0)>=2;

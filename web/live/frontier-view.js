@@ -25,7 +25,7 @@ export function frontierTerrain(elevation){
 function riverMesh(points,material,y=-.12){const positions=[],indices=[];for(let i=1;i<points.length;i++){const a=points[i-1],b=points[i];for(const [x,z]of [a,b])positions.push(x,y,z-1.25,x,y,z+1.25);const n=(i-1)*4;indices.push(n,n+1,n+2,n+1,n+3,n+2);}const g=new T.BufferGeometry();g.setAttribute('position',new T.Float32BufferAttribute(positions,3));g.setIndex(indices);g.computeVertexNormals();return new T.Mesh(g,material);}
 export function installFrontier(view,frame){
  if(view.frontierInstalled||!frame.frontier)return;view.frontierInstalled=true;view.frontier=frame.frontier;
- view.scene.remove(view.groundMesh);view.groundMesh.geometry.dispose();view.groundMesh.geometry=frame.frontier.landscapeVersion>=2?naturalTerrain():frontierTerrain(view.heightAt);view.scene.add(view.groundMesh);
+ view.scene.remove(view.groundMesh);view.groundMesh.geometry.dispose();view.groundMesh.geometry=frame.frontier.landscapeVersion>=2?naturalTerrain():frontierTerrain(view.heightAt);if(frame.frontier.landscapeVersion>=2){view.groundMesh.material.flatShading=false;view.groundMesh.material.needsUpdate=true;}view.scene.add(view.groundMesh);
  view.camera.far=4000;view.camera.updateProjectionMatrix();view.controls.maxDistance=2000;view.controls.maxTargetRadius=750;view.scene.fog.density=.002;
  view.regionLabels=frame.frontier.homes.map(h=>{const label=document.createElement('div');label.className='label region-label';label.textContent=h.name;label.hidden=true;document.querySelector('#labels').append(label);return {home:h,label};});
  view.camps=new Map([['willow-basin',{shelter:view.shelter,fire:view.fire,flames:view.flames,light:view.fireLight}]]);
