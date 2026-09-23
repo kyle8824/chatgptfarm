@@ -4,5 +4,6 @@ export function observeLandscape(w,a){
  if(!w.frontier)return;
  a.landmarks??={};const now=(w.day*24+w.hour)*60+(w.minute||0);
  for(const o of [...w.settlement.trees,...w.settlement.stores,...w.settlement.projects])if(Math.hypot(a.coordinates.x-o.position.x,a.coordinates.y-o.position.y)<9)a.landmarks[o.id]={seenAt:now,position:{...o.position}};
- a.regionId=regionFor(a.coordinates)?.id||'wilderness';
+ for(const h of w.frontier.homes)if(Math.hypot(h.x-a.coordinates.x,h.y-a.coordinates.y)<18){a.knownCamps??=[];if(!a.knownCamps.includes(h.id))a.knownCamps.push(h.id);a.campId=h.id;}
+ a.regionId=regionFor(a.coordinates,w)?.id||'wilderness';
 }

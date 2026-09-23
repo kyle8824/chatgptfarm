@@ -1,3 +1,4 @@
+import {insideBounds,naturalWorld} from '../shared/landscape.js';
 import {climbingSites} from './climbing.mjs';
 import {localPosition,householdWorld} from '../shared/frontier.js';
 import {knownPlace} from './frontier-knowledge.mjs';
@@ -18,15 +19,16 @@ const text=(s,max)=>{if(typeof s!=='string'||!s.trim())throw Error('Missing desi
 const number=(v,min,max)=>{if(!Number.isFinite(v)||v<min||v>max)throw Error('Design dimension out of bounds');return v;};
 const vec=(v,min,max)=>{if(!Array.isArray(v)||v.length!==3)throw Error('Expected three dimensions');return v.map(n=>number(n,min,max));};
 export function buildingSites(w,a){
- const sites=climbingSites(w,a).filter(s=>!w.settlement.projects.some(p=>distance(p.position,s.position)<6)&&liveRoute(w,a.coordinates,{x:s.position.x,y:s.position.y-2.5},a));
+ const sites=climbingSites(w,a).filter(s=>!w.settlement.projects.some(p=>distance(p.position,s.position)<6)&&liveRoute(w,a.coordinates,{x:s.position.x,y:s.position.y+(s.upperEdge<0?1:-1)*2.5},a));
  for(const [i,p]of [{x:72,y:38},{x:58,y:39},{x:72,y:44},{x:59,y:45},{x:79,y:38},{x:53,y:40}].map(p=>localPosition(w,p)).entries()){
+  if(naturalWorld(w)&&distance(a.coordinates,p)>22)continue;
   if(w.settlement.projects.some(b=>distance(b.position,p)<6))continue;
   if(w.settlement.trees.some(t=>treeUnits(w,t)>0&&distance(t.position,p)<3.5))continue;
   if(liveWalkable(w,p)&&liveRoute(w,a.coordinates,p,a))sites.push({id:`clearing-${i}`,position:p,purposes:['storage','shelter'],width:4,depth:4});
  }
  const local=new Set();for(const radius of [8,14])for(let i=0;i<8;i++){
   const angle=i*Math.PI/4,p={x:Math.round(a.coordinates.x+Math.cos(angle)*radius),y:Math.round(a.coordinates.y+Math.sin(angle)*radius)},id=`local-${p.x}-${p.y}`;
-  if(local.has(id)||p.x<4||p.y<4||p.x>w.worldModel.bounds.width-4||p.y>w.worldModel.bounds.height-4)continue;local.add(id);
+  if(local.has(id)||!insideBounds(w,p,4))continue;local.add(id);
   if(w.settlement.projects.some(b=>distance(b.position,p)<6)||w.settlement.trees.some(t=>treeUnits(w,t)>0&&distance(t.position,p)<3.5))continue;
   if(![-2,0,2].every(x=>[-2,0,2].every(y=>liveWalkable(w,{x:p.x+x,y:p.y+y}))))continue;
   if(liveRoute(w,a.coordinates,p,a))sites.push({id,position:p,purposes:['storage','shelter'],width:4,depth:4});if(sites.length>=12)break;
@@ -48,9 +50,9 @@ function coversRectangle(rectangles,target){
 // A villager can move during inference. Keep the issued local site identity,
 // but recheck its physical clearance and route against the current world.
 function issuedLocalSite(w,a,raw,issued){
- if(!issued||issued.id!==raw.siteId||!/^local-\d+-\d+$/.test(issued.id)||issued.spansWater)return null;
+ if(!issued||issued.id!==raw.siteId||!/^local--?\d+--?\d+$/.test(issued.id)||issued.spansWater)return null;
  const p=issued.position;
- if(!p||issued.width!==4||issued.depth!==4||issued.id!==`local-${p.x}-${p.y}`||p.x<4||p.y<4||p.x>w.worldModel.bounds.width-4||p.y>w.worldModel.bounds.height-4)return null;
+ if(!p||issued.width!==4||issued.depth!==4||issued.id!==`local-${p.x}-${p.y}`||!insideBounds(w,p,4))return null;
  if(w.settlement.projects.some(b=>distance(b.position,p)<6)||w.settlement.trees.some(t=>treeUnits(w,t)>0&&distance(t.position,p)<3.5))return null;
  if(![-2,0,2].every(x=>[-2,0,2].every(y=>liveWalkable(w,{x:p.x+x,y:p.y+y})))||!liveRoute(w,a.coordinates,p,a))return null;
  return issued;

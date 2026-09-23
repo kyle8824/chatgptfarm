@@ -1,3 +1,4 @@
+import {reorganizeLandscape} from './landscape-migration.mjs';
 import {providerFor,reserveProvider,recordProviderResult,runProvider,providerSummary} from './providers.mjs';
 import {expandFrontier,frontierFrame,householdWorld} from './frontier.mjs';
 import {householdProjects} from './blueprints.mjs';
@@ -38,13 +39,13 @@ export function compact(w){
  for(const a of w.agents){const seen=new Set();a.suspendedTasks=(a.suspendedTasks||[]).filter(t=>{if(seen.has(t.actionId))return false;seen.add(t.actionId);return true;}).slice(-6);}
 }
 export class RealtimeController{
- constructor(storage,{now=Date.now,ai=null,env={},fetcher=fetch,frontierEnabled=false,budgetNow=()=>performance.now(),yieldToHost=()=>new Promise(resolve=>setTimeout(resolve,1))}={}){this.env=env;this.fetcher=fetcher;this.frontierEnabled=frontierEnabled;this.storage=storage;this.now=now;this.ai=ai;this.budgetNow=budgetNow;this.yieldToHost=yieldToHost;this.queue=Promise.resolve();this.proposals=new Map();this.jobs=new Map();this.lastSaved=0;this.lastAiCheck=0;this.error=null;this.checkpointIntervalMs=CHECKPOINT_MS;this.persistenceRetryAt=0;this.nextAlarmAt=0;}
+ constructor(storage,{now=Date.now,ai=null,env={},fetcher=fetch,frontierEnabled=false,landscapeEnabled=false,budgetNow=()=>performance.now(),yieldToHost=()=>new Promise(resolve=>setTimeout(resolve,1))}={}){this.env=env;this.fetcher=fetcher;this.frontierEnabled=frontierEnabled;this.landscapeEnabled=landscapeEnabled;this.storage=storage;this.now=now;this.ai=ai;this.budgetNow=budgetNow;this.yieldToHost=yieldToHost;this.queue=Promise.resolve();this.proposals=new Map();this.jobs=new Map();this.lastSaved=0;this.lastAiCheck=0;this.error=null;this.checkpointIntervalMs=CHECKPOINT_MS;this.persistenceRetryAt=0;this.nextAlarmAt=0;}
  serial(fn){const p=this.queue.then(fn);this.queue=p.catch(()=>{});return p;}
- async load(){if(this.record===undefined){this.record=await readCheckpoint(this.storage);if(this.record){ensureSettlement(this.record.world);ensureLife(this.record.world);if(this.frontierEnabled&&!this.record.world.frontier){expandFrontier(this.record.world);await this.save();}this.lastSaved=this.record.checkpointAt||0;this.checkpointIntervalMs=Math.max(CHECKPOINT_MS,this.record.checkpointIntervalMs||0);this.nextAlarmAt=this.lastSaved+this.checkpointIntervalMs;}for(const [id,p] of Object.entries(this.record?.pendingDecisions||{}))if(p.expires>this.now())this.proposals.set(id,p);}return this.record;}
+ async load(){if(this.record===undefined){this.record=await readCheckpoint(this.storage);if(this.record){ensureSettlement(this.record.world);ensureLife(this.record.world);if(this.frontierEnabled&&!this.record.world.frontier){expandFrontier(this.record.world);await this.save();}if(this.landscapeEnabled&&reorganizeLandscape(this.record.world))await this.save();this.lastSaved=this.record.checkpointAt||0;this.checkpointIntervalMs=Math.max(CHECKPOINT_MS,this.record.checkpointIntervalMs||0);this.nextAlarmAt=this.lastSaved+this.checkpointIntervalMs;}for(const [id,p] of Object.entries(this.record?.pendingDecisions||{}))if(p.expires>this.now())this.proposals.set(id,p);}return this.record;}
  async initialize(seed){if(await this.load())return;const now=this.now(),w=prepare(seed);compact(w);w.meta.actionRulesVersion='realtime-2';w.meta.liveFork={sourceDay:w.day,sourceHour:w.hour,sourceTick:seed.meta.tickNumber,createdAt:now};
   for(const a of w.agents){delete a.runtimeMotion;delete a.motionPath;}
   this.record={version:1,world:w,lastWallTime:now,createdAt:now,revision:0,unattendedSteps:0,alarmCount:0,lastAlarmAt:null,rate:RATE,ai:{date:new Date(now).toISOString().slice(0,10),calls:0,succeeded:0,applied:0,rejected:0,lastError:null},lastDecisionAt:{}};
-  if(this.frontierEnabled)expandFrontier(w);await this.save();
+  if(this.frontierEnabled)expandFrontier(w);if(this.landscapeEnabled)reorganizeLandscape(w);await this.save();
  }
  async save(){if(this.now()<this.persistenceRetryAt)throw Error(this.error||'Persistence unavailable');const at=this.now();try{
   const bytes=await writeCheckpoint(this.storage,{...this.record,checkpointAt:at,checkpointIntervalMs:this.checkpointIntervalMs},at+this.checkpointIntervalMs);

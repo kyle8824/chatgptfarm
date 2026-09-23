@@ -1,5 +1,5 @@
 import {knownPlace} from './frontier-knowledge.mjs';
-import {treadHeight} from './climbing.mjs';
+import {treadHeight,projectBase} from './climbing.mjs';
 import {walkable} from '../engine/navigation.js';
 import {activeParts,cargoAllowance,surfaceProtection} from '../shared/structure-performance.js';
 import {loadOf} from './holdings.mjs';
@@ -14,7 +14,7 @@ export function onDeck(w,p,actor=null){return (w.settlement?.projects||[]).some(
 });}
 export function crossingPace(w,a){for(const b of w.settlement?.projects||[])if(b.spansWater||b.purpose==='bridge')for(const part of b.parts)if(part.built&&part.kind==='deck'&&inside(b,part,a.coordinates))return .4+.5*(part.durability?.quality??.45)*(part.durability?.condition??1);return 1;}
 export function structureBlocks(w,p){
- for(const b of w.settlement?.projects||[]){const active=activeParts(b);for(const part of b.parts){if(!active.has(part.id))continue;const r=partBounds(b,part),feet=b.climbsTerrain?treadHeight(w,p):0,vertical=['wall','post'].includes(part.kind)&&part.size[1]>=.5&&r.top>feet+.3&&r.bottom<feet+1.35,bodyHeightPanel=['deck','beam','roof'].includes(part.kind)&&r.top>feet+.65&&r.bottom<feet+1.35;if(!vertical&&!bodyHeightPanel)continue;if(p.x>r.minX-.25&&p.x<r.maxX+.25&&p.y>r.minZ-.25&&p.y<r.maxZ+.25)return true;}}
+ for(const b of w.settlement?.projects||[]){const active=activeParts(b);for(const part of b.parts){if(!active.has(part.id))continue;const r=partBounds(b,part),feet=b.climbsTerrain?treadHeight(w,p)-projectBase(w,b):0,vertical=['wall','post'].includes(part.kind)&&part.size[1]>=.5&&r.top>feet+.3&&r.bottom<feet+1.35,bodyHeightPanel=['deck','beam','roof'].includes(part.kind)&&r.top>feet+.65&&r.bottom<feet+1.35;if(!vertical&&!bodyHeightPanel)continue;if(p.x>r.minX-.25&&p.x<r.maxX+.25&&p.y>r.minZ-.25&&p.y<r.maxZ+.25)return true;}}
  return false;
 }
 export function structureWaypoints(w,actor=null){const points=[];for(const b of w.settlement?.projects||[]){

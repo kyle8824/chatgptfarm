@@ -1,3 +1,4 @@
+import {naturalWorld} from '../shared/landscape.js';
 import {clearHeight} from './climbing.mjs';
 import {campLayout,campsOf,terrainWaypoints,terrainEdge} from '../shared/frontier.js';
 import {otherAgent} from '../engine/core.js';
@@ -64,6 +65,7 @@ function freeSpace(w,a,p){let min=Infinity;for(const b of w.agents){if(b.id===a.
 export function chooseDestination(w,a,target,selected={}){
  const CAMP=campLayout(w),id=selected.id||'',center=coordForPosition(target,w),points=[],m=motionState(a);
  if(selected.job?.destination)return {...selected.job.destination};
+ if(id==='rest'&&naturalWorld(w)&&distance(a.coordinates,coordForPosition('camp',w))>18)return {...a.coordinates};
  if(id==='explore')return explorationDestination(w,a)||{...a.coordinates};
  // Eating carried food is local; there is no artificial trip back to camp.
  if(/^eat_/.test(id)&&a.inventory[id==='eat_berries'?'berries':id==='eat_tuber'?'tubers':'cookedMeat']>0)return {...a.coordinates};

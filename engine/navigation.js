@@ -1,17 +1,21 @@
+import {insideBounds,pointInPolygon} from '../shared/landscape.js';
 import {frontierGround} from '../shared/frontier.js';
 // Metric routes over the current basin. Unknown slopes/vegetation are not given
 // invented collision geometry. Water and explicit blocking footprints are real.
 export const distance=(a,b)=>Math.hypot(a.x-b.x,a.y-b.y);
 function segmentDistance(p,a,b){const dx=b.x-a.x,dy=b.y-a.y,t=Math.max(0,Math.min(1,((p.x-a.x)*dx+(p.y-a.y)*dy)/(dx*dx+dy*dy||1)));return distance(p,{x:a.x+t*dx,y:a.y+t*dy});}
+const waterBounds=new WeakMap();
+function nearWaterGeometry(o,p){let b=waterBounds.get(o.geometry);if(!b){const pts=o.geometry.points||[],pad=Math.max(3,...(o.geometry.profile||[]).map(p=>p[1]+.5));b={minX:Math.min(...pts.map(p=>p[0]))-pad,maxX:Math.max(...pts.map(p=>p[0]))+pad,minY:Math.min(...pts.map(p=>p[1]))-pad,maxY:Math.max(...pts.map(p=>p[1]))+pad};waterBounds.set(o.geometry,b);}return p.x>=b.minX&&p.x<=b.maxX&&p.y>=b.minY&&p.y<=b.maxY;}
 export function walkable(w,p){
  if(!frontierGround(w,p))return false;
  const bounds=w.worldModel.bounds,scale=bounds.metersPerUnit||2;
- if(p.x<0||p.y<0||p.x>bounds.width||p.y>bounds.height)return false;
+ if(!insideBounds(w,p))return false;
  for(const o of w.worldModel.objects){
   if(o.state?.active===false)continue;
-  if(o.type==='creek_segment'){
+  if(['lake','creek_segment'].includes(o.type)&&!nearWaterGeometry(o,p))continue;
+  if(o.type==='lake'){if(pointInPolygon(p.x,p.y,o.geometry.points))return false;const pts=o.geometry.points;for(let i=0;i<pts.length;i++)if(segmentDistance(p,{x:pts[i][0],y:pts[i][1]},{x:pts[(i+1)%pts.length][0],y:pts[(i+1)%pts.length][1]})<.35)return false;}else if(o.type==='creek_segment'){
    const points=o.geometry?.points||[],clearance=(o.geometry?.widthM||5)/scale/2+.35;
-   for(let i=1;i<points.length;i++)if(segmentDistance(p,{x:points[i-1][0],y:points[i-1][1]},{x:points[i][0],y:points[i][1]})<clearance)return false;
+   for(let i=1;i<points.length;i++)if(segmentDistance(p,{x:points[i-1][0],y:points[i-1][1]},{x:points[i][0],y:points[i][1]})<(o.geometry.profile?Math.max(o.geometry.profile[i-1][1],o.geometry.profile[i][1])+.35:clearance))return false;
   }else if(o.physical?.blocksMovement&&o.position&&distance(p,o.position)<(o.geometry?.radiusM||1)/scale+.35)return false;
  }
  return true;

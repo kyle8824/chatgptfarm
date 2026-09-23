@@ -1,3 +1,5 @@
+import {knownPlace} from './frontier-knowledge.mjs';
+import {naturalWorld} from '../shared/landscape.js';
 import {clamp,remember} from '../engine/core.js';
 import {distance} from '../engine/navigation.js';
 import {clock} from './holdings.mjs';
@@ -27,6 +29,7 @@ export function comfortCandidates(w,a,{relax=false}={}){
  if(!relax&&a.needs.energy>=65)return [];
  const result=[];
  for(const p of w.settlement?.projects||[])for(const s of restSurfaces(p)){
+  if(naturalWorld(w)&&(!knownPlace(w,a,p)||distance(a.coordinates,s.position)>40))continue;
   if(!available(w,a,p,s)||!liveRoute(w,a.coordinates,s.position,a))continue;
   const place=restPlace(w,{...a,coordinates:s.position},{projectId:p.id,surfaceId:s.id});if(!place)continue;
   const score=relax?9+(100-(a.freeTime?.enjoyment??55))*.12+(100-a.needs.energy)*.18+place.score*.27:(100-a.needs.energy)*1.1+place.score*.3;

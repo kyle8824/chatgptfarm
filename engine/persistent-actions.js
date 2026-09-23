@@ -1,3 +1,4 @@
+import {naturalWorld} from '../shared/landscape.js';
 import {otherAgent} from './core.js';
 import {migrateWorld,clamp,finishHour,updateWeather,addEvent,remember} from './core.js';
 import {selectPersistentAction,executeKnown,retrieveDecisionContext} from './runtime.js';
@@ -15,6 +16,7 @@ export function actionDestination(w,a,selected,proposal){
  if(/^(survey|forage):/.test(id))return id.slice(id.indexOf(':')+1);
  if(id.startsWith('physical:')){const c=retrieveDecisionContext(w,a),o=c.affordances.objects.find(x=>x.id===proposal?.primaryObjectId);return o?.kind==='place'?o.position:a.position;}
  if(consume[id])return id==='eat_berries'&&!a.inventory.berries?'berries':a.position;
+ if(id==='rest'&&naturalWorld(w)&&distance(a.coordinates,coordForPosition('camp',w))>18)return a.position;
  if(id==='rest')return w.structures.shelter||w.structures.fire?'camp':'meadow';
  if(id==='share_food')return otherAgent(w,a)?.position||a.position;
  if(id==='seek_other')return otherAgent(w,a)?.position||a.position;
