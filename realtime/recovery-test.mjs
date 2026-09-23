@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict';
 import fs from 'node:fs/promises';
-import {RealtimeController,MAX_PULSE_STEPS} from './world.mjs';
+import {RealtimeController,MAX_PULSE_STEPS,RECOVERY_CHECKPOINT_PROGRESS_MS} from './world.mjs';
 import {liveClear,liveRoute} from './motion.mjs';
 import {prepare} from './elapsed.mjs';
 
@@ -26,7 +26,9 @@ const restarted=new RealtimeController(storage,{now:()=>now});await restarted.lo
 assert.equal(restarted.record.createdAt,created);
 assert.deepEqual(restarted.frame().agents,c.frame().agents,'partial recovery checkpoints retain exact tasks, supplies and positions');
 let pulses=0,maxPulseMs=0;const began=performance.now();
-while(c.record.lastWallTime<now&&pulses++<5000){const before=c.record.lastWallTime,start=performance.now();await c.pulse();maxPulseMs=Math.max(maxPulseMs,performance.now()-start);assert(c.record.lastWallTime>before&&c.record.lastWallTime<=now);}
+const recoveryWrites=writes;
+while(c.record.lastWallTime<now&&pulses++<5000){const before=c.record.lastWallTime,start=performance.now();await c.pulse();maxPulseMs=Math.max(maxPulseMs,performance.now()-start);assert(c.record.lastWallTime>before&&c.record.lastWallTime<=now);if(now-c.record.lastWallTime>30000)assert(c.record.lastWallTime-c.lastSavedThrough<RECOVERY_CHECKPOINT_PROGRESS_MS,'a frozen host clock cannot prevent recovery checkpoints');}
+assert(writes>recoveryWrites,'recovery progress is saved while the host clock stays frozen');
 assert.equal(c.record.lastWallTime,now,'bounded recovery eventually reaches the actual present');
 assert(Math.abs(worldMinutes(c.record.world)-initialMinutes-360)<1e-6,'one elapsed hour advances exactly six simulated hours, without skipping time');
 assert.equal(c.runtime().status,'running');assert.equal(c.record.createdAt,created);

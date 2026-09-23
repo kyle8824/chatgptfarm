@@ -29,6 +29,7 @@ export const CHECKPOINT_MS=15000;
 export const RECOVERY_STEP_MS=1000;
 export const PULSE_BUDGET_MS=40;
 export const MAX_PULSE_STEPS=12;
+export const RECOVERY_CHECKPOINT_PROGRESS_MS=120000;
 export function compact(w){
  w.dna=w.dna.slice(-80);for(const d of w.dna)delete d.evidence;
  w.history=w.history.slice(0,140);
@@ -49,12 +50,12 @@ export class RealtimeController{
  }
  async save(){if(this.now()<this.persistenceRetryAt)throw Error(this.error||'Persistence unavailable');const at=this.now();try{
   const bytes=await writeCheckpoint(this.storage,{...this.record,checkpointAt:at,checkpointIntervalMs:this.checkpointIntervalMs},at+this.checkpointIntervalMs);
-  this.lastSaved=at;this.nextAlarmAt=at+this.checkpointIntervalMs;this.record.checkpointAt=at;this.persistenceRetryAt=0;
+  this.lastSaved=at;this.lastSavedThrough=this.record.lastWallTime;this.nextAlarmAt=at+this.checkpointIntervalMs;this.record.checkpointAt=at;this.persistenceRetryAt=0;
   // Keep routine live-world writes near 30,000 rows/day as checkpoints grow.
   // AI reservations still save immediately and remain inside their own cap.
   this.checkpointIntervalMs=Math.max(CHECKPOINT_MS,Math.ceil((Math.ceil(bytes/64000)+2)*86400000/30000));
  }catch(e){this.error=e.message;this.persistenceRetryAt=at+worldFailure(e,at).retryAfterSeconds*1000;throw e;}}
- async advance(target,viewers=0){const r=this.record;if(!r)return false;if(this.persistenceRetryAt){if(target<this.persistenceRetryAt)return false;await this.save();}let n=0;const started=this.budgetNow();
+ async advance(target,viewers=0){const r=this.record;if(!r)return false;this.lastSavedThrough??=r.lastWallTime;if(this.persistenceRetryAt){if(target<this.persistenceRetryAt)return false;await this.save();}let n=0;const started=this.budgetNow();
   while(r.lastWallTime<target&&n++<MAX_PULSE_STEPS){const remaining=target-r.lastWallTime,wall=Math.min(remaining>30000?RECOVERY_STEP_MS:100,remaining),through=r.lastWallTime+wall;
    const adapter={decide:async c=>{const p=this.proposals.get(c.agent.id);this.proposals.delete(c.agent.id);if(r.pendingDecisions)delete r.pendingDecisions[c.agent.id];if(!p||p.expires<this.now())throw Object.assign(Error('Reflex policy'),{code:providerFor(r.world,r.world.agents.find(a=>a.id===c.agent.id),this.env,this.ai).configured?'between_model_decisions':'ai_not_configured'});if(!c.candidates.some(x=>x.id===p.actionId)){r.ai.rejected++;throw Object.assign(Error('Stale action'),{code:'model_action_no_longer_available'});}r.ai.applied++;const a=r.world.agents.find(a=>a.id===c.agent.id);if(a?.liveThought)a.liveThought.status='applied';return p;}};
    await step(r.world,wall/1000*r.rate,{mind:adapter,wallTime:through,fallbackReason:this.ai?'between_model_decisions':'ai_not_configured'});wildlifeStep(r.world,wall/1000*r.rate);r.lastWallTime=through;r.revision++;if(!viewers)r.unattendedSteps++;
@@ -63,7 +64,9 @@ export class RealtimeController{
    // and checkpoint alarms. Keep the ordinary 100 ms physical step near now.
    await this.yieldToHost();if(this.budgetNow()-started>=PULSE_BUDGET_MS)break;
   }
-  if(target-this.lastSaved>=this.checkpointIntervalMs){compact(r.world);await this.save();return true;}return false;
+  // Production clocks advance on I/O, not during CPU work. Recovery must
+  // checkpoint completed progress even while that wall-clock reading is stale.
+  if(target-this.lastSaved>=this.checkpointIntervalMs||target-r.lastWallTime>30000&&r.lastWallTime-this.lastSavedThrough>=RECOVERY_CHECKPOINT_PROGRESS_MS){compact(r.world);await this.save();return true;}return false;
  }
  pulse(viewers=0){return this.serial(async()=>{try{await this.advance(this.now(),viewers);if(!this.persistenceRetryAt)this.error=null;}catch(e){this.error=e.message;throw e;}});}
  alarm(viewers=0){return this.serial(async()=>{try{await this.load();if(!this.record)return;this.record.alarmCount++;this.record.lastAlarmAt=this.now();const saved=await this.advance(this.now(),viewers);if(!saved&&this.nextAlarmAt<=this.now()&&!this.persistenceRetryAt)await this.save();if(!this.persistenceRetryAt)this.error=null;}catch(e){this.error=e.message;try{await this.storage.setAlarm(Math.max(this.now()+30000,this.persistenceRetryAt));}catch{/* Provider limits can block alarm writes too; fetch/timer will retry. */}throw e;}});}
