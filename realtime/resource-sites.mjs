@@ -36,7 +36,7 @@ export function resourceFrame(w){
   const account=o.homeId&&o.homeId!=='willow-basin'?homeFor(w,{householdId:o.homeId}).resources:w.resources;
   if(o.state?.active===false||!o.position)continue;const site=w.regions?.sites?.[o.id],spec=info[site?'berries':o.zone];
   if(spec)objects.push({id:o.id,name:o.label||spec[0],mapped:!!o.homeId,type:site?'berries':o.zone,position:o.position,remaining:site?.quantity??account[o.zone]??0,unit:spec[1],use:spec[2],renewable:!!site||['berries','reeds'].includes(o.zone),radius:site?2.2:o.zone==='clay'?2.8:3.0,knownBy:site?w.agents.filter(a=>a.siteKnowledge?.[site.id]).map(a=>a.name):null});
-  else if(o.type==='fallen_tree')objects.push({id:o.id,name:'Fallen oak',type:'log',position:o.position,remaining:(w.resources.dryWood||0)+(w.resources.wetWood||0),dry:w.resources.dryWood||0,wet:w.resources.wetWood||0,unit:'Wood units',use:'Collect remaining fallen wood; carry it before use.',radius:1.5});
+  else if(o.type==='fallen_tree')objects.push({id:o.id,name:'Fallen oak',type:'log',position:o.position,remaining:(account.dryWood||0)+(account.wetWood||0),dry:account.dryWood||0,wet:account.wetWood||0,unit:'Wood units',use:'Collect remaining fallen wood; carry it before use.',radius:1.5});
   else if(o.type==='creek_segment')objects.push({id:o.id,name:o.label||'Creek',type:'water',position:o.position,points:o.geometry?.points,available:!!w.resources.creekWater,unit:'Flowing water',use:'Drinking requires reaching an accessible bank.',radius:2});
  }
  for(const s of w.resourceSites?.nodes||[])objects.push({...s,knownBy:(s.knownBy||[]).map(id=>w.agents.find(a=>a.id===id)?.name||id),type:s.item,unit:info[s.item][1],use:info[s.item][2],radius:s.item==='stones'?1.6:1.3,renewable:false,mapped:true});

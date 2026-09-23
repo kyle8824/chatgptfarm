@@ -1,3 +1,4 @@
+import {syncLegacyIntoWorldModel} from '../engine/world-model.js';
 import {walkable} from '../engine/navigation.js';
 import {liveClear} from './motion.mjs';
 import {HOME_REGIONS,FRONTIER_SIZE,GREAT_RIVER,FRONTIER_OBSTACLES,householdWorld,knownPerson,regionFor} from '../shared/frontier.js';
@@ -25,13 +26,14 @@ export function expandFrontier(w){
  ensureSettlement(w);ensureLife(w);
  w.frontier={version:1,size:FRONTIER_SIZE,activatedAt:clock(w),homes:HOME_REGIONS.map(h=>({...h,resources:h.id==='willow-basin'?null:{berries:18,dryWood:0,wetWood:0,stones:24,clay:10,reeds:18,creekWater:true},ecology:h.id==='willow-basin'?null:{animalTracks:false,gameTrail:false,smallGame:0,tuberPatch:false,tubers:8,tubersEdible:true},structures:h.id==='willow-basin'?null:{fire:false,shelter:false,cache:false,dryingRack:false},discovered:{creek:true,berries:true,stoneField:true,clayBank:false,reedBed:false},provider:h.id==='ochre-vale'?'openai':'cloudflare'})),firstContacts:{}};
  w.chronicle??={people:{},events:[]};w.worldModel.bounds={...w.worldModel.bounds,width:FRONTIER_SIZE,height:FRONTIER_SIZE};
- const origins=w.worldModel.objects.filter(o=>/^OBJ-(CAMP|CREEK|BERRIES|STONES|CLAY|REEDS|FRONTIER)-001$/.test(o.id));
+ const origins=w.worldModel.objects.filter(o=>/^OBJ-(CAMP|CREEK|BERRIES|STONES|CLAY|REEDS|FRONTIER|TREE)-001$/.test(o.id));
  const food=Object.values(w.regions.sites).filter(s=>s.regionId==='willow-basin');
  for(const h of w.frontier.homes){
   const dx=h.x-64,dy=h.y-34;
   w.regions.items[h.id]??={id:h.id,label:h.name,bounds:{width:100,height:100},neighbors:[]};
   if(h.id!=='willow-basin'){
-   for(const original of origins){const o=structuredClone(original);o.id=h.id+':'+o.id;o.homeId=h.id;o.regionId=h.id;o.position={x:o.position.x+dx,y:o.position.y+dy};if(o.geometry.points)o.geometry.points=o.geometry.points.map(([x,y])=>[x+dx,y+dy]);o.provenance={source:'frontier-initialization',at:clock(w)};w.worldModel.objects.push(o);}
+   for(const [units,moisture]of [[12,.12],[6,.55]]){w.wood.batches.push({id:`wood-${w.wood.nextId++}`,form:'branch',holder:{kind:'ground',id:h.id+':log'},units,dryKg:units,waterKg:units*moisture,lineage:[],origin:{kind:'new-region-fallen-wood',homeId:h.id,at:clock(w)}});w.wood.initialDryKg+=units;w.wood.initialWaterKg+=units*moisture;}h.resources.dryWood=12;h.resources.wetWood=6;
+   for(const original of origins){const o=structuredClone(original);o.id=h.id+':'+o.id;o.homeId=h.id;o.regionId=h.id;o.position={x:o.position.x+dx,y:o.position.y+dy};if(o.geometry.points)o.geometry.points=o.geometry.points.map(([x,y])=>[x+dx,y+dy]);o.childrenIds=[];o.history=[];o.state.active=true;o.provenance={source:'frontier-initialization',at:clock(w)};w.worldModel.objects.push(o);}
    for(const old of food){const s={...structuredClone(old),id:h.id+':'+old.id.split(':').at(-1),regionId:h.id,label:h.name+' '+old.habitat+' berries',position:{x:old.position.x+dx,y:old.position.y+dy},quantity:12,lastRegrowthHour:w.day*24+w.hour};w.regions.sites[s.id]=s;w.worldModel.objects.push({id:s.id,type:'berry_patch',label:s.label,zone:s.id,regionId:h.id,homeId:h.id,position:s.position,geometry:{radiusM:5},physical:{biological:true,harvestable:true},state:{active:true,ediblePortions:s.quantity}});}
    for(const old of RESOURCE_SITES){const node={...old,id:h.id+':'+old.id,name:h.name+' '+old.name,position:{x:old.position.x+dx,y:old.position.y+dy},remaining:old.initial,harvested:0,knownBy:[]};if(node.position.x>0&&node.position.y>0&&node.position.x<FRONTIER_SIZE&&node.position.y<FRONTIER_SIZE)w.resourceSites.nodes.push(node);}
    for(const t of forestLayout().filter(t=>t.position.x>4&&t.position.x<98&&t.position.y>4&&t.position.y<78))timber(w,h.id+':'+t.id,{x:t.position.x+dx,y:t.position.y+dy},t.timber,t.height,t.pine);
@@ -51,7 +53,7 @@ export function expandFrontier(w){
  for(const a of w.agents)for(const b of w.agents)if(a.id!==b.id&&a.householdId===b.householdId)a.knownPeople[b.id]??={firstMetAt:clock(w),lastSeenAt:clock(w),coordinates:{...b.coordinates}};
  for(const h of w.frontier.homes){const people=w.agents.filter(a=>a.householdId===h.id);if(h.id==='willow-basin')continue;const rel=w.relationships[pairKey(people[0].id,people[1].id)];rel.trust=34;rel.familiarity=12;rel.affinity=50;}
  addEvent(w,'frontier','Four distant valleys','The existing valley is now part of a larger continuous landscape. Six new adult founders live in three distant regions. They have not met the original villagers.',{homeIds:w.frontier.homes.map(h=>h.id)});
- return w.frontier;
+ syncLegacyIntoWorldModel(w);return w.frontier;
 }
 const riverCenter=()=>244;
 export function observePeople(w){

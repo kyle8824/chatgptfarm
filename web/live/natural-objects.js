@@ -16,6 +16,7 @@ export class NaturalObjects{
     const waterPoints=o.points||CREEK_POINTS;for(let i=1;i<waterPoints.length;i++){const [x,z]=waterPoints[i-1],[bx,bz]=waterPoints[i],length=Math.hypot(bx-x,bz-z),m=new T.Mesh(box,invisible);m.position.set((x+bx)/2-o.position.x,-.13-g.position.y,(z+bz)/2-o.position.y);m.scale.set(length,.06,2.5);m.rotation.y=-Math.atan2(bz-z,bx-x);g.add(m);}continue;
    }
    const extraBerry=o.type==='berries'&&o.id!=='OBJ-BERRIES-001';
+   if(o.type==='log'&&o.id!=='OBJ-TREE-001'){const m=piece(g,cylinder,'#775638',[0,.3,0],[.32,2.8,.32]);m.rotation.z=Math.PI/2;}
    if(o.mapped||extraBerry){
     const count=o.type==='berries'?4:Math.max(1,Math.min(7,Math.ceil(o.remaining/3)));
     for(let i=0;i<count;i++){

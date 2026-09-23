@@ -1,10 +1,11 @@
+import {applyFrameDelta} from '../../shared/live-frame.js';
 // The socket supplies all world state. Health requests only explain failures.
 export class WorldConnection{
  constructor({url,onFrame,onPong=()=>{},onProblem=()=>{},WebSocketClass=WebSocket,fetchHealth=()=>fetch('/live/health',{cache:'no-store',signal:AbortSignal.timeout(8000)}),timers=globalThis,now=Date.now}){Object.assign(this,{url,onFrame,onPong,onProblem,WebSocketClass,fetchHealth,timers,now});this.retry=0;this.nextProbe=0;this.active=false;this.problemText=null;this.hostingBackoff=0;}
  start(){this.active=true;this.connect();}
  connect(){if(!this.active)return;this.clearTimers();const socket=this.socket=new this.WebSocketClass(this.url);this.deadline=this.timers.setTimeout(()=>{if(this.socket!==socket)return;this.problem();socket.close();},12000);
-  socket.onopen=()=>this.ping();
-  socket.onmessage=e=>{if(socket!==this.socket)return;let message;try{message=JSON.parse(e.data);}catch{return;}if(message.type==='pong'){this.onPong(this.now()-message.sent);return;}if(message.type!=='state'||!message.runtime||!Array.isArray(message.agents))return;
+  let frame=null;socket.onopen=()=>this.ping();
+  socket.onmessage=e=>{if(socket!==this.socket)return;let message;try{message=JSON.parse(e.data);}catch{return;}if(message.type==='pong'){this.onPong(this.now()-message.sent);return;}if(message.type!=='state')return;try{frame=applyFrameDelta(frame,message);message=structuredClone(frame);}catch{socket.close();return;}if(!message.runtime||!Array.isArray(message.agents))return;
    try{this.onFrame(message);}catch{this.onProblem('The world arrived, but the view could not open. Please reload the page.');return;}
    this.timers.clearTimeout(this.deadline);this.retry=0;this.hostingBackoff=0;this.problemText=null;this.lastFrame=this.now();
   };
