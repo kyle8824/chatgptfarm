@@ -29,6 +29,10 @@ export function returnCamp(w,a){
 }
 export function returnCandidate(w,a){
  const h=returnCamp(w,a);if(!h||distance(a.coordinates,h)<=18)return null;
+ // Let a bounded, useful supply/work trip finish before returning. Otherwise
+ // crossing the camp radius interrupts the same unfinished errand forever.
+ const j=a.task?.selected?.job;
+ if(j?.destination&&(j.projectId||j.practice||/^(harvest_fuel:|tool_supply:)/.test(a.task.actionId))&&['harvest','gather','take','fallen','craft','assemble','repair','deliver'].includes(j.kind)&&distance(j.destination,h)<=45&&distance(a.coordinates,h)<=50)return null;
  const id=`return_warmth:${h.id}`,failure=a.liveFailures?.[id];
  if(failure&&clock(w)-failure.at<failure.retryMinutes)return null;
  return {id,label:`Return to ${h.name} to recover warmth`,score:160,reasons:[['cold requires a return to a known camp',160]],explanation:'Return to a known camp, then use real shelter and fuel. Pause for urgent food, water or rest.',job:{kind:'return_warmth',campId:h.id,destination:{...a.coordinates},minutes:30}};

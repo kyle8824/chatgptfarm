@@ -1,3 +1,4 @@
+import {interestBonus} from './happiness.mjs';
 import {naturalWorld} from '../shared/landscape.js';
 import {economyCandidates} from './regional-economy.mjs';
 import {parentingCandidates,familyFoodNeed} from './parenting.mjs';
@@ -41,10 +42,10 @@ function knownUnavailable(w,a,id){
 }
 export function liveCandidates(w,a,candidates){
  const shelterRecovery=coldRecovery(a)&&w.structures.shelter&&!w.structures.fire&&canUseCamp(w,a);
- // An extinguished fire is not a reason to resume optional errands in the
- // rain. Resting under real cover protects carried fuel while it air-dries;
- // usable fuel collection/ignition and urgent survival can still take over.
- if(shelterRecovery&&!candidates.some(c=>c.id==='rest'))candidates=[...candidates,{id:'rest',label:'Rest under cover while usable fuel is needed',score:80,reasons:[['reduce exposure until usable heat is available',80]]}];
+ // Cover reduces exposure, but energy-rest must stop once energy is restored.
+ // Quiet activity under cover and useful preparation remain possible while
+ // wet fuel dries; reachable heat and urgent survival still take priority.
+ if(shelterRecovery&&a.needs.energy<85&&!candidates.some(c=>c.id==='rest'))candidates=[...candidates,{id:'rest',label:'Rest under cover while usable fuel is needed',score:18+(100-a.needs.energy)*.45,reasons:[['recover energy under cover',18]]}];
  const filtered=candidates.filter(c=>{if(naturalWorld(w)&&(resourceFor[c.id]||['make_fire','build_shelter','dry_wood_by_fire','seek_warmth','seek_cover'].includes(c.id)))return distance(a.coordinates,coordForPosition(actionDestination(w,a,c),w))<=LOCAL_ACTION_RANGE;return true;}).filter(c=>!['store_wet_wood','collect_dried_wood','talk','seek_other'].includes(c.id)&&(c.id!=='make_fire'||a.inventory.dryWood>0)&&(c.id!=='dry_wood_by_fire'||a.inventory.wetWood>0)&&(c.id!=='seek_cover'||(a.coverUntil||0)<clock(w))&&(!w.frontier||!resourceFor[c.id]||w.resources[resourceFor[c.id]]>0)&&!knownUnavailable(w,a,c.id)&&(!resourceFor[c.id]||!w.settlement||roomFor(w,a,resourceFor[c.id])>0)&&(!['share_food'].includes(c.id)||(a.socialUntil||0)<clock(w)));
  // Retain a real, safe fallback if every remembered resource is unavailable.
  if(!filtered.length)filtered.push({id:'rest',label:w.structures.shelter?'Rest in the shelter':'Rest in the meadow',score:1,reasons:[['no useful reachable resource action',1]]});
@@ -55,13 +56,13 @@ export function liveCandidates(w,a,candidates){
   // Travel has a cost. Equally useful nearby resources should not lose a fixed
   // alphabetical tie to the same distant thicket on every decision.
   const other=otherAgent(w,a),trust=other?relationship(w,a,other)?.trust??34:34,socialPenalty=['talk','seek_other','share_food'].includes(c.id)?Math.max(0,35-trust)*(c.id==='share_food'?1.6:.7):0;
-  const score=Math.max(c.score,c.id==='rest'&&shelterRecovery?80:-Infinity)-trip*(a.needs.energy<25?.45:.24)-comfortPenalty-socialPenalty+(immediate&&a.needs.hunger<35?20:0);
+  const score=Math.max(c.score,c.id==='rest'&&shelterRecovery?18+(100-a.needs.energy)*.45:-Infinity)-trip*(a.needs.energy<25?.45:.24)-comfortPenalty-socialPenalty+(immediate&&a.needs.hunger<35?20:0);
   return {...c,label:c.id==='rest'&&naturalWorld(w)&&distance(a.coordinates,coordForPosition('camp',w))>18?'Rest here on the ground':c.id==='rest'&&shelterRecovery?'Rest under cover while usable fuel is needed':c.id==='explore'?'Explore the surrounding valley':c.label,score,reasons:[...(c.reasons||[]),['travel effort',-trip*.24]]};
  });
  const familyNeed=familyFoodNeed(w,a);
  const returning=returnCandidate(w,a),exploration=explorationMotivation(w,a),all=[...ordinary,...settlementCandidates(w,a),...freeTimeCandidates(w,a),...parentingCandidates(w,a),...economyCandidates(w,a),...(returning?[returning]:[])].filter(c=>c.id!=='explore'||exploration.allowed).map(c=>c.id==='explore'?{...c,score:c.score-exploration.penalty,explanation:exploration.reason,reasons:[...(c.reasons||[]),['remembered exploration yield',-exploration.penalty]]}:c).map(c=>familyNeed&&/^(gather_berries|forage:|survey:|retrieve_food:)/.test(c.id)?{...c,score:c.score+familyNeed,explanation:'Collect finite food for a dependent child.'}:c).sort((x,y)=>y.score-x.score||x.id.localeCompare(y.id));
- const useful=all.filter(c=>c.score>0);
- return useful.length?useful.filter((c,i)=>useful.findIndex(x=>x.id===c.id)===i):[{id:'rest',label:'Rest and reconsider',score:1,reasons:[['no useful available action',1]]}];
+ const useful=all.filter(c=>!(family(c.id)==='energy'&&a.needs.energy>=85)).map(c=>{const bonus=interestBonus(a,c);return {...c,score:c.score+bonus,reasons:[...(c.reasons||[]),['personal interest and recent satisfaction',bonus]]};}).filter(c=>c.score>0).sort((x,y)=>y.score-x.score||x.id.localeCompare(y.id));
+ return useful.length?useful.filter((c,i)=>useful.findIndex(x=>x.id===c.id)===i):a.needs.energy<85?[{id:'rest',label:'Rest and reconsider',score:1,reasons:[['no useful available action',1]]}]:[{id:'leisure:relax',label:'Take a quiet break',score:1,reasons:[['no useful activity within reach',1]],job:{kind:'relax',minutes:10,destination:{...a.coordinates},reason:'Pause briefly and reconsider available activities.'}}];
 }
 export function rememberFailure(w,a,t,detail){
  const key=resourceFor[t.actionId];if(key)a.resourceObservations??={};
@@ -71,6 +72,7 @@ export function rememberFailure(w,a,t,detail){
 }
 export function retireObsoleteTask(w,a){
  const t=a.task;if(!t)return;
+ if(family(t.actionId)==='energy'&&a.needs.energy>=85){outcome(w,a,t,true,`${a.name} has recovered enough energy and is ready for another activity.`);a.task=null;return;}
  let reason;if(['store_wet_wood','collect_dried_wood'].includes(t.actionId))reason='Storage now requires a physical visit to its container; choosing a handling task.';
  if(knownUnavailable(w,a,t.actionId))reason='The remembered resource is unavailable; reconsidering another useful action.';
  if(t.actionId==='seek_cover'&&t.phase==='work'){
@@ -91,7 +93,7 @@ export function retireObsoleteTask(w,a){
 }
 export function resumeLiveTask(w,a,urgent){
  const ranked=liveCandidates(w,a,candidateActions(w,a));
- a.suspendedTasks=(a.suspendedTasks||[]).filter(t=>!knownUnavailable(w,a,t.actionId)&&!(t.actionId==='seek_warmth'&&!w.structures.fire)&&!(t.actionId==='seek_cover'&&a.position==='camp'));
+ a.suspendedTasks=(a.suspendedTasks||[]).filter(t=>!(family(t.actionId)==='energy'&&a.needs.energy>=85)&&!knownUnavailable(w,a,t.actionId)&&!(t.actionId==='seek_warmth'&&!w.structures.fire)&&!(t.actionId==='seek_cover'&&a.position==='camp'));
  const index=a.suspendedTasks.findLastIndex(t=>ranked.some(c=>c.id===t.actionId)&&(urgent?family(t.actionId)===urgent:ranked[0]?.id===t.actionId));
  if(index<0)return false;const t=a.suspendedTasks[index],current=ranked.find(c=>c.id===t.actionId);
  // Preserve consumed food and completed work, but refresh the physical

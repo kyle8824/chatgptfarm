@@ -102,7 +102,7 @@ w.structures.shelter=true;a.coordinates={x:59,y:35};a.position='camp';
 assert(thermalChoices(householdWorld(w,a),a).some(c=>c.id==='seek_cover'),'actual shelter protects even when its fire is out');
 w.wood.legacyFireUntil=null;w.wood.batches=w.wood.batches.filter(b=>b.form!=='branch');a.inventory.dryWood=a.inventory.wetWood=0;a.needs.energy=95;
 for(let i=0;i<160;i++)await step(w,6);
-assert.equal(a.task?.actionId,'rest');assert(a.thermalExposure.sheltered,'cold rest stays under real cover until usable heat is available');assert.equal(a.needs.warmth,0,'cover alone does not manufacture warmth');
+assert.notEqual(a.task?.actionId,'rest','a fully rested person can attend to useful work while no heat is available');assert.notEqual(a.task?.actionId,'explore','cold still prevents optional expeditions');assert.equal(a.needs.warmth,0,'useful activity and cover do not manufacture warmth');
 const screen={task:{phase:'planning',actionId:'return_warmth:willow-basin'}};assert.match(progressText(screen),/safe walking route/);
 screen.task={phase:'travel',progress:{kind:'return_warmth',distance:20,targetDistance:100,camp:'Willow Basin'}};
 assert.equal(progressRatio(screen),.2);assert.match(progressText(screen),/20 m walked toward Willow Basin/);
