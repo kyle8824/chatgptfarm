@@ -48,7 +48,7 @@ export function liveRoute(w,from,to,actor=null){
   // Visibility routing through real doorway/corner clearances avoids grid
   // quantization and remains cheap enough for the running server.
   const points=[start,to,...terrainWaypoints(w,start,to)];for(const camp of campsOf(w)){if(segmentDistance(camp.fire,start,to)>10)continue;for(const x of [-2.65,0,2.65])for(const y of [-2.5,2.5])points.push(shelterPoint(x,y,w,camp.home));points.push(shelterPoint(0,0,w,camp.home));for(let i=0;i<12;i++)points.push({x:camp.fire.x+Math.cos(i/12*Math.PI*2)*1.6,y:camp.fire.y+Math.sin(i/12*Math.PI*2)*1.6});}
-  points.push(...structureWaypoints(w));
+  points.push(...structureWaypoints(w,actor));
   for(const b of others)for(let i=0;i<12;i++)points.push({x:b.coordinates.x+Math.cos(i/6*Math.PI)*1.38,y:b.coordinates.y+Math.sin(i/6*Math.PI)*1.38});
   for(const tree of (w.settlement?.trees||[]).filter(t=>!t.depleted&&segmentDistance(t.position,start,to)<1.5).slice(0,16))for(let i=0;i<8;i++)points.push({x:tree.position.x+Math.cos(i/4*Math.PI)*.7,y:tree.position.y+Math.sin(i/4*Math.PI)*.7});
   const costs=points.map(()=>Infinity),heuristic=points.map(p=>distance(p,to)),previous=[],done=new Set();costs[0]=0;

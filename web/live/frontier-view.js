@@ -19,7 +19,8 @@ function riverMesh(points,material,y=-.12){const positions=[],indices=[];for(let
 export function installFrontier(view,frame){
  if(view.frontierInstalled||!frame.frontier)return;view.frontierInstalled=true;view.frontier=frame.frontier;
  view.scene.remove(view.groundMesh);view.groundMesh.geometry.dispose();view.groundMesh.geometry=frontierTerrain(view.heightAt);view.scene.add(view.groundMesh);
- view.camera.far=1800;view.camera.updateProjectionMatrix();view.controls.maxDistance=700;view.controls.maxTargetRadius=750;view.scene.fog.density=.002;
+ view.camera.far=4000;view.camera.updateProjectionMatrix();view.controls.maxDistance=2000;view.controls.maxTargetRadius=750;view.scene.fog.density=.002;
+ view.regionLabels=frame.frontier.homes.map(h=>{const label=document.createElement('div');label.className='label region-label';label.textContent=h.name;label.hidden=true;document.querySelector('#labels').append(label);return {home:h,label};});
  view.camps=new Map([['willow-basin',{shelter:view.shelter,fire:view.fire,flames:view.flames,light:view.fireLight}]]);
  for(const home of frame.frontier.homes.filter(h=>h.id!=='willow-basin')){
   const camp=campLayout(null,home),shelter=view.shelter.clone(true),fire=view.fire.clone(true);shelter.position.set(camp.shelter.x,view.heightAt(camp.shelter.x,camp.shelter.y),camp.shelter.y);fire.position.set(camp.fire.x,view.heightAt(camp.fire.x,camp.fire.y),camp.fire.y);view.scene.add(shelter,fire);const flames=fire.children.find(c=>c.type==='Group'),light=fire.children.find(c=>c.isPointLight);view.camps.set(home.id,{shelter,fire,flames,light});

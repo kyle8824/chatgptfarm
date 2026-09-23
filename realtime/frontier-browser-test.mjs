@@ -18,7 +18,7 @@ try{for(const mobile of [true,false]){
  await page.evaluate(()=>document.querySelector('.eyebrow').textContent='ISOLATED EXPANSION FIXTURE');
  for(const home of [...frame.frontier.homes,{id:'all'}]){
   await page.selectOption('#region-select',home.id);await page.waitForFunction(id=>document.querySelectorAll('#people .person:not([hidden])').length===(id==='all'?8:2),home.id);
-  await page.screenshot({path:`realtime-qa/frontier-${mobile?'mobile':'desktop'}-${home.id}.png`});assert.equal(await page.evaluate(()=>document.documentElement.scrollWidth>innerWidth),false);
+  await page.waitForTimeout(200);if(home.id==='all'){assert.equal(await page.locator('.region-label:visible').count(),4,'all four camps fit the overview');assert.equal(await page.locator('#people').evaluate(e=>e.scrollLeft),0);}await page.screenshot({path:`realtime-qa/frontier-${mobile?'mobile':'desktop'}-${home.id}.png`});assert.equal(await page.evaluate(()=>document.documentElement.scrollWidth>innerWidth),false);
   const visible=await page.locator('#people .person:visible').count();report.push({mobile,home:home.id,visible});
  }
  await page.selectOption('#region-select','ochre-vale');await page.locator('#agent-elin').click();assert.match(await page.locator('#inspect-content').textContent(),/Elin Clay/);await page.locator('[data-tab="relationships"]').click();const text=await page.locator('#inspect-content').textContent();assert.match(text,/Ronan Brook/);assert(!text.includes('Mara Vale'),'unknown founders are absent from relationships');await page.screenshot({path:`realtime-qa/frontier-${mobile?'mobile':'desktop'}-lineage.png`});await page.getByRole('button',{name:'Close inspector'}).click();

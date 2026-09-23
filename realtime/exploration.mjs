@@ -28,7 +28,7 @@ export function observeExploration(w,a){
   if(first)addEvent(w,'world',`Place discovered · ${label}`,`${a.name} observed it while physically exploring this part of the valley.`,{agentId:a.id,coordinates:{...a.coordinates}});
  }
 }
-function nextLeg(w,a,t){const destination=explorationDestination(w,a);if(!destination)return false;const path=liveRoute(w,a.coordinates,destination);if(!path)return false;Object.assign(t,{destination,path,pathIndex:1,phase:'travel',progressIndex:null,egressing:!liveWalkable(w,a.coordinates)});return true;}
+function nextLeg(w,a,t){const destination=explorationDestination(w,a);if(!destination)return false;const path=liveRoute(w,a.coordinates,destination,a);if(!path)return false;Object.assign(t,{destination,path,pathIndex:1,phase:'travel',progressIndex:null,egressing:!liveWalkable(w,a.coordinates)});return true;}
 export function advanceExploration(w,a,t,seconds){
  const memory=a.liveExploration??={cells:{},observations:{}};
  if(!t.exploration){

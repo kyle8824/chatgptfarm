@@ -18,22 +18,22 @@ const text=(s,max)=>{if(typeof s!=='string'||!s.trim())throw Error('Missing desi
 const number=(v,min,max)=>{if(!Number.isFinite(v)||v<min||v>max)throw Error('Design dimension out of bounds');return v;};
 const vec=(v,min,max)=>{if(!Array.isArray(v)||v.length!==3)throw Error('Expected three dimensions');return v.map(n=>number(n,min,max));};
 export function buildingSites(w,a){
- const sites=climbingSites(w,a).filter(s=>!w.settlement.projects.some(p=>distance(p.position,s.position)<6)&&liveRoute(w,a.coordinates,{x:s.position.x,y:s.position.y-2.5}));
+ const sites=climbingSites(w,a).filter(s=>!w.settlement.projects.some(p=>distance(p.position,s.position)<6)&&liveRoute(w,a.coordinates,{x:s.position.x,y:s.position.y-2.5},a));
  for(const [i,p]of [{x:72,y:38},{x:58,y:39},{x:72,y:44},{x:59,y:45},{x:79,y:38},{x:53,y:40}].map(p=>localPosition(w,p)).entries()){
   if(w.settlement.projects.some(b=>distance(b.position,p)<6))continue;
   if(w.settlement.trees.some(t=>treeUnits(w,t)>0&&distance(t.position,p)<3.5))continue;
-  if(liveWalkable(w,p)&&liveRoute(w,a.coordinates,p))sites.push({id:`clearing-${i}`,position:p,purposes:['storage','shelter'],width:4,depth:4});
+  if(liveWalkable(w,p)&&liveRoute(w,a.coordinates,p,a))sites.push({id:`clearing-${i}`,position:p,purposes:['storage','shelter'],width:4,depth:4});
  }
  const local=new Set();for(const radius of [8,14])for(let i=0;i<8;i++){
   const angle=i*Math.PI/4,p={x:Math.round(a.coordinates.x+Math.cos(angle)*radius),y:Math.round(a.coordinates.y+Math.sin(angle)*radius)},id=`local-${p.x}-${p.y}`;
   if(local.has(id)||p.x<4||p.y<4||p.x>w.worldModel.bounds.width-4||p.y>w.worldModel.bounds.height-4)continue;local.add(id);
   if(w.settlement.projects.some(b=>distance(b.position,p)<6)||w.settlement.trees.some(t=>treeUnits(w,t)>0&&distance(t.position,p)<3.5))continue;
   if(![-2,0,2].every(x=>[-2,0,2].every(y=>liveWalkable(w,{x:p.x+x,y:p.y+y}))))continue;
-  if(liveRoute(w,a.coordinates,p))sites.push({id,position:p,purposes:['storage','shelter'],width:4,depth:4});if(sites.length>=12)break;
+  if(liveRoute(w,a.coordinates,p,a))sites.push({id,position:p,purposes:['storage','shelter'],width:4,depth:4});if(sites.length>=12)break;
  }
  const crossings=w.frontier?waterCrossings(w,a):[48,53,78,83,25,30].map(x=>({x,y:riverY(x)}));
  for(const {x,y}of crossings){const p={x,y:y+2.6};if(w.settlement.projects.some(b=>(b.purpose==='bridge'||b.spansWater)&&Math.abs(b.position.x-x)<4))continue;
-  if(liveRoute(w,a.coordinates,p))sites.push({id:w.frontier?`crossing-${x}-${Math.round(y)}`:`crossing-${x}`,position:{x,y},purposes:['bridge'],width:2.8,depth:6,waterHalfWidth:1.25,spansWater:true});
+  if(liveRoute(w,a.coordinates,p,a))sites.push({id:w.frontier?`crossing-${x}-${Math.round(y)}`:`crossing-${x}`,position:{x,y},purposes:['bridge'],width:2.8,depth:6,waterHalfWidth:1.25,spansWater:true});
  }return sites;
 }
 function waterCrossings(w,a){const out=[];for(const o of w.worldModel.objects.filter(o=>o.type==='creek_segment')){const pts=o.geometry.points||[];for(let i=1;i<pts.length;i++){const [u,v]=[pts[i-1],pts[i]],x=Math.round(Math.max(u[0]+3,Math.min(v[0]-3,a.coordinates.x))),y=u[1]+(v[1]-u[1])*(x-u[0])/(v[0]-u[0]);if(Math.hypot(x-a.coordinates.x,y-a.coordinates.y)<18)out.push({x,y});}}return out;}
@@ -52,7 +52,7 @@ function issuedLocalSite(w,a,raw,issued){
  const p=issued.position;
  if(!p||issued.width!==4||issued.depth!==4||issued.id!==`local-${p.x}-${p.y}`||p.x<4||p.y<4||p.x>w.worldModel.bounds.width-4||p.y>w.worldModel.bounds.height-4)return null;
  if(w.settlement.projects.some(b=>distance(b.position,p)<6)||w.settlement.trees.some(t=>treeUnits(w,t)>0&&distance(t.position,p)<3.5))return null;
- if(![-2,0,2].every(x=>[-2,0,2].every(y=>liveWalkable(w,{x:p.x+x,y:p.y+y})))||!liveRoute(w,a.coordinates,p))return null;
+ if(![-2,0,2].every(x=>[-2,0,2].every(y=>liveWalkable(w,{x:p.x+x,y:p.y+y})))||!liveRoute(w,a.coordinates,p,a))return null;
  return issued;
 }
 export function validateBlueprint(w,a,raw,issuedSite=null){
@@ -114,9 +114,9 @@ export function validateBlueprint(w,a,raw,issuedSite=null){
   const lids=p.parts.filter(x=>x.kind==='roof'&&partBounds(p,x).bottom>=f.top+height-.16);p.covered=coversRectangle(lids.map(x=>partBounds(p,x)),f);
   p.secured=p.covered&&sides.size===4&&walls.every(x=>['timber','stone'].includes(x.material))&&lids.length>0&&lids.every(x=>x.material==='timber');
  }else if(!generated&&(!p.parts.some(x=>x.kind==='roof')||p.parts.filter(x=>x.kind==='post'||x.kind==='wall').length<3))throw Error('Shelter needs a roof and supporting sides');
- if(!generated&&p.purpose==='shelter'){const preview={...w,settlement:{...w.settlement,projects:[...w.settlement.projects,{...p,id:'validation',parts:p.parts.map(x=>({...x,built:true}))}]}},roof=p.parts.find(x=>x.kind==='roof');const rest={x:p.position.x+roof.center[0],y:p.position.y+roof.center[2]};if(!liveWalkable(preview,rest)||!liveRoute(preview,a.coordinates,rest))throw Error('Shelter needs an accessible place beneath its roof');}
+ if(!generated&&p.purpose==='shelter'){const preview={...w,settlement:{...w.settlement,projects:[...w.settlement.projects,{...p,id:'validation',parts:p.parts.map(x=>({...x,built:true}))}]}},roof=p.parts.find(x=>x.kind==='roof');const rest={x:p.position.x+roof.center[0],y:p.position.y+roof.center[2]};if(!liveWalkable(preview,rest)||!liveRoute(preview,a.coordinates,rest,a))throw Error('Shelter needs an accessible place beneath its roof');}
  if(generated){p.affordances=inferAffordances(p);const finished={...p,id:'validation',status:'complete',parts:p.parts.map(x=>({...x,built:true}))},preview={...w,settlement:{...w.settlement,projects:[...w.settlement.projects,finished]}};
-  p.affordances.restPoints=p.affordances.restPoints.filter(point=>liveWalkable(preview,point)&&liveRoute(preview,a.coordinates,point));
+  p.affordances.restPoints=p.affordances.restPoints.filter(point=>liveWalkable(preview,point)&&liveRoute(preview,a.coordinates,point,a));
   if(!p.affordances.restPoints.length)p.affordances.labels=p.affordances.labels.filter(x=>x!=='Potential sheltered rest');
  }
  p.bill={};for(const part of p.parts)p.bill[part.material]=(p.bill[part.material]||0)+part.materialUnits;return p;
@@ -124,7 +124,7 @@ export function validateBlueprint(w,a,raw,issuedSite=null){
 export function adoptBlueprint(w,a,design,model){
  if(!design)return null;if(householdProjects(w,a).length>=12||householdProjects(w,a).filter(p=>p.status!=='complete').length>=2||w.settlement.projects.some(p=>p.ownerId===a.id&&p.status!=='complete'))throw Error('Construction capacity reached');
  const p={...design,id:`project-${w.settlement.nextId++}`,ownerId:a.id,...(a.householdId?{householdId:a.householdId}:{}),designer:a.name,model,source:'ai',createdAt:clock(w),status:'planned',revision:0};
- const stockPositions=[{x:p.bounds.maxX+1,y:p.bounds.maxZ+1},{x:p.bounds.minX-1,y:p.bounds.maxZ+1},{x:p.bounds.maxX+1,y:p.bounds.minZ-1},{x:p.bounds.minX-1,y:p.bounds.minZ-1}],stockPosition=stockPositions.find(q=>liveWalkable(w,q)&&liveRoute(w,a.coordinates,q));if(!stockPosition)throw Error('No reachable material staging area');
+ const stockPositions=[{x:p.bounds.maxX+1,y:p.bounds.maxZ+1},{x:p.bounds.minX-1,y:p.bounds.maxZ+1},{x:p.bounds.maxX+1,y:p.bounds.minZ-1},{x:p.bounds.minX-1,y:p.bounds.minZ-1}],stockPosition=stockPositions.find(q=>liveWalkable(w,q)&&liveRoute(w,a.coordinates,q,a));if(!stockPosition)throw Error('No reachable material staging area');
  p.stockpileId=makeStore(w,{position:stockPosition,ownerId:a.id,access:p.access,kind:'site',name:`Materials for ${p.name}`,capacityKg:260,capacityVolume:480,projectId:p.id}).id;
  w.settlement.projects.push(p);w.settlement.revision++;remember(w,a,`I designed ${p.name}: ${p.rationale}`,{importance:8,tags:['construction','design'],source:`design:${p.id}`});
  addEvent(w,'construction-design',`${a.name} designed ${p.name}`,`${p.rationale} The ${p.parts.length} parts are a plan; materials still need to be carried here and assembled.`,{agentId:a.id,projectId:p.id});return p;

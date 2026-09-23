@@ -19,6 +19,7 @@ jobs:
         run: |
           FRONTIER_STEPS=14400 node realtime/frontier-test.mjs
           node realtime/frontier-economy-test.mjs
+          node realtime/frontier-construction-test.mjs
           node realtime/provider-test.mjs
           node realtime/frame-delta-test.mjs
           node realtime/design-recovery-test.mjs

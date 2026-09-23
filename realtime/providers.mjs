@@ -25,6 +25,7 @@ export function reserveProvider(record,a,route,kind,payload,now){
  return entry;
 }
 export function recordProviderResult(record,entry,result,route,status){
+ if(entry.accounted){entry.status=status;return;}entry.accounted=true;
  const usage=result?.usage||{},input=usage.input_tokens??usage.prompt_tokens,output=usage.output_tokens??usage.completion_tokens;Object.assign(entry,{status,inputTokens:Number.isFinite(input)?input:null,outputTokens:Number.isFinite(output)?output:null,responseId:result?.id||null});
  const key=entry.householdId,tot=record.providerUsage.totals[key]??={calls:0,actionCalls:0,designCalls:0,inputTokens:0,outputTokens:0,accepted:0,rejected:0};tot.calls++;tot[entry.kind+'Calls']++;tot.inputTokens+=entry.inputTokens||0;tot.outputTokens+=entry.outputTokens||0;
  if(route.provider==='openai'&&Number.isFinite(input)&&Number.isFinite(output)){const cost=(input*route.inputRate+output*route.outputRate)/1e6,day=record.providerUsage.days[entry.date];entry.reportedUsd=cost;day.reportedUsd+=cost;if(cost<=entry.reservedUsd)day.reservedUsd-=entry.reservedUsd-cost;else record.providerUsage.rateMismatch=true;}
