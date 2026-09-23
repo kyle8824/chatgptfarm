@@ -20,6 +20,7 @@ import {workSettlement,noticeMissingSupplies,recordStructureUse} from './settlem
 import {builtCover,coverEffectiveness} from './structures.mjs';
 import {ensureFreeTime,advanceFreeTime,beginFreeTime,finishFreeTime,isFreeTimeJob,workFreeTime} from './free-time.mjs';
 import {ensureComfort,isRestingTask,workComfortRest} from './comfort.mjs';
+import {updateThermalGoal,advanceThermalReturn} from './thermal-return.mjs';
 
 export function prepare(seed){
  const w=migrateWorld(structuredClone(seed));delete w.runtime;
@@ -42,15 +43,17 @@ export async function step(w,seconds,{mind=null,fallbackReason='no_provider',wal
   if(!isAdult(w,a))continue;
   advanceFreeTime(w,a,seconds);
   ensureComfort(a);a.restSupport=null;
-  retireObsoleteTask(w,a);if(!a.task)noteCargoLimits(w,a);
+  updateThermalGoal(w,a);retireObsoleteTask(w,a);if(!a.task)noteCargoLimits(w,a);
   noticeMissingSupplies(w,a);
   const urgent=liveUrgency(w,a);
-  if(a.task&&urgent&&family(a.task.actionId)!==urgent&&a.task.requiredMinutes-a.task.workMinutes>0.1&&a.needs[urgent]+10<(a.needs[family(a.task.actionId)]??100))interrupt(w,a,urgent);
-  if(!a.task&&!resumeLiveTask(w,a,urgent))await startTask(w,a,mind,urgent?'urgent_need':fallbackReason,!!urgent,{urgentNeed:urgent,candidateTransform:c=>liveCandidates(w,a,c),destinationResolver:(target,selected)=>chooseDestination(w,a,target,selected),routeFinder:(world,from,to)=>liveRoute(world,from,to,a)});
+  if(a.task&&urgent&&family(a.task.actionId)!==urgent&&a.task.requiredMinutes-a.task.workMinutes>0.1&&(['hydration','hunger','energy'].includes(urgent)&&a.needs[urgent]<20||a.needs[urgent]+10<(a.needs[family(a.task.actionId)]??100)))interrupt(w,a,urgent);
+  if(!a.task&&!resumeLiveTask(w,a,urgent))await startTask(w,a,mind,urgent?'urgent_need':fallbackReason,!!urgent,{urgentNeed:urgent,onRouteFailure:t=>rememberFailure(w,a,t,'No safe route to the selected destination.'),candidateTransform:c=>liveCandidates(w,a,c),destinationResolver:(target,selected)=>chooseDestination(w,a,target,selected),routeFinder:(world,from,to)=>liveRoute(world,from,to,a)});
   configureTask(w,a);
   if(a.task)beginFreeTime(w,a,a.task);
   const t=a.task,from={...a.coordinates};if(t&&!t.liveTiming&&t.workMinutes===0){const id=t.actionId;t.requiredMinutes=t.selected?.job?.minutes??(id==='drink'?.75:id.startsWith('eat_')?1:/^(gather_|forage:)/.test(id)?4:id==='talk'?3:id==='seek_other'?.1:t.requiredMinutes);t.liveTiming=true;}if(t&&a.liveThought?.actionId===t.actionId&&t.source==='ai')a.liveThought.status='acting';let positionBefore=a.position;if(t?.actionId==='drink')t.interactionReady=withinWaterReach(w,a.coordinates);
-  if(t?.actionId==='explore'){
+  if(t?.selected?.job?.kind==='return_warmth'){
+   positionBefore=t.phase==='travel'?'travel':a.position;const result=advanceThermalReturn(w,a,t,seconds);if(result.done){outcome(w,a,t,result.success,result.detail);if(!result.success)rememberFailure(w,a,t,result.detail);a.task=null;}
+  }else if(t?.actionId==='explore'){
    positionBefore='travel';const result=advanceExploration(w,a,t,seconds);if(result.done){outcome(w,a,t,result.success,result.detail);if(!result.success)rememberFailure(w,a,t,result.detail);a.task=null;}
   }else if(t?.actionId==='drink'&&t.phase==='work'&&!withinWaterReach(w,a.coordinates)){
    // Reposition an old saved task or a body displaced away from the bank.

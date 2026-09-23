@@ -34,10 +34,11 @@ export function thermalChoices(world, agent) {
       score: deficit * 1.8 + Math.max(0, -here.net),
       reasons: [['warmth deficit', deficit], ['camp hourly warmth change', camp.net]]}];
   }
-  if (world.structures.shelter && agent.position !== 'camp' && camp.net > here.net && deficit > 0) {
+  const cover = thermalExposure(world, {...agent, position: 'camp',coordinates:campLayout(world).shelter});
+  if (world.structures.shelter && !here.sheltered && cover.net > here.net && deficit > 0) {
     return [{id: 'seek_cover', label: 'Take cover in the camp shelter',
-      score: deficit + (camp.net - here.net) * 4,
-      reasons: [['warmth deficit', deficit], ['exposure reduction', camp.net - here.net]]}];
+      score: deficit + (cover.net - here.net) * 4,
+      reasons: [['warmth deficit', deficit], ['exposure reduction', cover.net - here.net]]}];
   }
   return [];
 }
