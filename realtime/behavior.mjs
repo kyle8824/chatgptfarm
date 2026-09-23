@@ -12,7 +12,7 @@ import {settlementCandidates} from './settlement.mjs';
 import {clock as liveClock,roomFor} from './holdings.mjs';
 import {explorationMotivation} from './exploration.mjs';
 import {freeTimeCandidates} from './free-time.mjs';
-import {coldRecovery,returnCandidate} from './thermal-return.mjs';
+import {coldRecovery,returnCandidate,usefulReturnCamp} from './thermal-return.mjs';
 
 const clock=w=>(w.day*24+w.hour)*60+(w.minute||0);
 const resourceFor={gather_dry_wood:'dryWood',gather_wet_wood:'wetWood',gather_berries:'berries',gather_stones:'stones',gather_clay:'clay',gather_reeds:'reeds'};
@@ -60,7 +60,8 @@ export function liveCandidates(w,a,candidates){
  });
  const familyNeed=familyFoodNeed(w,a);
  const returning=returnCandidate(w,a),exploration=explorationMotivation(w,a),all=[...ordinary,...settlementCandidates(w,a),...freeTimeCandidates(w,a),...parentingCandidates(w,a),...economyCandidates(w,a),...(returning?[returning]:[])].filter(c=>c.id!=='explore'||exploration.allowed).map(c=>c.id==='explore'?{...c,score:c.score-exploration.penalty,explanation:exploration.reason,reasons:[...(c.reasons||[]),['remembered exploration yield',-exploration.penalty]]}:c).map(c=>familyNeed&&/^(gather_berries|forage:|survey:|retrieve_food:)/.test(c.id)?{...c,score:c.score+familyNeed,explanation:'Collect finite food for a dependent child.'}:c).sort((x,y)=>y.score-x.score||x.id.localeCompare(y.id));
- return all.length?all.filter((c,i)=>all.findIndex(x=>x.id===c.id)===i):[{id:'rest',label:'Rest and reconsider',score:1,reasons:[['no useful available action',1]]}];
+ const useful=all.filter(c=>c.score>0);
+ return useful.length?useful.filter((c,i)=>useful.findIndex(x=>x.id===c.id)===i):[{id:'rest',label:'Rest and reconsider',score:1,reasons:[['no useful available action',1]]}];
 }
 export function rememberFailure(w,a,t,detail){
  const key=resourceFor[t.actionId];if(key)a.resourceObservations??={};
@@ -80,6 +81,7 @@ export function retireObsoleteTask(w,a){
  }
  if(t.actionId==='seek_warmth'&&!w.structures.fire)reason='The fire is out; this task can no longer warm anyone.';
  if(t.actionId==='explore'&&coldRecovery(a))reason='Too cold for optional exploration; recover warmth before another trip.';
+ if(t.selected?.job?.kind==='return_warmth'&&!usefulReturnCamp(w,a,t.selected.job.campId))reason='This known camp offers no shelter or usable heat; the return cannot help with the cold.';
  if(t.actionId==='seek_other'){
   const other=otherAgent(w,a);
   if(other&&distance(a.coordinates,other.coordinates)<2.1){a.socialUntil=clock(w)+90;outcome(w,a,t,true,`${a.name} found ${other.name} nearby; the search is finished.`);a.task=null;return;}
@@ -91,6 +93,11 @@ export function resumeLiveTask(w,a,urgent){
  const ranked=liveCandidates(w,a,candidateActions(w,a));
  a.suspendedTasks=(a.suspendedTasks||[]).filter(t=>!knownUnavailable(w,a,t.actionId)&&!(t.actionId==='seek_warmth'&&!w.structures.fire)&&!(t.actionId==='seek_cover'&&a.position==='camp'));
  const index=a.suspendedTasks.findLastIndex(t=>ranked.some(c=>c.id===t.actionId)&&(urgent?family(t.actionId)===urgent:ranked[0]?.id===t.actionId));
- if(index<0)return false;const t=a.suspendedTasks[index];a.task=t;configureTask(w,a,{force:true});if(!a.task.path.length){a.task=null;return false;}
+ if(index<0)return false;const t=a.suspendedTasks[index],current=ranked.find(c=>c.id===t.actionId);
+ // Preserve consumed food and completed work, but refresh the physical
+ // destination. A rested traveler must not return to an obsolete rest site.
+ t.targetPosition=actionDestination(w,a,t.selected,t.proposal);t.label=current.label;
+ if(t.selected?.job&&current.job?.destination)t.selected.job={...t.selected.job,destination:{...current.job.destination}};
+ a.task=t;configureTask(w,a,{force:true});if(!a.task.path.length){a.task=null;return false;}
  a.suspendedTasks.splice(index,1);addEvent(w,'action-resumed',`${a.name} resumes ${t.label}`,'Useful unfinished work is retained; its destination is checked for space.',{agentId:a.id,actionId:t.id,decisionId:t.decisionId});display(a);return true;
 }

@@ -5,6 +5,7 @@ import {otherAgent} from '../engine/core.js';
 import {recordCrossingWear,noteCargoLimits} from './structure-lifecycle.mjs';
 import {walkable,clearSegment,walkingSpeed,distance} from '../engine/navigation.js';
 import {coordForPosition} from '../engine/spectator.js';
+import {actionDestination} from '../engine/persistent-actions.js';
 import {CAMP,shelterPoint,shelterLocal} from './layout.mjs';
 import {waterBankPoints,withinWaterReach,nearestWater} from './water.mjs';
 import {onDeck,crossingPace,structureBlocks,structureWaypoints} from './structures.mjs';
@@ -74,7 +75,11 @@ function freeSpace(w,a,p){let min=Infinity;for(const b of w.agents){if(b.id===a.
 export function chooseDestination(w,a,target,selected={}){
  const CAMP=campLayout(w),id=selected.id||'',center=coordForPosition(target,w),points=[],m=motionState(a);
  if(selected.job?.destination)return {...selected.job.destination};
- if(id==='rest'&&naturalWorld(w)&&distance(a.coordinates,coordForPosition('camp',w))>18)return {...a.coordinates};
+ if(id==='rest'&&naturalWorld(w)){
+  if(!w.structures.shelter&&!w.structures.fire||distance(a.coordinates,coordForPosition('camp',w))>18)return {...a.coordinates};
+  const here=shelterLocal(a.coordinates,w);
+  if(w.structures.shelter&&Math.abs(here.x)<.6&&Math.abs(here.y)<1.3)return {...a.coordinates};
+ }
  if(id==='explore')return explorationDestination(w,a)||{...a.coordinates};
  // Eating carried food is local; there is no artificial trip back to camp.
  if(/^eat_/.test(id)&&a.inventory[id==='eat_berries'?'berries':id==='eat_tuber'?'tubers':'cookedMeat']>0)return {...a.coordinates};
@@ -96,7 +101,11 @@ export function chooseDestination(w,a,target,selected={}){
  return liveWalkable(w,a.coordinates)?{...a.coordinates}:points[0]?.p||center;
 }
 export function configureTask(w,a,{force=false}={}){
- const t=a.task;if(!t||(!force&&t.liveSpaceVersion===1&&(t.actionId!=='drink'||t.liveWaterVersion===1)))return;
+ const t=a.task;if(!t||(!force&&t.liveSpaceVersion===1&&(t.actionId!=='drink'||t.liveWaterVersion===1)&&(t.actionId!=='rest'||t.liveRestVersion===1)))return;
+ if(t.actionId==='rest'){
+  t.targetPosition=actionDestination(w,a,{id:'rest'});t.liveRestVersion=1;
+  t.label=t.targetPosition==='camp'&&w.structures.shelter?'Rest under the camp shelter':t.targetPosition==='camp'&&w.structures.fire?'Rest beside the camp fire':'Rest here on the ground';
+ }
  // Resuming after food/water may start elsewhere. Rebuild the incremental
  // journey there, never route back to the original planning position.
  if(t.selected?.job?.kind==='return_warmth'){if(force)delete t.returnJourney;t.destination={...a.coordinates};t.path=[{...a.coordinates}];t.phase='planning';t.liveSpaceVersion=1;return;}

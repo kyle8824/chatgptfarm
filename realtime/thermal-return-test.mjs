@@ -6,6 +6,7 @@ import {thermalChoices} from '../engine/thermal.js';
 import {householdWorld} from '../shared/frontier.js';
 import {prepare,step} from './elapsed.mjs';
 import {expandFrontier} from './frontier.mjs';
+import {observeLandscape} from './frontier-knowledge.mjs';
 import {reorganizeLandscape} from './landscape-migration.mjs';
 import {liveWalkable,liveClear} from './motion.mjs';
 import {liveCandidates,liveUrgency} from './behavior.mjs';
@@ -20,7 +21,7 @@ function fixture(){
  const a=w.agents.find(a=>a.id==='agent-mara');w.agents=[a];
  a.coordinates={...observed};a.position='travel';a.needs={hydration:98,hunger:98,energy:55,warmth:0};
  a.task=null;a.suspendedTasks=[];a.locomotion=null;a.inventory.berries=2;
- w.weather='rain';w.temperature=38;w.liveWeatherUntil=w.day*24+w.hour+6;
+ w.weather='rain';w.temperature=38;w.liveWeatherUntil=w.day*24+w.hour+6;w.structures.shelter=true;
  return {w,a};
 }
 // The entire long route obeys existing collision/terrain checks, with a hard
@@ -44,7 +45,11 @@ assert(obstruction.blocked);assert(!obstruction.path,'a closed obstruction never
 const stranger=w.frontier.homes.find(h=>h.id==='flint-heights');
 a.coordinates={x:stranger.x+20,y:stranger.y};updateThermalGoal(w,a);
 assert.equal(returnCamp(w,a).id,'willow-basin');delete a.thermalGoal;
-a.knownCamps=[stranger.id];updateThermalGoal(w,a);assert.equal(returnCamp(w,a).id,stranger.id);assert.equal(a.householdId,'willow-basin');
+a.knownCamps=[stranger.id];updateThermalGoal(w,a);assert.equal(returnCamp(w,a).id,'willow-basin','an empty clearing offers no cold protection');
+stranger.structures.shelter=true;
+assert.equal(returnCamp(w,a).id,'willow-basin','unobserved remote improvements do not appear in memory');
+a.coordinates={x:stranger.x+5,y:stranger.y};observeLandscape(w,a);a.coordinates={x:stranger.x+20,y:stranger.y};delete a.thermalGoal;updateThermalGoal(w,a);
+assert.equal(returnCamp(w,a).id,stranger.id);assert.equal(a.householdId,'willow-basin');
 
 // Reproduce the reported journey. Arrival alone grants no warmth; the actual
 // fire is required. The world and return intent survive a saved-state reload.
