@@ -35,7 +35,21 @@ function aimBones(joint,lowerJoint,target,upper,lower,pole,blend){
  joint.quaternion.slerp(shoulderQ,blend);lowerJoint.quaternion.slerp(foreQ,blend);
 }
 
-export function personAction(task){const kind=task?.job?.kind;return ['relax','rest'].includes(kind)?'rest':['conversation','courtship','commitment','family_plan','private_time'].includes(kind)?'conversation':kind==='care'?'care':kind==='hand_game'?'hand_game':kind==='study'?'observe':kind==='visit'?'visit':kind==='assemble'||kind==='repair'?'building':kind==='harvest'?'gather_timber':kind?'handling_supplies':task?.actionId;}
+const jobPoses=new Map([
+ ['reconsider','idle'],['return_warmth','idle'],
+ ['relax','rest'],['rest','rest'],
+ ...['conversation','courtship','commitment','family_plan','private_time'].map(kind=>[kind,'conversation']),
+ ['care','care'],['hand_game','hand_game'],['study','observe'],['visit','visit'],
+ ['assemble','building'],['repair','building'],['harvest','gather_timber'],
+ ...['take','deliver','deposit','put_down','gather','fallen','craft','practice_technique','regional_craft','trade','fold_rack','unfold_rack'].map(kind=>[kind,'handling_supplies']),
+]);
+export function personAction(task){
+ if(task?.actionId==='reconsider')return 'idle';
+ const kind=task?.job?.kind;
+ // Only known physical jobs animate labor. A new or idle job must never
+ // inherit gathering gestures merely because it has job metadata.
+ return kind?jobPoses.get(kind)||'idle':task?.actionId||'idle';
+}
 
 export function animatePerson(e,time,dt,walking,fresh){
  if(!fresh||e.model.infant)return;const m=e.model,work=e.phase==='work'&&!walking,drink=work&&e.action==='drink',gather=work&&/^(gather_|forage:|survey:|building|handling_supplies)/.test(e.action||''),rest=work&&e.action==='rest',social=work&&['conversation','hand_game','care'].includes(e.action),eat=work&&/^eat_/.test(e.action||'');
