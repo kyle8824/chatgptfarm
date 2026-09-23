@@ -24,7 +24,7 @@ export function drawContents(group,inventory,{carried=false,limit=20}={}){
 }
 export class SettlementView{
  constructor(scene,elevation){this.scene=scene;this.elevation=elevation;this.objects=new Map();this.data=null;}
- base(p){return (p.purpose==='bridge'||p.spansWater)?Math.max(this.elevation(p.position.x,riverY(p.position.x)-2),this.elevation(p.position.x,riverY(p.position.x)+2))+.04:this.elevation(p.position.x,p.position.y);}
+ base(p){return (p.purpose==='bridge'||p.spansWater)?Math.max(this.elevation(p.position.x,p.position.y-2),this.elevation(p.position.x,p.position.y+2))+.04:this.elevation(p.position.x,p.position.y);}
  update(data,agents=[]){if(!data)return;this.data=data;const live=new Set();
   for(const p of data.projects){live.add(p.id);const open=!!p.storeId&&agents.some(a=>a.task?.job?.storeId===p.storeId&&a.task.phase==='work'),signature=JSON.stringify([p.parts.map(x=>[x.built,Math.floor(x.workMinutes/x.requiredMinutes*12),Math.floor(conditionOf(x)*10)]),p.status,open]);let obj=this.objects.get(p.id);if(obj?.signature===signature)continue;if(obj)this.remove(p.id);
    const g=createStructureModel(p,{open,appearance:releasedStructureLook(p)});g.position.set(p.position.x,this.base(p),p.position.y);g.userData.objectId=p.id;this.scene.add(g);
@@ -45,7 +45,7 @@ export class SettlementView{
   for(const id of this.objects.keys())if(!live.has(id))this.remove(id);
  }
  remove(id){const obj=this.objects.get(id);if(!obj)return;this.scene.remove(obj.group);obj.group.userData.disposeStructure?.();obj.group.traverse(m=>{if(m.isMesh&&!m.material.visible){m.geometry.dispose();m.material.dispose();}});this.objects.delete(id);}
- elevationAt(x,z){for(const p of this.data?.projects||[])for(const part of p.parts){if(!activeParts(p).has(part.id)||part.kind!=='deck'||part.center[1]+part.size[1]/2>.65)continue;const [cx,y,cz]=part.center,[sx,sy,sz]=part.size;if(Math.abs(x-p.position.x-cx)<=sx/2+.05&&Math.abs(z-p.position.y-cz)<=sz/2+.05)return this.base(p)+y+sy/2;}return this.elevation(x,z);}
+ elevationAt(x,z){for(const p of this.data?.projects||[])for(const part of p.parts){if(!activeParts(p).has(part.id)||part.kind!=='deck'||!p.climbsTerrain&&part.center[1]+part.size[1]/2>.65)continue;const [cx,y,cz]=part.center,[sx,sy,sz]=part.size;if(Math.abs(x-p.position.x-cx)<=sx/2+.05&&Math.abs(z-p.position.y-cz)<=sz/2+.05)return this.base(p)+y+sy/2;}return this.elevation(x,z);}
 }
 export function updateCargo(person,inventory){const signature=JSON.stringify(inventory||{});if(person.cargoSignature===signature)return;person.cargoSignature=signature;const r=person.rig;if(!r)return;
  if(r.cargo)r.cargoAnchor.remove(r.cargo);r.cargo=new T.Group();r.cargoAnchor.add(r.cargo);drawContents(r.cargo,inventory,{carried:true,limit:8});r.bag.visible=Object.values(inventory||{}).some(v=>v>0);

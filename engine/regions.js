@@ -29,7 +29,7 @@ export function advanceSites(w){
 export function siteCandidates(w,a){
   const out=[],deficit=100-a.needs.hunger,hasFood=a.inventory.berries>0||a.inventory.cookedMeat>0||(a.inventory.tubers>0&&a.skills?.['tuber-edible']>0);
   for(const s of Object.values(w.regions?.sites||{})){
-    if(s.regionId!==a.regionId)continue;
+    if(s.regionId!==a.regionId)continue;if(w.frontier&&!a.siteKnowledge?.[s.id]&&Math.hypot(s.position.x-a.coordinates.x,s.position.y-a.coordinates.y)>18)continue;
     const k=a.siteKnowledge[s.id];
     if(!k){out.push({id:`survey:${s.id}`,label:`Search the ${s.habitat} for useful plants`,score:12+a.traits.curiosity*8+deficit*(hasFood?.1:.85),reasons:[['unexamined habitat',12],['food deficit',deficit]]});continue;}
     if(a.inventory.berries>=5)continue;

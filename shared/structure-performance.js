@@ -10,7 +10,7 @@ export function cargoAllowance(p,part){
  const width=Math.min(1.35,part.size[0]/1.1),thickness=Math.min(1.7,part.size[1]/.2),material={timber:1,stone:1.25,reeds:.1,clay:.1}[part.material]||.5;
  return Math.max(0,24*width*thickness*material*support(part.id));
 }
-export function surfaceProtection(part){return conditionOf(part)*(.5+.5*qualityOf(part))*({timber:.94,reeds:.8,stone:.97,clay:.4}[part.material]||.5);}
+export function surfaceProtection(part){return Math.min(.99,conditionOf(part)*(.5+.5*qualityOf(part))*({timber:.94,reeds:.8,stone:.97,clay:.4}[part.material]||.5)+(part.sealant?.kind==='pine-resin'?.15*conditionOf(part):0));}
 export function structurePerformance(p){
  const built=p.parts.filter(x=>x.built),active=activeParts(p),usable=built.filter(x=>active.has(x.id)),roofs=usable.filter(x=>x.kind==='roof'),decks=built.filter(x=>x.kind==='deck');
  const condition=built.length?Math.min(...built.map(conditionOf)):1,quality=built.length?built.reduce((n,x)=>n+qualityOf(x),0)/built.length:null;

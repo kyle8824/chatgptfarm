@@ -1,12 +1,14 @@
+import {campsOf,campLayout} from '../shared/frontier.js';
 // Transitional hourly model. Location labels are authoritative until travel
 // exposure is integrated; renderer coordinates must not drive world physics.
 export function thermalExposure(world, agent) {
   const atCamp = agent.position === 'camp';
-  const sheltered = atCamp && !!world.structures.shelter;
+  const camps=world.frontier?campsOf(world):null,p=agent.coordinates;
+  const sheltered = camps&&p?camps.some(c=>c.structures.shelter&&Math.abs(p.x-c.shelter.x)<1.5&&Math.abs(p.y-c.shelter.y)<1.6):atCamp && !!world.structures.shelter;
   const coldLoss = world.temperature < 50 ? 5 : world.temperature < 58 ? 2 : 0;
   const rainLoss = world.weather === 'rain' && !sheltered ? 3 : 0;
   const shelterProtection = sheltered ? Math.min(coldLoss, 2) : 0;
-  const fireGain = atCamp && world.structures.fire ? 10 : 0;
+  const fireGain = camps&&p?Math.max(0,...camps.filter(c=>c.structures.fire).map(c=>10*Math.max(0,Math.min(1,(4-Math.hypot(p.x-c.fire.x,p.y-c.fire.y))/1.8)))):atCamp && world.structures.fire ? 10 : 0;
   return {coldLoss, rainLoss, shelterProtection, fireGain,
     net: fireGain + shelterProtection - coldLoss - rainLoss,
     location: agent.position, sheltered, model: 'hourly-location-v1'};
@@ -25,7 +27,7 @@ export function applyThermalExposure(world, agent) {
 // will replace that assumption as the spatial model is rebuilt.
 export function thermalChoices(world, agent) {
   const here = thermalExposure(world, agent);
-  const camp = thermalExposure(world, {...agent, position: 'camp'});
+  const camp = thermalExposure(world, {...agent, position: 'camp',coordinates:campLayout(world).fire});
   const deficit = Math.max(0, 70 - agent.needs.warmth);
   if (world.structures.fire && deficit > 0) {
     return [{id: 'seek_warmth', label: 'Warm up beside the camp fire',

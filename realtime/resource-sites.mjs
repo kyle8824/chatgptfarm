@@ -1,3 +1,4 @@
+import {homeFor,REGIONAL_ITEMS} from '../shared/frontier.js';
 // Finite, explicitly accounted activation of additional landscape deposits.
 // Old supplies, world object IDs and inventories are never replaced/refilled.
 export const RESOURCE_SITES=[
@@ -22,7 +23,7 @@ export function harvestSite(w,id,count,actorId=null){
 }
 export function materialSources(w,material,actor=null){
  const key={stone:'stones',reeds:'reeds',clay:'clay'}[material];if(!key)return [];
- const old=w.worldModel.objects.find(o=>o.zone===key),out=[];
+ const old=w.worldModel.objects.find(o=>o.zone===key&&(!w.homeContext||(o.homeId||'willow-basin')===w.homeContext.id)),out=[];
  if(old&&(w.resources[key]||0)>0)out.push({id:old.id,item:key,position:old.position,remaining:w.resources[key],resource:key});
  for(const s of w.resourceSites?.nodes||[])if(s.item===key&&s.remaining>0&&(!actor||(s.knownBy||[]).includes(actor.id)||Math.hypot(s.position.x-actor.coordinates.x,s.position.y-actor.coordinates.y)<9))out.push({id:s.id,nodeId:s.id,item:key,position:s.position,remaining:s.remaining});
  return out;
@@ -30,11 +31,13 @@ export function materialSources(w,material,actor=null){
 export function resourceFrame(w){
  const objects=[];
  const info={berries:['Berry patch','Food portions','Gather berries'],stones:['Loose stone','Stones','Gather for tools and stone construction'],clay:['Clay bank','Clay units','Gather clay for shaping and supported daub walls'],reeds:['Reed bed','Reed bundles','Cut reeds for bindings, walls and roofing']};
+ Object.assign(info,Object.fromEntries(Object.entries(REGIONAL_ITEMS).map(([k,v])=>[k,[v.name,'Units',v.use]])));
  for(const o of w.worldModel.objects){
+  const account=o.homeId&&o.homeId!=='willow-basin'?homeFor(w,{householdId:o.homeId}).resources:w.resources;
   if(o.state?.active===false||!o.position)continue;const site=w.regions?.sites?.[o.id],spec=info[site?'berries':o.zone];
-  if(spec)objects.push({id:o.id,name:o.label||spec[0],type:site?'berries':o.zone,position:o.position,remaining:site?.quantity??w.resources[o.zone]??0,unit:spec[1],use:spec[2],renewable:!!site||['berries','reeds'].includes(o.zone),radius:site?2.2:o.zone==='clay'?2.8:3.0,knownBy:site?w.agents.filter(a=>a.siteKnowledge?.[site.id]).map(a=>a.name):null});
-  else if(o.type==='fallen_tree')objects.push({id:o.id,name:'Fallen oak',type:'log',position:o.position,remaining:(w.resources.dryWood||0)+(w.resources.wetWood||0),dry:w.resources.dryWood||0,wet:w.resources.wetWood||0,unit:'Wood units',use:'Collect remaining fallen wood; carry it before use.',radius:1.5});
-  else if(o.type==='creek_segment')objects.push({id:o.id,name:'Creek',type:'water',position:o.position,available:!!w.resources.creekWater,unit:'Flowing water',use:'Drinking requires reaching an accessible bank.',radius:2});
+  if(spec)objects.push({id:o.id,name:o.label||spec[0],mapped:!!o.homeId,type:site?'berries':o.zone,position:o.position,remaining:site?.quantity??account[o.zone]??0,unit:spec[1],use:spec[2],renewable:!!site||['berries','reeds'].includes(o.zone),radius:site?2.2:o.zone==='clay'?2.8:3.0,knownBy:site?w.agents.filter(a=>a.siteKnowledge?.[site.id]).map(a=>a.name):null});
+  else if(o.type==='fallen_tree')objects.push({id:o.id,name:'Fallen oak',type:'log',position:o.position,remaining:(account.dryWood||0)+(account.wetWood||0),dry:account.dryWood||0,wet:account.wetWood||0,unit:'Wood units',use:'Collect remaining fallen wood; carry it before use.',radius:1.5});
+  else if(o.type==='creek_segment')objects.push({id:o.id,name:o.label||'Creek',type:'water',position:o.position,points:o.geometry?.points,available:!!w.resources.creekWater,unit:'Flowing water',use:'Drinking requires reaching an accessible bank.',radius:2});
  }
  for(const s of w.resourceSites?.nodes||[])objects.push({...s,knownBy:(s.knownBy||[]).map(id=>w.agents.find(a=>a.id===id)?.name||id),type:s.item,unit:info[s.item][1],use:info[s.item][2],radius:s.item==='stones'?1.6:1.3,renewable:false,mapped:true});
  return objects;

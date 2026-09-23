@@ -1,3 +1,4 @@
+import {knownPerson,householdWorld} from '../shared/frontier.js';
 import {clamp,pairKey,makeAgent,remember,addEvent} from '../engine/core.js';
 import {clock} from './holdings.mjs';
 
@@ -33,7 +34,7 @@ export function setAgingYearDays(w,days){
 export const isAdult=(w,a)=>!!a.life&&ageYears(w,a)>=18;
 export function lifeStage(w,a){const y=ageYears(w,a);return y<1?'infant':y<3?'toddler':y<13?'child':y<18?'teen':y<60?'adult':'elder';}
 export function familyRelated(w,a,b){
- const ancestors=p=>{const ids=new Set();let layer=p.life?.parents||[];for(let n=0;n<3;n++){const next=[];for(const id of layer){ids.add(id);next.push(...(w.agents.find(x=>x.id===id)?.life?.parents||[]));}layer=next;}return ids;};
+ const ancestors=p=>{const ids=new Set();let layer=p.life?.parents||[];while(layer.length){const next=[];for(const id of layer){if(ids.has(id))continue;ids.add(id);next.push(...(w.agents.find(x=>x.id===id)?.life?.parents||w.chronicle?.people[id]?.parents||[]));}layer=next;}return ids;};
  const aa=ancestors(a),bb=ancestors(b);return aa.has(b.id)||bb.has(a.id)||[...aa].some(id=>bb.has(id));
 }
 export function romanceEligible(w,a,b){return a.id!==b.id&&isAdult(w,a)&&isAdult(w,b)&&!familyRelated(w,a,b)&&(!a.life.partnerId||a.life.partnerId===b.id)&&(!b.life.partnerId||b.life.partnerId===a.id);}
@@ -45,7 +46,7 @@ export function familyReadiness(w,a,b){
  if(ageYears(w,mother)<20||ageYears(w,mother)>=45||ageYears(w,father)<20)return {ready:false,reason:'Not in the simulated family-planning life stage.'};
  if([a,b].some(p=>p.life.familyWish<50))return {ready:false,reason:'Both partners must want to raise a child.'};
  if([a,b].some(p=>p.needs.hunger<65||p.needs.hydration<65||p.needs.energy<55||p.needs.warmth<45))return {ready:false,reason:'Attend to food, water, rest and warmth first.'};
- if(!w.structures.shelter&&!w.settlement?.projects.some(p=>p.status==='complete'&&p.affordances?.rainCover?.length))return {ready:false,reason:'Find dependable shelter before planning a baby.'};
+ if(!w.structures.shelter&&!w.settlement?.projects.some(p=>p.status==='complete'&&p.affordances?.rainCover?.length&&(!w.frontier||Math.hypot(p.position.x-a.coordinates.x,p.position.y-a.coordinates.y)<35)))return {ready:false,reason:'Find dependable shelter before planning a baby.'};
  if([a,b].some(p=>(p.life.children||[]).some(id=>{const c=w.agents.find(x=>x.id===id);return c&&ageYears(w,c)<3;})))return {ready:false,reason:'A young child already needs their care.'};
  const r=w.relationships[pairKey(a.id,b.id)];
  if(r?.romance.status!=='partners'||clock(w)-r.romance.since<3*DAY||r.trust<65||Math.min(...Object.values(r.romance.feelings))<65)return {ready:false,reason:'Build a stable, trusting partnership first.'};
@@ -91,6 +92,7 @@ function birth(w,mother){
  const traits=Object.fromEntries(['curiosity','cooperation','caution'].map(k=>[k,clamp((mother.traits[k]+(father?.traits[k]??.5))/2+(random(w)-.5)*.12,.1,.95)]));
  const baby=makeAgent(id,name,mother.position,{hunger:75,hydration:80,energy:65,warmth:Math.max(45,mother.needs.warmth)},traits);
  baby.coordinates={...mother.coordinates};baby.life={bornAt:clock(w),ageEpoch:clock(w),ageAtEpoch:0,sex:female?'female':'male',parents:[mother.id,...(father?[father.id]:[])],children:[],partnerId:null,pregnancy:null,lastBirthAt:null,familyWish:50+random(w)*30,carriedBy:mother.id,lastBirthday:0,stage:'infant'};
+ baby.surname=mother.surname||father?.surname||'';if(mother.householdId)baby.householdId=mother.householdId;baby.regionId=mother.regionId;baby.knownPeople=Object.fromEntries(baby.life.parents.map(id=>[id,{firstMetAt:clock(w),lastSeenAt:clock(w)}]));if(w.chronicle)w.chronicle.people[baby.id]={id:baby.id,givenName:baby.name,surname:baby.surname,parents:[...baby.life.parents],bornAt:baby.life.bornAt,householdId:baby.householdId,founder:false};
  baby.currentAction=`Being carried by ${mother.name}`;w.agents.push(baby);mother.life.pregnancy=null;mother.life.lastBirthAt=clock(w);mother.needs.energy=clamp(mother.needs.energy-18);mother.needs.hunger=clamp(mother.needs.hunger-8);
  for(const parent of [mother,father].filter(Boolean)){
   parent.life.children.push(id);w.relationships[pairKey(parent.id,id)]={trust:65,familiarity:10,affinity:80,lastInteraction:`${w.day}:${w.hour}`,sharedMemories:0,techniquesShared:0};
@@ -118,8 +120,8 @@ export function lifeSummary(w,a){
  if(!a.life)return null;const years=ageYears(w,a),p=a.life.pregnancy,byId=id=>({id,name:w.agents.find(a=>a.id===id)?.name||'Unknown'});
  return {ageYears:Math.floor(years),ageMonths:Math.floor(years*12),stage:lifeStage(w,a),sex:a.life.sex,yearDays:w.lifecycle.yearDays,parents:a.life.parents.map(byId),children:a.life.children.map(byId),partner:a.life.partnerId?byId(a.life.partnerId):null,carriedBy:a.life.carriedBy,pregnancy:p?{progress:pregnancyProgress(w,p),daysRemaining:Math.max(0,(p.dueAt-clock(w))/DAY),otherParent:byId(p.otherParentId)}:null};
 }
-export function relationshipsFor(w,a){return w.agents.filter(b=>b.id!==a.id).map(b=>{
+export function relationshipsFor(w,a){return w.agents.filter(b=>b.id!==a.id&&(!w.frontier||knownPerson(a,b))).map(b=>{
  const r=w.relationships[pairKey(a.id,b.id)],love=r?.romance,kin=familyRelated(w,a,b),status=a.life?.parents.includes(b.id)?'Parent':a.life?.children.includes(b.id)?'Child':kin?'Family':love?.status==='partners'?'Partner':love?.status==='courting'?'Courting':love?.status==='separated'?'Former partner':r?.affinity>=70&&r?.trust>=60?'Friend':'Acquaintance';
- return {id:b.id,name:b.name,status,trust:Math.round(r?.trust??0),familiarity:Math.round(r?.familiarity??0),affinity:Math.round(r?.affinity??50),romance:!kin&&isAdult(w,a)&&isAdult(w,b)?{toward:Math.round(love?.feelings[a.id]??0),from:Math.round(love?.feelings[b.id]??0)}:null,sharedMemories:r?.sharedMemories||0};
+ return {id:b.id,name:[b.name,b.surname].filter(Boolean).join(' '),status,trust:Math.round(r?.trust??0),familiarity:Math.round(r?.familiarity??0),affinity:Math.round(r?.affinity??50),romance:!kin&&isAdult(w,a)&&isAdult(w,b)?{toward:Math.round(love?.feelings[a.id]??0),from:Math.round(love?.feelings[b.id]??0)}:null,sharedMemories:r?.sharedMemories||0};
 });}
 export function familyContext(w,a){const life=lifeSummary(w,a),partner=w.agents.find(b=>b.id===a.life?.partnerId);return {life,relationships:relationshipsFor(w,a),familyPlanning:partner?familyReadiness(w,a,partner):null,dependents:w.agents.filter(b=>b.life?.parents.includes(a.id)&&!isAdult(w,b)).map(b=>({name:b.name,stage:lifeStage(w,b),needs:b.needs})),housingGoal:a.life?.pregnancy||a.life?.children.some(id=>{const b=w.agents.find(p=>p.id===id);return b&&!isAdult(w,b);})?'Make dry, sheltered, comfortable space for the family using physically supported construction.':null};}

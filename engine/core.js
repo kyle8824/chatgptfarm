@@ -1,3 +1,4 @@
+import {knownPerson,householdWorld} from '../shared/frontier.js';
 import {ensureWood,advanceWood} from './wood-runtime.js';
 import {ensureRegions,advanceSites} from './regions.js';
 import {applyThermalExposure} from './thermal.js';
@@ -27,9 +28,9 @@ export function migrateWorld(w){
  for(const a of w.agents){a.traits||={curiosity:.6,cooperation:.6,caution:.5};a.memories||=[];a.beliefs||={};a.skills||={};a.experiments||={};a.affordanceAttempts||={};a.inventory||={};for(const[k,v]of Object.entries(INVENTORY_DEFAULTS))a.inventory[k]??=v;a.coordinates??=null;a.activeAction??=null;a.mind||={};Object.assign(a.mind,{brainMode:a.mind.brainMode??'fallback',currentGoal:a.mind.currentGoal??'Stay alive and understand the world',intent:a.mind.intent??'Respond to current conditions',confidence:a.mind.confidence??0,decisionSummary:a.mind.decisionSummary??'',model:a.mind.model??null,recentActions:a.mind.recentActions??[],lastReferencedMemoryIds:a.mind.lastReferencedMemoryIds??[],lastPhysicalProposal:a.mind.lastPhysicalProposal??null})}
  ensureWorldModel(w);ensureEcology(w);ensureRegions(w);ensureWood(w);return w;
 }
-export function addEvent(w,type,title,detail,meta={}){w.history.unshift({id:`E-${String(w.seq.event++).padStart(5,'0')}`,day:w.day,hour:w.hour,type,title,detail,...meta});w.history=w.history.slice(0,900)}
+export function addEvent(w,type,title,detail,meta={}){w.history.unshift({id:`E-${String(w.seq.event++).padStart(5,'0')}`,day:w.day,hour:w.hour,type,title,detail,...meta});if(w.chronicle&&['birth','relationship','pregnancy','family-plan','construction-complete','frontier','first-contact','trade'].includes(type))w.chronicle.events.push(structuredClone(w.history[0]));w.history=w.history.slice(0,900)}
 export function remember(w,a,text,{importance=5,tags=[],source=null,confidence=.75}={}){const hit=a.memories.find(m=>m.text===text);if(hit){hit.confidence=clamp((hit.confidence??.7)+.04,0,1);hit.lastSeen=`${w.day}:${w.hour}`;return hit}const prefix=a.id.endsWith('ivo')?'I':'M',m={id:`M-${prefix}${String(w.seq.memory++).padStart(3,'0')}`,text,importance,tags,source:source||`experience:${w.day}-${w.hour}`,confidence,lastSeen:`${w.day}:${w.hour}`};a.memories.unshift(m);a.memories=a.memories.slice(0,120);addEvent(w,'learn',`${a.name} formed a memory`,text,{agentId:a.id,memoryId:m.id});return m}
-export const otherAgent=(w,a)=>w.agents.find(x=>x.id!==a.id);
+export const otherAgent=(w,a)=>w.agents.filter(x=>x.id!==a.id&&(!w.frontier||knownPerson(a,x))).sort((x,y)=>Math.hypot(x.coordinates?.x-a.coordinates?.x,x.coordinates?.y-a.coordinates?.y)-Math.hypot(y.coordinates?.x-a.coordinates?.x,y.coordinates?.y-a.coordinates?.y))[0];
 export const relationship=(w,a,b)=>w.relationships[pairKey(a.id,b.id)];
 export const knows=(a,skill)=>(a.skills?.[skill]||0)>0;
 export const knowledgeText=a=>a.memories.map(m=>`${m.text} ${(m.tags||[]).join(' ')}`).join(' ').toLowerCase();
@@ -52,4 +53,4 @@ export function advanceWeatherMemory(w){
 }
 function regrow(w){w.resources.berries=Math.min(20,w.resources.berries+2);w.resources.reeds=Math.min(18,w.resources.reeds+1);if(w.ecology.tuberPatch)w.ecology.tubers=Math.min(10,w.ecology.tubers+1)}
 function environmentTick(w,needs=true){for(const a of needs?w.agents:[]){const n=a.needs;n.hydration=clamp(n.hydration-(a.inventory.firedVessel>0?5.5:6.5));n.hunger=clamp(n.hunger-4.2);n.energy=clamp(n.energy-2.8);applyThermalExposure(w,a)}if(w.ecology.gameTrail&&w.ecology.smallGame<2&&noise(w.day,w.hour,117)>.82)w.ecology.smallGame++}
-export function finishHour(w,{needs=true,wood=true,ecology=true}={}){advanceObjectEnvironment(w,w.day*24+w.hour+1);environmentTick(w,needs);if(wood)advanceWood(w,w.day*24+w.hour+1);if(ecology)advanceEcology(w);w.hour++;if(w.hour>=24){w.hour=0;w.day++;regrow(w)}updateWeather(w);advanceWeatherMemory(w);syncLegacyIntoWorldModel(w);advanceSites(w)}
+export function finishHour(w,{needs=true,wood=true,ecology=true}={}){advanceObjectEnvironment(w,w.day*24+w.hour+1);environmentTick(w,needs);if(wood)advanceWood(w,w.day*24+w.hour+1);if(ecology)advanceEcology(w);w.hour++;if(w.hour>=24){w.hour=0;w.day++;for(const h of w.frontier?.homes||[null])regrow(h?householdWorld(w,{householdId:h.id}):w)}updateWeather(w);advanceWeatherMemory(w);syncLegacyIntoWorldModel(w);advanceSites(w)}

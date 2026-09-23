@@ -1,8 +1,10 @@
+import {frontierGround} from '../shared/frontier.js';
 // Metric routes over the current basin. Unknown slopes/vegetation are not given
 // invented collision geometry. Water and explicit blocking footprints are real.
 export const distance=(a,b)=>Math.hypot(a.x-b.x,a.y-b.y);
 function segmentDistance(p,a,b){const dx=b.x-a.x,dy=b.y-a.y,t=Math.max(0,Math.min(1,((p.x-a.x)*dx+(p.y-a.y)*dy)/(dx*dx+dy*dy||1)));return distance(p,{x:a.x+t*dx,y:a.y+t*dy});}
 export function walkable(w,p){
+ if(!frontierGround(w,p))return false;
  const bounds=w.worldModel.bounds,scale=bounds.metersPerUnit||2;
  if(p.x<0||p.y<0||p.x>bounds.width||p.y>bounds.height)return false;
  for(const o of w.worldModel.objects){

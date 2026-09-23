@@ -52,3 +52,38 @@ The selected biological year remains 60 world days (10 real days at 6×).
 A newborn reaches 18 after 180 real days. Natural mortality is not implemented.
 No model upgrade, cadence change, world reset or forced family milestone is
 authorized merely to make a demonstration succeed.
+
+## Implemented release
+
+PR #47 repairs rejected design retries. PR #48 implements a 500 × 500 world
+(25 times the original area), an additive versioned migration, four independent
+households, observed first contact, useful regional materials, physical barter,
+supported climbing and crossing routes, surnames and persistent ancestry.
+
+Migration is gated by `FOUR_REGIONS_ENABLED=true`. Once migrated, the saved
+world remains expanded even if the flag is removed; it is not a reset switch.
+Existing identifiers, people, supplies, projects, clock and creation timestamp
+are retained. Three new homes get finite starting supplies, not replenishment.
+
+The global daily cap remains 96 calls including 24 designs, allocated as 24
+calls / 6 designs per household. Action/design eligibility remains 30/60 real
+minutes. Ochre Vale uses the OpenAI Responses adapter only when all settings
+are present: `OPENAI_API_KEY` (secret), `OPENAI_MODEL`, `OPENAI_DAILY_USD`,
+`OPENAI_INPUT_USD_PER_MILLION`, and `OPENAI_OUTPUT_USD_PER_MILLION`.
+Optional `OPENAI_REASONING_EFFORT` must suit that model. Missing configuration
+keeps local autonomous behavior active and makes no provider call. Token costs
+are conservative reservations reconciled with returned usage; failures retain
+reservations. This is an observational comparison, not a controlled experiment.
+
+Verification covers a full world day with eight adults, additive save/reload,
+finite supply conservation, an autonomous new-home resting-mat build after a
+fixture proposal, actual proximity-based contact and barter, and completed
+supported treads opening a previously blocked climb. Real workerd exercises
+alarms, WebSockets and durable restart; browser fixtures exercise all four
+regions on mobile and desktop. Provider HTTP is mocked: no paid OpenAI call
+or live autonomous inter-household meeting is claimed by these checks.
+
+Long-distance settlement growth remains emergent. Rivers require physical
+crossings; ridges and ravines can also be circumvented through wilderness.
+Climbing currently supports built treads, not animated vertical rope ladders.
+Automatic whole-building extensions and natural mortality remain future work.

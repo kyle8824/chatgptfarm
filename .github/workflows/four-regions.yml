@@ -1,0 +1,52 @@
+name: Four regions verification
+on:
+  push:
+    branches: [feature/four-regions]
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  simulation:
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - run: npm ci --prefix cloudflare
+      - name: Verify expansion, physical economy, providers and continuity
+        run: |
+          FRONTIER_STEPS=14400 node realtime/frontier-test.mjs
+          node realtime/frontier-economy-test.mjs
+          node realtime/frontier-construction-test.mjs
+          node realtime/provider-test.mjs
+          node realtime/frame-delta-test.mjs
+          node realtime/design-recovery-test.mjs
+          node realtime/design-planner-test.mjs
+          node realtime/family-test.mjs
+          node realtime/comfort-test.mjs
+          node realtime/persistence-test.mjs
+          TEST_FRONTIER=1 node realtime/workerd-test.mjs
+          npm run check --prefix cloudflare
+          git diff --exit-code -- world/state.json
+  browser:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - run: npm ci --prefix cloudflare
+      - name: Verify mobile and desktop rendering
+        run: |
+          npm install --no-save playwright@1.55.0
+          npx playwright install --with-deps chromium
+          node realtime/frontier-browser-test.mjs
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: frontier-evidence
+          path: realtime-qa/frontier-*
+          retention-days: 7

@@ -1,0 +1,18 @@
+import assert from 'node:assert/strict';
+import {createWorld} from '../engine/core.js';
+import {RealtimeController} from './world.mjs';
+import {expandFrontier} from './frontier.mjs';
+import {providerFor,reserveProvider,runProvider,recordProviderResult} from './providers.mjs';
+const saved=new Map(),storage={get:async k=>structuredClone(saved.get(k)),put:async(k,v)=>saved.set(k,structuredClone(v)),delete:async k=>saved.delete(k),setAlarm:async()=>{},transaction:async f=>f(storage)};
+const now=Date.UTC(2026,8,23),env={OPENAI_API_KEY:'test-key-not-real',OPENAI_MODEL:'configured-test-model',OPENAI_DAILY_USD:1,OPENAI_INPUT_USD_PER_MILLION:1,OPENAI_OUTPUT_USD_PER_MILLION:4};
+const ai={run:async()=>({response:{actionId:'rest',goal:'Rest',intent:'Recover energy.',decisionSummary:'I am tired.'},usage:{input_tokens:100,output_tokens:30}})};
+let requests=[];const fetcher=async(url,req)=>{requests.push({url,body:JSON.parse(req.body)});return Response.json({id:'response-test',status:'completed',usage:{input_tokens:80,output_tokens:40},output:[{type:'message',content:[{type:'output_text',text:JSON.stringify({actionId:'rest',goal:'Rest',intent:'Recover energy.',decisionSummary:'I am tired.'})}]}]});};
+const c=new RealtimeController(storage,{now:()=>now,ai,env,fetcher,frontierEnabled:true});await c.initialize(createWorld());
+const a=c.record.world.agents.find(a=>a.name==='Elin');assert.equal(providerFor(c.record.world,a,{},ai).configured,false);
+await c.makeDecision(a.id,'{"choices":[{"id":"rest"}]}',[{id:'rest'}]);assert.equal(requests.length,1);assert.equal(requests[0].url,'https://api.openai.com/v1/responses');assert.equal(requests[0].body.max_output_tokens,180);assert.equal(requests[0].body.text.format.schema.additionalProperties,false);assert.equal(requests[0].body.store,false);assert.equal(c.proposals.get(a.id).model,env.OPENAI_MODEL);assert.equal(c.record.ai.calls,1);
+const accounted=c.record.providerUsage.records[0],totalsBefore=structuredClone(c.record.providerUsage.totals),spendBefore=structuredClone(c.record.providerUsage.days);recordProviderResult(c.record,accounted,{usage:{input_tokens:80,output_tokens:40}},providerFor(c.record.world,a,env,ai),'failed');assert.deepEqual(c.record.providerUsage.totals,totalsBefore,'a checkpoint failure cannot double-count usage');assert.deepEqual(c.record.providerUsage.days,spendBefore);
+const route=providerFor(c.record.world,a,env,ai),payload={max_tokens:180,messages:[]};for(let i=1;i<18;i++)assert(reserveProvider(c.record,a,route,'action',payload,now));assert.equal(reserveProvider(c.record,a,route,'action',payload,now),null,'fair action share');for(let i=0;i<6;i++)assert(reserveProvider(c.record,a,route,'design',payload,now));assert.equal(reserveProvider(c.record,a,route,'design',payload,now),null,'fair design share');assert.equal(c.record.ai.calls,24);
+const verySmall={...route,dailyUsd:.00000001};assert.equal(reserveProvider(c.record,{...a,id:'other'},verySmall,'action',payload,now+86400000),null,'spending cap fails closed');
+assert.equal(reserveProvider(c.record,a,{...route,configured:false},'design',payload,now+86400000),null,'no paid call without complete configuration');
+await c.save();const reload=new RealtimeController(storage,{now:()=>now,ai,env,fetcher,frontierEnabled:true});await reload.load();assert.equal(reload.record.world.agents.length,8);assert.deepEqual(reload.record.providerUsage,c.record.providerUsage);assert.equal(reload.record.createdAt,c.record.createdAt);
+console.log('PASS real provider routing code with mocked HTTP; strict JSON; unchanged token ceilings; per-household allocation; durable reservations; missing configuration and spend cap prevent calls; no paid requests made');

@@ -1,3 +1,4 @@
+import {homeAccount,localPosition,householdWorld} from '../shared/frontier.js';
 export const WORLD_MODEL_VERSION='object-field-1.0';
 
 const FIXED={
@@ -46,14 +47,14 @@ export function ensureWorldModel(w){
  syncLegacyIntoWorldModel(w);return w.worldModel;
 }
 
-export function findWorldObject(w,id){return w.worldModel?.objects?.find(o=>o.id===id)||null}
-export function worldObjectForZone(w,zone){return w.worldModel?.objects?.find(o=>o.zone===zone&&o.parentId===null)||null}
+export function findWorldObject(w,id){if(/^OBJ-(CAMP|CREEK|BERRIES|TREE|STONES|CLAY|REEDS|FRONTIER|SHELTER|FIRE|DRYING|TRACKS)-001$/.test(id))id=homeAccount(w,id);return w.worldModel?.objects?.find(o=>o.id===id)||null}
+export function worldObjectForZone(w,zone){return w.worldModel?.objects?.find(o=>o.zone===zone&&o.parentId===null&&(!w.homeContext||(o.homeId||'willow-basin')===w.homeContext.id))||null}
 export function addObjectHistory(w,obj,type,detail,meta={}){obj.history||=[];obj.history.push({day:w.day,hour:w.hour,type,detail,...meta});if(obj.history.length>80)obj.history=obj.history.slice(-80)}
 
-function structureEntity(w,id,type,label,active,position,physical){let o=findWorldObject(w,id);if(!o){o={id,kind:'structure',type,label,zone:position.zone,position:{x:position.x,y:position.y},geometry:{shape:'structure'},physical:{...physical},material:{},state:{active:!!active},parentId:null,childrenIds:[],resolution:{level:'object',componentsInstantiated:true},provenance:{created:now(w),source:'legacy-structure-migration'},history:[]};w.worldModel.objects.push(o)}o.state.active=!!active;return o}
+function structureEntity(w,id,type,label,active,position,physical){id=homeAccount(w,id);position={...position,...localPosition(w,position)};let o=findWorldObject(w,id);if(!o){o={id,...(w.homeContext?{homeId:w.homeContext.id}:{}),kind:'structure',type,label,zone:position.zone,position:{x:position.x,y:position.y},geometry:{shape:'structure'},physical:{...physical},material:{},state:{active:!!active},parentId:null,childrenIds:[],resolution:{level:'object',componentsInstantiated:true},provenance:{created:now(w),source:'legacy-structure-migration'},history:[]};w.worldModel.objects.push(o)}o.state.active=!!active;return o}
 
 export function syncLegacyIntoWorldModel(w){
- if(!w.worldModel)return;
+ if(!w.worldModel)return;if(w.frontier&&!w.homeContext){for(const h of w.frontier.homes)syncLegacyIntoWorldModel(householdWorld(w,{householdId:h.id}));updateEnvironmentalModel(w);return;}
  const r=w.resources||{},s=w.structures||{},e=w.ecology||{};
  const patch=findWorldObject(w,FIXED.berries.id);if(patch){patch.state.ediblePortions=r.berries||0;patch.state.exhausted=(r.berries||0)<=0}
  const tree=findWorldObject(w,FIXED.log.id);if(tree){tree.state.availableDryBranches=r.dryWood||0;tree.state.availableWetBranches=r.wetWood||0;const total=(r.dryWood||0)+(r.wetWood||0);tree.state.branchSupply=total;tree.material.moisturePct??=total?Math.round(((r.wetWood||0)/total)*55+12):Math.max(tree.material.moisturePct||28,28)}
@@ -65,7 +66,7 @@ export function syncLegacyIntoWorldModel(w){
  structureEntity(w,'OBJ-FIRE-001','camp_fire','camp fire',s.fire,{x:61,y:33,zone:'camp'},{fire:true,heat:true,light:true});
  structureEntity(w,'OBJ-DRYING-001','drying_rack','drying rack',s.dryingRack,{x:68,y:34,zone:'camp'},{wood:true,dryingSurface:true});
  const tracks=findWorldObject(w,'OBJ-TRACKS-001');if(tracks){tracks.state.active=false;tracks.state.retiredReason='replaced by source-linked wildlife traces';}
- updateEnvironmentalModel(w);
+ if(!w.homeContext)updateEnvironmentalModel(w);
 }
 
 export function sampleEnvironmentalFields(w){

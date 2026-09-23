@@ -14,6 +14,7 @@ const recipes={
 };
 export function toolPlan(a,item,depth=0){
  if(depth>6)throw Error('Tool dependency cycle');
+ if(item==='sharpStone'&&a.inventory.flint>=1)return {craft:item,minutes:4,label:'Knapp a fine flint edge'};if(item==='cordage'&&a.inventory.longFiber>=1)return {craft:item,minutes:4,label:'Twist long reed fibers into cordage'};
  const recipe=recipes[item];if(!recipe)return {item,quantity:1};
  for(const [input,count]of Object.entries(recipe.inputs)){
   const key=input==='branch'?(a.inventory.dryWood?'dryWood':'wetWood'):input==='edge'?(a.inventory.boundSharpTool?'boundSharpTool':'sharpStone'):input;
@@ -32,6 +33,7 @@ export function preparationFor(a,part){
  return null;
 }
 export function craftTool(w,a,item){
+ const special=item==='sharpStone'&&a.inventory.flint>=1?'flint':item==='cordage'&&a.inventory.longFiber>=1?'longFiber':null;if(special){a.inventory[special]--;a.inventory[item]=(a.inventory[item]||0)+1;recordPractice(w,a,item==='sharpStone'?'stoneworking':'fiberwork',4,'Worked '+special+' into '+item);return {done:true,success:true,detail:'One unit of '+special+' became one '+item+' through elapsed work.'};}
  const recipe=recipes[item],plan=recipe&&toolPlan(a,item);
  if(!recipe||plan.craft!==item)return {done:true,success:false,detail:'The tool materials are no longer carried here.'};
  const x=recipe.x||(a.inventory.dryWood?'carried_dry_branch':'carried_wet_branch'),y=recipe.y||(['woodPole','pointedPole'].includes(item)?a.inventory.boundSharpTool?'bound_sharp_tool':'sharp_stone':null);

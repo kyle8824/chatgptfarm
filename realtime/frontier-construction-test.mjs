@@ -1,0 +1,14 @@
+import assert from 'node:assert/strict';
+import {createWorld} from '../engine/core.js';
+import {prepare,step} from './elapsed.mjs';
+import {expandFrontier} from './frontier.mjs';
+import {householdWorld} from '../shared/frontier.js';
+import {designContext,validateBlueprint,adoptBlueprint} from './blueprints.mjs';
+import {totals} from '../engine/wood-materials.js';
+const w=prepare(createWorld());expandFrontier(w);const a=w.agents.find(a=>a.name==='Tessa'),v=householdWorld(w,a);a.coordinates={x:436,y:68};a.needs={hunger:95,hydration:95,energy:95,warmth:85};a.task=null;a.comfort={value:25,uncomfortableMinutes:60};w.weather='clear';w.temperature=65;
+const context=designContext(v,a),site=context.sites.find(s=>!s.spansWater&&!s.climbsTerrain);assert(site);
+const raw={build:true,name:'Tessa’s first resting mat',purpose:'comfortable resting surface',rationale:'Bare ground is uncomfortable.',siteId:site.id,access:'private',code:'for(let i=0;i<4;i++)part({id:`reed-${i}`,kind:"deck",material:"reeds",center:[0,.04,-.9+i*.6],size:[1,.08,.6],requires:[]});'};
+const p=adoptBlueprint(v,a,validateBlueprint(v,a,raw),'isolated-design-fixture');assert.equal(p.householdId,'flint-heights');assert(p.position.x>350);let steps=0;while(p.status!=='complete'&&steps++<18000)await step(w,6);
+assert.equal(p.status,'complete',JSON.stringify({steps,task:a.task,parts:p.parts}));assert(p.parts.every(x=>x.invested&&x.bindingUsed&&x.workMinutes>=x.requiredMinutes));assert(p.parts.every(x=>x.workmanship?.builder==='agent-tessa'));assert.equal(w.agents.length,8);
+const sum=totals(w.wood),consumed=w.wood.sinks.reduce((n,s)=>n+s.dryKg,0);assert(Math.abs(sum.dryKg+consumed-w.wood.initialDryKg)<1e-5,'wood dry mass survives independent harvesting, processing and fuel');
+console.log(JSON.stringify({result:'PASS a new-region founder autonomously gathers, crafts bindings and assembles a valid local design with finite supplies; all eight adults continue; wood mass conserved',steps}));
