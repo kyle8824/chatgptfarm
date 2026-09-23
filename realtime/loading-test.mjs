@@ -15,6 +15,7 @@ const old=c.socket;c.retryNow();assert.notEqual(c.socket,old);old.message({type:
 c.socket.open();c.socket.message({type:'state',runtime:{revision:4},agents:[]});assert.equal(frames.length,1);advance(12000);assert.equal(c.socket.readyState,1,'receiving real state cancels the initial timeout');c.stop();assert.equal(callbacks.size,0);
 assert.equal(worldFailure(Error('Exceeded daily limit for rows written')).code,'hosting_limit');assert.equal(worldFailure(Error('Exceeded allowed rows written in Durable Objects free tier.'),Date.UTC(2026,8,22,23,59)).retryAfterSeconds,60);assert.equal(worldFailure(Error('database or disk is full: SQLITE_FULL')).code,'storage_full');assert(!worldFailure(Error('token=secret https://example.com/private')).detail.includes('secret'));
 const temp=await fs.mkdtemp(path.join(os.tmpdir(),'valley-load-test-'));
+assert.equal(worldFailure(Error('Exceeded allowed rows written in Durable Objects free tier.'),Date.UTC(2026,8,23,0,1)).retryAfterSeconds,300,'a rejection after midnight cannot postpone recovery to the following day');
 try{
  await build({entryPoints:[new URL('../cloudflare/worker.mjs',import.meta.url).pathname],outfile:path.join(temp,'worker.mjs'),bundle:true,format:'esm',platform:'node',plugins:[{name:'do-test',setup(b){b.onResolve({filter:/^cloudflare:workers$/},()=>({path:'stub',namespace:'do'}));b.onLoad({filter:/.*/,namespace:'do'},()=>({contents:'export class DurableObject{constructor(ctx,env){this.ctx=ctx;this.env=env}}'}));}}]});
  const {LiveValley,default:worker}=await import(path.join(temp,'worker.mjs'));
