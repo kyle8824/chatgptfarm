@@ -1,0 +1,29 @@
+name: Construction recovery verification
+on:
+  push:
+    branches: [fix/construction-rejections]
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - run: npm ci --prefix cloudflare
+      - name: Validate design recovery and physical construction
+        run: |
+          node realtime/design-recovery-test.mjs
+          node realtime/design-planner-test.mjs
+          node realtime/open-construction-test.mjs
+          node realtime/comfort-test.mjs
+          node realtime/settlement-test.mjs
+          node realtime/family-test.mjs
+          node realtime/persistence-test.mjs
+          node realtime/workerd-test.mjs
+          npm run check --prefix cloudflare
+          git diff --exit-code -- world/state.json

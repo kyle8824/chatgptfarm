@@ -1,0 +1,39 @@
+import assert from 'node:assert/strict';
+import {createWorld} from '../engine/core.js';
+import {RealtimeController} from './world.mjs';
+import {runConstructionCode} from './construction-code.mjs';
+import {designContext,validateBlueprint,adoptBlueprint} from './blueprints.mjs';
+import {step} from './elapsed.mjs';
+
+const supplied={site:{width:4,depth:4},materials:{reeds:20}};
+assert.equal(runConstructionCode('let site={width:2}; part({id:"local",width:site.width});',supplied).parts[0].width,2);
+assert.equal(supplied.site.width,4);
+assert.throws(()=>runConstructionCode('site.width=999;',supplied),/Assignment only/);
+assert.throws(()=>runConstructionCode('site={width:999};',supplied),/constant/);
+assert.throws(()=>runConstructionCode('const p=part.constructor("return globalThis"); p();',supplied));
+
+const saved=new Map(),storage={get:async k=>structuredClone(saved.get(k)),put:async(k,v)=>saved.set(k,structuredClone(v)),delete:async k=>saved.delete(k),setAlarm:async()=>{},transaction:async fn=>fn(storage)};
+let now=Date.UTC(2026,8,23),requests=[];
+const c=new RealtimeController(storage,{now:()=>now});await c.initialize(createWorld());
+const w=c.record.world,[mara,ivo]=w.agents;
+for(const [i,a]of w.agents.entries()){a.coordinates={x:66+i*4,y:36};a.needs={hunger:95,hydration:95,energy:95,warmth:80};a.task=null;a.suspendedTasks=[];}
+w.weather='clear';w.temperature=65;w.structures.shelter=true;
+const code='for(let i=0;i<4;i++) part({id:"mat-"+i,kind:"deck",material:"reeds",center:[0,.04,-.9+i*.6],size:[1,.08,.6],requires:[]});';
+const valid={build:true,name:'Reed resting surface',purpose:'soft place to rest',rationale:'Repeated rest on bare ground is uncomfortable.',access:'private',code,siteId:'clearing-0'};
+const owned=adoptBlueprint(w,ivo,validateBlueprint(w,ivo,valid),'fixture');owned.status='complete';owned.parts.forEach(p=>{p.built=true;});
+const context=designContext(w,mara);assert(!context.allowedReplacementIds.includes(owned.id));assert.equal(context.personId,mara.id);assert.equal(context.projects[0].canReplace,false);
+const candidate={...valid,siteId:context.sites.find(s=>!s.spansWater).id,replacesProjectId:owned.id};
+c.ai={run:async(_model,input)=>{requests.push(JSON.parse(input.messages[1].content));return {response:candidate};}};
+await c.makeDesign(mara.id,context);await c.makeDesign(mara.id,context);
+assert.equal(c.record.designRepair[mara.id].repeats,2);assert.match(c.record.designFailures[mara.id],/omit replacesProjectId/);
+const reloaded=new RealtimeController(storage,{now:()=>now});await reloaded.load();assert.equal(reloaded.record.designRepair[mara.id].repeats,2,'repair state persists');
+c.ai={run:async(_model,input)=>{const req=JSON.parse(input.messages[1].content);requests.push(req);assert.equal(req.retryStrategy,'fresh_design');assert.equal(req.previousProgram,null);assert.match(req.previousRejection,/omit replacesProjectId/);return {response:{...valid,siteId:candidate.siteId}};}};
+await c.makeDesign(mara.id,designContext(w,mara));const project=w.settlement.projects.at(-1);
+assert.equal(project.ownerId,mara.id);assert.equal(project.status,'planned');assert(!project.replacesProjectId);assert.equal(owned.ownerId,ivo.id);assert(!c.record.designRepair[mara.id]);
+assert(project.parts.every(p=>!p.built));assert.equal(c.record.ai.calls,3);assert.equal(c.runtime().ai.designCalls,3);
+for(const node of w.resourceSites.nodes)node.knownBy.push(mara.id);mara.comfort.value=25;mara.comfort.uncomfortableMinutes=60;
+let steps=0;while(project.status!=='complete'&&steps++<12000)await step(w,6);
+assert.equal(project.status,'complete',JSON.stringify({steps,task:mara.task,parts:project.parts}));
+assert(project.parts.every(p=>p.invested&&p.bindingUsed>0&&p.workMinutes>=p.requiredMinutes));
+assert(w.settlement.projects.includes(owned),'another person’s structure is retained');
+console.log(JSON.stringify({result:'PASS lexical scope without host mutation; explicit ownership; persistent fresh-design recovery; unchanged budgets; full autonomous finite construction after accepted revision',steps,calls:c.record.ai.calls}));
