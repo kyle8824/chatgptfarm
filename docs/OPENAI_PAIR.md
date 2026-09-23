@@ -63,3 +63,20 @@ that Willow reports OpenAI, the other three report Cloudflare, and Willow's
 `missingConfiguration` becomes empty after activation. `configured` proves runtime
 settings are present; a later successful recorded request is needed to prove
 generation. Do not confuse the read-only model check with a live villager call.
+
+## September 23 owner-requested debugging reset
+
+After adding the key, Kyle explicitly requested a fresh daily allowance for Mara
+and Ivo. `OPENAI_ALLOWANCE_RESET=2026-09-23-willow-openai-debug-1` applies once,
+only on that UTC date, to the canonical world and original two-person household.
+It zeroes their household request counters, subtracts their old contribution from
+global quota counters, and clears only their action/design cooldown timestamps.
+
+The prior counts and timestamps are retained in `allowanceResets`, saved before
+any new request. Dollar reservations, reported spend, provider call/token history,
+other households' counters, pending tasks, needs and world time are preserved.
+Future restarts/redeployments cannot repeat the reset. Request IDs use a separate
+durable sequence so resetting a quota cannot duplicate old call identifiers.
+The viewer labels the household allowance as **calls since reset** for this day.
+This explicitly authorized exception supersedes the earlier instruction to wait
+for midnight; normal request caps and the $0.10/day spending guard still apply.

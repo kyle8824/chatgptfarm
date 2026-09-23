@@ -15,5 +15,5 @@ export function providerStatus(h){
 export function providerMarkup(state,person){
  const h=personProvider(state,person),allocation=state.runtime?.providers?.allocation;
  const source=person.task?.source==='ai'?`Current action chosen by ${modelName(person.task.model)}.`:'Current action uses autonomous behavior rules.';
- return `<section class="provider-card" aria-label="Assigned AI"><strong>${esc(h?.provider==='openai'?'OpenAI':h?.provider==='cloudflare'?'Cloudflare':'AI')} · ${esc(modelName(h?.model))}</strong><span>${esc(providerStatus(h))}</span>${h&&allocation?`<small>${h.callsToday} calls used today · ${allocation.perHousehold}/day shared by this household (${allocation.actionsPerHousehold} action + ${allocation.designPerHousehold} design).</small>`:''}<small>${esc(source)}</small></section>`;
+ return `<section class="provider-card" aria-label="Assigned AI"><strong>${esc(h?.provider==='openai'?'OpenAI':h?.provider==='cloudflare'?'Cloudflare':'AI')} · ${esc(modelName(h?.model))}</strong><span>${esc(providerStatus(h))}</span>${h&&allocation?`<small>${h.callsToday} calls ${h.allowanceReset?'since reset':'used today'} · ${allocation.perHousehold}/day shared by this household (${allocation.actionsPerHousehold} action + ${allocation.designPerHousehold} design).</small>`:''}<small>${esc(source)}</small></section>`;
 }
