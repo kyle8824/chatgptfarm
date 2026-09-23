@@ -8,6 +8,7 @@ import {freeTimeCandidates,advanceFreeTime,beginFreeTime,finishFreeTime,workFree
 import {liveCandidates} from './behavior.mjs';
 import {workSettlement} from './settlement.mjs';
 import {clock,makeStore} from './holdings.mjs';
+import {faceInteraction} from './motion.mjs';
 import {progressText,taskExplanation} from '../web/live/task-view.js';
 
 function fixture(){const w=prepare(createWorld());w.weather='clear';w.temperature=65;for(const [i,a]of w.agents.entries()){a.coordinates={x:66+i*1.8,y:39};a.position='meadow';a.task=null;a.suspendedTasks=[];a.needs={hunger:95,hydration:95,energy:85,warmth:90};a.liveFailures={};a.mind.recentActions=[];}return w;}
@@ -45,6 +46,7 @@ let g=fixture(),[ga,gb]=g.agents;const game=freeTimeCandidates(g,ga).find(c=>c.j
 ga.coordinates={...game.job.destination};ga.task=task(ga,game);let gameResult=workFreeTime(g,ga,ga.task,2);assert(!gameResult.done);assert.equal(ga.task.progress.rounds,1);
 const initialRound=structuredClone(ga.task.social.rounds[0]),company=gb.freeTime.company;workFreeTime(g,gb,gb.task,2);assert.equal(ga.task.progress.rounds,1,'guest never advances the shared clock');assert.equal(gb.freeTime.company,company);
 g=prepare(JSON.parse(JSON.stringify(g)));[ga,gb]=g.agents;assert.deepEqual(ga.task.social.rounds[0],initialRound);
+for(const person of [ga,gb]){for(let i=0;i<10;i++)faceInteraction(g,person,.6);const peer=person===ga?gb:ga,target=Math.atan2(peer.coordinates.x-person.coordinates.x,peer.coordinates.y-person.coordinates.y);assert(Math.abs(Math.atan2(Math.sin(person.locomotion.facing-target),Math.cos(person.locomotion.facing-target)))<.001,'social partners turn to face each other');}
 await fs.mkdir('realtime-qa',{recursive:true});await fs.writeFile('realtime-qa/free-time-fixture.json',JSON.stringify(g));
 for(let i=0;i<4;i++)gameResult=workFreeTime(g,ga,ga.task,2);
 assert(gameResult.success);assert.equal(ga.task.social.rounds.length,5);assert(ga.task.social.scores.reduce((x,y)=>x+y,0)<=5);

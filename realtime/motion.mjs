@@ -142,8 +142,8 @@ export function separateBodies(w,seconds){
  }
 }
 export function faceInteraction(w,a,seconds){const m=motionState(a);m.vx=m.vy=m.speed=0;let target;
- if(a.task?.selected?.job){const j=a.task.selected.job,p=w.settlement?.projects.find(p=>p.id===j.projectId),part=p?.parts.find(x=>x.id===j.partId);target=part?{x:p.position.x+part.center[0],y:p.position.y+part.center[2]}:j.position;}
- else if(a.task?.selected?.job?.partnerId)target=w.agents.find(b=>b.id===a.task.selected.job.partnerId)?.coordinates;
+ if(a.task?.selected?.job?.partnerId)target=w.agents.find(b=>b.id===a.task.selected.job.partnerId)?.coordinates;
+ else if(a.task?.selected?.job){const j=a.task.selected.job,p=w.settlement?.projects.find(p=>p.id===j.projectId),part=p?.parts.find(x=>x.id===j.partId);target=part?{x:p.position.x+part.center[0],y:p.position.y+part.center[2]}:j.position;}
  else if(['talk','share_food','seek_other'].includes(a.task?.actionId))target=w.agents.find(b=>b.id!==a.id)?.coordinates;
  else if(a.position==='camp')target=CAMP.fire;
  else if(a.task?.actionId==='drink')target=nearestWater(w,a.coordinates)?.point;
