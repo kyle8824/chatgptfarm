@@ -6,6 +6,7 @@ import {liveClear,motionState} from './motion.mjs';
 import {findMaterialSource,interactionPoint} from './settlement.mjs';
 import {toolPlan} from './crafting.mjs';
 import {explorationMotivation} from './exploration.mjs';
+import {comfortCandidates,comfortContext,workComfortRest} from './comfort.mjs';
 
 const initial=()=>({company:55,enjoyment:55,mastery:55,cooldowns:{},seen:{}});
 export const comfortable=a=>a.needs.hunger>55&&a.needs.hydration>55&&a.needs.energy>45&&a.needs.warmth>35;
@@ -17,14 +18,14 @@ export function advanceFreeTime(w,a,seconds){
  if((f.noticeAt??-Infinity)+5/60<=clock(w)){f.noticeAt=clock(w);for(const b of w.agents)if(b.id!==a.id&&distance(a.coordinates,b.coordinates)<12&&liveClear(w,a.coordinates,b.coordinates))f.seen[b.id]={at:clock(w),position:{...b.coordinates}};}
  if(f.practice&&clock(w)-f.practice.at>=240)delete f.practice;
 }
-export function freeTimeContext(w,a){const f=a.freeTime||initial();return {company:Math.round(f.company),enjoyment:Math.round(f.enjoyment),mastery:Math.round(f.mastery),practiceGoal:f.practice?.item||null,exploration:explorationMotivation(w,a)};}
+export function freeTimeContext(w,a){const f=a.freeTime||initial();return {comfort:comfortContext(w,a),company:Math.round(f.company),enjoyment:Math.round(f.enjoyment),mastery:Math.round(f.mastery),practiceGoal:f.practice?.item||null,exploration:explorationMotivation(w,a)};}
 const ready=(w,a,kind)=>comfortable(a)&&(!a.task||a.task.selected?.job?.kind==='relax')&&(a.freeTime?.cooldowns?.social||0)<=clock(w)&&(kind==='conversation'?(a.freeTime?.company??55)<80:(a.freeTime?.enjoyment??55)<80);
 const owned=(w,a,item)=>(a.inventory[item]||0)+(w.settlement?.stores||[]).filter(s=>s.ownerId===a.id).reduce((n,s)=>n+(s.items[item]||0),0);
 const practiceOptions=[['cordage','fiberwork',4],['woodPole','woodworking',2],['sharpStone','stoneworking',1],['boundSharpTool','hafting',1]];
 
 export function freeTimeCandidates(w,a){
  if(!comfortable(a))return [];
- const f=a.freeTime||initial(),now=clock(w),result=[],curiosity=a.traits.curiosity,cooperation=a.traits.cooperation;
+ const f=a.freeTime||initial(),now=clock(w),result=comfortCandidates(w,a,{relax:true}),curiosity=a.traits.curiosity,cooperation=a.traits.cooperation;
  const offer=(id,label,score,job,reason)=>result.push({id,label,score,reasons:[[reason,score]],job:{...job,freeTime:true,reason}});
  // Quiet leisure remains possible even after other interests have been met.
  offer('leisure:relax','Relax and enjoy the surroundings',5+(100-a.needs.energy)*.18+(100-f.enjoyment)*.12,{kind:'relax',minutes:20,destination:{...a.coordinates}},'Take an unhurried break while immediate needs are met.');
@@ -87,9 +88,7 @@ export function workFreeTime(w,a,t,minutes){
  if(t.socialResult)return {done:true,...t.socialResult};
  if(distance(a.coordinates,j.destination)>.5)return fail('The leisure location is no longer within reach.');
  if(j.kind==='relax'){
-  const spent=Math.min(minutes,Math.max(0,t.requiredMinutes-t.workMinutes));t.workMinutes+=spent;
-  a.needs.energy=clamp(a.needs.energy+spent*.35);f.enjoyment=clamp(f.enjoyment+spent*.7);
-  return {done:t.workMinutes>=t.requiredMinutes,success:true,detail:`${a.name} took a quiet break and feels more rested.`};
+  return workComfortRest(w,a,t,minutes);
  }
  if(j.kind==='visit'){f.cooldowns.visit=clock(w)+120;return {done:true,success:true,detail:`${a.name} checked ${w.agents.find(b=>b.id===j.partnerId)?.name||'the other villager'}'s last observed location. An encounter still requires their presence and willingness.`};}
  const b=w.agents.find(b=>b.id===j.partnerId);
