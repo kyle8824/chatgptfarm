@@ -1,5 +1,6 @@
 import {naturalWorld} from '../shared/landscape.js';
 import {distance} from '../engine/navigation.js';
+import {coordForPosition} from '../engine/spectator.js';
 import {clock} from './holdings.mjs';
 import {advanceLiveRoute,motionState} from './motion.mjs';
 import {beginReturnRoute,advanceReturnRoute} from './return-route.mjs';
@@ -32,6 +33,14 @@ export function returnCandidate(w,a){
  // Let a bounded, useful supply/work trip finish before returning. Otherwise
  // crossing the camp radius interrupts the same unfinished errand forever.
  const j=a.task?.selected?.job;
+ // Finish a bounded local food errand before returning. Otherwise a cold
+ // villager crosses the camp radius, turns back, resumes the same forage and
+ // repeats indefinitely without ever reaching the berries or getting warm.
+ const protection=knownCampProtection(w,a,h),heatReady=protection.fire||protection.fuel||a.inventory.dryWood>=1;
+ if(!heatReady&&a.task&&a.needs.hunger<75&&/^(forage:|survey:|gather_berries|retrieve_food:|eat_)/.test(a.task.actionId)){
+  const foodGoal=j?.destination||coordForPosition(a.task.targetPosition,w);
+  if(foodGoal&&distance(foodGoal,h)<=45&&distance(a.coordinates,h)<=50)return null;
+ }
  if(j?.destination&&(j.coldPreparation||j.projectId||j.practice||/^(harvest_fuel:|tool_supply:)/.test(a.task.actionId))&&['harvest','gather','take','fallen','craft','assemble','repair','deliver'].includes(j.kind)&&distance(j.destination,h)<=45&&distance(a.coordinates,h)<=50)return null;
  const id=`return_warmth:${h.id}`,failure=a.liveFailures?.[id];
  if(failure&&clock(w)-failure.at<failure.retryMinutes)return null;

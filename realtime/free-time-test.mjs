@@ -9,7 +9,7 @@ import {liveCandidates} from './behavior.mjs';
 import {workSettlement} from './settlement.mjs';
 import {clock,makeStore} from './holdings.mjs';
 import {faceInteraction} from './motion.mjs';
-import {progressText,taskExplanation} from '../web/live/task-view.js';
+import {progressRatio,progressText,taskExplanation} from '../web/live/task-view.js';
 
 function fixture(){const w=prepare(createWorld());w.weather='clear';w.temperature=65;for(const [i,a]of w.agents.entries()){a.coordinates={x:66+i*1.8,y:39};a.position='meadow';a.task=null;a.suspendedTasks=[];a.needs={hunger:95,hydration:95,energy:85,warmth:90};a.liveFailures={};a.mind.recentActions=[];}return w;}
 function task(a,c){return {id:'test-'+c.id,decisionId:null,actionId:c.id,label:c.label,selected:c,source:'fallback',targetPosition:a.position,origin:{...a.coordinates},destination:{...c.job.destination},path:[{...a.coordinates}],phase:'work',liveSpaceVersion:1,liveTiming:true,workMinutes:0,requiredMinutes:c.job.minutes};}
@@ -42,7 +42,8 @@ assert(!freeTimeCandidates(p,pa).some(c=>c.job.practice&&c.job.kind!=='practice_
 
 // Both people must be available, within reach, and stay there. A game is one
 // shared session; a restart cannot reroll completed rounds or award twice.
-let g=fixture(),[ga,gb]=g.agents;const game=freeTimeCandidates(g,ga).find(c=>c.job.kind==='hand_game');assert(game);
+let g=fixture(),[ga,gb]=g.agents;assert.equal(progressRatio({task:{actionId:'reconsider',workMinutes:1,requiredMinutes:2}}),0,'idle waiting is not displayed as completed work');
+gb.task={id:'idle-pause',label:'Reconsider',actionId:'reconsider',selected:{job:{kind:'reconsider'}}};const game=freeTimeCandidates(g,ga).find(c=>c.job.kind==='hand_game');assert(game);
 ga.coordinates={...game.job.destination};ga.task=task(ga,game);let gameResult=workFreeTime(g,ga,ga.task,2);assert(!gameResult.done);assert.equal(ga.task.progress.rounds,1);
 const initialRound=structuredClone(ga.task.social.rounds[0]),company=gb.freeTime.company;workFreeTime(g,gb,gb.task,2);assert.equal(ga.task.progress.rounds,1,'guest never advances the shared clock');assert.equal(gb.freeTime.company,company);
 g=prepare(JSON.parse(JSON.stringify(g)));[ga,gb]=g.agents;assert.deepEqual(ga.task.social.rounds[0],initialRound);

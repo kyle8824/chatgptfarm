@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict';
 import {createWorld} from '../engine/core.js';
-import {prepare} from './elapsed.mjs';
+import {prepare,step} from './elapsed.mjs';
 import {expandFrontier} from './frontier.mjs';
 import {reorganizeLandscape} from './landscape-migration.mjs';
 import {householdWorld,campLayout} from '../shared/frontier.js';
@@ -9,6 +9,7 @@ import {liveCandidates,retireObsoleteTask,rememberFailure} from './behavior.mjs'
 import {candidateActions} from '../engine/decision.js';
 import {freeTimeCandidates,finishFreeTime} from './free-time.mjs';
 import {willingToRest} from './comfort.mjs';
+import {returnCandidate} from './thermal-return.mjs';
 import {thermalExposure} from '../engine/thermal.js';
 import {workSettlement,settlementCandidates,findMaterialSource} from './settlement.mjs';
 import {buildingSites,validateBlueprint,adoptBlueprint} from './blueprints.mjs';
@@ -21,6 +22,18 @@ r.task={id:'reported-ronan-route',actionId:'forage:ochre-vale:upland-berries',se
 configureTask(view(),r);const journey=r.task,food=r.inventory.berries;let result;
 for(let i=0;i<1200;i++){result=advanceLiveRoute(view(),r,journey,.6);if(result.arrived||result.blocked)break;}
 assert(result.arrived||result.blocked,'reported route must arrive or stop, not orbit indefinitely');assert.equal(r.inventory.berries,food,'travel never grants berries');
+
+// The actual live loop also crossed the cold-return radius. A shelter with
+// no fire must not abort the same short food journey over and over.
+const local=prepare(createWorld());expandFrontier(local);reorganizeLandscape(local);
+const ron=local.agents.find(a=>a.name==='Ronan');local.agents=[ron];const home=local.frontier.homes.find(h=>h.id==='ochre-vale');home.structures.shelter=true;home.structures.fire=false;
+ron.coordinates={x:-332.93329082927727,y:-322.9474553340321};ron.position='travel';ron.needs={hunger:58,hydration:90,energy:75,warmth:0};ron.inventory.berries=0;ron.suspendedTasks=[];
+const site=local.regions.sites['ochre-vale:upland-berries'];ron.siteKnowledge[site.id]={quantity:site.quantity,observedHour:local.day*24+local.hour};
+ron.task={id:'saved-food-trip',actionId:'forage:'+site.id,label:'Gather needed berries',selected:{id:'forage:'+site.id,label:'Gather needed berries'},targetPosition:site.id,origin:{...ron.coordinates},phase:'travel',source:'fallback',workMinutes:0,requiredMinutes:4,liveTiming:true};
+configureTask(householdWorld(local,ron),ron);const initialBerries=site.quantity;
+for(let i=0;i<300&&ron.task?.id==='saved-food-trip';i++)await step(local,6);
+assert(ron.inventory.berries>0,'Ronan must reach and actually gather food, not merely leave the old task');assert.equal(ron.inventory.berries,initialBerries-site.quantity,'the finished errand consumes finite berries');assert(!ron.suspendedTasks.some(t=>t.id==='saved-food-trip'),'cold does not suspend the same bounded food errand');
+ron.coordinates={x:home.x-20,y:home.y};ron.task={actionId:'forage:'+site.id,targetPosition:site.id};ron.campKnowledge[home.id]={shelter:true,fire:true,fuel:false};assert(returnCandidate(householdWorld(local,ron),ron),'known usable heat still takes priority for a freezing traveler');
 
 // Successful route recomputation must not erase an inability to make progress.
 const blocked=prepare(createWorld()),b=blocked.agents[0];blocked.agents=[b];b.coordinates={x:70,y:39};

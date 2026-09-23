@@ -24,7 +24,7 @@ export function barterOffer(w,a,b){
 }
 export function workEconomy(w,a,t,minutes){const j=t.selected.job,fail=detail=>({done:true,success:false,detail});
  if(j.kind==='trade'){
-  const b=w.agents.find(b=>b.id===j.partnerId);if(!b||!healthy(a)||!healthy(b)||gap(a.coordinates,b.coordinates)>2.2||!liveClear(w,a.coordinates,b.coordinates)||b.task&&b.task.selected?.job?.kind!=='relax'||(a.tradeCooldowns?.[b.id]||0)>clock(w))return fail('The other person is unavailable or the meeting has moved apart.');
+  const b=w.agents.find(b=>b.id===j.partnerId);if(!b||!healthy(a)||!healthy(b)||gap(a.coordinates,b.coordinates)>2.2||!liveClear(w,a.coordinates,b.coordinates)||b.task&&!['relax','reconsider'].includes(b.task.selected?.job?.kind)||(a.tradeCooldowns?.[b.id]||0)>clock(w))return fail('The other person is unavailable or the meeting has moved apart.');
   const offer=barterOffer(w,a,b);if(!offer||offer.give!==j.give||offer.take!==j.take)return fail('The supplies or willingness to exchange have changed.');t.workMinutes=Math.min(t.requiredMinutes,t.workMinutes+minutes);if(t.workMinutes<t.requiredMinutes)return {done:false};
   // Checked within the serial simulation turn before either finite transfer.
   const give=transferItems(w,a,b,j.give,1),take=transferItems(w,b,a,j.take,1);if(give!==1||take!==1)throw Error('Validated barter transfer failed');
