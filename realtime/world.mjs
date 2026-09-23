@@ -21,6 +21,7 @@ export const RATE=6;
 export const CHECKPOINT_MS=15000;
 export const RECOVERY_STEP_MS=1000;
 export const PULSE_BUDGET_MS=40;
+export const MAX_PULSE_STEPS=12;
 export function compact(w){
  w.dna=w.dna.slice(-80);for(const d of w.dna)delete d.evidence;
  w.history=w.history.slice(0,140);
@@ -31,7 +32,7 @@ export function compact(w){
  for(const a of w.agents){const seen=new Set();a.suspendedTasks=(a.suspendedTasks||[]).filter(t=>{if(seen.has(t.actionId))return false;seen.add(t.actionId);return true;}).slice(-6);}
 }
 export class RealtimeController{
- constructor(storage,{now=Date.now,ai=null,budgetNow=()=>performance.now(),yieldToHost=()=>new Promise(resolve=>setTimeout(resolve,0))}={}){this.storage=storage;this.now=now;this.ai=ai;this.budgetNow=budgetNow;this.yieldToHost=yieldToHost;this.queue=Promise.resolve();this.proposals=new Map();this.jobs=new Map();this.lastSaved=0;this.lastAiCheck=0;this.error=null;this.checkpointIntervalMs=CHECKPOINT_MS;this.persistenceRetryAt=0;this.nextAlarmAt=0;}
+ constructor(storage,{now=Date.now,ai=null,budgetNow=()=>performance.now(),yieldToHost=()=>new Promise(resolve=>setTimeout(resolve,1))}={}){this.storage=storage;this.now=now;this.ai=ai;this.budgetNow=budgetNow;this.yieldToHost=yieldToHost;this.queue=Promise.resolve();this.proposals=new Map();this.jobs=new Map();this.lastSaved=0;this.lastAiCheck=0;this.error=null;this.checkpointIntervalMs=CHECKPOINT_MS;this.persistenceRetryAt=0;this.nextAlarmAt=0;}
  serial(fn){const p=this.queue.then(fn);this.queue=p.catch(()=>{});return p;}
  async load(){if(this.record===undefined){this.record=await readCheckpoint(this.storage);if(this.record){ensureSettlement(this.record.world);this.lastSaved=this.record.checkpointAt||0;this.checkpointIntervalMs=Math.max(CHECKPOINT_MS,this.record.checkpointIntervalMs||0);this.nextAlarmAt=this.lastSaved+this.checkpointIntervalMs;}for(const [id,p] of Object.entries(this.record?.pendingDecisions||{}))if(p.expires>this.now())this.proposals.set(id,p);}return this.record;}
  async initialize(seed){if(await this.load())return;const now=this.now(),w=prepare(seed);compact(w);w.meta.actionRulesVersion='realtime-2';w.meta.liveFork={sourceDay:w.day,sourceHour:w.hour,sourceTick:seed.meta.tickNumber,createdAt:now};
@@ -47,7 +48,7 @@ export class RealtimeController{
   this.checkpointIntervalMs=Math.max(CHECKPOINT_MS,Math.ceil((Math.ceil(bytes/64000)+2)*86400000/30000));
  }catch(e){this.error=e.message;this.persistenceRetryAt=at+worldFailure(e,at).retryAfterSeconds*1000;throw e;}}
  async advance(target,viewers=0){const r=this.record;if(!r)return false;if(this.persistenceRetryAt){if(target<this.persistenceRetryAt)return false;await this.save();}let n=0;const started=this.budgetNow();
-  while(r.lastWallTime<target&&n++<300){const remaining=target-r.lastWallTime,wall=Math.min(remaining>30000?RECOVERY_STEP_MS:100,remaining),through=r.lastWallTime+wall;
+  while(r.lastWallTime<target&&n++<MAX_PULSE_STEPS){const remaining=target-r.lastWallTime,wall=Math.min(remaining>30000?RECOVERY_STEP_MS:100,remaining),through=r.lastWallTime+wall;
    const adapter={decide:async c=>{const p=this.proposals.get(c.agent.id);this.proposals.delete(c.agent.id);if(r.pendingDecisions)delete r.pendingDecisions[c.agent.id];if(!p||p.expires<this.now())throw Object.assign(Error('Reflex policy'),{code:this.ai?'between_model_decisions':'ai_not_configured'});if(!c.candidates.some(x=>x.id===p.actionId)){r.ai.rejected++;throw Object.assign(Error('Stale action'),{code:'model_action_no_longer_available'});}r.ai.applied++;const a=r.world.agents.find(a=>a.id===c.agent.id);if(a?.liveThought)a.liveThought.status='applied';return p;}};
    await step(r.world,wall/1000*r.rate,{mind:adapter,wallTime:through,fallbackReason:this.ai?'between_model_decisions':'ai_not_configured'});wildlifeStep(r.world,wall/1000*r.rate);r.lastWallTime=through;r.revision++;if(!viewers)r.unattendedSteps++;
    // Resolved promises alone do not yield to incoming requests or alarms.

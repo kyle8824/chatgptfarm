@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict';
 import fs from 'node:fs/promises';
-import {RealtimeController} from './world.mjs';
+import {RealtimeController,MAX_PULSE_STEPS} from './world.mjs';
 import {liveClear,liveRoute} from './motion.mjs';
 import {prepare} from './elapsed.mjs';
 
@@ -17,6 +17,11 @@ assert(yields>0,'recovery yields to incoming events before continuing');
 assert(c.record.lastWallTime-initialCursor<=10000,'one recovery burst cannot swallow an hour of work');
 assert.equal(modelRequests,0,'old recovery state does not spend fresh model calls');
 assert.equal(c.runtime().status,'catching-up');
+// Production clocks can remain frozen during CPU work. The step cap must
+// still end a burst; elapsed-time measurements are only an extra guard.
+const frozen=new RealtimeController(storage,{now:()=>now,budgetNow:()=>0,yieldToHost:async()=>{}});await frozen.load();
+const frozenBefore=frozen.record.lastWallTime;await frozen.pulse();
+assert.equal(frozen.record.lastWallTime-frozenBefore,MAX_PULSE_STEPS*1000,'hard step cap works even when the platform clock is frozen');
 const restarted=new RealtimeController(storage,{now:()=>now});await restarted.load();
 assert.equal(restarted.record.createdAt,created);
 assert.deepEqual(restarted.frame().agents,c.frame().agents,'partial recovery checkpoints retain exact tasks, supplies and positions');
