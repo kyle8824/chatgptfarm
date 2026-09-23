@@ -1,0 +1,13 @@
+# Happiness and personal interests
+
+Happiness is a persistent 0–100 measure based on physical wellbeing (28%), comfort (14%), company (20%), enjoyment (24%) and a sense of progress (14%). It approaches those conditions gradually, with additional satisfaction from actual activity. A new record starts from the person’s existing conditions. Existing needs, inventories, age, history and saved projects are unchanged.
+
+Each person receives stable, distinct 0–100 activity preferences derived from their ID and existing curiosity/cooperation traits. Preferences are persisted once. They are likes, not skills or success probabilities. They affect both rule-based ranking and the context given to the assigned AI. Provider, call cadence, request quotas and spending caps are unchanged.
+
+Building, exploring, learning skills, socializing, games and quiet time are connected to actual physical work. Recent satisfaction rises with elapsed activity and fades over simulation time, reducing the motivation and reward for repetition. Task cursors survive checkpoints/suspensions so the same work cannot earn enjoyment twice. Selection, idle travel and API requests give no reward. Exploration uses measured movement. Uncomfortable quiet time provides no artificial enjoyment. Cooking, fishing and hunting interests are displayed separately as future activities; live pursuit/cooking/fishing mechanics are not introduced by this change.
+
+Energy-rest ends at 85 energy. Tired people still rest; urgent food/water/energy and available warmth recovery retain priority. Cold alone no longer disables practical skill work. Sheltered people with their other needs met may talk or play, including a fully rested person who was previously resting. Cold social destinations must remain protected; optional exploration still requires warmth recovery. Useful nearby supply trips may finish within 45 world units of a known camp before returning, preventing repeated interruptions at its 18-unit boundary. Distant cold expeditions still return physically.
+
+The inspector adds a Happiness meter and an Interests tab. Bars show personal preference, while recent-satisfaction labels show the desire for variety. Physical construction still requires valid designs, materials, tools, reachable work sites and elapsed labor. This feature does not create heat, food, tools, completed structures or scripted outcomes.
+
+Validation: `node realtime/happiness-test.mjs`, existing free-time, comfort, cold-return and camp-loop regressions, and the normal Worker CI gates. Live verification must distinguish generated designs from assembled parts and short observation windows from guarantees of permanent behavior.

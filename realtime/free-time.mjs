@@ -1,3 +1,5 @@
+import {advanceHappiness,happinessSummary} from './happiness.mjs';
+import {thermalExposure} from '../engine/thermal.js';
 import {romanceKinds,willingRomance,completeRomance,isAdult,familyContext} from './life.mjs';
 import {coverEffectiveness} from './structures.mjs';
 import {CAMP,shelterLocal} from './layout.mjs';
@@ -14,24 +16,29 @@ import {comfortCandidates,comfortContext,workComfortRest} from './comfort.mjs';
 const initial=()=>({company:55,enjoyment:55,mastery:55,cooldowns:{},seen:{}});
 export const comfortable=a=>a.needs.hunger>55&&a.needs.hydration>55&&a.needs.energy>45&&a.needs.warmth>35;
 export function ensureFreeTime(a){return a.freeTime??=initial();}
+export function leisureReady(w,a,p=a.coordinates){
+ const n=a.needs;if(n.hunger<=35||n.hydration<=35||n.energy<=40)return false;
+ return n.warmth>35||thermalExposure(w,{...a,coordinates:p}).sheltered||coverEffectiveness(w,p)>.5||w.weather!=='rain'&&w.temperature>=58;
+}
 export function advanceFreeTime(w,a,seconds){
  const f=ensureFreeTime(a),hours=seconds/3600;
  f.company=clamp(f.company-hours*5);f.enjoyment=clamp(f.enjoyment-hours*7);f.mastery=clamp(f.mastery-hours*4);
  // A sighting, not access to the other person's remote current location.
  if((f.noticeAt??-Infinity)+5/60<=clock(w)){f.noticeAt=clock(w);for(const b of w.agents)if(b.id!==a.id&&distance(a.coordinates,b.coordinates)<12&&liveClear(w,a.coordinates,b.coordinates))f.seen[b.id]={at:clock(w),position:{...b.coordinates}};}
  if(f.practice&&clock(w)-f.practice.at>=240)delete f.practice;
+ advanceHappiness(a,seconds);
 }
-export function freeTimeContext(w,a){const f=a.freeTime||initial();return {family:familyContext(w,a),comfort:comfortContext(w,a),company:Math.round(f.company),enjoyment:Math.round(f.enjoyment),mastery:Math.round(f.mastery),practiceGoal:f.practice?.item||null,exploration:explorationMotivation(w,a)};}
-const ready=(w,a,kind)=>comfortable(a)&&(!a.task||a.task.selected?.job?.kind==='relax')&&(a.freeTime?.cooldowns?.social||0)<=clock(w)&&(romanceKinds.includes(kind)|| (kind==='conversation'?(a.freeTime?.company??55)<80:(a.freeTime?.enjoyment??55)<80));
+export function freeTimeContext(w,a){const f=a.freeTime||initial();return {happiness:happinessSummary(a),family:familyContext(w,a),comfort:comfortContext(w,a),company:Math.round(f.company),enjoyment:Math.round(f.enjoyment),mastery:Math.round(f.mastery),practiceGoal:f.practice?.item||null,exploration:explorationMotivation(w,a)};}
+const ready=(w,a,kind)=>leisureReady(w,a)&&(!a.task||a.task.selected?.job?.kind==='relax'||a.needs.energy>=80&&(a.task.actionId==='rest'||a.task.selected?.job?.kind==='rest'))&&(a.freeTime?.cooldowns?.social||0)<=clock(w)&&(romanceKinds.includes(kind)|| (kind==='conversation'?(a.freeTime?.company??55)<80:(a.freeTime?.enjoyment??55)<80));
 const owned=(w,a,item)=>(a.inventory[item]||0)+(w.settlement?.stores||[]).filter(s=>s.ownerId===a.id).reduce((n,s)=>n+(s.items[item]||0),0);
 const practiceOptions=[['cordage','fiberwork',4],['woodPole','woodworking',2],['sharpStone','stoneworking',1],['boundSharpTool','hafting',1]];
 
 export function freeTimeCandidates(w,a){
- if(!comfortable(a))return [];
- const f=a.freeTime||initial(),now=clock(w),result=comfortCandidates(w,a,{relax:true}),curiosity=a.traits.curiosity,cooperation=a.traits.cooperation;
+ if(a.needs.hunger<=35||a.needs.hydration<=35||a.needs.energy<=40)return [];
+ const f=a.freeTime||initial(),now=clock(w),result=leisureReady(w,a)?comfortCandidates(w,a,{relax:true}).filter(c=>leisureReady(w,a,c.job.destination)):[],curiosity=a.traits.curiosity,cooperation=a.traits.cooperation;
  const offer=(id,label,score,job,reason)=>result.push({id,label,score,reasons:[[reason,score]],job:{...job,freeTime:true,reason}});
  // Quiet leisure remains possible even after other interests have been met.
- offer('leisure:relax','Relax and enjoy the surroundings',5+(100-a.needs.energy)*.18+(100-f.enjoyment)*.12,{kind:'relax',minutes:20,destination:{...a.coordinates}},'Take an unhurried break while immediate needs are met.');
+ if(leisureReady(w,a))offer('leisure:relax','Relax and enjoy the surroundings',5+(100-a.needs.energy)*.18+(100-f.enjoyment)*.12,{kind:'relax',minutes:20,destination:{...a.coordinates}},'Take an unhurried break while immediate needs are met.');
  if((f.cooldowns.practice||0)<=now){
   const options=practiceOptions.filter(([item,,cap])=>owned(w,a,item)<cap&&(item!=='sharpStone'||!owned(w,a,'boundSharpTool'))).map(([item,skill])=>{
    const last=a.craftPractice?.[skill]?.last,failed=last?.success===false&&(w.day-last.day)*24+w.hour-last.hour<12;
@@ -49,7 +56,7 @@ export function freeTimeCandidates(w,a){
    }
   }
  }
- if((f.cooldowns.social||0)<=now)for(const b of w.agents){
+ if(leisureReady(w,a)&&(f.cooldowns.social||0)<=now)for(const b of w.agents){
   if(b.id===a.id||(b.life&&!isAdult(w,b))||(relationship(w,a,b)?.trust??0)<20)continue;
   const seen=f.seen[b.id],gap=distance(a.coordinates,b.coordinates),visible=gap<12&&liveClear(w,a.coordinates,b.coordinates);
   if(visible)for(const kind of ['conversation','hand_game',...romanceKinds]){
@@ -58,17 +65,17 @@ export function freeTimeCandidates(w,a){
     if(!willingRomance(w,a,b,kind))continue;
     const q=shelterLocal(b.coordinates,w),covered=w.structures.shelter&&Math.abs(q.x)<CAMP.shelter.halfWidth&&Math.abs(q.y)<CAMP.shelter.halfLength||coverEffectiveness(w,b.coordinates)>.5;
     if(kind==='private_time'&&(!covered||w.agents.some(p=>p.id!==a.id&&p.id!==b.id&&distance(p.coordinates,b.coordinates)<4)))continue;
-    const destination=interactionPoint(w,a,b.coordinates,{radius:1.6});if(!destination)continue;
+    const destination=interactionPoint(w,a,b.coordinates,{radius:1.6,accept:p=>leisureReady(w,a,p)});if(!destination)continue;
     const titles={courtship:'Spend affectionate time with ',commitment:'Talk about becoming a couple with ',family_plan:'Talk about starting a family with ',private_time:'Spend private time with '};
     const score={courtship:42,commitment:60,family_plan:62,private_time:60}[kind];
     offer('social:'+kind+':'+b.id,titles[kind]+b.name,score-gap*.25,{kind,partnerId:b.id,destination,minutes:kind==='courtship'?20:15},'A shared adult choice requiring mutual interest, availability and time together.');continue;
    }
-   const destination=interactionPoint(w,a,b.coordinates,{radius:1.6});if(!destination)continue;
+   const destination=interactionPoint(w,a,b.coordinates,{radius:1.6,accept:p=>leisureReady(w,a,p)});if(!destination)continue;
    const score=kind==='conversation'?8+cooperation*10+(100-f.company)*.4:7+cooperation*6+(100-f.enjoyment)*.42;
    offer('social:'+kind+':'+b.id,kind==='conversation'?'Spend time talking with '+b.name:'Play a hand-sign game with '+b.name,score-gap*.25,{kind,partnerId:b.id,destination,minutes:kind==='conversation'?12:10},kind==='conversation'?'Seek companionship and exchange remembered experiences.':'Enjoy five rounds together: stone beats shears, shears beat reed, reed beats stone.');
   }
   else if(seen&&now-seen.at<240&&f.company<45&&distance(a.coordinates,seen.position)>3&&(f.cooldowns.visit||0)<=now){
-   const destination=interactionPoint(w,a,seen.position);if(destination)offer('leisure:visit:'+b.id,'Look for '+b.name+' where last seen',10+(100-f.company)*.35,{kind:'visit',partnerId:b.id,destination,minutes:.1},'Look at a remembered location; the other person may have moved.');
+   const destination=interactionPoint(w,a,seen.position);if(destination&&leisureReady(w,a,destination))offer('leisure:visit:'+b.id,'Look for '+b.name+' where last seen',10+(100-f.company)*.35,{kind:'visit',partnerId:b.id,destination,minutes:.1},'Look at a remembered location; the other person may have moved.');
   }
  }
  return result.filter(c=>!a.liveFailures?.[c.id]||now-a.liveFailures[c.id].at>=90);
@@ -120,7 +127,7 @@ export function workFreeTime(w,a,t,minutes){
   b.task={...structuredClone(t),id:t.id+':guest',decisionId:null,source:'fallback',model:null,fallbackReason:'accepted_social_invitation',decisionSummary:`I want to join ${a.name} for ${j.kind==='conversation'?'conversation':j.kind==='hand_game'?'a hand-sign game':'time together'}.`,origin:{...b.coordinates},destination:{...b.coordinates},path:[{...b.coordinates}],phase:'work',targetPosition:b.position,selected:{id:'social:guest:'+a.id,label:j.kind==='conversation'?'Talk with '+a.name:j.kind==='hand_game'?'Play a hand-sign game with '+a.name:'Spend time with '+a.name,job:{...j,destination:{...b.coordinates},partnerId:a.id,hostId:a.id,sessionId:t.id}},social:null};
   b.task.label=b.task.selected.label;b.task.actionId=b.task.selected.id;b.task.liveSpaceVersion=1;
  }
- if(b.task?.selected?.job?.sessionId!==t.id||!comfortable(a)||!comfortable(b))return fail('Someone needs to attend to another need; the shared activity stops.');
+ if(b.task?.selected?.job?.sessionId!==t.id||!leisureReady(w,a)||!leisureReady(w,b))return fail('Someone needs to attend to another need; the shared activity stops.');
  t.workMinutes=Math.min(t.requiredMinutes,t.workMinutes+minutes);b.task.workMinutes=t.workMinutes;
  if(j.kind==='hand_game'){
   const names=['stone','reed','shears'];

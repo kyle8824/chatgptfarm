@@ -1,3 +1,4 @@
+import {ensureHappiness,recordEnjoyedWork} from './happiness.mjs';
 import {workEconomy} from './regional-economy.mjs';
 import {observeLandscape} from './frontier-knowledge.mjs';
 import {householdWorld} from '../shared/frontier.js';
@@ -25,7 +26,7 @@ import {updateThermalGoal,advanceThermalReturn} from './thermal-return.mjs';
 export function prepare(seed){
  const w=migrateWorld(structuredClone(seed));delete w.runtime;
  w.meta.persistentActions=1;w.meta.actionRulesVersion='realtime-2';w.minute=Number(w.minute||0);
- for(const a of w.agents){a.coordinates||=coordForPosition(a.position,w);delete a.runtimeMotion;ensureFreeTime(a);ensureComfort(a);}
+ for(const a of w.agents){a.coordinates||=coordForPosition(a.position,w);delete a.runtimeMotion;ensureFreeTime(a);ensureComfort(a);ensureHappiness(a);}
  ensureSettlement(w);ensureLife(w);
  return w;
 }
@@ -50,7 +51,7 @@ export async function step(w,seconds,{mind=null,fallbackReason='no_provider',wal
   if(!a.task&&!resumeLiveTask(w,a,urgent))await startTask(w,a,mind,urgent?'urgent_need':fallbackReason,!!urgent,{urgentNeed:urgent,onRouteFailure:t=>rememberFailure(w,a,t,'No safe route to the selected destination.'),candidateTransform:c=>liveCandidates(w,a,c),destinationResolver:(target,selected)=>chooseDestination(w,a,target,selected),routeFinder:(world,from,to)=>liveRoute(world,from,to,a)});
   configureTask(w,a);
   if(a.task)beginFreeTime(w,a,a.task);
-  const t=a.task,from={...a.coordinates};if(t&&!t.liveTiming&&t.workMinutes===0){const id=t.actionId;t.requiredMinutes=t.selected?.job?.minutes??(id==='drink'?.75:id.startsWith('eat_')?1:/^(gather_|forage:)/.test(id)?4:id==='talk'?3:id==='seek_other'?.1:t.requiredMinutes);t.liveTiming=true;}if(t&&a.liveThought?.actionId===t.actionId&&t.source==='ai')a.liveThought.status='acting';let positionBefore=a.position;if(t?.actionId==='drink')t.interactionReady=withinWaterReach(w,a.coordinates);
+  const t=a.task,from={...a.coordinates};if(t)t.happinessWork??=t.workMinutes||0;if(t&&!t.liveTiming&&t.workMinutes===0){const id=t.actionId;t.requiredMinutes=t.selected?.job?.minutes??(id==='drink'?.75:id.startsWith('eat_')?1:/^(gather_|forage:)/.test(id)?4:id==='talk'?3:id==='seek_other'?.1:t.requiredMinutes);t.liveTiming=true;}if(t&&a.liveThought?.actionId===t.actionId&&t.source==='ai')a.liveThought.status='acting';let positionBefore=a.position;if(t?.actionId==='drink')t.interactionReady=withinWaterReach(w,a.coordinates);
   if(t?.selected?.job?.kind==='return_warmth'){
    positionBefore=t.phase==='travel'?'travel':a.position;const result=advanceThermalReturn(w,a,t,seconds);if(result.done){outcome(w,a,t,result.success,result.detail);if(!result.success)rememberFailure(w,a,t,result.detail);a.task=null;}
   }else if(t?.actionId==='explore'){
@@ -65,6 +66,7 @@ export async function step(w,seconds,{mind=null,fallbackReason='no_provider',wal
    if(movement.blocked){outcome(w,a,t,false,'Route changed while travelling.','blocked');rememberFailure(w,a,t,'Route remains blocked; try another useful task before retrying.');a.task=null;}
    else if(movement.arrived){a.position=t.targetPosition;t.phase='work';recordSurfaceUse(w,a,t.origin,t.destination,t.actionId);}
   }else if(t){faceInteraction(w,a,seconds);const result=['trade','regional_craft'].includes(t.selected?.job?.kind)?workEconomy(w,a,t,minutes):t.selected?.job?.kind==='care'?workParenting(w,a,t,minutes):isRestingTask(t)?workComfortRest(w,a,t,minutes):isFreeTimeJob(t)?workFreeTime(w,a,t,minutes):t.selected?.job?workSettlement(w,a,t,minutes):work(w,a,t,minutes);if(isRestingTask(t)&&t.workMinutes>0&&t.selected?.job?.projectId)recordStructureUse(w,a,w.settlement.projects.find(p=>p.id===t.selected.job.projectId),'rest');if(result.done){finishFreeTime(w,a,t,result);outcome(w,a,t,result.success!==false,result.detail);if(result.success===false)rememberFailure(w,a,t,result.detail);if(['talk','seek_other'].includes(t.actionId))a.socialUntil=clock(w)+90;if(t.actionId==='seek_cover')a.coverUntil=clock(w)+45;a.task=null;}}
+  if(t)recordEnjoyedWork(w,a,t);
   enforceCarry(w,a);
   const ratio=seconds/3600,n=a.needs;
   const walked=Math.hypot(a.coordinates.x-from.x,a.coordinates.y-from.y)>1e-8;

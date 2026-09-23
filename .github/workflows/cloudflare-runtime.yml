@@ -1,7 +1,7 @@
 name: Cloudflare Runtime Validation
 on:
   pull_request:
-    paths: ['cloudflare/**', 'runtime/**', 'engine/**', 'engine.js', 'mind.js', 'phaser-world-v1.js', '.github/workflows/cloudflare-runtime.yml']
+    paths: ['cloudflare/**', 'runtime/**', 'engine/**', 'realtime/**', 'shared/**', 'web/live/**', 'engine.js', 'mind.js', 'phaser-world-v1.js', '.github/workflows/cloudflare-runtime.yml']
   workflow_dispatch:
 permissions:
   contents: read

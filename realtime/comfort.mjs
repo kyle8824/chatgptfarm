@@ -46,7 +46,6 @@ export function workComfortRest(w,a,t,minutes){
  a.restSupport=place;
  if(place.heading!==null)motionState(a).facing=place.heading;
  a.needs.energy=clamp(a.needs.energy+spent/60*(relax?10+place.score*.15:18+place.score*.32));
- if(relax&&a.freeTime)a.freeTime.enjoyment=clamp(a.freeTime.enjoyment+spent*(.25+place.score/140));
  c.value=clamp(c.value+(place.score-c.value)*Math.min(1,spent/40));
  if(place.score<55)c.uncomfortableMinutes=Math.min(720,c.uncomfortableMinutes+spent);else c.uncomfortableMinutes=Math.max(0,c.uncomfortableMinutes-spent*2);
  c.lastRest={at:clock(w),score:Math.round(place.score),description:place.description,projectId:place.projectId};
