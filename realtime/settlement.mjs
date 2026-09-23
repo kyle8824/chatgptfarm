@@ -1,3 +1,4 @@
+import {naturalWorld} from '../shared/landscape.js';
 import {treadHeight} from './climbing.mjs';
 import {homeAccount} from '../shared/frontier.js';
 import {knownPlace} from './frontier-knowledge.mjs';
@@ -37,7 +38,7 @@ export function findMaterialSource(w,a,material){
  if(material==='timber')for(const t of w.settlement.trees)if(knownPlace(w,a,t)&&treeUnits(w,t)>0&&(a.inventory.boundSharpTool>0||!(t.handGathered>=1)))sources.push({kind:'harvest',treeId:t.id,position:t.position,item:'wetWood'});
  if(material==='timber'){const log=w.worldModel.objects.find(o=>o.type==='fallen_tree'&&(!w.homeContext||(o.homeId||'willow-basin')===w.homeContext.id));if(log)for(const item of ['dryWood','wetWood'])if(w.resources[item]>0)sources.push({kind:'fallen',position:log.position,item});}
  for(const node of materialSources(w,material,a))sources.push({kind:'gather',nodeId:node.nodeId,resource:node.resource,position:node.position,item:node.item,sourceId:node.id});
- return sources.sort((x,y)=>distance(a.coordinates,x.position)-distance(a.coordinates,y.position));
+ return sources.filter(s=>!naturalWorld(w)||distance(a.coordinates,s.position)<=45).sort((x,y)=>distance(a.coordinates,x.position)-distance(a.coordinates,y.position));
 }
 export function settlementCandidates(w,a){
  if(!w.settlement)return [];const result=comfortCandidates(w,a),l=loadOf(w,a),full=l.mass>CARRY.mass*.72||l.volume>CARRY.volume*.72;
@@ -54,7 +55,7 @@ export function settlementCandidates(w,a){
   result.push({id:'explore',label:'Explore for tool materials',score:score-12,reasons:[['missing known tool supplies',score-12]]});
  };
  const maintenance=w.settlement.projects.filter(p=>knownPlace(w,a,p)&&p.status==='complete'&&(p.ownerId===a.id||p.access==='shared')&&!p.supersededBy);
- for(const p of maintenance){
+ for(const p of maintenance){if(naturalWorld(w)&&distance(a.coordinates,p.position)>60)continue;
   const part=p.parts.find(x=>x.built&&conditionOf(x)<(p.maintenanceRequested?.by===a.id?.95:.65)&&(x.requires||[]).every(id=>conditionOf(p.parts.find(x=>x.id===id))>.12));if(!part)continue;
   const repairing=p.repair?.partId===part.id?p.repair:null,needed=repairing?.materialUnits??Math.max(1,Math.ceil(part.materialUnits*(conditionOf(part)<=.12?1:.35)));
   const repairPart={...part,invested:!!repairing?.invested,materialUnits:needed},plan=preparationFor(a,repairPart),base=30+(1-conditionOf(part))*40+(p.maintenanceRequested?.by===a.id?15:0);
@@ -74,7 +75,7 @@ export function settlementCandidates(w,a){
   const need=(100-a.needs.hunger)*1.2,penalty=mine?0:48+a.traits.cooperation*25;
   offer(`retrieve_food:${s.id}:${edible}`,`${mine?'Collect':'Take'} ${edible} from ${s.name}`,need-penalty+(mine?8:(8-a.needs.hunger)*9),{kind:'take',storeId:s.id,item:edible,quantity:2,minutes:.5,theft:!mine},s.position);
  }
- const projects=w.settlement.projects.filter(p=>{const owner=w.agents.find(b=>b.id===p.ownerId);return knownPlace(w,a,p)&&p.status!=='complete'&&(p.ownerId===a.id||p.access==='shared'&&(!owner||(relationship(w,a,owner)?.trust??34)>=20));}).sort((p,q)=>(p.ownerId===a.id?0:1)-(q.ownerId===a.id?0:1));
+ const projects=w.settlement.projects.filter(p=>{const owner=w.agents.find(b=>b.id===p.ownerId);return (!naturalWorld(w)||distance(a.coordinates,p.position)<60)&&knownPlace(w,a,p)&&p.status!=='complete'&&(p.ownerId===a.id||p.access==='shared'&&(!owner||(relationship(w,a,owner)?.trust??34)>=20));}).sort((p,q)=>(p.ownerId===a.id?0:1)-(q.ownerId===a.id?0:1));
  for(const p of projects){const stock=storeBy(w,p.stockpileId),base=53+(p.ownerId===a.id?4:0)+(p.affordances?.restSurfaces?.length?Math.max(0,65-(a.comfort?.value??55))*.3:0),ready=p.parts.find(part=>!part.built&&part.requires.every(id=>p.parts.find(x=>x.id===id)?.built)&&(!part.worker||part.worker===a.id||!w.agents.some(b=>b.id===part.worker&&b.task?.selected?.job?.partId===part.id&&b.task?.selected?.job?.projectId===p.id)));
   const preparation=ready&&preparationFor(a,ready);if(preparation){offerPreparation(preparation,p);continue;}
   if(ready&&!(a.liveFailures?.[`build:${p.id}:${ready.id}`]&&clock(w)-a.liveFailures[`build:${p.id}:${ready.id}`].at<10)&&(ready.invested||units(a,ready.material)>=ready.materialUnits)){
@@ -96,7 +97,7 @@ export function settlementCandidates(w,a){
  if(nextPart&&!nextPart.invested){let n=nextPart.materialUnits;for(const k of materialKeys[nextPart.material]){keep[k]=Math.min(n,a.inventory[k]||0);n-=keep[k];}}
  const depositKeys=Object.entries(a.inventory).filter(([k,n])=>n>(keep[k]||0)).map(([k])=>k);
  const assemblyLoadBlocked=projects.some(p=>{const part=p.parts.find(x=>!x.built&&!x.invested&&x.requires.every(id=>p.parts.find(t=>t.id===id)?.built));if(!part)return false;const key=materialKeys[part.material][0];return roomFor(w,a,key)+units(a,part.material)<part.materialUnits;});
- if(depositKeys.length){const preferred=w.settlement.stores.filter(s=>s.kind!=='site'&&allowed(a,s)&&depositKeys.some(k=>roomFor(w,s,k))).sort((x,y)=>(['storage','platform'].includes(x.kind)?0:20)-(['storage','platform'].includes(y.kind)?0:20)+distance(x.position,a.coordinates)-distance(y.position,a.coordinates));
+ if(depositKeys.length){const preferred=w.settlement.stores.filter(s=>(!naturalWorld(w)||knownPlace(w,a,s)&&distance(a.coordinates,s.position)<40)&&s.kind!=='site'&&allowed(a,s)&&depositKeys.some(k=>roomFor(w,s,k))).sort((x,y)=>(['storage','platform'].includes(x.kind)?0:20)-(['storage','platform'].includes(y.kind)?0:20)+distance(x.position,a.coordinates)-distance(y.position,a.coordinates));
   const usingLoad=result.some(c=>['assemble','repair','deliver','craft'].includes(c.job?.kind));
   const s=preferred[0];if(s)offer(`deposit:${s.id}`,`Put supplies in ${s.name}`,assemblyLoadBlocked?96:full&&!usingLoad?86:projects.length?8:27,{kind:'deposit',storeId:s.id,keep,minutes:.75},s.position);
   else if(full||assemblyLoadBlocked)result.push({id:'put_down_load',label:'Put down unrelated cargo for the building work',score:96,reasons:[['carrying space',96]],job:{kind:'put_down',keep,destination:{...a.coordinates},minutes:.75}});

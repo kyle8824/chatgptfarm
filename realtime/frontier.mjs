@@ -1,3 +1,4 @@
+import {naturalWorld,LAND_BOUNDS,LANDMARKS,STREAMS,LAKES} from '../shared/landscape.js';
 import {syncLegacyIntoWorldModel} from '../engine/world-model.js';
 import {walkable} from '../engine/navigation.js';
 import {liveClear} from './motion.mjs';
@@ -64,5 +65,5 @@ export function observePeople(w){
   if(fresh){const detail=`${a.name} ${a.surname} and ${b.name} ${b.surname} encountered one another in the landscape.`;remember(w,a,detail,{importance:9,tags:['social','first-contact']});remember(w,b,detail,{importance:9,tags:['social','first-contact']});const k=[a.householdId,b.householdId].sort().join('|');if(!w.frontier.firstContacts[k]){w.frontier.firstContacts[k]={at:clock(w),people:[a.id,b.id],position:{...a.coordinates}};addEvent(w,'first-contact','People from distant valleys meet',detail,{agentIds:[a.id,b.id],position:{...a.coordinates}});}}
  }
 }
-export function frontierFrame(w){return w.frontier?{version:1,size:FRONTIER_SIZE,homes:w.frontier.homes.map(h=>({id:h.id,name:h.name,x:h.x,y:h.y,biome:h.biome,color:h.color,provider:h.provider,structures:h.id==='willow-basin'?w.structures:h.structures})),obstacles:FRONTIER_OBSTACLES,river:GREAT_RIVER,firstContacts:w.frontier.firstContacts}:null;}
+export function frontierFrame(w){return w.frontier?{version:1,landscapeVersion:w.frontier.landscapeVersion||1,bounds:naturalWorld(w)?LAND_BOUNDS:{minX:0,minY:0,maxX:500,maxY:500},landmarks:naturalWorld(w)?LANDMARKS:[],water:naturalWorld(w)?{streams:STREAMS,lakes:LAKES}:null,size:FRONTIER_SIZE,homes:w.frontier.homes.map(h=>({id:h.id,name:h.name,x:h.x,y:h.y,biome:h.biome,color:h.color,provider:h.provider,structures:h.id==='willow-basin'?w.structures:h.structures})),obstacles:naturalWorld(w)?[]:FRONTIER_OBSTACLES,river:naturalWorld(w)?STREAMS.find(s=>s.id==='longwater').points:GREAT_RIVER,firstContacts:w.frontier.firstContacts}:null;}
 export {householdWorld};

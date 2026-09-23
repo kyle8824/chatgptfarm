@@ -1,3 +1,4 @@
+import {mapBounds} from '../shared/landscape.js';
 import {distance} from '../engine/navigation.js';
 import {liveWalkable,liveClear} from './motion.mjs';
 import {waterBankPoints,withinWaterReach,riverY} from './water.mjs';
@@ -17,7 +18,7 @@ function ensure(a){
  a.liveWildlife??={version:1,seed:hash(a.id),age:0,decideIn:0,hold:0,calmFor:0,alertUntil:0,mode:'observe',reason:'Assessing the surroundings',target:null,speed:0,facing:0,companions:[],blocked:0};
  a.needs??={energy:80,hunger:72,thirst:75};a.fear??=0;a.home??={...a.position};return a.liveWildlife;
 }
-function bounded(w,p){return {x:clamp(p.x,1,w.worldModel.bounds.width-1),y:clamp(p.y,1,w.worldModel.bounds.height-1)};}
+function bounded(w,p){const b=mapBounds(w);return {x:clamp(p.x,b.minX+1,b.maxX-1),y:clamp(p.y,b.minY+1,b.maxY-1)};}
 function clear(w,a,to){
  // Escape invalid old positions through elapsed motion, never relocate on load.
  if(!liveWalkable(w,a.position))return liveWalkable(w,to);
@@ -121,9 +122,9 @@ function move(w,a,animals,seconds){
 function fishStep(w,a,seconds){
  const b=ensure(a);b.age+=seconds;b.direction??=hash(a.id)%2?1:-1;
  const near=(w.agents||[]).find(p=>distance(a.position,p.coordinates)<4),speed=near?.85:.32;
- const x=a.position.x;if(x<2&&b.direction<0||x>w.worldModel.bounds.width-2&&b.direction>0)b.direction*=-1;
+ const x=a.position.x;if(x<2&&b.direction<0||x>98&&b.direction>0)b.direction*=-1;
  if(near)b.direction=x<near.coordinates.x?-1:1;
- const nx=clamp(x+b.direction*speed*seconds,1,w.worldModel.bounds.width-1),targetY=riverY(nx),dy=clamp(targetY-a.position.y,-speed*seconds,speed*seconds),from={...a.position};
+ const nx=clamp(x+b.direction*speed*seconds,1,99),targetY=riverY(nx),dy=clamp(targetY-a.position.y,-speed*seconds,speed*seconds),from={...a.position};
  a.position={x:nx,y:a.position.y+dy};a.previousPosition=from;b.speed=distance(from,a.position)/seconds;b.facing=Math.atan2(nx-from.x,dy);b.threatId=near?.id||null;b.companions=[];
  set(a,near?'dart':'swim',near?'A disturbance at the bank makes the school move away.':'Moving along the creek channel as a school.');a.fear=clamp(a.fear+(near?10:-2)*seconds);
 }

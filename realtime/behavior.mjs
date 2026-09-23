@@ -1,3 +1,4 @@
+import {naturalWorld} from '../shared/landscape.js';
 import {economyCandidates} from './regional-economy.mjs';
 import {parentingCandidates,familyFoodNeed} from './parenting.mjs';
 import {candidateActions} from '../engine/decision.js';
@@ -30,7 +31,7 @@ function knownUnavailable(w,a,id){
  return false;
 }
 export function liveCandidates(w,a,candidates){
- const filtered=candidates.filter(c=>!['store_wet_wood','collect_dried_wood','talk','seek_other'].includes(c.id)&&(c.id!=='make_fire'||a.inventory.dryWood>0)&&(c.id!=='dry_wood_by_fire'||a.inventory.wetWood>0)&&(c.id!=='seek_cover'||(a.coverUntil||0)<clock(w))&&(!w.frontier||!resourceFor[c.id]||w.resources[resourceFor[c.id]]>0)&&!knownUnavailable(w,a,c.id)&&(!resourceFor[c.id]||!w.settlement||roomFor(w,a,resourceFor[c.id])>0)&&(!['share_food'].includes(c.id)||(a.socialUntil||0)<clock(w)));
+ const filtered=candidates.filter(c=>{if(naturalWorld(w)&&(resourceFor[c.id]||['make_fire','build_shelter','dry_wood_by_fire','seek_warmth','seek_cover'].includes(c.id)))return distance(a.coordinates,coordForPosition(actionDestination(w,a,c),w))<=30;return true;}).filter(c=>!['store_wet_wood','collect_dried_wood','talk','seek_other'].includes(c.id)&&(c.id!=='make_fire'||a.inventory.dryWood>0)&&(c.id!=='dry_wood_by_fire'||a.inventory.wetWood>0)&&(c.id!=='seek_cover'||(a.coverUntil||0)<clock(w))&&(!w.frontier||!resourceFor[c.id]||w.resources[resourceFor[c.id]]>0)&&!knownUnavailable(w,a,c.id)&&(!resourceFor[c.id]||!w.settlement||roomFor(w,a,resourceFor[c.id])>0)&&(!['share_food'].includes(c.id)||(a.socialUntil||0)<clock(w)));
  // Retain a real, safe fallback if every remembered resource is unavailable.
  if(!filtered.length)filtered.push({id:'rest',label:w.structures.shelter?'Rest in the shelter':'Rest in the meadow',score:1,reasons:[['no useful reachable resource action',1]]});
  const ordinary=filtered.map(c=>{
@@ -41,7 +42,7 @@ export function liveCandidates(w,a,candidates){
   // alphabetical tie to the same distant thicket on every decision.
   const other=otherAgent(w,a),trust=other?relationship(w,a,other)?.trust??34:34,socialPenalty=['talk','seek_other','share_food'].includes(c.id)?Math.max(0,35-trust)*(c.id==='share_food'?1.6:.7):0;
   const score=c.score-trip*(a.needs.energy<25?.45:.24)-comfortPenalty-socialPenalty+(immediate&&a.needs.hunger<35?20:0);
-  return {...c,label:c.id==='explore'?'Explore the surrounding valley':c.label,score,reasons:[...(c.reasons||[]),['travel effort',-trip*.24]]};
+  return {...c,label:c.id==='rest'&&naturalWorld(w)&&distance(a.coordinates,coordForPosition('camp',w))>18?'Rest here on the ground':c.id==='explore'?'Explore the surrounding valley':c.label,score,reasons:[...(c.reasons||[]),['travel effort',-trip*.24]]};
  });
  const familyNeed=familyFoodNeed(w,a);
  const exploration=explorationMotivation(w,a),all=[...ordinary,...settlementCandidates(w,a),...freeTimeCandidates(w,a),...parentingCandidates(w,a),...economyCandidates(w,a)].filter(c=>c.id!=='explore'||exploration.allowed).map(c=>c.id==='explore'?{...c,score:c.score-exploration.penalty,explanation:exploration.reason,reasons:[...(c.reasons||[]),['remembered exploration yield',-exploration.penalty]]}:c).map(c=>familyNeed&&/^(gather_berries|forage:|survey:|retrieve_food:)/.test(c.id)?{...c,score:c.score+familyNeed,explanation:'Collect finite food for a dependent child.'}:c).sort((x,y)=>y.score-x.score||x.id.localeCompare(y.id));
