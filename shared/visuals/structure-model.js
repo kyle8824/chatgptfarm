@@ -1,3 +1,4 @@
+import {constructionProgress} from '../construction-progress.js';
 import {conditionOf,activeParts} from '../structure-performance.js';
 import * as T from 'three';
 import {mergeGeometries} from 'three/addons/utils/BufferGeometryUtils.js';
@@ -33,7 +34,8 @@ function componentGeometry(part){
   const g=branch(3,hewn);if(part.kind==='beam'){if(part.size[0]>part.size[2])g.rotateZ(Math.PI/2);else g.rotateX(Math.PI/2);}geos.push(g);
  }else if(part.material==='stone'){const g=new T.IcosahedronGeometry(.58,0);geos.push(tint(g,1));}
  else {const g=box.clone();geos.push(tint(g,.95));}
- const geometry=mergeGeometries(geos);geos.forEach(g=>g.dispose());geometry.computeBoundingBox();
+ const stops=[];let vertices=0;for(const g of geos){vertices+=g.index?.count||g.attributes.position.count;stops.push(vertices);}
+ const geometry=mergeGeometries(geos);geometry.userData.componentStops=stops;geos.forEach(g=>g.dispose());geometry.computeBoundingBox();
  // Normalize to the recorded collision/material envelope. A cosmetic edit
  // cannot expand dimensions, close gaps or upgrade a rough piece to hewn.
  const b=geometry.boundingBox,span=new T.Vector3();b.getSize(span);const center=new T.Vector3();b.getCenter(center);geometry.translate(-center.x,-center.y,-center.z);geometry.scale(1/span.x,1/span.y,1/span.z);
@@ -54,9 +56,20 @@ export function createStructureModel(project,{stage='construction',appearance={}
    if(open&&part.kind==='roof'&&project.purpose==='storage'){parent=new T.Group();parent.position.set(part.center[0],part.center[1],part.center[2]-part.size[2]/2);parent.rotation.x=-1.15;group.add(parent);center=[0,0,part.size[2]/2];}
    const mesh=new T.Mesh(componentGeometry(part),material(part));mesh.position.set(...center);mesh.scale.set(...part.size);mesh.castShadow=mesh.receiveShadow=true;mesh.userData.partId=part.id;parent.add(mesh);
    if(stage==='construction'&&part.built&&!active.has(part.id)){mesh.scale.y=Math.min(.12,mesh.scale.y);mesh.position.y=.06;mesh.rotation.y=.12;mesh.rotation.z=.035;}
-   if(stage==='construction'&&!part.built){mesh.scale.y*=Math.max(.08,Math.min(1,part.workMinutes/part.requiredMinutes||0));mesh.position.y=part.center[1]-part.size[1]/2+mesh.scale.y/2;}
+   if(stage==='construction'&&!part.built){
+    const progress=constructionProgress(part),panel=['wall','deck','roof'].includes(part.kind);
+    if(panel){const geometry=mesh.geometry.clone(),stops=mesh.geometry.userData.componentStops,count=Math.max(1,Math.ceil(stops.length*Math.min(1,progress.fraction/.8)));geometry.setDrawRange(0,stops[count-1]);mesh.geometry=geometry;owned.push(geometry);}
+    if(progress.phase==='preparing'){
+     // Materials are worked at ground level before being lifted into place.
+     // Panels reveal individual branches/bundles rather than growing taller.
+     if(part.kind==='wall'){mesh.rotation.x=Math.PI/2;mesh.position.y=part.size[2]/2+.04;}
+     else if(part.kind==='post'){mesh.rotation.z=Math.PI/2;mesh.position.y=part.size[0]/2+.04;}
+     else mesh.position.y=part.size[1]/2+.04;
+    }
+    mesh.userData.constructionPhase=progress.phase;
+   }
   }
-  if(stage==='construction'&&!part.built){const geometry=new T.EdgesGeometry(part.shape==='cylinder'?cylinder:box),m=new T.LineBasicMaterial({color:'#bfa868',transparent:true,opacity:.35}),line=new T.LineSegments(geometry,m);line.position.set(...part.center);line.scale.set(...part.size);group.add(line);owned.push(geometry,m);}
+  if(stage==='construction'&&!part.built&&!part.invested){const geometry=new T.EdgesGeometry(box),m=new T.LineBasicMaterial({color:'#ad9569',transparent:true,opacity:.18}),line=new T.LineSegments(geometry,m);line.position.set(part.center[0],.025,part.center[2]);line.scale.set(part.size[0],.025,part.size[2]);group.add(line);owned.push(geometry,m);}
  }
  group.userData.disposeStructure=()=>{owned.forEach(x=>x.dispose());};return group;
 }

@@ -1,0 +1,30 @@
+name: Construction workshop stages
+on:
+  push:
+    branches: [fix/construction-workshop-stages]
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  workshop:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - run: npm ci --prefix character-preview
+      - run: node structure-workshop/test.mjs && node structure-workshop/build.mjs
+      - run: git diff --exit-code -- vercel-public/structure-workshop/
+      - run: npm install --prefix character-preview --no-save --package-lock=false playwright@1.55.1
+      - run: cd character-preview && npx playwright install --with-deps chromium
+      - name: Test workshop and staged source without production writes
+        run: |
+          python3 -m http.server 4178 --directory vercel-public > /tmp/workshop-server.log 2>&1 &
+          node structure-workshop/browser-test.mjs
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: construction-workshop-evidence
+          path: structure-workshop/evidence/
