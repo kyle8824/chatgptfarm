@@ -22,6 +22,7 @@ jobs:
           node realtime/people-activity-test.mjs
           node realtime/navigation-recovery-test.mjs
           node realtime/water-recovery-test.mjs
+          node realtime/material-search-test.mjs
           node realtime/physical-actions-test.mjs
           node realtime/frontier-economy-test.mjs
           node realtime/recovery-test.mjs

@@ -35,7 +35,13 @@ function assemblyPoint(w,a,p,part){
 export function materialNeed(p,material){return p.parts.filter(x=>!x.invested&&x.material===material).reduce((n,x)=>n+x.materialUnits,0);}
 export function findMaterialSource(w,a,material){
  const sources=[];for(const s of w.settlement.stores)if(knownPlace(w,a,s)&&allowed(a,s)&&(s.kind!=='site'||w.settlement.projects.find(p=>p.id===s.projectId)?.status==='complete')&&units(s,material)>0&&!(material==='timber'&&a.needs.warmth<40&&s.id===homeAccount(w,'camp-drying')&&units(s,'timber')<=2))sources.push({kind:'take',storeId:s.id,position:s.position,item:materialKeys[material].find(k=>s.items[k]>0)});
- if(material==='timber')for(const t of w.settlement.trees)if(knownPlace(w,a,t)&&treeUnits(w,t)>0&&(a.inventory.boundSharpTool>0||!(t.handGathered>=1)))sources.push({kind:'harvest',treeId:t.id,position:t.position,item:'wetWood'});
+ if(material==='timber'){
+  // Build a fresh projection once per query. Re-scanning every wood batch
+  // for each remembered tree made planning quadratic as exploration grew.
+  // Nothing is cached across transfers, depletion, construction or reloads.
+  const timber=new Map();for(const b of w.wood.batches)if(b.holder.kind==='ground')timber.set(b.holder.id,(timber.get(b.holder.id)||0)+b.units);
+  for(const t of w.settlement.trees)if(knownPlace(w,a,t)&&(timber.get(t.id)||0)>0&&(a.inventory.boundSharpTool>0||!(t.handGathered>=1)))sources.push({kind:'harvest',treeId:t.id,position:t.position,item:'wetWood'});
+ }
  if(material==='timber'){const log=w.worldModel.objects.find(o=>o.type==='fallen_tree'&&(!w.homeContext||(o.homeId||'willow-basin')===w.homeContext.id));if(log)for(const item of ['dryWood','wetWood'])if(w.resources[item]>0)sources.push({kind:'fallen',position:log.position,item});}
  for(const node of materialSources(w,material,a))sources.push({kind:'gather',nodeId:node.nodeId,resource:node.resource,position:node.position,item:node.item,sourceId:node.id});
  return sources.filter(s=>!naturalWorld(w)||distance(a.coordinates,s.position)<=45).sort((x,y)=>distance(a.coordinates,x.position)-distance(a.coordinates,y.position));
