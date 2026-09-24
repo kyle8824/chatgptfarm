@@ -1,3 +1,4 @@
+import {improvementBonus} from './improvement-goals.mjs';
 import {coldPreparationCandidates,coldPreparationAvailable} from './cold-preparation.mjs';
 import {interestBonus} from './happiness.mjs';
 import {isRestingTask,willingToRest,usefulRestChoice} from './comfort.mjs';
@@ -49,6 +50,7 @@ export function liveCandidates(w,a,candidates){
  // Quiet activity under cover and useful preparation remain possible while
  // wet fuel dries; reachable heat and urgent survival still take priority.
  if(shelterRecovery&&a.needs.energy<85&&!candidates.some(c=>c.id==='rest'))candidates=[...candidates,{id:'rest',label:'Rest under cover while usable fuel is needed',score:18+(100-a.needs.energy)*.45,reasons:[['recover energy under cover',18]]}];
+ if(w.structures.shelterConstruction&&!w.structures.shelter&&canUseCamp(w,a)&&!candidates.some(c=>c.id==='build_shelter'))candidates=[...candidates,{id:'build_shelter',label:'Continue the shelter frame and cover',score:65,reasons:[['finish the invested shelter',65]]}];
  const filtered=candidates.filter(c=>{if(naturalWorld(w)&&(resourceFor[c.id]||['make_fire','build_shelter','dry_wood_by_fire','seek_warmth','seek_cover'].includes(c.id)))return distance(a.coordinates,coordForPosition(actionDestination(w,a,c),w))<=LOCAL_ACTION_RANGE;return true;}).filter(c=>!['store_wet_wood','collect_dried_wood','talk','seek_other'].includes(c.id)&&(c.id!=='gather_wet_wood'||!w.structures.shelter||storedWood(w).wetWood<2)&&(c.id!=='make_fire'||a.inventory.dryWood>0)&&(c.id!=='dry_wood_by_fire'||a.inventory.wetWood>0)&&(c.id!=='seek_cover'||(a.coverUntil||0)<clock(w))&&(!w.frontier||!resourceFor[c.id]||w.resources[resourceFor[c.id]]>0)&&!knownUnavailable(w,a,c.id)&&(!resourceFor[c.id]||!w.settlement||roomFor(w,a,resourceFor[c.id])>0)&&(!['share_food'].includes(c.id)||(a.socialUntil||0)<clock(w)));
  // Retain a real, safe fallback if every remembered resource is unavailable.
  if(!filtered.length)filtered.push({id:'rest',label:w.structures.shelter?'Rest in the shelter':'Rest in the meadow',score:1,reasons:[['no useful reachable resource action',1]]});
@@ -64,7 +66,7 @@ export function liveCandidates(w,a,candidates){
  });
  const familyNeed=familyFoodNeed(w,a);
  const returning=returnCandidate(w,a),exploration=explorationMotivation(w,a),all=[...ordinary,...coldPreparationCandidates(w,a),...settlementCandidates(w,a),...freeTimeCandidates(w,a),...parentingCandidates(w,a),...economyCandidates(w,a),...(returning?[returning]:[])].filter(c=>c.id!=='explore'||exploration.allowed).map(c=>c.id==='explore'?{...c,score:c.score-exploration.penalty,explanation:exploration.reason,reasons:[...(c.reasons||[]),['remembered exploration yield',-exploration.penalty]]}:c).map(c=>familyNeed&&/^(gather_berries|forage:|survey:|retrieve_food:)/.test(c.id)?{...c,score:c.score+familyNeed,explanation:'Collect finite food for a dependent child.'}:c).sort((x,y)=>y.score-x.score||x.id.localeCompare(y.id));
- const useful=all.filter(c=>!(family(c.id)==='energy'&&a.needs.energy>=85)&&usefulRestChoice(w,a,c)&&!knownUnavailable(w,a,c.id)).map(c=>{const bonus=interestBonus(a,c);return {...c,score:c.score+bonus,reasons:[...(c.reasons||[]),['personal interest and recent satisfaction',bonus]]};}).filter(c=>c.score>0).sort((x,y)=>y.score-x.score||x.id.localeCompare(y.id));
+ const useful=all.filter(c=>!(family(c.id)==='energy'&&a.needs.energy>=85)&&usefulRestChoice(w,a,c)&&!knownUnavailable(w,a,c.id)).map(c=>{const bonus=interestBonus(a,c)+improvementBonus(a,c);return {...c,score:c.score+bonus,reasons:[...(c.reasons||[]),['personal interest, satisfaction and ongoing improvement',bonus]]};}).filter(c=>c.score>0).sort((x,y)=>y.score-x.score||x.id.localeCompare(y.id));
  return useful.length?useful.filter((c,i)=>useful.findIndex(x=>x.id===c.id)===i):willingToRest(w,a)?[{id:'rest',label:'Rest and reconsider',score:1,reasons:[['no useful available action',1]]}]:[{id:'reconsider',label:'Pause to reconsider available work',score:1,reasons:[['no useful reachable activity',1]],job:{kind:'reconsider',minutes:2,destination:{...a.coordinates}}}];
 }
 export function rememberFailure(w,a,t,detail){

@@ -1,0 +1,66 @@
+name: Live construction progression
+on:
+  push:
+    branches: [fix/live-construction-progression]
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  runtime:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - run: npm ci --prefix cloudflare
+      - name: Physical work, preservation and behavior
+        run: |
+          node realtime/construction-stages-test.mjs
+          node realtime/ambition-test.mjs
+          node realtime/open-construction-test.mjs
+          node realtime/design-recovery-test.mjs
+          node realtime/design-planner-test.mjs
+          node realtime/structure-lifecycle-test.mjs
+          node realtime/comfort-test.mjs
+          node realtime/cold-preparation-test.mjs
+          node realtime/physical-actions-test.mjs
+          node realtime/material-search-test.mjs
+          node realtime/settlement-test.mjs
+          node realtime/recovery-test.mjs
+          node realtime/persistence-test.mjs
+          node realtime/loading-test.mjs
+          node realtime/planner-budget-test.mjs
+          node realtime/cloudflare-budget-test.mjs
+          node realtime/provider-test.mjs
+          LANDSCAPE_STEPS=7200 node realtime/natural-landscape-test.mjs
+      - name: Sustained current-state stream in the actual Worker runtime
+        run: |
+          TEST_FRONTIER=1 TEST_LANDSCAPE=1 STREAM_TEST_MS=60000 node realtime/workerd-test.mjs
+          npm run check --prefix cloudflare
+          git diff --exit-code -- world/state.json
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: construction-runtime-evidence
+          path: realtime-qa/*.json
+  browser:
+    runs-on: ubuntu-latest
+    timeout-minutes: 12
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - run: npm ci --prefix cloudflare
+      - run: npm install --no-save --package-lock=false playwright@1.55.1
+      - run: npx playwright install --with-deps chromium
+      - run: node realtime/construction-stages-test.mjs
+      - run: node realtime/resource-visual-test.mjs
+      - run: node realtime/construction-stages-browser-test.mjs
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: construction-browser-evidence
+          path: realtime-qa/

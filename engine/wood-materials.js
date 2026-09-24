@@ -54,7 +54,7 @@ export function integrateWood(ledger,toHour,conditionsFor){
   finite(toHour,'simulation hour');if(toHour<ledger.lastHour)throw Error('Wood time cannot go backwards');
   const elapsed=toHour-ledger.lastHour;if(!elapsed)return;
   const updates=ledger.batches.map(b=>{
-    const c=conditionsFor(copy(b.holder));
+    const c=conditionsFor({kind:b.holder.kind,id:b.holder.id});
     if(!c||!Number.isFinite(c.temperatureC)||!Number.isFinite(c.humidity)||c.humidity<0||c.humidity>1||!Number.isFinite(c.airflow)||c.airflow<0||typeof c.raining!=='boolean'||typeof c.covered!=='boolean')throw Error('Invalid wood exposure');
     const ratio=b.waterKg/b.dryKg;
     const rain=c.raining?Math.max(0,Math.min(1,c.rainExposure??(c.covered?0:1))):0;

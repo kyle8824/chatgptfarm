@@ -228,3 +228,45 @@ geometry-derived functions, inspectable natural resources and wildlife rules.
 New model calls write bounded JavaScript construction programs with novel
 purpose descriptions; the older 4–28-part purpose validation above applies
 only to retained declarative projects. Source is available at `/live/design/:id`.
+
+### Live construction stages (September 24, 2026)
+
+Construction programs may now propose 1–48 new components. Dependency order is
+normalized before physical validation; missing supports, cycles, oversized loads,
+floating geometry, ownership and material limits are still rejected. Models may
+choose an offered `extend-<projectId>` site with `extendsProjectId` to add to an
+accessible finished structure. Additions preserve its ID, creation time, existing
+parts, wear, stock, ownership and contents. Programs are retained per stage at
+`/live/design/:id`. A stale or overlapping addition is rejected; at most 96 parts
+are retained in a structure. Crossings/climbs retain their specialized validation
+and can still be replaced independently. No fixed architectural upgrade ladder
+is introduced.
+
+Supported completed bedding and roofs can be used before later components are
+finished. Supply capacity follows the actual built geometry, and extending a
+store updates its existing account without duplicating or moving its contents.
+Preparing, placing and securing components are rendered from invested materials
+and accumulated work; future pieces have only ground markings. Existing primitive
+camp shelters remain intact. Future primitive shelter construction retains its
+four-branch cost and 180-minute work requirement, but investment and shared frame/
+cover work persist through interruptions and reloads.
+
+A person's ongoing improvement goal is saved separately from their immediate
+meal, drink, rest or work task. Accepted projects and experienced poor rest create
+context for later choices. The next reachable supply/tool/assembly step receives
+a bounded preference when survival needs are safe. Goals create no resources,
+projects, skills or compulsory architecture, and do not suppress urgent needs.
+Necessary low-energy rest continues beyond the previous energy-30 threshold.
+
+Building-site queries now create one timber projection per query, and interaction
+point alternatives share a route-search budget. The expanded 2,013-batch fixture
+requires 2,013 ledger reads instead of roughly 54 million. No cache survives a
+transfer or depletion. LiveValley identity, clock rate, elapsed-time accounting,
+checkpoint policy, provider routing, AI cadence and spending limits are unchanged.
+
+`construction-stages-test.mjs` exercises actual work, stage extensions, partial
+use, resources, ownership, persistent goals/rest and reloads. The matching browser
+test uses the production client with explicitly isolated fixtures. The live
+construction workflow also exercises 12 simulated hours with eight villagers and
+a 60-second current-state WebSocket stream in the actual Worker runtime. These
+fixtures never write to the production world.

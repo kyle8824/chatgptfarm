@@ -1,3 +1,5 @@
+import {workPrimitiveShelter} from './primitive-shelter.mjs';
+import {updateImprovementGoal} from './improvement-goals.mjs';
 import {ensureHappiness,recordEnjoyedWork} from './happiness.mjs';
 import {workEconomy} from './regional-economy.mjs';
 import {observeLandscape} from './frontier-knowledge.mjs';
@@ -44,7 +46,7 @@ export async function step(w,seconds,{mind=null,fallbackReason='no_provider',wal
   if(!isAdult(w,a))continue;
   advanceFreeTime(w,a,seconds);
   ensureComfort(a);a.restSupport=null;
-  updateThermalGoal(w,a);retireObsoleteTask(w,a);if(!a.task)noteCargoLimits(w,a);
+  updateThermalGoal(w,a);updateImprovementGoal(w,a);retireObsoleteTask(w,a);if(!a.task)noteCargoLimits(w,a);
   noticeMissingSupplies(w,a);
   const urgent=liveUrgency(w,a);
   if(a.task&&urgent&&family(a.task.actionId)!==urgent&&a.task.requiredMinutes-a.task.workMinutes>0.1&&(['hydration','hunger','energy'].includes(urgent)&&a.needs[urgent]<20||a.needs[urgent]+10<(a.needs[family(a.task.actionId)]??100)))interrupt(w,a,urgent);
@@ -71,7 +73,7 @@ export async function step(w,seconds,{mind=null,fallbackReason='no_provider',wal
    a.position='travel';positionBefore='travel';const movement=advanceLiveRoute(w,a,t,seconds);
    if(movement.blocked){outcome(w,a,t,false,'Route changed while travelling.','blocked');rememberFailure(w,a,t,'Route remains blocked; try another useful task before retrying.');a.task=null;}
    else if(movement.arrived){a.position=t.targetPosition;t.phase='work';recordSurfaceUse(w,a,t.origin,t.destination,t.actionId);}
-  }else if(t){faceInteraction(w,a,seconds);const result=['trade','regional_craft'].includes(t.selected?.job?.kind)?workEconomy(w,a,t,minutes):t.selected?.job?.kind==='care'?workParenting(w,a,t,minutes):isRestingTask(t)?workComfortRest(w,a,t,minutes):isFreeTimeJob(t)?workFreeTime(w,a,t,minutes):t.selected?.job?workSettlement(w,a,t,minutes):work(w,a,t,minutes);if(isRestingTask(t)&&t.workMinutes>0&&t.selected?.job?.projectId)recordStructureUse(w,a,w.settlement.projects.find(p=>p.id===t.selected.job.projectId),'rest');if(result.done){finishFreeTime(w,a,t,result);outcome(w,a,t,result.success!==false,result.detail);if(result.success===false)rememberFailure(w,a,t,result.detail);if(['talk','seek_other'].includes(t.actionId))a.socialUntil=clock(w)+90;if(t.actionId==='seek_cover')a.coverUntil=clock(w)+45;a.task=null;}}
+  }else if(t){faceInteraction(w,a,seconds);const result=t.actionId==='build_shelter'?workPrimitiveShelter(w,a,t,minutes):['trade','regional_craft'].includes(t.selected?.job?.kind)?workEconomy(w,a,t,minutes):t.selected?.job?.kind==='care'?workParenting(w,a,t,minutes):isRestingTask(t)?workComfortRest(w,a,t,minutes):isFreeTimeJob(t)?workFreeTime(w,a,t,minutes):t.selected?.job?workSettlement(w,a,t,minutes):work(w,a,t,minutes);if(isRestingTask(t)&&t.workMinutes>0&&t.selected?.job?.projectId)recordStructureUse(w,a,w.settlement.projects.find(p=>p.id===t.selected.job.projectId),'rest');if(result.done){finishFreeTime(w,a,t,result);outcome(w,a,t,result.success!==false,result.detail);if(result.success===false)rememberFailure(w,a,t,result.detail);if(['talk','seek_other'].includes(t.actionId))a.socialUntil=clock(w)+90;if(t.actionId==='seek_cover')a.coverUntil=clock(w)+45;a.task=null;}}
   if(t)recordEnjoyedWork(w,a,t);
   enforceCarry(w,a);
   const ratio=seconds/3600,n=a.needs;
