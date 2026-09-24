@@ -60,7 +60,13 @@ export async function step(w,seconds,{mind=null,fallbackReason='no_provider',wal
    // Reposition an old saved task or a body displaced away from the bank.
    // No hydration or work progress is awarded until water is in reach.
    faceInteraction(w,a,seconds);t.waterRetry=(t.waterRetry||0)-seconds;
-   if(t.waterRetry<=0){configureTask(w,a,{force:true});t.waterRetry=3;}
+   if(t.waterRetry<=0){
+    configureTask(w,a,{force:true});t.waterRetry=3;
+    if(!t.path?.length||!withinWaterReach(w,t.destination)){
+     const detail='No safe route to an accessible water bank; remember the obstruction before retrying.';
+     outcome(w,a,t,false,detail,'blocked');rememberFailure(w,a,t,detail);a.task=null;
+    }
+   }
   }else if(t?.phase==='travel'){
    a.position='travel';positionBefore='travel';const movement=advanceLiveRoute(w,a,t,seconds);
    if(movement.blocked){outcome(w,a,t,false,'Route changed while travelling.','blocked');rememberFailure(w,a,t,'Route remains blocked; try another useful task before retrying.');a.task=null;}
