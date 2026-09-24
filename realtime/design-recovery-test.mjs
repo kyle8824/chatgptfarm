@@ -26,12 +26,12 @@ const valid={build:true,name:'Reed resting surface',purpose:'soft place to rest'
 const owned=adoptBlueprint(w,ivo,validateBlueprint(w,ivo,valid),'fixture');owned.status='complete';owned.parts.forEach(p=>{p.built=true;});
 const context=designContext(w,mara);assert(!context.allowedReplacementIds.includes(owned.id));assert.equal(context.personId,mara.id);assert.equal(context.projects[0].canReplace,false);
 const candidate={...valid,siteId:context.sites.find(s=>!s.spansWater).id,replacesProjectId:owned.id};
-c.ai={run:async(_model,input)=>{requests.push(JSON.parse(input.messages[1].content));return {response:candidate};}};
-await c.makeDesign(mara.id,context);await c.makeDesign(mara.id,context);
+c.ai={run:async(_model,input)=>{requests.push(JSON.parse(input.messages[1].content));return {usage:{prompt_tokens:1000,completion_tokens:300},response:candidate};}};
+await c.makeDesign(mara.id,context);now+=3600000;await c.makeDesign(mara.id,context);
 assert.equal(c.record.designRepair[mara.id].repeats,2);assert.match(c.record.designFailures[mara.id],/omit replacesProjectId/);
 const reloaded=new RealtimeController(storage,{now:()=>now});await reloaded.load();assert.equal(reloaded.record.designRepair[mara.id].repeats,2,'repair state persists');
-c.ai={run:async(_model,input)=>{const req=JSON.parse(input.messages[1].content);requests.push(req);assert.equal(req.retryStrategy,'fresh_design');assert.equal(req.previousProgram,null);assert.match(req.previousRejection,/omit replacesProjectId/);return {response:{...valid,siteId:candidate.siteId}};}};
-await c.makeDesign(mara.id,designContext(w,mara));const project=w.settlement.projects.at(-1);
+c.ai={run:async(_model,input)=>{const req=JSON.parse(input.messages[1].content);requests.push(req);assert.equal(req.retryStrategy,'fresh_design');assert.equal(req.previousProgram,null);assert.match(req.previousRejection,/omit replacesProjectId/);return {usage:{prompt_tokens:1000,completion_tokens:300},response:{...valid,siteId:candidate.siteId}};}};
+now+=3600000;await c.makeDesign(mara.id,designContext(w,mara));const project=w.settlement.projects.at(-1);
 assert.equal(project.ownerId,mara.id);assert.equal(project.status,'planned');assert(!project.replacesProjectId);assert.equal(owned.ownerId,ivo.id);assert(!c.record.designRepair[mara.id]);
 assert(project.parts.every(p=>!p.built));assert.equal(c.record.ai.calls,3);assert.equal(c.runtime().ai.designCalls,3);
 for(const node of w.resourceSites.nodes)node.knownBy.push(mara.id);mara.comfort.value=25;mara.comfort.uncomfortableMinutes=60;

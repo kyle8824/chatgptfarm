@@ -25,7 +25,7 @@ export class LiveValley extends DurableObject{
    server.send(JSON.stringify(this.controller.frame(this.clients.size)));return new Response(null,{status:101,webSocket:client});
   }
   if(request.method!=='GET')return new Response('Method not allowed',{status:405});
-  if(path.startsWith('/live/design/')){const id=decodeURIComponent(path.slice('/live/design/'.length)),p=this.controller.record.world.settlement?.projects.find(p=>p.id===id);return p?json({id:p.id,name:p.name,designer:p.designer,code:p.code||null,language:p.codeVersion||'legacy-declarative-parts',parts:p.parts,affordances:p.affordances||null}):new Response('Design not found',{status:404});}
+  if(path.startsWith('/live/design/')){const id=decodeURIComponent(path.slice('/live/design/'.length)),p=this.controller.record.world.settlement?.projects.find(p=>p.id===id);return p?json({id:p.id,name:p.name,designer:p.designer,code:p.code||null,language:p.codeVersion||'legacy-declarative-parts',parts:p.parts,stages:p.stages||null,affordances:p.affordances||null}):new Response('Design not found',{status:404});}
   if(path==='/live/geometry')return json(this.controller.geometry());
   if(path==='/live/health')return json({...this.controller.runtime(this.clients.size),build:BUILD_INFO});
   if(path==='/live/state')return json({...this.controller.frame(this.clients.size),constructionDrafts:Object.entries(this.controller.record.designDrafts||{}).map(([agentId,program])=>({agentId,program,validation:this.controller.record.designFailures?.[agentId]||null}))});

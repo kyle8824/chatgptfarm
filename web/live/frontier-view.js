@@ -1,3 +1,4 @@
+import {updateShelterProgress} from '../../shared/visuals/shelter-progress.js';
 import {naturalTerrain,installNaturalWater} from './natural-landscape.js';
 import * as T from 'three';
 import {HOME_REGIONS,FRONTIER_OBSTACLES,GREAT_RIVER,riverAt,campLayout,pointIn} from '../../shared/frontier.js';
@@ -36,4 +37,4 @@ export function installFrontier(view,frame){
  if(frame.frontier.landscapeVersion>=2)installNaturalWater(view);else view.scene.add(riverMesh(GREAT_RIVER,view.waterMat));
  view.forest();
 }
-export function updateFrontier(view,frame){for(const h of frame.frontier?.homes||[]){const c=view.camps?.get(h.id);if(c){c.shelter.visible=!!h.structures.shelter;c.flames.visible=!!h.structures.fire;c.light.visible=!!h.structures.fire;}}}
+export function updateFrontier(view,frame){for(const h of frame.frontier?.homes||[]){const c=view.camps?.get(h.id);if(c){updateShelterProgress(c.shelter,h.structures);c.flames.visible=!!h.structures.fire;c.light.visible=!!h.structures.fire;}}}

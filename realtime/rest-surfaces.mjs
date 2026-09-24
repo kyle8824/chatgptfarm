@@ -9,7 +9,7 @@ function filled(parts,r){
 // Resting functions follow supported, level, unobstructed physical surfaces.
 // A name such as "bed" or "chair" confers no comfort by itself.
 export function restSurfaces(project,{planned=false}={}){
- if(project.spansWater||project.purpose==='bridge'||!planned&&project.status!=='complete')return [];
+ if(project.spansWater||project.purpose==='bridge')return [];
  const active=planned?new Set(project.parts.map(p=>p.id)):activeParts(project);
  const parts=project.parts.filter(p=>active.has(p.id)),panels=parts.filter(p=>p.kind==='deck'&&p.size[1]<=.45&&partBounds(project,p).top<=.65),remaining=new Set(panels),result=[];
  while(remaining.size){

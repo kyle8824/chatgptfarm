@@ -41,6 +41,9 @@ export const isRestingTask=t=>t?.actionId==='rest'||['rest','relax'].includes(t?
 export function willingToRest(w,a,job=null,position=a.coordinates){
  if(a.needs.energy<=30)return true;
  const place=restPlace(w,{...a,coordinates:position},job);if(!place)return false;
+ // Once exhaustion required a real rest, do not reconsider at 30.001 energy.
+ // A saved task carries this commitment through interruption and restart.
+ if(isRestingTask(a.task)&&a.task.recoveryTarget&&a.needs.energy<a.task.recoveryTarget)return true;
  // Exhaustion can justify bad ground. Low spirits and discomfort otherwise
  // motivate a change, instead of another fully-rested quiet-time timer.
  return place.score>=45||((a.happiness?.value??55)>=55&&a.needs.energy<65);
@@ -54,6 +57,7 @@ export function workComfortRest(w,a,t,minutes){
  if(j?.kind==='rest'&&j.projectId&&!j.surfaceId&&!coverEffectiveness(w,a.coordinates))return {done:true,success:false,detail:'This structure no longer provides shelter at the resting place.'};
  if(!place){a.restSupport=null;return {done:true,success:false,detail:'The resting surface is occupied, obstructed, damaged, or out of reach.'};}
  const c=ensureComfort(a),spent=Math.min(minutes,Math.max(0,t.requiredMinutes-t.workMinutes)),relax=j?.kind==='relax';
+ if(!relax&&a.needs.energy<=30)t.recoveryTarget??=65;
  a.restSupport=place;
  if(place.heading!==null)motionState(a).facing=place.heading;
  a.needs.energy=clamp(a.needs.energy+spent/60*(relax?10+place.score*.15:18+place.score*.32));

@@ -20,7 +20,7 @@ export function coldPreparationCandidates(w,a){
  if(a.inventory.dryWood>=1&&w.structures.shelter)return result;
  const needsShelter=!w.structures.shelter; // Distant workers do not supply remote knowledge or protection.
 
- if(needsShelter&&raw>=4)return result; // Existing build/return actions use it.
+ if(needsShelter&&(raw>=4||w.structures.shelterConstruction))return result; // Existing build/return actions use it.
  const drying=stores.filter(s=>s.covered);
  if(w.structures.shelter&&a.inventory.wetWood>0&&!drying.some(s=>(s.items.wetWood||0)>=2)){
   for(const s of drying.filter(s=>roomFor(w,s,'wetWood')>0).sort((s,t)=>distance(s.position,camp.shelter)-distance(t.position,camp.shelter))){

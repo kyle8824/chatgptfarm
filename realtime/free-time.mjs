@@ -28,7 +28,7 @@ export function advanceFreeTime(w,a,seconds){
  if(f.practice&&clock(w)-f.practice.at>=240)delete f.practice;
  advanceHappiness(a,seconds);
 }
-export function freeTimeContext(w,a){const f=a.freeTime||initial();return {happiness:happinessSummary(a),family:familyContext(w,a),comfort:comfortContext(w,a),company:Math.round(f.company),enjoyment:Math.round(f.enjoyment),mastery:Math.round(f.mastery),practiceGoal:f.practice?.item||null,exploration:explorationMotivation(w,a)};}
+export function freeTimeContext(w,a){const f=a.freeTime||initial();return {improvementGoal:a.improvementGoal||null,happiness:happinessSummary(a),family:familyContext(w,a),comfort:comfortContext(w,a),company:Math.round(f.company),enjoyment:Math.round(f.enjoyment),mastery:Math.round(f.mastery),practiceGoal:f.practice?.item||null,exploration:explorationMotivation(w,a)};}
 const ready=(w,a,kind)=>leisureReady(w,a)&&(!a.task||['relax','reconsider'].includes(a.task.selected?.job?.kind)||a.needs.energy>=80&&(a.task.actionId==='rest'||a.task.selected?.job?.kind==='rest'))&&(a.freeTime?.cooldowns?.social||0)<=clock(w)&&(romanceKinds.includes(kind)|| (kind==='conversation'?(a.freeTime?.company??55)<80:(a.freeTime?.enjoyment??55)<80));
 const owned=(w,a,item)=>(a.inventory[item]||0)+(w.settlement?.stores||[]).filter(s=>s.ownerId===a.id).reduce((n,s)=>n+(s.items[item]||0),0);
 const practiceOptions=[['cordage','fiberwork',4],['woodPole','woodworking',2],['sharpStone','stoneworking',1],['boundSharpTool','hafting',1]];
