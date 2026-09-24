@@ -2,6 +2,7 @@
 // a checkpoint, quota, alarm, provider configuration or world identity.
 import assert from 'node:assert/strict';
 import fs from 'node:fs/promises';
+import {applyFrameDelta} from '../shared/live-frame.js';
 const root='https://chatgptfarm.kyle8824.workers.dev',expected=process.env.EXPECTED_LIVE_COMMIT,observeOnly=process.env.OBSERVE_ONLY==='1',records=[];
 const get=async route=>{const response=await fetch(root+route,{cache:'no-store',signal:AbortSignal.timeout(20000)});const value=await response.json();if(!response.ok)throw Error(`${route}: ${response.status} ${value.code||value.error||''}`);return value;};
 const wait=ms=>new Promise(r=>setTimeout(r,ms));
@@ -19,8 +20,8 @@ try{
  const before=await get('/live/state');await fs.writeFile('realtime-qa/live-release-before.json',JSON.stringify(before));
  if(!observeOnly){
   assert.equal(before.agents.length,8);assert.equal(before.runtime.createdAt,1790030005263);
-  const socket=new WebSocket(root.replace('https:','wss:')+'/live/ws?protocol=delta-1'),frames=[];let socketError=null;
-  socket.addEventListener('message',e=>{try{const value=JSON.parse(e.data);if(value.type==='state')frames.push(value.runtime);}catch(error){socketError=String(error);}});socket.addEventListener('error',()=>{socketError='public WebSocket error';});
+  const socket=new WebSocket(root.replace('https:','wss:')+'/live/ws?protocol=delta-1'),frames=[];let socketError=null,wire=null;
+  socket.addEventListener('message',e=>{try{const value=JSON.parse(e.data);if(value.type==='state'){wire=applyFrameDelta(wire,value);frames.push(structuredClone(wire.runtime));}}catch(error){socketError=String(error);}});socket.addEventListener('error',()=>{socketError='public WebSocket error';});
   await wait(45000);socket.close();assert.equal(socketError,null);assert(frames.length>=80,'current-state streaming continues for 45 seconds');assert(frames.every(r=>r.computedThrough<=r.serverTime));assert(frames.at(-1).revision>frames[0].revision);
   const after=await get('/live/state');await fs.writeFile('realtime-qa/live-release-after.json',JSON.stringify(after));
   assert.deepEqual(after.agents.map(a=>a.id),before.agents.map(a=>a.id));assert.equal(after.runtime.createdAt,before.runtime.createdAt);assert.equal(after.runtime.rate,6);assert(after.runtime.computedThrough>before.runtime.computedThrough);assert(after.runtime.lagMs<5000);assert(after.runtime.persistence.checkpointAt>before.runtime.persistence.checkpointAt,'real checkpoint writes continue');
