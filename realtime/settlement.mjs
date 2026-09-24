@@ -3,7 +3,7 @@ import {naturalWorld} from '../shared/landscape.js';
 import {treadHeight} from './climbing.mjs';
 import {homeAccount} from '../shared/frontier.js';
 import {knownPlace} from './frontier-knowledge.mjs';
-import {conditionOf,structurePerformance} from '../shared/structure-performance.js';
+import {conditionOf,structurePerformance,activeParts} from '../shared/structure-performance.js';
 import {recordWorkmanship,workQuality,noteStructureProblem} from './structure-lifecycle.mjs';
 import {coverEffectiveness} from './structures.mjs';
 import {constructionSpec,constructionBlockers} from '../shared/craft.js';
@@ -74,7 +74,7 @@ export function settlementCandidates(w,a){
   for(const source of findMaterialSource(w,a,material)){if(!roomFor(w,a,source.item))continue;const before=result.length;offer(`tool_supply:${source.treeId||source.storeId||source.sourceId||source.item}`,`Collect ${plan.item} for tools and joints`,score,{...source,projectId:p?.id,quantity:plan.quantity,minutes:source.kind==='harvest'?6:2},source.position);if(result.length>before)return;}
   result.push({id:'explore',label:'Explore for tool materials',score:score-12,reasons:[['missing known tool supplies',score-12]]});
  };
- const maintenance=w.settlement.projects.filter(p=>knownPlace(w,a,p)&&p.status==='complete'&&(p.ownerId===a.id||p.access==='shared')&&!p.supersededBy);
+ const maintenance=w.settlement.projects.filter(p=>knownPlace(w,a,p)&&(p.ownerId===a.id||p.access==='shared')&&!p.supersededBy);
  for(const p of maintenance){if(naturalWorld(w)&&distance(a.coordinates,p.position)>60)continue;
   const part=p.parts.find(x=>x.built&&conditionOf(x)<(p.maintenanceRequested?.by===a.id?.95:.65)&&(x.requires||[]).every(id=>conditionOf(p.parts.find(x=>x.id===id))>.12));if(!part)continue;
   const repairing=p.repair?.partId===part.id?p.repair:null,needed=repairing?.materialUnits??Math.max(1,Math.ceil(part.materialUnits*(conditionOf(part)<=.12?1:.35)));
@@ -96,7 +96,7 @@ export function settlementCandidates(w,a){
   offer(`retrieve_food:${s.id}:${edible}`,`${mine?'Collect':'Take'} ${edible} from ${s.name}`,need-penalty+(mine?8:(8-a.needs.hunger)*9),{kind:'take',storeId:s.id,item:edible,quantity:2,minutes:.5,theft:!mine},s.position);
  }
  const projects=w.settlement.projects.filter(p=>{const owner=w.agents.find(b=>b.id===p.ownerId);return (!naturalWorld(w)||distance(a.coordinates,p.position)<60)&&knownPlace(w,a,p)&&p.status!=='complete'&&(p.ownerId===a.id||p.access==='shared'&&(!owner||(relationship(w,a,owner)?.trust??34)>=20));}).sort((p,q)=>(p.ownerId===a.id?0:1)-(q.ownerId===a.id?0:1));
- for(const p of projects){const stock=storeBy(w,p.stockpileId),base=53+(p.ownerId===a.id?4:0)+(p.affordances?.restSurfaces?.length?Math.max(0,65-(a.comfort?.value??55))*.3:0),ready=p.parts.find(part=>!part.built&&part.requires.every(id=>p.parts.find(x=>x.id===id)?.built)&&(!part.worker||part.worker===a.id||!w.agents.some(b=>b.id===part.worker&&b.task?.selected?.job?.partId===part.id&&b.task?.selected?.job?.projectId===p.id)));
+ for(const p of projects){const active=activeParts(p),stock=storeBy(w,p.stockpileId),base=53+(p.ownerId===a.id?4:0)+(p.affordances?.restSurfaces?.length?Math.max(0,65-(a.comfort?.value??55))*.3:0),ready=p.parts.find(part=>!part.built&&part.requires.every(id=>active.has(id))&&(!part.worker||part.worker===a.id||!w.agents.some(b=>b.id===part.worker&&b.task?.selected?.job?.partId===part.id&&b.task?.selected?.job?.projectId===p.id)));
   if(stock.folded){offer('unfold_rack:'+stock.id,'Set up the reused building rack for '+p.name,base+20,{kind:'unfold_rack',storeId:stock.id,projectId:p.id,minutes:1.5},stock.position);continue;}
   // A fetched binding remains a construction input even after preparation
   // becomes satisfied. Otherwise ordinary cargo handling puts it straight
@@ -181,7 +181,7 @@ export function workSettlement(w,a,t,minutes){
  if(j.kind==='assemble'){
   const part=p?.parts.find(x=>x.id===j.partId);if(!part||part.built)return {done:true,success:true,detail:'This part is already in place.'};
   const blockers=constructionBlockers(a,part);if(blockers.length)return fail(blockers.join('; '));
-  if(part.requires.some(id=>!p.parts.find(x=>x.id===id)?.built))return fail('The supporting parts are not built yet.');
+  if(part.requires.some(id=>!activeParts(p).has(id)))return fail('The supporting parts must be built and sound before assembly.');
   if((p.purpose==='storage'||p.affordances?.storage)&&part.kind==='wall'&&w.agents.some(b=>b.coordinates.x>p.bounds.minX-.25&&b.coordinates.x<p.bounds.maxX+.25&&b.coordinates.y>p.bounds.minZ-.25&&b.coordinates.y<p.bounds.maxZ+.25)){t.obstructionMinutes=(t.obstructionMinutes||0)+minutes;return t.obstructionMinutes>=2?fail('Someone is occupying the wall area; do other useful work before retrying.'): {done:false};}
   t.obstructionMinutes=0;const b=partBounds(p,part),dx=Math.max(b.minX-a.coordinates.x,a.coordinates.x-b.maxX,0),dy=Math.max(b.minZ-a.coordinates.y,a.coordinates.y-b.maxZ,0);
   if(p.climbsTerrain&&b.bottom>treadHeight(w,a.coordinates,a)+1.8)return fail('This component is above working reach; finish lower treads first.');

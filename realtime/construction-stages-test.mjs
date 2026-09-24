@@ -49,6 +49,8 @@ const stranger={...a,id:'stranger'};assert(!designContext(w,stranger).allowedExt
 assert.throws(()=>validateBlueprint(w,a,{...extension,code:mat}),/unique/);
 assert.throws(()=>validateBlueprint(w,a,{...extension,replacesProjectId:p.id}),/cannot also replace/);
 assert.throws(()=>validateBlueprint(w,a,{...extension,code:"part({id:'a',kind:'roof',material:'reeds',center:[0,2,0],size:[1,.1,1],requires:['b']});part({id:'b',kind:'beam',material:'timber',center:[0,2,0],size:[1,.1,.1],requires:['a']});"}),/cycle/);
+const damaged=p.parts.find(x=>x.id==='postL');damaged.durability.condition=0;
+assert.throws(()=>validateBlueprint(w,a,{...extension,code:"part({id:'brace',kind:'beam',material:'timber',center:[-.9,1.65,.9],size:[.1,.1,.1],requires:['postL']});"}),/Repair failed existing supports/);damaged.durability.condition=1;
 // Existing store identity, position and contents survive an additional stage.
 const floor=adoptBlueprint(w,a,validateBlueprint(w,a,raw("part({id:'base',kind:'deck',material:'timber',center:[0,.1,0],size:[1,.2,1],requires:[]});",{siteId:'clearing-1'})),'storage-fixture');
 const f=floor.parts[0];gatherWood(w,a,'wetWood',f.materialUnits);a.inventory.cordage=1;let option=settlementCandidates(w,a).find(c=>c.job?.projectId===floor.id&&c.job.kind==='assemble');assert(option);a.coordinates={...option.job.destination};workSettlement(w,a,{selected:option,requiredMinutes:f.requiredMinutes,workMinutes:0},f.requiredMinutes);

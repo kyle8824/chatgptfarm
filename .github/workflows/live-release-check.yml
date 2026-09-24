@@ -1,0 +1,26 @@
+name: Verify live valley release
+on:
+  push:
+    branches: [repair/continuous-runtime]
+    paths: ['realtime/**', 'engine/**', 'shared/**', 'cloudflare/**', 'web/live/**', '.github/workflows/live-release-check.yml']
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  live:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Observe deployment, current-time stream and original saved world
+        run: node realtime/live-release-check.mjs
+        env:
+          EXPECTED_LIVE_COMMIT: ${{ github.sha }}
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: live-release-evidence
+          path: realtime-qa/live-release-*.json

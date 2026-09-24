@@ -5,7 +5,7 @@ import {climbingSites} from './climbing.mjs';
 import {localPosition,householdWorld} from '../shared/frontier.js';
 import {knownPlace} from './frontier-knowledge.mjs';
 import {familyContext} from './life.mjs';
-import {structurePerformance} from '../shared/structure-performance.js';
+import {structurePerformance,activeParts} from '../shared/structure-performance.js';
 import {constructionSpec,craftSnapshot,CRAFT_GRAPH} from '../shared/craft.js';
 import {runConstructionCode} from './construction-code.mjs';
 import {inferAffordances} from './affordances.mjs';
@@ -91,6 +91,7 @@ export function validateBlueprint(w,a,raw,issuedSite=null){
   if(input.material==='clay'&&part.kind!=='wall')throw Error('Unfired clay is daub for supported walls, not load-bearing beams');
   if(part.shape==='cylinder'&&part.kind!=='post')throw Error('Round members currently stand vertically as posts');
   const supports=part.requires.map(id=>p.parts.find(x=>x.id===id));
+  if(extended&&supports.some(s=>extended.parts.some(x=>x.id===s.id)&&!activeParts(extended).has(s.id)))throw Error('Repair failed existing supports before adding dependent components');
   if(supports.length&&supports.every(x=>['reeds','clay'].includes(x.material)))throw Error('Soft reed or clay panels cannot carry another structural part');
   for(const disconnected of supports.filter(s=>!touch(r,partBounds(p,s)))){const b=partBounds(p,disconnected),gaps=[Math.max(r.minX-b.maxX,b.minX-r.maxX,0),Math.max(r.bottom-b.top,b.bottom-r.top,0),Math.max(r.minZ-b.maxZ,b.minZ-r.maxZ,0)];errors.push(`${part.id} does not touch ${disconnected.id}: gaps x/height/z=${gaps.map(n=>n.toFixed(2)).join('/')}; each must be <=0.16. Correct centers or dependency`);}
   const ground=r.bottom<=.16&&(!p.spansWater||[r.minZ,r.maxZ].every(y=>(nearestWater(w,{x:p.position.x,y})?.edge??-1)>.25));
@@ -150,7 +151,7 @@ export function adoptBlueprint(w,a,design,model){
  if(existing){const oldParts=existing.parts,priorStage={name:existing.name,rationale:existing.rationale,designerId:existing.ownerId,model:existing.model,code:existing.code||null,createdAt:existing.createdAt,completedAt:existing.completedAt,partIds:oldParts.map(x=>x.id)};existing.stages??=[priorStage];existing.stages.push(stage);Object.assign(existing,{parts:[...oldParts,...design.parts.slice(oldParts.length)],bounds:design.bounds,bill:design.bill,affordances:design.affordances,stockpileId:p.stockpileId,status:'planned',constructionVersion:2,revision:existing.revision+1});adopted=existing;}
  else {p.stages=[stage];delete p.extensionBase;delete p.extendsProjectId;w.settlement.projects.push(p);}
  a.improvementGoal={kind:'construction',projectId:adopted.id,reason:design.rationale,startedAt:clock(w),status:'active'};w.settlement.revision++;remember(w,a,`I designed ${p.name}: ${p.rationale}`,{importance:8,tags:['construction','design'],source:`design:${p.id}`});
- addEvent(w,'construction-design',`${a.name} designed ${p.name}`,`${p.rationale} The ${p.parts.length} parts are a plan; materials still need to be carried here and assembled.`,{agentId:a.id,projectId:p.id});return adopted;
+ addEvent(w,'construction-design',`${a.name} designed ${p.name}`,`${p.rationale} The ${stage.partIds.length} new parts are a plan; materials still need to be carried here and assembled.`,{agentId:a.id,projectId:p.id});return adopted;
 }
 export const DESIGN_SYSTEM=`You are a person surviving in a physical valley. Design and CODE what you need from your environment. There is NO named building catalog or prefab recipe. A structure's name/purpose grants no functionality. Invent geometry suited to actual needs, terrain, materials, possessions and social context; you may defer with build:false. A proposed design creates no supplies or finished work. People gather, carry and assemble every piece afterwards.
 Return JSON {build:boolean,name:string,purpose:string,siteId:string,access:"private"|"shared",rationale:string,code:string,replacesProjectId?:string,extendsProjectId?:string}. purpose is YOUR short description, not an enum. code is a construction program in a bounded JavaScript subset: const/let, arithmetic, comparisons, if, for loops (<=128 iterations), plain named functions (<=8 nested calls), arrays (bounded local array.push is supported), template strings and plain objects. Math.min/max/abs/floor/ceil/round/sin/cos/sqrt and Math.PI are available. Variables site and materials are already supplied and expose real dimensions and currently gatherable totals. Read site.width/site.depth; use different names for your own dimensions. A local variable cannot change the actual site boundaries. No eval, imports, network, new, timers, global state, property mutation or arbitrary engine changes.

@@ -15,6 +15,9 @@ jobs:
         with:
           node-version: '22'
       - run: npm ci --prefix cloudflare
+      - name: Record current public world before release
+        continue-on-error: true
+        run: OBSERVE_ONLY=1 node realtime/live-release-check.mjs
       - name: Physical work, preservation and behavior
         run: |
           node realtime/construction-stages-test.mjs
