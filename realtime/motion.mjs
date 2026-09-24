@@ -38,7 +38,8 @@ export function liveClear(w,a,b,actor=null){
  return clearSegment(w,a,b,(world,p)=>liveWalkable(world,p,actor,false))&&clearHeight(w,a,b,actor);
 }
 export const MAX_ROUTE_SAMPLES=100000;
-export function liveRoute(w,from,to,actor=null){
+export function liveRoute(w,from,to,actor=null,budget=null){
+ if(budget&&budget.remaining<=0)return null;
  if(!liveWalkable(w,to,actor))return null;let start=from,escape=null;
  // Old versions could save bodies inside a roof or fire footprint. Walk out
  // of that invalid placement over elapsed time; never teleport on migration.
@@ -50,7 +51,9 @@ export function liveRoute(w,from,to,actor=null){
  const others=actor?w.agents.filter(b=>b.id!==actor.id&&!b.life?.carriedBy&&segmentDistance(b.coordinates,start,to)<6):[],clear=(a,b)=>{
   // A deterministic work bound also works when the host clock is frozen.
   // Never approve an unchecked edge when the search runs out of work.
-  remaining-=2+Math.ceil(distance(a,b)*10);if(remaining<0)return false;
+  const cost=2+Math.ceil(distance(a,b)*10);
+  remaining-=cost;if(budget)budget.remaining-=cost;
+  if(remaining<0||budget&&budget.remaining<0)return false;
   return others.every(o=>segmentDistance(o.coordinates,a,b)>=Math.min(BODY_DISTANCE+.08,distance(o.coordinates,a)-.001))&&liveClear(w,a,b,actor);
  };
  let path;
@@ -63,8 +66,8 @@ export function liveRoute(w,from,to,actor=null){
   for(const b of others)for(let i=0;i<12;i++)points.push({x:b.coordinates.x+Math.cos(i/6*Math.PI)*1.38,y:b.coordinates.y+Math.sin(i/6*Math.PI)*1.38});
   for(const tree of (w.settlement?.trees||[]).filter(t=>!t.depleted&&segmentDistance(t.position,start,to)<1.5).slice(0,16))for(let i=0;i<8;i++)points.push({x:tree.position.x+Math.cos(i/4*Math.PI)*.7,y:tree.position.y+Math.sin(i/4*Math.PI)*.7});
   const costs=points.map(()=>Infinity),heuristic=points.map(p=>distance(p,to)),previous=[],done=new Set();costs[0]=0;
-  while(done.size<points.length&&remaining>=0){let i=-1;for(let n=0;n<points.length;n++)if(!done.has(n)&&(i<0||costs[n]+heuristic[n]<costs[i]+heuristic[i]))i=n;if(i<0||!Number.isFinite(costs[i]))break;if(i===1){path=[];while(i!==undefined){path.unshift(points[i]);i=previous[i];}break;}done.add(i);
-   for(let j=0;j<points.length&&remaining>=0;j++)if(!done.has(j)){const cost=costs[i]+distance(points[i],points[j]);if(cost<costs[j]&&clear(points[i],points[j])){costs[j]=cost;previous[j]=i;}}
+  while(done.size<points.length&&remaining>=0&&(!budget||budget.remaining>=0)){let i=-1;for(let n=0;n<points.length;n++)if(!done.has(n)&&(i<0||costs[n]+heuristic[n]<costs[i]+heuristic[i]))i=n;if(i<0||!Number.isFinite(costs[i]))break;if(i===1){path=[];while(i!==undefined){path.unshift(points[i]);i=previous[i];}break;}done.add(i);
+   for(let j=0;j<points.length&&remaining>=0&&(!budget||budget.remaining>=0);j++)if(!done.has(j)){const cost=costs[i]+distance(points[i],points[j]);if(cost<costs[j]&&clear(points[i],points[j])){costs[j]=cost;previous[j]=i;}}
   }
  }
  if(!path)return null;
@@ -95,8 +98,15 @@ export function chooseDestination(w,a,target,selected={}){
   points.push({p,score:Math.min(3,space)*1.4-distance(a.coordinates,p)*.07-previous*.6+random(a)*.35,space});
  }
  points.sort((a,b)=>b.score-a.score);
- for(const {p,space}of points)if(space>=ARRIVAL_SPACE&&liveRoute(w,a.coordinates,p,a))return p;
- for(const {p,space}of points)if(space>=BODY_DISTANCE+.1&&liveRoute(w,a.coordinates,p,a))return p;
+ // One interaction search shares one work allowance across all candidate
+ // spots. Previously each of 80 bank spots got a full route search twice,
+ // so a single unreachable drink could monopolize the simulation thread.
+ const budget={remaining:MAX_ROUTE_SAMPLES},attempted=new Set();
+ for(const clearance of [ARRIVAL_SPACE,BODY_DISTANCE+.1])for(const {p,space}of points){
+  if(budget.remaining<=0)break;
+  if(space<clearance||attempted.has(p))continue;
+  attempted.add(p);if(liveRoute(w,a.coordinates,p,a,budget))return p;
+ }
  // Hold safely if an interaction area is full; collision checks still apply.
  return liveWalkable(w,a.coordinates)?{...a.coordinates}:points[0]?.p||center;
 }
