@@ -97,6 +97,7 @@ export function retireObsoleteTask(w,a){
  if(reason){outcome(w,a,t,false,reason,'superseded');a.task=null;}
 }
 export function resumeLiveTask(w,a,urgent){
+ if(!a.suspendedTasks?.length)return false;
  const ranked=liveCandidates(w,a,candidateActions(w,a));
  a.suspendedTasks=(a.suspendedTasks||[]).filter(t=>!(family(t.actionId)==='energy'&&a.needs.energy>=85)&&!knownUnavailable(w,a,t.actionId)&&!(t.actionId==='seek_warmth'&&!w.structures.fire)&&!(t.actionId==='seek_cover'&&a.position==='camp'));
  const index=a.suspendedTasks.findLastIndex(t=>ranked.some(c=>c.id===t.actionId)&&(urgent?family(t.actionId)===urgent:ranked[0]?.id===t.actionId));
