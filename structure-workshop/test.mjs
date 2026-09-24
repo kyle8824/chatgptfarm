@@ -2,7 +2,7 @@ import assert from 'node:assert/strict';
 import fs from 'node:fs/promises';
 import {build} from '../character-preview/node_modules/esbuild/lib/main.js';
 import {structureSignature,makeStructureLook,readStructureLook,normalizeStructureLook} from '../shared/visuals/structure-appearance.js';
-import {catalogFromFrame,readCatalog,resourceRows,physicalFunctions} from './catalog.js';
+import {catalogFromFrame,readCatalog,resourceRows,physicalFunctions,validProject,constructionPrograms} from './catalog.js';
 const p=JSON.parse(await fs.readFile(new URL('./example.json',import.meta.url))),before=JSON.stringify(p),look=makeStructureLook(p,{timber:'#315347',grain:.2,roughness:.75});
 assert.equal(readStructureLook(p,JSON.parse(JSON.stringify(look))).timber,'#315347');
 for(const bad of [{...look,parts:[]},{...look,projectId:'another'},{...look,appearance:{size:[8,8,8]}},{...look,appearance:{roughness:NaN}},{...look,appearance:JSON.parse('{"__proto__":"#ffffff"}') }])assert.throws(()=>readStructureLook(p,bad));
@@ -22,3 +22,6 @@ assert.equal(modelA.children.filter(x=>x.isMesh).length,p.parts.length);assert.e
 assert.equal(modelB.children[0].material.color.getHexString(),'315347');modelA.userData.disposeStructure();modelB.userData.disposeStructure();
 const failed=structuredClone(p);for(const x of failed.parts){x.built=true;x.durability={quality:.4,condition:1};}failed.parts[0].durability.condition=0;const damaged=module.createStructureModel(failed,{stage:'construction'});assert(damaged.children.find(x=>x.userData.partId==='weather-top').position.y<.1,'failed support puts dependent roofing on the ground in the recorded view');damaged.userData.disposeStructure();
 console.log('PASS appearance-only schema, geometry invariance, design binding, construction progress, resource accounting, cached catalog and shared renderer');
+
+assert(validProject({...p,parts:Array.from({length:96},(_,i)=>({...p.parts[0],id:'part-'+i}))}));assert(!validProject({...p,parts:Array.from({length:97},(_,i)=>({...p.parts[0],id:'part-'+i}))}));
+const stages={parts:[],stages:[{name:'First mat',code:'part({id:\'mat\'});',partIds:['mat']},{name:'Added cover',code:'part({id:\'roof\'});',partIds:['roof']}]};assert.match(constructionPrograms(stages),/Stage 1 · First mat[\s\S]*Stage 2 · Added cover/);
