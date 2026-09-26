@@ -18,11 +18,28 @@ export function constructionSpec(part){
  return {finish,tool:wooden&&(finish==='hewn'||thick)?'boundSharpTool':null,skill:wooden&&finish==='hewn'?'woodworking':null,minutes:wooden&&finish==='hewn'?12:0,binding,
   description:wooden?(finish==='hewn'?'Hand-hewn timber · tool marks remain':panel?'Uneven branch mat · fiber lashings':'Unshaped branch · bark retained'):part.material==='reeds'?'Overlapped reeds · fiber ties':part.material==='stone'?'Unworked rubble':'Hand-packed clay daub'};
 }
-export function constructionBlockers(a,part){
+export const CORDAGE_LENGTH_MM=4000;
+export function bindingLength(part){
+ if(!constructionSpec(part).binding)return 0;
+ const [x,y,z]=part.size;
+ // Panel ties scale with covered area, not the number of emitted rectangles.
+ // A frame connection uses a short lashing at each actual supporting joint.
+ const length=['deck','roof','wall'].includes(part.kind)?(part.kind==='wall'?Math.max(x,z)*y:x*z)*800:Math.max(1,part.requires?.length||0)*500;
+ return Math.ceil(length*(part.bindingFraction??1));
+}
+export function bindingCoils(part,project){
+ if(!project)return constructionSpec(part).binding;
+ return Math.ceil(Math.max(0,bindingLength(part)-(project.bindingStockMm||0))/CORDAGE_LENGTH_MM);
+}
+export function bindingBudget(project){
+ const remainingMm=project.parts.filter(p=>!p.built&&!p.invested).reduce((n,p)=>n+bindingLength(p),0);
+ return {remainingMm,atSiteMm:project.bindingStockMm||0,coilsNeeded:Math.ceil(Math.max(0,remainingMm-(project.bindingStockMm||0))/CORDAGE_LENGTH_MM),reedBundlesPerCoil:3};
+}
+export function constructionBlockers(a,part,project){
  const s=constructionSpec(part),out=[];
  if(s.tool&&!(a.inventory?.[s.tool]>0))out.push('Carry a '+TOOL_NAMES[s.tool]);
  if(s.skill&&practiceMinutes(a,s.skill)<s.minutes)out.push(`${s.minutes} minutes of actual ${s.skill} practice required`);
- if(!part.invested&&s.binding>(a.inventory?.cordage||0))out.push('Make and carry cordage for the joints');
+ if(!part.invested&&bindingCoils(part,project)>(a.inventory?.cordage||0))out.push('Make and carry cordage for the joints');
  return out;
 }
 export function craftSnapshot(a){return {practice:a.craftPractice||{},knownTechniques:a.skills||{},tools:Object.fromEntries(Object.entries(TOOL_NAMES).map(([key])=>[key,a.inventory?.[key]||0]))};}

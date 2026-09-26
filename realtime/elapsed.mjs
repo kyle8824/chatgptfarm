@@ -1,4 +1,6 @@
 import {workPrimitiveShelter} from './primitive-shelter.mjs';
+import {advancePlantGrowth} from './plant-growth.mjs';
+import {advanceSupplyJourney} from './supply-journey.mjs';
 import {updateImprovementGoal} from './improvement-goals.mjs';
 import {ensureHappiness,recordEnjoyedWork} from './happiness.mjs';
 import {workEconomy} from './regional-economy.mjs';
@@ -54,7 +56,9 @@ export async function step(w,seconds,{mind=null,fallbackReason='no_provider',wal
   configureTask(w,a);
   if(a.task)beginFreeTime(w,a,a.task);
   const t=a.task,from={...a.coordinates};if(t)t.happinessWork??=t.workMinutes||0;if(t&&!t.liveTiming&&t.workMinutes===0){const id=t.actionId;t.requiredMinutes=t.selected?.job?.minutes??(id==='drink'?.75:id.startsWith('eat_')?1:/^(gather_|forage:)/.test(id)?4:id==='talk'?3:id==='seek_other'?.1:t.requiredMinutes);t.liveTiming=true;}if(t&&a.liveThought?.actionId===t.actionId&&t.source==='ai')a.liveThought.status='acting';let positionBefore=a.position;if(t?.actionId==='drink')t.interactionReady=withinWaterReach(w,a.coordinates);
-  if(t?.selected?.job?.kind==='return_warmth'){
+  if(t?.selected?.job?.kind==='supply_trip'){
+   positionBefore=t.phase==='travel'?'travel':a.position;const result=await advanceSupplyJourney(w,a,t,seconds);if(result.done){outcome(w,a,t,result.success,result.detail);if(!result.success)rememberFailure(w,a,t,result.detail);a.task=null;}
+  }else if(t?.selected?.job?.kind==='return_warmth'){
    positionBefore=t.phase==='travel'?'travel':a.position;const result=advanceThermalReturn(w,a,t,seconds);if(result.done){outcome(w,a,t,result.success,result.detail);if(!result.success)rememberFailure(w,a,t,result.detail);a.task=null;}
   }else if(t?.actionId==='explore'){
    positionBefore='travel';const result=advanceExploration(w,a,t,seconds);if(result.done){outcome(w,a,t,result.success,result.detail);if(!result.success)rememberFailure(w,a,t,result.detail);a.task=null;}
@@ -87,6 +91,7 @@ export async function step(w,seconds,{mind=null,fallbackReason='no_provider',wal
  for(const a of agents)if(!isAdult(w,a))advanceChild(householdWorld(w,a),a,seconds);
  separateBodies(w,seconds);for(const a of w.agents)if(a.life?.carriedBy){const p=w.agents.find(p=>p.id===a.life.carriedBy);if(p)a.coordinates={...p.coordinates};}
  advanceStructures(w,seconds);
+ advancePlantGrowth(w,seconds);
  w.minute+=minutes;
  advanceWood(w,w.day*24+w.hour+w.minute/60);
  syncHoldings(w);
