@@ -65,6 +65,9 @@ export function validateBlueprint(w,a,raw,issuedSite=null){
  if(!raw||typeof raw!=='object')throw Error('Invalid construction response');
  if(raw.build===false)return null;
  if(raw.build!==true)throw Error('Explicit build decision required');
+ // Optional JSON fields may be null. Treat that as omission, without
+ // accepting an invented project id or relaxing ownership/support checks.
+ raw={...raw,extendsProjectId:raw.extendsProjectId??undefined,replacesProjectId:raw.replacesProjectId??undefined};
  const generated=typeof raw.code==='string',site=buildingSites(w,a).find(s=>s.id===raw.siteId)||(generated&&issuedLocalSite(w,a,raw,issuedSite));if(!site||!generated&&!site.purposes.includes(raw.purpose))throw Error('Site unavailable or wrong purpose');
  const extended=raw.extendsProjectId?w.settlement.projects.find(p=>p.id===raw.extendsProjectId):null;
  if(site.extendsProjectId!==raw.extendsProjectId||raw.extendsProjectId&&(!generated||!extended||extended.status!=='complete'||raw.replacesProjectId))throw Error('Use an offered extension site and its matching extendsProjectId; additions cannot also replace a structure');

@@ -75,6 +75,22 @@ export function rememberFailure(w,a,t,detail){
  (a.liveFailures??={})[t.actionId]={at:clock(w),retryMinutes:t.selected?.job||/route/i.test(detail)?10:key==='dryWood'?240:180,detail};
  const entries=Object.entries(a.liveFailures).sort((a,b)=>b[1].at-a[1].at).slice(0,16);a.liveFailures=Object.fromEntries(entries);
 }
+export function shouldInterruptForNeed(w,a,need){
+ const t=a.task;
+ if(!t||!need||family(t.actionId)===need||t.requiredMinutes-t.workMinutes<=.1)return false;
+ if(!(['hydration','hunger','energy'].includes(need)&&a.needs[need]<20||a.needs[need]+10<(a.needs[family(t.actionId)]??100)))return false;
+ // A failed water/food route can temporarily leave no eligible response.
+ // Cancelling useful work in that state immediately reselects the same task,
+ // repeatedly discarding its journey planning and accumulating suspensions.
+ // Recheck unavailable alternatives at a bounded cadence; motion and work
+ // still advance on every elapsed physics step.
+ const pending=t.unavailableUrgency;
+ if(pending?.need===need&&clock(w)<pending.retryAt)return false;
+ if(!liveCandidates(w,a,candidateActions(w,a)).some(c=>family(c.id)===need)){
+  t.unavailableUrgency={need,retryAt:clock(w)+1};return false;
+ }
+ delete t.unavailableUrgency;return true;
+}
 export function retireObsoleteTask(w,a){
  const t=a.task;if(!t)return;
  if(isRestingTask(t)&&!willingToRest(w,a,t.selected?.job,t.destination||a.coordinates)){outcome(w,a,t,true,`${a.name} leaves an uncomfortable break to look for useful work or a more enjoyable activity.`,'superseded');a.task=null;return;}

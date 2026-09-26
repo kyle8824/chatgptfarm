@@ -1,0 +1,39 @@
+name: Inspect live building progress
+on:
+  push:
+    branches: [fix/building-flow]
+    paths: ['.github/workflows/building-diagnosis.yml']
+permissions:
+  contents: read
+jobs:
+  observe:
+    runs-on: ubuntu-latest
+    timeout-minutes: 4
+    steps:
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Read public state without changing the world
+        shell: bash
+        run: |
+          mkdir -p evidence
+          node --input-type=module <<'JS'
+          import fs from 'node:fs/promises';
+          const root='https://chatgptfarm.kyle8824.workers.dev/live/';
+          for(let sample=0;sample<3;sample++){
+            for(const route of ['health','state',...(sample===0?['geometry']:[])]){
+              try{
+                const response=await fetch(root+route,{signal:AbortSignal.timeout(25000),cache:'no-store'});
+                const value=await response.json();
+                await fs.writeFile('evidence/'+route+'-'+sample+'.json',JSON.stringify(value));
+                console.log(JSON.stringify({route,sample,status:response.status,lagMs:(value.runtime||value).lagMs,revision:(value.runtime||value).revision,projects:value.settlement?.projects.map(p=>({id:p.id,name:p.name,status:p.status,built:p.parts.filter(x=>x.built).length,total:p.parts.length}))}));
+              }catch(e){console.log(JSON.stringify({route,sample,error:String(e)}));}
+            }
+            if(sample<2)await new Promise(r=>setTimeout(r,15000));
+          }
+          JS
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: live-building-diagnosis
+          path: evidence/

@@ -96,7 +96,13 @@ export function settlementCandidates(w,a){
   offer(`retrieve_food:${s.id}:${edible}`,`${mine?'Collect':'Take'} ${edible} from ${s.name}`,need-penalty+(mine?8:(8-a.needs.hunger)*9),{kind:'take',storeId:s.id,item:edible,quantity:2,minutes:.5,theft:!mine},s.position);
  }
  const projects=w.settlement.projects.filter(p=>{const owner=w.agents.find(b=>b.id===p.ownerId);return (!naturalWorld(w)||distance(a.coordinates,p.position)<60)&&knownPlace(w,a,p)&&p.status!=='complete'&&(p.ownerId===a.id||p.access==='shared'&&(!owner||(relationship(w,a,owner)?.trust??34)>=20));}).sort((p,q)=>(p.ownerId===a.id?0:1)-(q.ownerId===a.id?0:1));
- for(const p of projects){const active=activeParts(p),stock=storeBy(w,p.stockpileId),base=53+(p.ownerId===a.id?4:0)+(p.affordances?.restSurfaces?.length?Math.max(0,65-(a.comfort?.value??55))*.3:0),ready=p.parts.find(part=>!part.built&&part.requires.every(id=>active.has(id))&&(!part.worker||part.worker===a.id||!w.agents.some(b=>b.id===part.worker&&b.task?.selected?.job?.partId===part.id&&b.task?.selected?.job?.projectId===p.id)));
+ const nextParts=new Map();
+ for(const p of projects){const active=activeParts(p),stock=storeBy(w,p.stockpileId),base=53+(p.ownerId===a.id?4:0)+(p.affordances?.restSurfaces?.length?Math.max(0,65-(a.comfort?.value??55))*.3:0),available=p.parts.filter(part=>!part.built&&part.requires.every(id=>active.has(id))&&(!part.worker||part.worker===a.id||!w.agents.some(b=>b.id===part.worker&&b.task?.selected?.job?.partId===part.id&&b.task?.selected?.job?.projectId===p.id)));
+  // Source order is not a compulsory construction sequence. Finish invested
+  // work, or use carried/racked materials on another supported component,
+  // before chasing a missing prerequisite for the first part in the program.
+  const prepared=available.filter(part=>!preparationFor(a,part)),ready=prepared.find(part=>part.invested)||prepared.find(part=>units(a,part.material)>=part.materialUnits)||prepared.find(part=>units(a,part.material)+units(stock,part.material)>=part.materialUnits)||available[0];
+  if(ready)nextParts.set(p.id,ready);
   if(stock.folded){offer('unfold_rack:'+stock.id,'Set up the reused building rack for '+p.name,base+20,{kind:'unfold_rack',storeId:stock.id,projectId:p.id,minutes:1.5},stock.position);continue;}
   // A fetched binding remains a construction input even after preparation
   // becomes satisfied. Otherwise ordinary cargo handling puts it straight
@@ -115,7 +121,7 @@ export function settlementCandidates(w,a){
   }
  }
  // Keep a little food and tools on the body, put bulk goods in owned storage.
- const nextPart=projects[0]?.parts.find(x=>!x.built&&x.requires.every(id=>projects[0].parts.find(t=>t.id===id)?.built)),food=FOOD.find(k=>a.inventory[k]>0),tool=a.inventory.boundSharpTool?'boundSharpTool':'sharpStone';
+ const nextPart=nextParts.get(projects[0]?.id),food=FOOD.find(k=>a.inventory[k]>0),tool=a.inventory.boundSharpTool?'boundSharpTool':'sharpStone';
  const keep=Object.fromEntries(Object.keys(a.inventory).map(k=>[k,k===food?2:['resin','flint','longFiber','potteryClay'].includes(k)?2:projects.length?(k===tool?1:0):['sharpStone','boundSharpTool','firedVessel'].includes(k)?1:0]));
  for(const [key,n]of Object.entries(craftKeep))keep[key]=Math.max(keep[key]||0,n);
  if(a.freeTime?.practice&&clock(w)-a.freeTime.practice.at<240)for(const key of ['stones','reeds','cordage','woodPole','sharpStone','boundSharpTool','dryWood','wetWood'])keep[key]=Math.max(keep[key]||0,Math.min(a.inventory[key]||0,{stones:2,reeds:3,cordage:1,woodPole:1,sharpStone:1,boundSharpTool:1,dryWood:1,wetWood:1}[key]));
@@ -123,7 +129,7 @@ export function settlementCandidates(w,a){
  // Keep the raw branches needed for a basic shelter through ordinary cargo handling.
  if(a.needs.warmth<40&&!w.structures.shelter){let reserve=4;for(const k of ['dryWood','wetWood']){keep[k]=Math.max(keep[k]||0,Math.min(reserve,a.inventory[k]||0));reserve-=Math.min(reserve,a.inventory[k]||0);}}
  const depositKeys=Object.entries(a.inventory).filter(([k,n])=>n>(keep[k]||0)).map(([k])=>k);
- const assemblyLoadBlocked=projects.some(p=>{const part=p.parts.find(x=>!x.built&&!x.invested&&x.requires.every(id=>p.parts.find(t=>t.id===id)?.built));if(!part)return false;const key=materialKeys[part.material][0];return roomFor(w,a,key)+units(a,part.material)<part.materialUnits;});
+ const assemblyLoadBlocked=projects.some(p=>{const part=nextParts.get(p.id);if(!part||part.invested)return false;const key=materialKeys[part.material][0];return roomFor(w,a,key)+units(a,part.material)<part.materialUnits;});
  if(depositKeys.length){const preferred=w.settlement.stores.filter(s=>(!naturalWorld(w)||knownPlace(w,a,s)&&distance(a.coordinates,s.position)<40)&&s.kind!=='site'&&allowed(a,s)&&depositKeys.some(k=>roomFor(w,s,k))).sort((x,y)=>(['storage','platform'].includes(x.kind)?0:20)-(['storage','platform'].includes(y.kind)?0:20)+distance(x.position,a.coordinates)-distance(y.position,a.coordinates));
   const usingLoad=result.some(c=>['assemble','repair','deliver','craft'].includes(c.job?.kind));
   const s=preferred[0];if(s)offer(`deposit:${s.id}`,`Put supplies in ${s.name}`,assemblyLoadBlocked?96:full&&!usingLoad?86:projects.length?8:27,{kind:'deposit',storeId:s.id,keep,minutes:.75},s.position);

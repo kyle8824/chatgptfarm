@@ -9,7 +9,7 @@ import {expandFrontier} from './frontier.mjs';
 import {observeLandscape} from './frontier-knowledge.mjs';
 import {reorganizeLandscape} from './landscape-migration.mjs';
 import {liveWalkable,liveClear} from './motion.mjs';
-import {liveCandidates,liveUrgency} from './behavior.mjs';
+import {liveCandidates,liveUrgency,rememberFailure} from './behavior.mjs';
 import {updateThermalGoal,returnCamp,returnCandidate} from './thermal-return.mjs';
 import {beginReturnRoute,advanceReturnRoute,RETURN_ROUTE_EXPANSIONS,RETURN_ROUTE_LIMIT} from './return-route.mjs';
 import {explorationMotivation} from './exploration.mjs';
@@ -86,6 +86,22 @@ assert.equal(a.thermalGoal.campId,'willow-basin');
 for(const [need,id]of [['hydration','drink'],['energy','rest']]){
  const f=fixture();await step(f.w,6);f.a.needs[need]=11;await step(f.w,6);assert.equal(f.a.task?.actionId,id,`${need} may interrupt a cold journey`);
 }
+
+// Production showed a thirsty traveler interrupting/restarting the same
+// return journey every step while drinking was in its failed-route cooldown.
+// Preserve useful motion, then interrupt as soon as that alternative is
+// eligible at the bounded recheck. Never grant water remotely.
+({w,a}=fixture());await step(w,6);const continuing=a.task.id,location={...a.coordinates};
+a.needs.hydration=0;rememberFailure(w,a,{actionId:'drink'},'No safe route to water');
+for(let i=0;i<80;i++)await step(w,.6);
+assert.equal(a.task.id,continuing,'unavailable urgent action cannot repeatedly restart a useful journey');
+assert(!a.suspendedTasks.some(t=>t.id===continuing));
+assert(distance(location,a.coordinates)>0,'the retained task actually makes physical progress');
+assert.equal(a.needs.hydration,0,'no invented recovery for an unavailable resource');
+delete a.liveFailures.drink;
+for(let i=0;i<110&&a.task?.actionId!=='drink';i++)await step(w,.6);
+assert.equal(a.task?.actionId,'drink','real water recovery still interrupts when available');
+assert(a.suspendedTasks.some(t=>t.id===continuing),'useful journey work remains resumable');
 
 // No safe route means a recorded cooldown, never false arrival or heat.
 ({w,a}=fixture());w.worldModel.objects.push({id:'blocked-return-fixture',position:{...a.coordinates},geometry:{radiusM:200},physical:{blocksMovement:true}});

@@ -1,0 +1,44 @@
+name: Building flow verification
+on:
+  push:
+    branches: [fix/building-flow]
+permissions:
+  contents: read
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    timeout-minutes: 12
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - run: npm ci --prefix cloudflare
+      - name: Finite autonomous building and preservation
+        run: |
+          node realtime/building-flow-test.mjs
+          node realtime/thermal-return-test.mjs
+          node realtime/remote-survival-test.mjs
+          node realtime/behavior-test.mjs
+          node realtime/construction-stages-test.mjs
+          node realtime/ambition-test.mjs
+          node realtime/open-construction-test.mjs
+          node realtime/design-recovery-test.mjs
+          node realtime/design-planner-test.mjs
+          node realtime/structure-lifecycle-test.mjs
+          node realtime/material-search-test.mjs
+          node realtime/craft-test.mjs
+          node realtime/hewn-construction-test.mjs
+          node realtime/persistence-test.mjs
+          node realtime/planner-budget-test.mjs
+          node realtime/provider-test.mjs
+      - name: Actual Worker runtime and deploy build
+        run: |
+          TEST_FRONTIER=1 TEST_LANDSCAPE=1 STREAM_TEST_MS=60000 node realtime/workerd-test.mjs
+          npm run check --prefix cloudflare
+          git diff --exit-code -- world/state.json
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: building-flow-evidence
+          path: realtime-qa/*.json
