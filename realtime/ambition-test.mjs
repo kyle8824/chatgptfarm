@@ -27,7 +27,7 @@ assert(result.arrived||result.blocked,'reported route must arrive or stop, not o
 // no fire must not abort the same short food journey over and over.
 const local=prepare(createWorld());expandFrontier(local);reorganizeLandscape(local);
 const ron=local.agents.find(a=>a.name==='Ronan');local.agents=[ron];const home=local.frontier.homes.find(h=>h.id==='ochre-vale');home.structures.shelter=true;home.structures.fire=false;
-ron.coordinates={x:-332.93329082927727,y:-322.9474553340321};ron.position='travel';ron.needs={hunger:58,hydration:90,energy:75,warmth:0};ron.inventory.berries=0;ron.suspendedTasks=[];
+ron.coordinates={x:-332.93329082927727,y:-322.9474553340321};ron.position='travel';ron.needs={hunger:78.28,hydration:94.76,energy:34.54,warmth:1.52};ron.inventory.berries=0;ron.suspendedTasks=[];
 const site=local.regions.sites['ochre-vale:upland-berries'];ron.siteKnowledge[site.id]={quantity:site.quantity,observedHour:local.day*24+local.hour};
 ron.task={id:'saved-food-trip',actionId:'forage:'+site.id,label:'Gather needed berries',selected:{id:'forage:'+site.id,label:'Gather needed berries'},targetPosition:site.id,origin:{...ron.coordinates},phase:'travel',source:'fallback',workMinutes:0,requiredMinutes:4,liveTiming:true};
 configureTask(householdWorld(local,ron),ron);const initialBerries=site.quantity;

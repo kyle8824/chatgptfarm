@@ -1,3 +1,4 @@
+import {advanceSurvivalRoute,routedSurvival,survivalReach} from './survival-route.mjs';
 import {workPrimitiveShelter} from './primitive-shelter.mjs';
 import {advancePlantGrowth} from './plant-growth.mjs';
 import {advanceSupplyJourney} from './supply-journey.mjs';
@@ -56,20 +57,23 @@ export async function step(w,seconds,{mind=null,fallbackReason='no_provider',wal
   configureTask(w,a);
   if(a.task)beginFreeTime(w,a,a.task);
   const t=a.task,from={...a.coordinates};if(t)t.happinessWork??=t.workMinutes||0;if(t&&!t.liveTiming&&t.workMinutes===0){const id=t.actionId;t.requiredMinutes=t.selected?.job?.minutes??(id==='drink'?.75:id.startsWith('eat_')?1:/^(gather_|forage:)/.test(id)?4:id==='talk'?3:id==='seek_other'?.1:t.requiredMinutes);t.liveTiming=true;}if(t&&a.liveThought?.actionId===t.actionId&&t.source==='ai')a.liveThought.status='acting';let positionBefore=a.position;if(t?.actionId==='drink')t.interactionReady=withinWaterReach(w,a.coordinates);
-  if(t?.selected?.job?.kind==='supply_trip'){
+  if(t?.survivalJourney){
+   const result=advanceSurvivalRoute(w,a,t);
+   if(result.blocked){const detail='No safe survival route was found within the bounded search.';outcome(w,a,t,false,detail,'blocked');rememberFailure(w,a,t,detail);a.task=null;}
+  }else if(t?.selected?.job?.kind==='supply_trip'){
    positionBefore=t.phase==='travel'?'travel':a.position;const result=await advanceSupplyJourney(w,a,t,seconds);if(result.done){outcome(w,a,t,result.success,result.detail);if(!result.success)rememberFailure(w,a,t,result.detail);a.task=null;}
   }else if(t?.selected?.job?.kind==='return_warmth'){
    positionBefore=t.phase==='travel'?'travel':a.position;const result=advanceThermalReturn(w,a,t,seconds);if(result.done){outcome(w,a,t,result.success,result.detail);if(!result.success)rememberFailure(w,a,t,result.detail);a.task=null;}
   }else if(t?.actionId==='explore'){
    positionBefore='travel';const result=advanceExploration(w,a,t,seconds);if(result.done){outcome(w,a,t,result.success,result.detail);if(!result.success)rememberFailure(w,a,t,result.detail);a.task=null;}
-  }else if(t?.actionId==='drink'&&t.phase==='work'&&!withinWaterReach(w,a.coordinates)){
-   // Reposition an old saved task or a body displaced away from the bank.
-   // No hydration or work progress is awarded until water is in reach.
+  }else if(t&&routedSurvival(t)&&t.phase==='work'&&!survivalReach(w,t,a.coordinates)){
+   // Reposition saved false arrivals or displaced bodies. Survival work
+   // only advances within physical reach of the water or food site.
    faceInteraction(w,a,seconds);t.waterRetry=(t.waterRetry||0)-seconds;
    if(t.waterRetry<=0){
     configureTask(w,a,{force:true});t.waterRetry=3;
-    if(!t.path?.length||!withinWaterReach(w,t.destination)){
-     const detail='No safe route to an accessible water bank; remember the obstruction before retrying.';
+    if(!t.survivalJourney&&(!t.path?.length||!survivalReach(w,t,t.destination))){
+     const detail='No safe route to the survival resource; remember the obstruction before retrying.';
      outcome(w,a,t,false,detail,'blocked');rememberFailure(w,a,t,detail);a.task=null;
     }
    }
