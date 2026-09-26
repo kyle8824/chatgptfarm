@@ -1,6 +1,6 @@
 import {resolveMaterial} from '../engine/physical-materials.js';
 import {recordPractice} from '../engine/craft-practice.js';
-import {constructionSpec,practiceMinutes,TOOL_NAMES} from '../shared/craft.js';
+import {constructionSpec,bindingCoils,practiceMinutes,TOOL_NAMES} from '../shared/craft.js';
 import {addEvent} from '../engine/core.js';
 import {syncHoldings} from './holdings.mjs';
 
@@ -14,22 +14,23 @@ const recipes={
 };
 export function toolPlan(a,item,depth=0){
  if(depth>6)throw Error('Tool dependency cycle');
- if(item==='sharpStone'&&a.inventory.flint>=1)return {craft:item,minutes:4,label:'Knapp a fine flint edge'};if(item==='cordage'&&a.inventory.longFiber>=1)return {craft:item,minutes:4,label:'Twist long reed fibers into cordage'};
+ if(item==='sharpStone'&&a.inventory.flint>=1)return {craft:item,intermediate:item,minutes:4,label:'Knapp a fine flint edge'};if(item==='cordage'&&a.inventory.longFiber>=1)return {craft:item,intermediate:item,minutes:4,label:'Twist long reed fibers into cordage'};
  const recipe=recipes[item];if(!recipe)return {item,quantity:1};
  for(const [input,count]of Object.entries(recipe.inputs)){
   const key=input==='branch'?(a.inventory.dryWood?'dryWood':'wetWood'):input==='edge'?(a.inventory.boundSharpTool?'boundSharpTool':'sharpStone'):input;
   if((a.inventory[key]||0)>=count)continue;
   if(recipes[key])return toolPlan(a,key,depth+1);
-  return {item:input==='branch'?'timber':key,quantity:count-(a.inventory[key]||0)};
+  return {item:input==='branch'?'timber':key,quantity:count-(a.inventory[key]||0),intermediate:item};
  }
- return {craft:item,minutes:recipe.minutes,label:'Make '+TOOL_NAMES[item]};
+ return {craft:item,intermediate:item,minutes:recipe.minutes,label:'Make '+TOOL_NAMES[item]};
 }
-export function preparationFor(a,part){
+export function preparationFor(a,part,project){
  const spec=constructionSpec(part);
  if(spec.tool&&!a.inventory[spec.tool])return {...toolPlan(a,spec.tool),goal:spec.tool,goalQuantity:1};
  // Useful practice produces actual worked poles; these retain their wood mass.
  if(spec.skill&&practiceMinutes(a,spec.skill)<spec.minutes)return toolPlan(a,'woodPole');
- if(!part.invested&&spec.binding>(a.inventory.cordage||0))return {...toolPlan(a,'cordage'),goal:'cordage',goalQuantity:spec.binding-(a.inventory.cordage||0)};
+ const binding=bindingCoils(part,project);
+ if(!part.invested&&binding>(a.inventory.cordage||0))return {...toolPlan(a,'cordage'),goal:'cordage',goalQuantity:binding-(a.inventory.cordage||0)};
  return null;
 }
 export function craftTool(w,a,item){

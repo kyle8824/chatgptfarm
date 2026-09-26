@@ -8,8 +8,10 @@ export function updateImprovementGoal(w,a){
   const project=w.settlement.projects.find(p=>p.id===goal.projectId);
   if(project&&project.status!=='complete'){
    goal.status='working';goal.pausedFor=['hydration','hunger','energy'].find(k=>a.needs[k]<20)||null;
-   const part=project.parts.find(p=>!p.built&&(p.requires||[]).every(id=>project.parts.find(x=>x.id===id)?.built));
+   const job=a.task?.selected?.job;
+   const part=project.parts.find(p=>p.id===(job?.projectId===project.id?job.partId:null))||project.parts.find(p=>!p.built&&(p.requires||[]).every(id=>project.parts.find(x=>x.id===id)?.built));
    goal.nextStep=part?`${part.invested?'Finish assembling':'Prepare and assemble'} ${part.id}`:'Check the remaining supports';
+   if(job?.projectId===project.id&&job.kind==='supply_trip')goal.nextStep=`${a.task.supplyJourney?.stage==='return'?'Bring back':'Collect'} ${job.source.item} for this project`;
    return goal;
   }
   if(goal.status!=='satisfied'){goal.status='satisfied';goal.completedAt=now;goal.nextStep='Use the finished work and learn what needs improving';goal.pausedFor=null;}

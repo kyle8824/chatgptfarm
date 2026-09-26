@@ -1,4 +1,5 @@
 import {completeStages} from './construction-stages.mjs';
+import {supplyTripCandidate,pendingSupplyTrips} from './supply-journey.mjs';
 import {naturalWorld} from '../shared/landscape.js';
 import {treadHeight} from './climbing.mjs';
 import {homeAccount} from '../shared/frontier.js';
@@ -6,7 +7,7 @@ import {knownPlace} from './frontier-knowledge.mjs';
 import {conditionOf,structurePerformance,activeParts} from '../shared/structure-performance.js';
 import {recordWorkmanship,workQuality,noteStructureProblem} from './structure-lifecycle.mjs';
 import {coverEffectiveness} from './structures.mjs';
-import {constructionSpec,constructionBlockers} from '../shared/craft.js';
+import {constructionSpec,constructionBlockers,bindingCoils,bindingLength,CORDAGE_LENGTH_MM} from '../shared/craft.js';
 import {recordPractice} from '../engine/craft-practice.js';
 import {preparationFor,craftTool,toolPlan} from './crafting.mjs';
 import {materialSources,harvestSite} from './resource-sites.mjs';
@@ -35,8 +36,8 @@ function assemblyPoint(w,a,p,part){
  return interactionPoint(w,a,{x,y},{radius:.8,extra:options,accept:q=>Math.hypot(Math.max(b.minX-q.x,q.x-b.maxX,0),Math.max(b.minZ-q.y,q.y-b.maxZ,0))<=1.6&&(!(p.purpose==='storage'||p.affordances?.storage?.enclosed)||q.x<=bb.minX-.4||q.x>=bb.maxX+.4||q.y<=bb.minZ-.4||q.y>=bb.maxZ+.4)});
 }
 export function materialNeed(p,material){return p.parts.filter(x=>!x.built&&!x.invested&&x.material===material).reduce((n,x)=>n+x.materialUnits,0);}
-export function findMaterialSource(w,a,material){
- const sources=[];for(const s of w.settlement.stores)if(knownPlace(w,a,s)&&allowed(a,s)&&(s.kind!=='site'||w.settlement.projects.find(p=>p.id===s.projectId)?.status==='complete')&&units(s,material)>0&&!(material==='timber'&&a.needs.warmth<40&&s.id===homeAccount(w,'camp-drying')&&units(s,'timber')<=2))sources.push({kind:'take',storeId:s.id,position:s.position,item:materialKeys[material].find(k=>s.items[k]>0)});
+export function findMaterialSource(w,a,material,{range=45,projectId=null}={}){
+ const sources=[];for(const s of w.settlement.stores)if(knownPlace(w,a,s)&&allowed(a,s)&&(s.kind!=='site'||s.projectId===projectId||w.settlement.projects.find(p=>p.id===s.projectId)?.status==='complete')&&units(s,material)>0&&!(material==='timber'&&a.needs.warmth<40&&s.id===homeAccount(w,'camp-drying')&&units(s,'timber')<=2))sources.push({kind:'take',storeId:s.id,position:s.position,item:materialKeys[material].find(k=>s.items[k]>0)});
  if(material==='timber'){
   // Build a fresh projection once per query. Re-scanning every wood batch
   // for each remembered tree made planning quadratic as exploration grew.
@@ -45,13 +46,25 @@ export function findMaterialSource(w,a,material){
   for(const t of w.settlement.trees)if(knownPlace(w,a,t)&&(timber.get(t.id)||0)>0&&(a.inventory.boundSharpTool>0||!(t.handGathered>=1)))sources.push({kind:'harvest',treeId:t.id,position:t.position,item:'wetWood'});
  }
  if(material==='timber'){const log=w.worldModel.objects.find(o=>o.type==='fallen_tree'&&(!w.homeContext||(o.homeId||'willow-basin')===w.homeContext.id));if(log)for(const item of ['dryWood','wetWood'])if(w.resources[item]>0)sources.push({kind:'fallen',position:log.position,item});}
- for(const node of materialSources(w,material,a))sources.push({kind:'gather',nodeId:node.nodeId,resource:node.resource,position:node.position,item:node.item,sourceId:node.id});
- return sources.filter(s=>!naturalWorld(w)||distance(a.coordinates,s.position)<=45).sort((x,y)=>distance(a.coordinates,x.position)-distance(a.coordinates,y.position));
+ for(const node of materialSources(w,material,a))sources.push({kind:'gather',nodeId:node.nodeId,resource:node.resource,position:node.position,item:node.item,sourceId:node.id,homeId:node.homeId});
+ return sources.filter(s=>!naturalWorld(w)||distance(a.coordinates,s.position)<=range).sort((x,y)=>distance(a.coordinates,x.position)-distance(a.coordinates,y.position));
+}
+function itemSources(w,a,item,p){
+ const sources=w.settlement.stores.filter(s=>knownPlace(w,a,s)&&allowed(a,s)&&s.items[item]>0&&(s.kind!=='site'||s.projectId===p?.id||w.settlement.projects.find(p=>p.id===s.projectId)?.status==='complete')).map(s=>({kind:'take',storeId:s.id,item,position:s.position}));
+ for(const n of w.resourceSites.nodes)if(n.item===item&&n.remaining>0&&(n.knownBy.includes(a.id)||distance(a.coordinates,n.position)<9))sources.push({kind:'gather',nodeId:n.id,item,position:n.position});
+ return sources.sort((s,t)=>distance(a.coordinates,s.position)-distance(a.coordinates,t.position));
 }
 export function settlementCandidates(w,a){
- if(!w.settlement)return [];const result=comfortCandidates(w,a),l=loadOf(w,a),full=l.mass>CARRY.mass*.72||l.volume>CARRY.volume*.72;
+ if(!w.settlement)return [];const result=[...comfortCandidates(w,a),...pendingSupplyTrips(w,a)],l=loadOf(w,a),full=l.mass>CARRY.mass*.72||l.volume>CARRY.volume*.72;
  const offer=(id,label,score,job,position,opts={})=>{if(a.liveFailures?.[id]&&clock(w)-a.liveFailures[id].at<10)return;if(w.frontier&&distance(a.coordinates,position)>80)return;const store=job.storeId?storeBy(w,job.storeId):null;const destination=interactionPoint(w,a,position,{...opts,radius:store?.radius?store.radius+.65:opts.radius||1.15});if(destination)result.push({id,label,score:score-distance(a.coordinates,destination)*.18,reasons:[['physical task',score]],job:{...job,destination,position}});};
  const craftKeep={};
+ const offerSupply=(id,label,score,source,p,quantity,{deliver=false}={})=>{
+  if(!roomFor(w,a,source.item))return false;
+  const before=result.length;
+  if(distance(a.coordinates,source.position)<=45)offer(id,label,score,{...source,projectId:p?.id,quantity,minutes:source.kind==='harvest'?6:source.kind==='take'?.5:2},source.position);
+  if(result.length>before)return true;
+  const trip=supplyTripCandidate(w,a,p,source,quantity,{score,deliver});if(trip){result.push(trip);return true;}return false;
+ };
  for(const s of w.settlement.stores.filter(s=>s.kind==='site'&&!s.folded&&allowed(a,s)&&knownPlace(w,a,s)&&w.settlement.projects.find(p=>p.id===s.projectId)?.status==='complete')){
   const item=Object.keys(s.items).find(k=>s.items[k]>0);
   if(item){if(roomFor(w,a,item))offer('clear_rack:'+s.id,'Clear spare materials from the finished building rack',56,{kind:'take',storeId:s.id,item,quantity:Math.min(4,roomFor(w,a,item)),minutes:.75},s.position);}
@@ -63,25 +76,33 @@ export function settlementCandidates(w,a){
   for(const key of ['stones','reeds','cordage','woodPole','sharpStone','boundSharpTool','dryWood','wetWood'])craftKeep[key]=Math.max(craftKeep[key]||0,Math.min(a.inventory[key]||0,{stones:2,reeds:3,cordage:1,woodPole:1,sharpStone:1,boundSharpTool:1,dryWood:1,wetWood:1}[key]));
   // A binding/tool already made by real work can be fetched. Recursing
   // straight into its raw recipe stranded builds beside stocked containers.
-  if(plan.goal){
-   craftKeep[plan.goal]=Math.max(craftKeep[plan.goal]||0,a.inventory[plan.goal]||0);
-   const stores=w.settlement.stores.filter(s=>knownPlace(w,a,s)&&allowed(a,s)&&s.items[plan.goal]>0&&distance(a.coordinates,s.position)<45&&(s.kind!=='site'||s.projectId===p?.id||w.settlement.projects.find(p=>p.id===s.projectId)?.status==='complete')).sort((s,t)=>distance(a.coordinates,s.position)-distance(a.coordinates,t.position));
-   for(const s of stores){if(!roomFor(w,a,plan.goal))break;const before=result.length;offer(`fetch_tool:${p?.id||'practice'}:${s.id}:${plan.goal}`,`Collect stored ${plan.goal} for ${p?.name||'the work'}`,score+4,{kind:'take',projectId:p?.id,storeId:s.id,item:plan.goal,quantity:plan.goalQuantity||1,minutes:.5},s.position);if(result.length>before)return;}
+  const finished=[];
+  for(const goal of new Set([plan.goal,plan.intermediate].filter(Boolean))){
+   craftKeep[goal]=Math.max(craftKeep[goal]||0,a.inventory[goal]||0);
+   if(goal!==plan.goal&&(a.inventory[goal]||0)>=1)continue;
+   finished.push(...itemSources(w,a,goal,p).map(source=>({source,quantity:goal===plan.goal?plan.goalQuantity||1:1})));
   }
+  const fetch=({source,quantity})=>offerSupply(`fetch_tool:${p?.id||'practice'}:${source.storeId||source.nodeId}:${source.item}`,`Collect ${source.item} for ${p?.name||'the work'}`,score+4,source,p,quantity);
+  for(const option of finished.filter(x=>distance(a.coordinates,x.source.position)<=45))if(fetch(option))return;
   if(plan.craft){const id=`craft:${plan.craft}`;if(!a.liveFailures?.[id]||clock(w)-a.liveFailures[id].at>=10)result.push({id,label:plan.label,score,reasons:[['construction prerequisite',score]],job:{kind:'craft',item:plan.craft,projectId:p?.id,destination:{...a.coordinates},minutes:plan.minutes}});return;}
   const material={stones:'stone',reeds:'reeds',timber:'timber'}[plan.item];
   if(!material)return;
-  for(const source of findMaterialSource(w,a,material)){if(!roomFor(w,a,source.item))continue;const before=result.length;offer(`tool_supply:${source.treeId||source.storeId||source.sourceId||source.item}`,`Collect ${plan.item} for tools and joints`,score,{...source,projectId:p?.id,quantity:plan.quantity,minutes:source.kind==='harvest'?6:2},source.position);if(result.length>before)return;}
-  result.push({id:'explore',label:'Explore for tool materials',score:score-12,reasons:[['missing known tool supplies',score-12]]});
+  const substitute=plan.item==='reeds'?'longFiber':plan.item==='stones'?'flint':null;
+  const inputs=[...(substitute?itemSources(w,a,substitute,p).map(source=>({source,quantity:1})):[]),...findMaterialSource(w,a,material,{range:Infinity,projectId:p?.id}).map(source=>({source,quantity:plan.quantity}))].sort((x,y)=>distance(a.coordinates,x.source.position)-distance(a.coordinates,y.source.position));
+  const collect=({source,quantity})=>offerSupply(`tool_supply:${source.treeId||source.storeId||source.nodeId||source.sourceId||source.item}`,`Collect ${source.item} for tools and joints`,score,source,p,quantity);
+  for(const option of inputs.filter(x=>distance(a.coordinates,x.source.position)<=45).slice(0,12))if(collect(option))return;
+  for(const option of finished.filter(x=>distance(a.coordinates,x.source.position)>45))if(fetch(option))return;
+  for(const option of inputs.filter(x=>distance(a.coordinates,x.source.position)>45).slice(0,12))if(collect(option))return;
+  result.push({id:'explore',label:'Explore for tool materials',projectId:p?.id,score:score-12,reasons:[['missing known tool supplies',score-12]]});
  };
  const maintenance=w.settlement.projects.filter(p=>knownPlace(w,a,p)&&(p.ownerId===a.id||p.access==='shared')&&!p.supersededBy);
  for(const p of maintenance){if(naturalWorld(w)&&distance(a.coordinates,p.position)>60)continue;
   const part=p.parts.find(x=>x.built&&conditionOf(x)<(p.maintenanceRequested?.by===a.id?.95:.65)&&(x.requires||[]).every(id=>conditionOf(p.parts.find(x=>x.id===id))>.12));if(!part)continue;
   const repairing=p.repair?.partId===part.id?p.repair:null,needed=repairing?.materialUnits??Math.max(1,Math.ceil(part.materialUnits*(conditionOf(part)<=.12?1:.35)));
-  const repairPart={...part,invested:!!repairing?.invested,materialUnits:needed},plan=preparationFor(a,repairPart),base=30+(1-conditionOf(part))*40+(p.maintenanceRequested?.by===a.id?15:0);
+  const repairPart={...part,invested:!!repairing?.invested,materialUnits:needed},plan=preparationFor(a,repairPart,p),base=30+(1-conditionOf(part))*40+(p.maintenanceRequested?.by===a.id?15:0);
   if(plan){offerPreparation(plan,p,base+5);continue;}
   for(const k of materialKeys[part.material])craftKeep[k]=Math.max(craftKeep[k]||0,Math.min(a.inventory[k]||0,needed));
-  craftKeep.cordage=Math.max(craftKeep.cordage||0,constructionSpec(part).binding);
+  craftKeep.cordage=Math.max(craftKeep.cordage||0,bindingCoils(part,p));
   if(repairing?.invested||units(a,part.material)>=needed){const destination=assemblyPoint(w,a,p,part);if(destination&&(!a.liveFailures?.[`repair:${p.id}:${part.id}`]||clock(w)-a.liveFailures[`repair:${p.id}:${part.id}`].at>=10))result.push({id:`repair:${p.id}:${part.id}`,label:`Repair ${part.id} · ${p.name}`,score:base,reasons:[['restore useful construction',base]],job:{kind:'repair',projectId:p.id,partId:part.id,destination,minutes:6+needed*3}});}
   else for(const source of findMaterialSource(w,a,part.material)){if(!roomFor(w,a,source.item))continue;const before=result.length;offer(`repair_supply:${p.id}:${source.treeId||source.storeId||source.sourceId||source.item}`,`Collect repair material for ${p.name}`,base,{...source,quantity:needed-units(a,part.material),minutes:source.kind==='harvest'?6:2},source.position);if(result.length>before)break;}
  }
@@ -101,14 +122,14 @@ export function settlementCandidates(w,a){
   // Source order is not a compulsory construction sequence. Finish invested
   // work, or use carried/racked materials on another supported component,
   // before chasing a missing prerequisite for the first part in the program.
-  const prepared=available.filter(part=>!preparationFor(a,part)),ready=prepared.find(part=>part.invested)||prepared.find(part=>units(a,part.material)>=part.materialUnits)||prepared.find(part=>units(a,part.material)+units(stock,part.material)>=part.materialUnits)||available[0];
+  const prepared=available.filter(part=>!preparationFor(a,part,p)),ready=prepared.find(part=>part.invested)||prepared.find(part=>units(a,part.material)>=part.materialUnits)||prepared.find(part=>units(a,part.material)+units(stock,part.material)>=part.materialUnits)||available[0];
   if(ready)nextParts.set(p.id,ready);
   if(stock.folded){offer('unfold_rack:'+stock.id,'Set up the reused building rack for '+p.name,base+20,{kind:'unfold_rack',storeId:stock.id,projectId:p.id,minutes:1.5},stock.position);continue;}
   // A fetched binding remains a construction input even after preparation
   // becomes satisfied. Otherwise ordinary cargo handling puts it straight
   // back, and the next decision fetches the same cord again.
-  if(ready&&!ready.invested)craftKeep.cordage=Math.max(craftKeep.cordage||0,constructionSpec(ready).binding);
-  const preparation=ready&&preparationFor(a,ready);if(preparation){offerPreparation(preparation,p);continue;}
+  if(ready&&!ready.invested)craftKeep.cordage=Math.max(craftKeep.cordage||0,bindingCoils(ready,p));
+  const preparation=ready&&preparationFor(a,ready,p);if(preparation){offerPreparation(preparation,p);continue;}
   if(ready&&!(a.liveFailures?.[`build:${p.id}:${ready.id}`]&&clock(w)-a.liveFailures[`build:${p.id}:${ready.id}`].at<10)&&(ready.invested||units(a,ready.material)>=ready.materialUnits)){
    const destination=assemblyPoint(w,a,p,ready);if(destination)result.push({id:`build:${p.id}:${ready.id}`,label:`Assemble ${ready.id} · ${p.name}`,score:base+12,reasons:[['planned construction',base]],job:{kind:'assemble',projectId:p.id,partId:ready.id,destination,minutes:ready.requiredMinutes}});
   }
@@ -117,17 +138,18 @@ export function settlementCandidates(w,a){
    const missing=materialNeed(p,material)-units(stock,material);if(missing<=0)continue;
    const carried=materialKeys[material].find(k=>a.inventory[k]>0);
    if(carried)offer(`deliver:${p.id}:${material}`,`Carry ${material} to ${p.name}`,base+9,{kind:'deliver',projectId:p.id,storeId:stock.id,item:carried,quantity:missing,minutes:.5},stock.position);
-   else if(!full){const sources=findMaterialSource(w,a,material);if(!sources.length&&material==='timber'&&!a.inventory.boundSharpTool)offerPreparation(toolPlan(a,'boundSharpTool'),p);if(!sources.length)result.push({id:'explore',label:'Explore for '+material+' · '+p.name,projectId:p.id,score:base+4,reasons:[['missing locally known building material',base+4]]});for(const source of sources.slice(0,12)){if(!roomFor(w,a,source.item))continue;const before=result.length;offer(`supply:${p.id}:${source.treeId||source.storeId||source.sourceId||source.resource}`,`Collect ${material} for ${p.name}`,base+(ready?.material===material?4:0),{...source,projectId:p.id,quantity:Math.min(4,missing),minutes:source.kind==='harvest'?3:1.5},source.position);if(result.length>before)break;}}
+   else if(!full){const sources=findMaterialSource(w,a,material,{range:Infinity});if(!sources.length&&material==='timber'&&!a.inventory.boundSharpTool)offerPreparation(toolPlan(a,'boundSharpTool'),p);if(!sources.length)result.push({id:'explore',label:'Explore for '+material+' · '+p.name,projectId:p.id,score:base+4,reasons:[['missing locally known building material',base+4]]});for(const source of sources.slice(0,12))if(offerSupply(`supply:${p.id}:${source.treeId||source.storeId||source.sourceId||source.resource}`,`Collect ${material} for ${p.name}`,base+(ready?.material===material?4:0),source,p,Math.min(4,missing),{deliver:true}))break;}
   }
  }
  // Keep a little food and tools on the body, put bulk goods in owned storage.
  const nextPart=nextParts.get(projects[0]?.id),food=FOOD.find(k=>a.inventory[k]>0),tool=a.inventory.boundSharpTool?'boundSharpTool':'sharpStone';
  const keep=Object.fromEntries(Object.keys(a.inventory).map(k=>[k,k===food?2:['resin','flint','longFiber','potteryClay'].includes(k)?2:projects.length?(k===tool?1:0):['sharpStone','boundSharpTool','firedVessel'].includes(k)?1:0]));
  for(const [key,n]of Object.entries(craftKeep))keep[key]=Math.max(keep[key]||0,n);
+ for(const t of [a.task,...(a.suspendedTasks||[])])for(const [key,n]of Object.entries(t?.supplyJourney?.collected||{}))keep[key]=Math.max(keep[key]||0,Math.min(n,a.inventory[key]||0));
  if(a.freeTime?.practice&&clock(w)-a.freeTime.practice.at<240)for(const key of ['stones','reeds','cordage','woodPole','sharpStone','boundSharpTool','dryWood','wetWood'])keep[key]=Math.max(keep[key]||0,Math.min(a.inventory[key]||0,{stones:2,reeds:3,cordage:1,woodPole:1,sharpStone:1,boundSharpTool:1,dryWood:1,wetWood:1}[key]));
- if(nextPart&&!nextPart.invested){let n=nextPart.materialUnits;for(const k of materialKeys[nextPart.material]){keep[k]=Math.min(n,a.inventory[k]||0);n-=keep[k];}}
+ if(nextPart&&!nextPart.invested){let n=nextPart.materialUnits;for(const k of materialKeys[nextPart.material]){const needed=Math.min(n,a.inventory[k]||0);keep[k]=Math.max(keep[k]||0,needed);n-=needed;}}
  // Keep the raw branches needed for a basic shelter through ordinary cargo handling.
- if(a.needs.warmth<40&&!w.structures.shelter){let reserve=4;for(const k of ['dryWood','wetWood']){keep[k]=Math.max(keep[k]||0,Math.min(reserve,a.inventory[k]||0));reserve-=Math.min(reserve,a.inventory[k]||0);}}
+ if(a.needs.warmth<40&&!w.structures.fire){let reserve=w.structures.shelter?2:4;for(const k of ['dryWood','wetWood']){keep[k]=Math.max(keep[k]||0,Math.min(reserve,a.inventory[k]||0));reserve-=Math.min(reserve,a.inventory[k]||0);}}
  const depositKeys=Object.entries(a.inventory).filter(([k,n])=>n>(keep[k]||0)).map(([k])=>k);
  const assemblyLoadBlocked=projects.some(p=>{const part=nextParts.get(p.id);if(!part||part.invested)return false;const key=materialKeys[part.material][0];return roomFor(w,a,key)+units(a,part.material)<part.materialUnits;});
  if(depositKeys.length){const preferred=w.settlement.stores.filter(s=>(!naturalWorld(w)||knownPlace(w,a,s)&&distance(a.coordinates,s.position)<40)&&s.kind!=='site'&&allowed(a,s)&&depositKeys.some(k=>roomFor(w,s,k))).sort((x,y)=>(['storage','platform'].includes(x.kind)?0:20)-(['storage','platform'].includes(y.kind)?0:20)+distance(x.position,a.coordinates)-distance(y.position,a.coordinates));
@@ -149,12 +171,12 @@ function recordTaking(w,a,s,key,count){
 }
 export function noticeMissingSupplies(w,a){for(const incident of w.settlement.incidents){if(incident.discovered||incident.ownerId!==a.id)continue;const s=storeBy(w,incident.storeId);if(s&&distance(s.position,a.coordinates)<2){incident.discovered=true;a.propertyConcern=(a.propertyConcern||0)+1;remember(w,a,`Some ${incident.item} are missing from my supplies. I did not see who took them; I want safer storage.`,{importance:9,tags:['ownership','missing','protection']});}}}
 function investPart(w,a,p,part){
- let need=part.materialUnits;const binding=constructionSpec(part).binding;if(units(a,part.material)<need||(a.inventory.cordage||0)<binding)return false;
+ let need=part.materialUnits;const binding=bindingCoils(part,p);if(units(a,part.material)<need||(a.inventory.cordage||0)<binding)return false;
  for(const key of materialKeys[part.material]){const q=Math.min(a.inventory[key]||0,need);if(!q)continue;
   if(WOOD[key])woodCommand(w,a,{from:{kind:'carried',id:a.id},to:{kind:'stored',id:`component:${p.id}:${part.id}`},quantity:q,category:key,inputForm:'branch',outputForm:'shelter-component',reason:`install carried material in ${part.id} of ${p.name}`});
   else{a.inventory[key]-=q;(part.materials??={})[key]=(part.materials[key]||0)+q;}
   need-=q;if(!need)break;
- }if(binding){a.inventory.cordage-=binding;part.bindingUsed=binding;}part.invested=true;syncHoldings(w);if(part.material==='timber'){const batches=w.wood.batches.filter(b=>b.holder.id===`component:${p.id}:${part.id}`);part.woodWaterRatio=batches.reduce((n,b)=>n+b.waterKg,0)/Math.max(.001,batches.reduce((n,b)=>n+b.dryKg,0));}return true;
+ }const length=bindingLength(part);if(length){a.inventory.cordage-=binding;p.bindingStockMm=(p.bindingStockMm||0)+binding*CORDAGE_LENGTH_MM-length;p.bindingCoilsOpened=(p.bindingCoilsOpened||0)+binding;part.bindingUsed=length/CORDAGE_LENGTH_MM;part.bindingLengthMm=length;}part.invested=true;syncHoldings(w);if(part.material==='timber'){const batches=w.wood.batches.filter(b=>b.holder.id===`component:${p.id}:${part.id}`);part.woodWaterRatio=batches.reduce((n,b)=>n+b.waterKg,0)/Math.max(.001,batches.reduce((n,b)=>n+b.dryKg,0));}return true;
 }
 export function workSettlement(w,a,t,minutes){
  const j=t.selected.job,s=j.storeId?storeBy(w,j.storeId):null,p=j.projectId?w.settlement.projects.find(p=>p.id===j.projectId):null;
@@ -173,7 +195,7 @@ export function workSettlement(w,a,t,minutes){
   if(p.repair&&p.repair.partId!==part.id)return fail('Another component is already being repaired.');
   const r=p.repair??={partId:part.id,materialUnits:Math.max(1,Math.ceil(part.materialUnits*(conditionOf(part)<=.12?1:.35))),replacementFraction:conditionOf(part)<=.12?1:.35,workMinutes:0};
   const proxy={...part,materials:{},id:'repair-'+part.id+'-'+(part.repairs||0),materialUnits:r.materialUnits,invested:r.invested,bindingUsed:r.bindingUsed};
-  const blockers=constructionBlockers(a,proxy);if(blockers.length)return fail(blockers.join('; '));
+  const blockers=constructionBlockers(a,proxy,p);if(blockers.length)return fail(blockers.join('; '));
   if(!r.invested){if(!investPart(w,a,p,proxy))return fail('Repair supplies must be carried to the damaged component.');r.invested=true;r.bindingUsed=proxy.bindingUsed||0;r.materials=proxy.materials;r.woodWaterRatio=proxy.woodWaterRatio??0;}
   r.requiredMinutes=6+r.materialUnits*3;const worked=Math.min(minutes,r.requiredMinutes-r.workMinutes);r.workMinutes+=worked;(r.contributions??={})[a.id]=(r.contributions?.[a.id]||0)+worked;
   t.workMinutes=r.workMinutes;t.requiredMinutes=r.requiredMinutes;p.revision++;w.settlement.revision++;
@@ -186,7 +208,7 @@ export function workSettlement(w,a,t,minutes){
  }
  if(j.kind==='assemble'){
   const part=p?.parts.find(x=>x.id===j.partId);if(!part||part.built)return {done:true,success:true,detail:'This part is already in place.'};
-  const blockers=constructionBlockers(a,part);if(blockers.length)return fail(blockers.join('; '));
+  const blockers=constructionBlockers(a,part,p);if(blockers.length)return fail(blockers.join('; '));
   if(part.requires.some(id=>!activeParts(p).has(id)))return fail('The supporting parts must be built and sound before assembly.');
   if((p.purpose==='storage'||p.affordances?.storage)&&part.kind==='wall'&&w.agents.some(b=>b.coordinates.x>p.bounds.minX-.25&&b.coordinates.x<p.bounds.maxX+.25&&b.coordinates.y>p.bounds.minZ-.25&&b.coordinates.y<p.bounds.maxZ+.25)){t.obstructionMinutes=(t.obstructionMinutes||0)+minutes;return t.obstructionMinutes>=2?fail('Someone is occupying the wall area; do other useful work before retrying.'): {done:false};}
   t.obstructionMinutes=0;const b=partBounds(p,part),dx=Math.max(b.minX-a.coordinates.x,a.coordinates.x-b.maxX,0),dy=Math.max(b.minZ-a.coordinates.y,a.coordinates.y-b.maxZ,0);
@@ -239,7 +261,7 @@ export function workSettlement(w,a,t,minutes){
   if(!q)return fail('No timber or carrying room remains.');woodCommand(w,a,{from:{kind:'ground',id:tree.id},quantity:q,category:'any',reason:'cut finite standing timber at the tree'});if(!a.inventory.boundSharpTool)tree.handGathered=(tree.handGathered||0)+q;else recordPractice(w,a,'woodworking',t.requiredMinutes,'Cut timber with a hafted edge');tree.depleted=treeUnits(w,tree)===0;w.settlement.revision++;return {done:true,success:true,detail:`${a.name} ${a.inventory.boundSharpTool?'cut':'snapped a small accessible branch and carried'} ${q} wood units from a real tree.`};
  }
  if(j.kind==='gather'){
-  if(distance(a.coordinates,j.position)>1.9)return fail('The resource is beyond reach.');const node=j.nodeId?w.resourceSites?.nodes.find(n=>n.id===j.nodeId):null;if(j.nodeId&&(!node||node.item!==j.item||distance(a.coordinates,node.position)>1.9))return fail('The material deposit is unavailable or out of reach.');const q=j.nodeId?harvestSite(w,j.nodeId,Math.min(j.quantity,roomFor(w,a,j.item)),a.id):Math.max(0,Math.min(w.resources[j.resource]||0,j.quantity,roomFor(w,a,j.item)));if(!j.nodeId)w.resources[j.resource]-=q;a.inventory[j.item]=(a.inventory[j.item]||0)+q;return {done:true,success:q>0,detail:`${a.name} gathered ${q} ${j.item} for construction.`};
+  if(distance(a.coordinates,j.position)>1.9)return fail('The resource is beyond reach.');const node=j.nodeId?w.resourceSites?.nodes.find(n=>n.id===j.nodeId):null;if(j.nodeId&&(!node||node.item!==j.item||distance(a.coordinates,node.position)>1.9))return fail('The material deposit is unavailable or out of reach.');const root=w.rootWorld||w,account=j.homeId&&j.homeId!=='willow-basin'?root.frontier?.homes.find(h=>h.id===j.homeId)?.resources:j.homeId?root.resources:w.resources;if(!account)return fail('The remembered resource account is unavailable.');const q=j.nodeId?harvestSite(w,j.nodeId,Math.min(j.quantity,roomFor(w,a,j.item)),a.id):Math.max(0,Math.min(account[j.resource]||0,j.quantity,roomFor(w,a,j.item)));if(!j.nodeId)account[j.resource]-=q;a.inventory[j.item]=(a.inventory[j.item]||0)+q;return {done:true,success:q>0,detail:`${a.name} gathered ${q} ${j.item} for construction.`};
  }return fail('Unknown physical job.');
 }
 

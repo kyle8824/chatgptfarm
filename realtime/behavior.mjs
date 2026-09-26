@@ -72,7 +72,7 @@ export function liveCandidates(w,a,candidates){
 export function rememberFailure(w,a,t,detail){
  const key=resourceFor[t.actionId];if(key)a.resourceObservations??={};
  if(key&&w.resources[key]<=0)a.resourceObservations[key]={band:'depleted',quantity:0,day:w.day,hour:w.hour};
- (a.liveFailures??={})[t.actionId]={at:clock(w),retryMinutes:t.selected?.job||/route/i.test(detail)?10:key==='dryWood'?240:180,detail};
+ (a.liveFailures??={})[t.actionId]={at:clock(w),retryMinutes:t.selected?.job?.kind==='supply_trip'?60:t.selected?.job||/route/i.test(detail)?10:key==='dryWood'?240:180,detail};
  const entries=Object.entries(a.liveFailures).sort((a,b)=>b[1].at-a[1].at).slice(0,16);a.liveFailures=Object.fromEntries(entries);
 }
 export function shouldInterruptForNeed(w,a,need){
