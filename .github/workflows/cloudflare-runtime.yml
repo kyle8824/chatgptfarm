@@ -21,6 +21,8 @@ jobs:
       - run: node realtime/survival-route-test.mjs && node realtime/ambition-test.mjs && node realtime/remote-survival-test.mjs && node realtime/thermal-return-test.mjs
       - run: node scripts/runtime-test.mjs
       - run: npm test --prefix cloudflare
+      - run: node realtime/persistence-test.mjs && node realtime/planner-budget-test.mjs && node realtime/cloudflare-budget-test.mjs
+      - run: TEST_FRONTIER=1 TEST_LANDSCAPE=1 STREAM_TEST_MS=60000 node realtime/workerd-test.mjs
       - run: npm run test:worker --prefix cloudflare
       - run: npm run check --prefix cloudflare
         env:
