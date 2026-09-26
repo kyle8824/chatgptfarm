@@ -37,7 +37,7 @@ export function returnCandidate(w,a){
  // villager crosses the camp radius, turns back, resumes the same forage and
  // repeats indefinitely without ever reaching the berries or getting warm.
  const protection=knownCampProtection(w,a,h),heatReady=protection.fire||protection.fuel||a.inventory.dryWood>=1;
- if(!heatReady&&a.task&&a.needs.hunger<75&&/^(forage:|survey:|gather_berries|retrieve_food:|eat_)/.test(a.task.actionId)){
+ if(!heatReady&&a.task&&/^(forage:|survey:|gather_berries|retrieve_food:|eat_)/.test(a.task.actionId)){
   const foodGoal=j?.destination||coordForPosition(a.task.targetPosition,w);
   if(foodGoal&&distance(foodGoal,h)<=45&&distance(a.coordinates,h)<=50)return null;
  }

@@ -24,6 +24,10 @@ const LOCAL_ACTION_RANGE=30;
 const canUseCamp=(w,a)=>!naturalWorld(w)||distance(a.coordinates,coordForPosition('camp',w))<=LOCAL_ACTION_RANGE;
 export function liveUrgency(w,a){
  const n=a.needs;
+ // Finish a short, productive drink/meal already in progress. Switching
+ // between two empty meters after the first sip strands long food journeys.
+ const consuming=a.task?.phase==='work'&&(a.task.actionId==='drink'&&a.task.interactionReady!==false?'hydration':/^eat_/.test(a.task.actionId)?'hunger':null);
+ if(consuming&&n[consuming]<35)return consuming;
  // An unfixable cold deficit must not indefinitely veto water, food and rest.
  // Shelter reduces exposure; it does not generate heat.
  if(n.hydration<12)return 'hydration';if(n.hunger<12)return 'hunger';if(n.energy<12)return 'energy';
@@ -67,6 +71,12 @@ export function liveCandidates(w,a,candidates){
  const familyNeed=familyFoodNeed(w,a);
  const returning=returnCandidate(w,a),exploration=explorationMotivation(w,a),all=[...ordinary,...coldPreparationCandidates(w,a),...settlementCandidates(w,a),...freeTimeCandidates(w,a),...parentingCandidates(w,a),...economyCandidates(w,a),...(returning?[returning]:[])].filter(c=>c.id!=='explore'||exploration.allowed).map(c=>c.id==='explore'?{...c,score:c.score-exploration.penalty,explanation:exploration.reason,reasons:[...(c.reasons||[]),['remembered exploration yield',-exploration.penalty]]}:c).map(c=>familyNeed&&/^(gather_berries|forage:|survey:|retrieve_food:)/.test(c.id)?{...c,score:c.score+familyNeed,explanation:'Collect finite food for a dependent child.'}:c).sort((x,y)=>y.score-x.score||x.id.localeCompare(y.id));
  const useful=all.filter(c=>!(family(c.id)==='energy'&&a.needs.energy>=85)&&usefulRestChoice(w,a,c)&&!knownUnavailable(w,a,c.id)).map(c=>{const bonus=interestBonus(a,c)+improvementBonus(a,c);return {...c,score:c.score+bonus,reasons:[...(c.reasons||[]),['personal interest, satisfaction and ongoing improvement',bonus]]};}).filter(c=>c.score>0).sort((x,y)=>y.score-x.score||x.id.localeCompare(y.id));
+ // If the primary critical need has no available action (for example a
+ // water-route cooldown), address another critical need before optional work
+ // or a distant cold return. The action selector still chooses the primary
+ // need whenever it has a usable response.
+ const critical=['hydration','hunger','energy'].find(k=>a.needs[k]<12&&useful.some(c=>family(c.id)===k));
+ if(critical)return useful.filter(c=>family(c.id)===critical);
  return useful.length?useful.filter((c,i)=>useful.findIndex(x=>x.id===c.id)===i):willingToRest(w,a)?[{id:'rest',label:'Rest and reconsider',score:1,reasons:[['no useful available action',1]]}]:[{id:'reconsider',label:'Pause to reconsider available work',score:1,reasons:[['no useful reachable activity',1]],job:{kind:'reconsider',minutes:2,destination:{...a.coordinates}}}];
 }
 export function rememberFailure(w,a,t,detail){
@@ -92,6 +102,10 @@ export function shouldInterruptForNeed(w,a,need){
  delete t.unavailableUrgency;return true;
 }
 export function retireObsoleteTask(w,a){
+ // Older false arrivals classified a known site's route failure as a
+ // three-hour resource failure. Retain the failed attempt and its timestamp,
+ // but apply the existing route cooldown now that physical routing is fixed.
+ for(const [id,failure] of Object.entries(a.liveFailures||{}))if(/^(forage:|survey:)/.test(id)&&a.siteKnowledge?.[id.slice(id.indexOf(':')+1)]&&failure.detail?.includes('The site is not known or reachable.')&&failure.retryMinutes>10)failure.retryMinutes=10;
  const t=a.task;if(!t)return;
  if(isRestingTask(t)&&!willingToRest(w,a,t.selected?.job,t.destination||a.coordinates)){outcome(w,a,t,true,`${a.name} leaves an uncomfortable break to look for useful work or a more enjoyable activity.`,'superseded');a.task=null;return;}
  if(t.actionId==='seek_warmth'&&a.needs.warmth>=80){outcome(w,a,t,true,`${a.name} is warm enough to get on with the day.`);a.task=null;return;}

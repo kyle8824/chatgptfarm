@@ -1,3 +1,4 @@
+import {routedSurvival,survivalReach,beginSurvivalRoute} from './survival-route.mjs';
 import {naturalWorld} from '../shared/landscape.js';
 import {clearHeight} from './climbing.mjs';
 import {campLayout,campsOf,terrainWaypoints,terrainEdge} from '../shared/frontier.js';
@@ -38,7 +39,7 @@ export function liveClear(w,a,b,actor=null){
  return clearSegment(w,a,b,(world,p)=>liveWalkable(world,p,actor,false))&&clearHeight(w,a,b,actor);
 }
 export const MAX_ROUTE_SAMPLES=100000;
-export function liveRoute(w,from,to,actor=null,budget=null){
+export function liveRoute(w,from,to,actor=null,budget=null,{directOnly=false}={}){
  if(budget&&budget.remaining<=0)return null;
  if(!liveWalkable(w,to,actor))return null;let start=from,escape=null;
  // Old versions could save bodies inside a roof or fire footprint. Walk out
@@ -58,6 +59,7 @@ export function liveRoute(w,from,to,actor=null,budget=null){
  };
  let path;
  if(clear(start,to))path=[start,to];
+ else if(directOnly)return null;
  else{
   // Visibility routing through real doorway/corner clearances avoids grid
   // quantization and remains cheap enough for the running server.
@@ -102,6 +104,11 @@ export function chooseDestination(w,a,target,selected={}){
  // spots. Previously each of 80 bank spots got a full route search twice,
  // so a single unreachable drink could monopolize the simulation thread.
  const budget={remaining:MAX_ROUTE_SAMPLES},attempted=new Set();
+ // Check every cheap straight approach before a blocked near bank can spend
+ // the whole allowance on detours. A farther bank may be directly reachable.
+ for(const clearance of [ARRIVAL_SPACE,BODY_DISTANCE+.1])for(const {p,space}of points){
+  if(space>=clearance&&liveRoute(w,a.coordinates,p,a,budget,{directOnly:true}))return p;
+ }
  for(const clearance of [ARRIVAL_SPACE,BODY_DISTANCE+.1])for(const {p,space}of points){
   if(budget.remaining<=0)break;
   if(space<clearance||attempted.has(p))continue;
@@ -111,8 +118,9 @@ export function chooseDestination(w,a,target,selected={}){
  return liveWalkable(w,a.coordinates)?{...a.coordinates}:points[0]?.p||center;
 }
 export function configureTask(w,a,{force=false}={}){
- const t=a.task;if(!t||(!force&&t.liveSpaceVersion===1&&(t.actionId!=='drink'||t.liveWaterVersion===1)&&(t.actionId!=='rest'||t.liveRestVersion===1)))return;
- if(force)delete t.routeProgress; // Resuming after another real errand starts a new journey.
+ const t=a.task;if(!t||(!force&&t.liveSpaceVersion===1&&(!routedSurvival(t)||t.liveSurvivalVersion===1)&&(t.actionId!=='drink'||t.liveWaterVersion===1)&&(t.actionId!=='rest'||t.liveRestVersion===1)))return;
+ if(!t.liveSurvivalVersion&&routedSurvival(t)&&t.actionId!=='drink'&&t.phase==='work'&&!survivalReach(w,t,a.coordinates))t.workMinutes=0;
+ if(force){delete t.routeProgress;delete t.survivalJourney;} // Resuming after another real errand starts a new journey.
  if(t.actionId==='rest'){
   t.targetPosition=actionDestination(w,a,{id:'rest'});t.liveRestVersion=1;
   t.label=t.targetPosition==='camp'&&w.structures.shelter?'Rest under the camp shelter':t.targetPosition==='camp'&&w.structures.fire?'Rest beside the camp fire':'Rest here on the ground';
@@ -124,6 +132,10 @@ export function configureTask(w,a,{force=false}={}){
  t.destination=chooseDestination(w,a,t.targetPosition,{...t.selected,id:t.actionId});t.path=liveRoute(w,a.coordinates,t.destination,a)||[];t.pathIndex=1;t.liveSpaceVersion=1;
  t.phase=distance(a.coordinates,t.destination)>.15?'travel':'work';t.egressing=!liveWalkable(w,a.coordinates);t.liveTrace=[{...a.coordinates}];
  if(t.actionId==='drink')t.liveWaterVersion=1;
+ if(routedSurvival(t)){
+  t.liveSurvivalVersion=1;
+  if(!t.path.length||!survivalReach(w,t,t.destination))beginSurvivalRoute(w,a,t);
+ }
 }
 export const explorationCell=p=>`${Math.floor(p.x/4)},${Math.floor(p.y/4)}`;
 export function explorationDestination(w,a){
