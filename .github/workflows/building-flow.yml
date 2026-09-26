@@ -17,6 +17,9 @@ jobs:
       - name: Finite autonomous building and preservation
         run: |
           node realtime/building-flow-test.mjs
+          node realtime/thermal-return-test.mjs
+          node realtime/remote-survival-test.mjs
+          node realtime/behavior-test.mjs
           node realtime/construction-stages-test.mjs
           node realtime/ambition-test.mjs
           node realtime/open-construction-test.mjs

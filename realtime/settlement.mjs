@@ -101,7 +101,7 @@ export function settlementCandidates(w,a){
   // Source order is not a compulsory construction sequence. Finish invested
   // work, or use carried/racked materials on another supported component,
   // before chasing a missing prerequisite for the first part in the program.
-  const prepared=available.filter(part=>!preparationFor(a,part)),ready=prepared.find(part=>part.invested||units(a,part.material)>=part.materialUnits)||prepared.find(part=>units(a,part.material)+units(stock,part.material)>=part.materialUnits)||available[0];
+  const prepared=available.filter(part=>!preparationFor(a,part)),ready=prepared.find(part=>part.invested)||prepared.find(part=>units(a,part.material)>=part.materialUnits)||prepared.find(part=>units(a,part.material)+units(stock,part.material)>=part.materialUnits)||available[0];
   if(ready)nextParts.set(p.id,ready);
   if(stock.folded){offer('unfold_rack:'+stock.id,'Set up the reused building rack for '+p.name,base+20,{kind:'unfold_rack',storeId:stock.id,projectId:p.id,minutes:1.5},stock.position);continue;}
   // A fetched binding remains a construction input even after preparation
