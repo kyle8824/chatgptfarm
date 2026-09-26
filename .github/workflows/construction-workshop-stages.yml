@@ -1,7 +1,7 @@
 name: Construction workshop stages
 on:
   push:
-    branches: [fix/construction-workshop-stages]
+    branches: [fix/construction-workshop-stages, fix/material-supply-workshop]
   workflow_dispatch:
 permissions:
   contents: read

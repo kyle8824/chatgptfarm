@@ -1,5 +1,5 @@
 import {structurePerformance} from '../shared/structure-performance.js';
-import {constructionSpec} from '../shared/craft.js';
+import {bindingLength,CORDAGE_LENGTH_MM} from '../shared/craft.js';
 // The existing main-domain /live rewrite keeps snapshot reads same-origin.
 export const WORLD_BASE='/live';
 export const SNAPSHOT_KEY='chatgptfarm-structure-catalog-v1';
@@ -14,8 +14,7 @@ export function readCatalog(storage){try{const raw=storage.getItem(SNAPSHOT_KEY)
 export function resourceRows(p,stores=[]){
  const rows=new Map(),stock=stores.find(s=>s.id===p.stockpileId)?.items||{},keys={timber:['dryWood','wetWood'],stone:['stones'],reeds:['reeds'],clay:['clay']};
  for(const part of p.parts){const row=rows.get(part.material)||{material:part.material,required:0,committed:0,atSite:0,missing:0};row.required+=part.materialUnits;if(part.built||part.invested)row.committed+=part.materialUnits;rows.set(part.material,row);}
- const bindings=p.parts.reduce((n,x)=>n+constructionSpec(x).binding,0);if(bindings)rows.set('cordage',{material:'cordage',required:bindings,committed:p.parts.reduce((n,x)=>n+(x.bindingUsed||0),0),atSite:0,missing:0});keys.cordage=['cordage'];
- for(const row of rows.values()){row.atSite=keys[row.material].reduce((n,key)=>n+(stock[key]||0),0);row.missing=Math.max(0,row.required-row.committed-row.atSite);}return [...rows.values()];
+ for(const row of rows.values()){row.atSite=keys[row.material].reduce((n,key)=>n+(stock[key]||0),0);row.missing=Math.max(0,row.required-row.committed-row.atSite);}const committed=p.parts.reduce((n,x)=>n+(x.bindingLengthMm??(x.bindingUsed||0)*CORDAGE_LENGTH_MM),0)/1000,remaining=p.parts.filter(x=>!x.built&&!x.invested).reduce((n,x)=>n+bindingLength(x),0)/1000,atSite=((p.bindingStockMm||0)+(stock.cordage||0)*CORDAGE_LENGTH_MM)/1000;if(committed+remaining>0)rows.set('cordage',{material:'cordage (m)',required:committed+remaining,committed,atSite,missing:Math.max(0,remaining-atSite)});return [...rows.values()];
 }
 export function physicalFunctions(p){
  const result=[],a=p.affordances,live=p.status==='complete',performance=structurePerformance(p),factor=live?performance.storageFactor:1;
