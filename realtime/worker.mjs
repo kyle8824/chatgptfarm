@@ -1,3 +1,4 @@
+import {localAiRequest,localConfigured} from './local-ai.mjs';
 import {frameDelta} from '../shared/live-frame.js';
 import {DurableObject} from 'cloudflare:workers';
 import {RealtimeController} from './world.mjs';
@@ -15,7 +16,7 @@ export class LiveValley extends DurableObject{
  }
  async alarm(){await this.controller.alarm(this.clients.size);this.startLoop();this.broadcast();void this.controller.requestDecisions();}
  broadcast(){if(!this.clients.size)return;const frame=this.controller.frame(this.clients.size,{includeTrees:false}),text=JSON.stringify(frameDelta(this.lastBroadcast,frame));this.lastBroadcast=structuredClone(frame);let legacy;for(const ws of this.clients){try{ws.send(this.deltaClients.has(ws)?text:(legacy??=JSON.stringify(this.controller.frame(this.clients.size))));}catch{this.clients.delete(ws);}}}
- async fetch(request){try{await this.initialize();const url=new URL(request.url),path=url.pathname;
+ async fetch(request){try{const local=new URL(request.url).pathname.startsWith('/live/local-ai/');if(local&&(!localConfigured(this.env)||request.headers.get('Authorization')!==`Bearer ${this.env.LOCAL_AI_KEY}`))return Response.json({error:'unauthorized_or_disabled'},{status:401});await this.initialize();if(local)return localAiRequest(this.controller,request);const url=new URL(request.url),path=url.pathname;
   if(path==='/live/ws'){
    if(request.headers.get('Upgrade')?.toLowerCase()!=='websocket')return new Response('WebSocket required',{status:426});
    if(this.clients.size>=100)return new Response('Viewer capacity reached',{status:503});

@@ -1,3 +1,4 @@
+import {observeResidence,advanceHomeReturn,settleHome} from './home-life.mjs';
 import {advanceSurvivalRoute,routedSurvival,survivalReach} from './survival-route.mjs';
 import {workPrimitiveShelter} from './primitive-shelter.mjs';
 import {advancePlantGrowth} from './plant-growth.mjs';
@@ -45,7 +46,7 @@ export async function step(w,seconds,{mind=null,fallbackReason='no_provider',wal
  const agents=[...w.agents].sort((a,b)=>a.id.localeCompare(b.id));
  if((w.day*24+w.hour)%2)agents.reverse();
  for(const a of agents){
-  const w=householdWorld(root,a);observeLandscape(w,a);
+  const w=householdWorld(root,a);observeLandscape(w,a);observeResidence(w,a);
   if(!isAdult(w,a))continue;
   advanceFreeTime(w,a,seconds);
   ensureComfort(a);a.restSupport=null;
@@ -62,6 +63,8 @@ export async function step(w,seconds,{mind=null,fallbackReason='no_provider',wal
    if(result.blocked){const detail='No safe survival route was found within the bounded search.';outcome(w,a,t,false,detail,'blocked');rememberFailure(w,a,t,detail);a.task=null;}
   }else if(t?.selected?.job?.kind==='supply_trip'){
    positionBefore=t.phase==='travel'?'travel':a.position;const result=await advanceSupplyJourney(w,a,t,seconds);if(result.done){outcome(w,a,t,result.success,result.detail);if(!result.success)rememberFailure(w,a,t,result.detail);a.task=null;}
+  }else if(t?.selected?.job?.kind==='return_home'){
+   positionBefore=t.phase==='travel'?'travel':a.position;const result=advanceHomeReturn(w,a,t,seconds);if(result.done){outcome(w,a,t,result.success,result.detail);if(!result.success)rememberFailure(w,a,t,result.detail);a.task=null;}
   }else if(t?.selected?.job?.kind==='return_warmth'){
    positionBefore=t.phase==='travel'?'travel':a.position;const result=advanceThermalReturn(w,a,t,seconds);if(result.done){outcome(w,a,t,result.success,result.detail);if(!result.success)rememberFailure(w,a,t,result.detail);a.task=null;}
   }else if(t?.actionId==='explore'){
@@ -81,7 +84,7 @@ export async function step(w,seconds,{mind=null,fallbackReason='no_provider',wal
    a.position='travel';positionBefore='travel';const movement=advanceLiveRoute(w,a,t,seconds);
    if(movement.blocked){outcome(w,a,t,false,'Route changed while travelling.','blocked');rememberFailure(w,a,t,'Route remains blocked; try another useful task before retrying.');a.task=null;}
    else if(movement.arrived){a.position=t.targetPosition;t.phase='work';recordSurfaceUse(w,a,t.origin,t.destination,t.actionId);}
-  }else if(t){faceInteraction(w,a,seconds);const result=t.actionId==='build_shelter'?workPrimitiveShelter(w,a,t,minutes):['trade','regional_craft'].includes(t.selected?.job?.kind)?workEconomy(w,a,t,minutes):t.selected?.job?.kind==='care'?workParenting(w,a,t,minutes):isRestingTask(t)?workComfortRest(w,a,t,minutes):isFreeTimeJob(t)?workFreeTime(w,a,t,minutes):t.selected?.job?workSettlement(w,a,t,minutes):work(w,a,t,minutes);if(isRestingTask(t)&&t.workMinutes>0&&t.selected?.job?.projectId)recordStructureUse(w,a,w.settlement.projects.find(p=>p.id===t.selected.job.projectId),'rest');if(result.done){finishFreeTime(w,a,t,result);outcome(w,a,t,result.success!==false,result.detail);if(result.success===false)rememberFailure(w,a,t,result.detail);if(['talk','seek_other'].includes(t.actionId))a.socialUntil=clock(w)+90;if(t.actionId==='seek_cover')a.coverUntil=clock(w)+45;a.task=null;}}
+  }else if(t){faceInteraction(w,a,seconds);const result=t.selected?.job?.kind==='settle_home'?settleHome(w,a,t,minutes):t.actionId==='build_shelter'?workPrimitiveShelter(w,a,t,minutes):['trade','regional_craft'].includes(t.selected?.job?.kind)?workEconomy(w,a,t,minutes):t.selected?.job?.kind==='care'?workParenting(w,a,t,minutes):isRestingTask(t)?workComfortRest(w,a,t,minutes):isFreeTimeJob(t)?workFreeTime(w,a,t,minutes):t.selected?.job?workSettlement(w,a,t,minutes):work(w,a,t,minutes);if(isRestingTask(t)&&t.workMinutes>0&&t.selected?.job?.projectId)recordStructureUse(w,a,w.settlement.projects.find(p=>p.id===t.selected.job.projectId),'rest');if(result.done){finishFreeTime(w,a,t,result);outcome(w,a,t,result.success!==false,result.detail);if(result.success===false)rememberFailure(w,a,t,result.detail);if(['talk','seek_other'].includes(t.actionId))a.socialUntil=clock(w)+90;if(t.actionId==='seek_cover')a.coverUntil=clock(w)+45;a.task=null;}}
   if(t)recordEnjoyedWork(w,a,t);
   enforceCarry(w,a);
   const ratio=seconds/3600,n=a.needs;

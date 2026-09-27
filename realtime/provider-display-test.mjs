@@ -23,4 +23,5 @@ const oldTask={...mara,task:{source:'ai',model:LLAMA_MODEL}};assert.match(provid
 frame.runtime.providers.households[0].model='<img onerror=bad>';assert(!providerMarkup(frame,mara).includes('<img'));assert.equal(modelName(LLAMA_MODEL),'Llama 3.3 70B');
 now+=86400000;const tomorrow=providerSummary(r,readyEnv,ai,now).households[0];assert.equal(tomorrow.callsToday,0);assert.equal(tomorrow.availability,'ready');assert.equal(r.ai.calls,78,'UTC rollover display stays read-only');
 assert.equal(JSON.stringify(providerSummary(r,readyEnv,ai,now)).includes(readyEnv.OPENAI_API_KEY),false);
+frame.runtime.localAi={configured:true,available:true,model:'local/llama3.1:8b'};assert.match(providerMarkup(frame,{...mara,task:{source:'ai',model:'local/llama3.1:8b'}}),/Current action chosen by Local · llama3.1:8b/);assert.match(providerMarkup(frame,mara),/Optional local helper: available/);
 console.log('PASS live provider display, original-pair routing, unchanged ancestry and used quotas, old-task provenance, UTC rollover, escaped labels and no secret disclosure');
