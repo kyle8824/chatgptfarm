@@ -1,6 +1,6 @@
 # Construction lab
 
-`/live/build-lab/` is an isolated, browser-owned experiment. It imports the farm's actual compiler, site validation, staged construction, finite inventories, movement, survival, comfort, thermal and rendering modules. No production world snapshot is mutated, no second live world runs on the server, and no simulation loop runs when the lab is idle.
+`/live/build-lab` is an isolated, browser-owned experiment. It imports the farm's actual compiler, site validation, staged construction, finite inventories, movement, survival, comfort, thermal and rendering modules. No production world snapshot is mutated, no second live world runs on the server, and no simulation loop runs when the lab is idle.
 
 Choose a scenario, compare planning instructions, request one design, inspect validation, adopt it, advance bounded simulated time, and measure use. Manual JSON construction programs also work. Six comparisons and the current experiment persist in browser storage; JSON exports retain inputs, model responses, usage, validation, baseline state and measured outcomes. Credentials are never saved/exported. AI output is nondeterministic, but restoring a baseline restores the same starting state. The lab is a controlled single-person fixture, not proof of social emergence or long-term production balance.
 
@@ -20,4 +20,4 @@ Use the same owner password originally configured as the Worker's `ADMIN_KEY`. T
 
 `node build-lab/build.mjs` bundles the lab using existing Cloudflare dependencies. `node build-lab/dev-server.mjs` serves a LOCAL TEST ONLY provider at localhost:4186 with password `local-lab-test-key`; this server is never deployed. `node build-lab/browser-test.mjs` verifies the UI/API/assembly/use/persistence flow with that clearly labeled provider fixture. It never spends real API credits. CI separately verifies the real Worker runtime and binding configuration.
 
-The lab is built by `cloudflare/build.mjs` and published with the existing runtime release. `/live/*` is already proxied by the public domain, so the static Vercel branch needs no release. The existing live-world journal links to the lab.
+The lab is built by `cloudflare/build.mjs` and published with the existing runtime release. `/live/*` is already proxied by the public domain, so the static Vercel branch needs no release. The existing live-world journal links to the lab. Use `/live/build-lab` without a trailing slash on the public domain: the proxy does not route that trailing-slash entry. The Worker serves the canonical entry directly and the HTML base makes assets/API resolve inside `/live/build-lab/`.

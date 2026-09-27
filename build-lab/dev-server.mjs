@@ -10,7 +10,7 @@ export function startServer(port=4186){
   const url=new URL(req.url,'http://localhost');
   if(url.pathname.startsWith('/live/build-lab/api/')){const chunks=[];for await(const chunk of req)chunks.push(chunk);const body=Buffer.concat(chunks);const response=await service.fetch(new Request(url,{method:req.method,headers:req.headers,...(body.length?{body}:{} )}));res.writeHead(response.status,Object.fromEntries(response.headers));res.end(await response.text());return;}
   if(url.pathname==='/'){res.writeHead(302,{Location:'/live/build-lab/'});res.end();return;}
-  const relative=url.pathname==='/live/build-lab/'?'index.html':url.pathname.replace('/live/build-lab/','');
+  const relative=['/live/build-lab','/live/build-lab/'].includes(url.pathname)?'index.html':url.pathname.replace('/live/build-lab/','');
   if(!['index.html','app.js','style.css'].includes(relative)){res.writeHead(404);res.end();return;}
   const file=new URL('../cloudflare/public/live/build-lab/'+relative,import.meta.url);res.writeHead(200,{'Content-Type':relative.endsWith('.js')?'text/javascript':relative.endsWith('.css')?'text/css':'text/html'});res.end(await fs.readFile(file));
  }catch(error){console.error(error.message);res.writeHead(500);res.end('Local test server error');}});
