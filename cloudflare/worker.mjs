@@ -52,7 +52,7 @@ export default {
     if(path.startsWith('/live/build-lab/api/'))return env.BUILD_LAB.getByName('build-lab-v1').fetch(request);
     if(path==='/live/build-lab')return env.ASSETS.fetch(new Request(new URL('/live/build-lab/',request.url),request));
     if(path==='/build-lab'||path==='/build-lab/')return Response.redirect(new URL('/live/build-lab',request.url),302);
-    if(['/live/ws','/live/state','/live/health','/live/geometry'].includes(path)||path.startsWith('/live/design/')){try{return await env.LIVE_VALLEY.getByName('live-valley-v1').fetch(request);}catch(e){return unavailableResponse(e,{diagnostic:path==='/live/health',build:BUILD_INFO});}}
+    if(['/live/ws','/live/state','/live/health','/live/geometry'].includes(path)||path.startsWith('/live/design/')||path.startsWith('/live/local-ai/')){try{return await env.LIVE_VALLEY.getByName('live-valley-v1').fetch(request);}catch(e){return unavailableResponse(e,{diagnostic:path==='/live/health',build:BUILD_INFO});}}
     if(path==='/live')return Response.redirect(new URL('/live/',request.url),302);
     if(['/state','/health','/evidence','/start','/pause','/resume'].includes(path)){
       try{return await env.WORLD.getByName('preview-v1').fetch(request);}catch(e){return unavailableResponse(e,{diagnostic:path==='/health',build:BUILD_INFO});}

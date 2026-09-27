@@ -1,3 +1,4 @@
+import {closeCompanions} from './home-life.mjs';
 import {advanceHappiness,happinessSummary} from './happiness.mjs';
 import {thermalExposure} from '../engine/thermal.js';
 import {romanceKinds,willingRomance,completeRomance,isAdult,familyContext} from './life.mjs';
@@ -79,7 +80,7 @@ export function freeTimeCandidates(w,a){
     offer('social:'+kind+':'+b.id,titles[kind]+b.name,score-gap*.25,{kind,partnerId:b.id,destination,minutes:kind==='courtship'?20:15},'A shared adult choice requiring mutual interest, availability and time together.');continue;
    }
    const destination=interactionPoint(w,a,b.coordinates,{radius:1.6,accept:p=>leisureReady(w,a,p)});if(!destination)continue;
-   const score=kind==='conversation'?8+cooperation*10+(100-f.company)*.4:7+cooperation*6+(100-f.enjoyment)*.42;
+   const bond=closeCompanions(w,a).find(p=>p.id===b.id),score=(kind==='conversation'?8+cooperation*10+(100-f.company)*.4:7+cooperation*6+(100-f.enjoyment)*.42)+(bond?bond.strength*8:0);
    offer('social:'+kind+':'+b.id,kind==='conversation'?'Spend time talking with '+b.name:'Play a hand-sign game with '+b.name,score-gap*.25,{kind,partnerId:b.id,destination,minutes:kind==='conversation'?12:10},kind==='conversation'?'Seek companionship and exchange remembered experiences.':'Enjoy five rounds together: stone beats shears, shears beat reed, reed beats stone.');
   }
   else if(seen&&now-seen.at<240&&f.company<45&&distance(a.coordinates,seen.position)>3&&(f.cooldowns.visit||0)<=now){

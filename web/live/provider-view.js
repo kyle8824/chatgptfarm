@@ -1,6 +1,7 @@
 const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 export function modelName(model){
  if(model==='@cf/meta/llama-3.3-70b-instruct-fp8-fast')return 'Llama 3.3 70B';
+ if(model?.startsWith('local/'))return 'Local · '+model.slice(6);
  if(model==='gpt-5.6-luna')return 'GPT-5.6 Luna';
  return model||'No model assigned';
 }
@@ -14,6 +15,7 @@ export function providerStatus(h){
 }
 export function providerMarkup(state,person){
  const h=personProvider(state,person),allocation=h?.allocation||state.runtime?.providers?.allocation,cf=state.runtime?.providers?.cloudflare;
+ const local=state.runtime?.localAi,localNote=local?.configured?`<small>Optional local helper: ${local.available?'available':'offline'} · ${esc(modelName(local.model))}. Cloud cadence and limits remain in place.</small>`:'';
  const source=person.task?.source==='ai'?`Current action chosen by ${modelName(person.task.model)}.`:'Current action uses autonomous behavior rules.';
- return `<section class="provider-card" aria-label="Assigned AI"><strong>${esc(h?.provider==='openai'?'OpenAI':h?.provider==='cloudflare'?'Cloudflare':'AI')} · ${esc(modelName(h?.model))}</strong><span>${esc(providerStatus(h))}</span>${h&&allocation?`<small>${h.callsToday} calls ${h.allowanceReset?'since reset':'used today'} · ${allocation.perHousehold}/day shared by this household (${allocation.actionsPerHousehold} action + ${allocation.designPerHousehold} design).</small>`:''}${h?.provider==='cloudflare'&&cf?`<small>${esc(h.callsToday)} household calls today · shared Llama usage ≈${Math.ceil(cf.reportedNeurons).toLocaleString('en-US')}/${cf.dailyTargetNeurons.toLocaleString('en-US')} neurons. ${cf.legacyUntrackedCalls?'Earlier calls remain unverified.':`Including pending or unverified requests: ${Math.ceil(cf.reservedNeurons).toLocaleString('en-US')}.`}</small>`:''}<small>${esc(source)}</small></section>`;
+ return `<section class="provider-card" aria-label="Assigned AI"><strong>${esc(h?.provider==='openai'?'OpenAI':h?.provider==='cloudflare'?'Cloudflare':'AI')} · ${esc(modelName(h?.model))}</strong><span>${esc(providerStatus(h))}</span>${h&&allocation?`<small>${h.callsToday} calls ${h.allowanceReset?'since reset':'used today'} · ${allocation.perHousehold}/day shared by this household (${allocation.actionsPerHousehold} action + ${allocation.designPerHousehold} design).</small>`:''}${h?.provider==='cloudflare'&&cf?`<small>${esc(h.callsToday)} household calls today · shared Llama usage ≈${Math.ceil(cf.reportedNeurons).toLocaleString('en-US')}/${cf.dailyTargetNeurons.toLocaleString('en-US')} neurons. ${cf.legacyUntrackedCalls?'Earlier calls remain unverified.':`Including pending or unverified requests: ${Math.ceil(cf.reservedNeurons).toLocaleString('en-US')}.`}</small>`:''}${localNote}<small>${esc(source)}</small></section>`;
 }

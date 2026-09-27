@@ -18,6 +18,7 @@ jobs:
           cache-dependency-path: cloudflare/package-lock.json
       - run: npm ci --prefix cloudflare
       - run: npm test
+      - run: node realtime/home-life-test.mjs && node realtime/local-ai-test.mjs && node realtime/provider-display-test.mjs && node realtime/design-planner-test.mjs
       - run: node build-lab/test.mjs
       - run: node realtime/survival-route-test.mjs && node realtime/ambition-test.mjs && node realtime/remote-survival-test.mjs && node realtime/thermal-return-test.mjs
       - run: node realtime/thermal-loop-test.mjs && node realtime/cold-preparation-test.mjs
