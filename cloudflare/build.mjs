@@ -19,3 +19,4 @@ await fs.mkdir(new URL('live/',out),{recursive:true});
 for(const file of ['index.html','style.css'])await fs.copyFile(new URL(`web/live/${file}`,root),new URL(`live/${file}`,out));
 await fs.copyFile(new URL('web/live/index.html',root),new URL('index.html',out));
 await build({entryPoints:[new URL('web/live/client.js',root).pathname],bundle:true,format:'esm',minify:true,outfile:new URL('live/client.js',out).pathname,nodePaths:[new URL('node_modules/',import.meta.url).pathname],target:'es2022'});
+await (await import('../build-lab/build.mjs')).buildLab();

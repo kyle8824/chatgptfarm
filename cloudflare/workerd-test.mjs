@@ -8,13 +8,17 @@ const temporary=await fs.mkdtemp(path.join(os.tmpdir(),'farm-worker-'));
 await build({entryPoints:[new URL('./worker.mjs',import.meta.url).pathname],bundle:true,format:'esm',platform:'browser',external:['cloudflare:workers'],outfile:path.join(temporary,'worker.mjs')});
 const seed=await fs.readFile(new URL('../world/state.json',import.meta.url),'utf8');
 const options={durableObjectsPersist:path.join(temporary,'state'),workers:[{name:'preview',modules:true,modulesRoot:temporary,scriptPath:path.join(temporary,'worker.mjs'),compatibilityDate:'2026-09-01',
- durableObjects:{WORLD:{className:'FarmWorld',useSQLite:true}},
+ durableObjects:{WORLD:{className:'FarmWorld',useSQLite:true},BUILD_LAB:{className:'BuildLab',useSQLite:true}},
  bindings:{ADMIN_KEY:'test-only-password',AI_ENABLED:'false'},
  outboundService:async()=>new Response(seed,{headers:{'Content-Type':'application/json'}})}]};
 let mf=new Miniflare({...convertV4MiniflareOptions(options),resourcePersistencePath:path.join(temporary,'state')});
 const request=(url,options)=>mf.dispatchFetch('https://preview.test'+url,options);
 const auth={method:'POST',headers:{Authorization:'Bearer test-only-password'}};
 try{
+ assert.equal((await request('/live/build-lab/api/status')).status,401);
+ const labStatus=await request('/live/build-lab/api/status',{headers:{Authorization:'Bearer test-only-password'}});
+ assert.equal(labStatus.status,200);const lab=await labStatus.json();assert.equal(lab.dailyUsd,.10);assert.equal(lab.calls,0);assert.equal(lab.configured,false);
+ assert.equal((await request('/live/build-lab/api/design',{...auth,body:JSON.stringify({requestId:'worker-lab-test-0001',variant:'context',context:{}})})).status,503);
  assert.equal((await request('/start',{method:'POST'})).status,401);
  assert.equal((await request('/state')).status,503);
  const response=await request('/start',auth);assert.equal(response.status,200,await response.clone().text());

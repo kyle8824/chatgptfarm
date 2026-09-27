@@ -1,7 +1,7 @@
 name: Cloudflare Runtime Validation
 on:
   pull_request:
-    paths: ['cloudflare/**', 'runtime/**', 'engine/**', 'realtime/**', 'shared/**', 'web/live/**', 'engine.js', 'mind.js', 'phaser-world-v1.js', '.github/workflows/cloudflare-runtime.yml']
+    paths: ['build-lab/**', 'cloudflare/**', 'runtime/**', 'engine/**', 'realtime/**', 'shared/**', 'web/live/**', 'engine.js', 'mind.js', 'phaser-world-v1.js', '.github/workflows/cloudflare-runtime.yml']
   workflow_dispatch:
 permissions:
   contents: read
@@ -18,6 +18,7 @@ jobs:
           cache-dependency-path: cloudflare/package-lock.json
       - run: npm ci --prefix cloudflare
       - run: npm test
+      - run: node build-lab/test.mjs
       - run: node realtime/survival-route-test.mjs && node realtime/ambition-test.mjs && node realtime/remote-survival-test.mjs && node realtime/thermal-return-test.mjs
       - run: node realtime/thermal-loop-test.mjs && node realtime/cold-preparation-test.mjs
       - run: node scripts/runtime-test.mjs
