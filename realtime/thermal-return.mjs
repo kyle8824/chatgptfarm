@@ -6,6 +6,20 @@ import {advanceLiveRoute,motionState} from './motion.mjs';
 import {beginReturnRoute,advanceReturnRoute} from './return-route.mjs';
 import {knownCampProtection} from './frontier-knowledge.mjs';
 
+// Remember a completed protection visit for this cold-recovery episode.
+// Reaching an unheated shelter is not evidence that another identical trip
+// will help. New usable heat or worse exposure can justify a fresh return.
+const exposure=w=>(w.temperature<50?5:w.temperature<58?2:0)+(w.weather==='rain'?3:0);
+function repeatedUnheatedReturn(w,a,h,protection){
+ const visit=a.thermalGoal?.visits?.[h.id];
+ if(!visit||protection.fire||protection.fuel||a.inventory.dryWood>=1)return false;
+ return (!protection.shelter||visit.shelter)&&exposure(w)<=visit.exposure;
+}
+function rememberProtectionVisit(w,a,h){
+ const seen=knownCampProtection(w,a,h);
+ a.thermalGoal={...a.thermalGoal,campId:h.id,visits:{...a.thermalGoal?.visits,[h.id]:{at:clock(w),shelter:seen.shelter,exposure:exposure(w)}}};
+}
+
 export const coldRecovery=a=>a.needs.warmth<20||!!a.thermalGoal&&a.needs.warmth<45;
 function usefulCamps(w,a){
  return (w.frontier?.homes||[]).filter(h=>h.id===a.householdId||a.knownCamps?.includes(h.id)).filter(h=>{
@@ -36,7 +50,9 @@ export function returnCandidate(w,a){
  // Finish a bounded local food errand before returning. Otherwise a cold
  // villager crosses the camp radius, turns back, resumes the same forage and
  // repeats indefinitely without ever reaching the berries or getting warm.
- const protection=knownCampProtection(w,a,h),heatReady=protection.fire||protection.fuel||a.inventory.dryWood>=1;
+ const protection=knownCampProtection(w,a,h);
+ if(repeatedUnheatedReturn(w,a,h,protection))return null;
+ const heatReady=protection.fire||protection.fuel||a.inventory.dryWood>=1;
  if(!heatReady&&a.task&&/^(forage:|survey:|gather_berries|retrieve_food:|eat_)/.test(a.task.actionId)){
   const foodGoal=j?.destination||coordForPosition(a.task.targetPosition,w);
   if(foodGoal&&distance(foodGoal,h)<=45&&distance(a.coordinates,h)<=50)return null;
@@ -49,7 +65,7 @@ export function returnCandidate(w,a){
 export function advanceThermalReturn(w,a,t,seconds){
  const camp=w.frontier?.homes.find(h=>h.id===t.selected.job.campId);
  if(!camp||!coldRecovery(a))return {done:true,success:true,detail:'The cold-weather return is no longer needed.'};
- if(distance(a.coordinates,camp)<=8.2){a.campId=camp.id;a.position='camp';a.thermalGoal={...a.thermalGoal,campId:camp.id};return {done:true,success:true,detail:`Reached ${camp.name} on foot. Shelter and fuel still have to be used to recover warmth.`};}
+ if(distance(a.coordinates,camp)<=8.2){a.campId=camp.id;a.position='camp';rememberProtectionVisit(w,a,camp);return {done:true,success:true,detail:`Reached ${camp.name} on foot. Shelter and fuel still have to be used to recover warmth.`};}
  if(!t.returnJourney){t.returnJourney={search:beginReturnRoute(a.coordinates,camp),travelled:0};t.phase='planning';}
  const journey=t.returnJourney;
  if(journey.search){
