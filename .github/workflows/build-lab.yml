@@ -1,0 +1,27 @@
+name: Build lab verification
+on:
+  pull_request:
+    paths: ['build-lab/**', 'cloudflare/**', 'realtime/**', 'shared/**', '.github/workflows/build-lab.yml']
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  lab:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: npm
+          cache-dependency-path: cloudflare/package-lock.json
+      - run: npm ci --prefix cloudflare
+      - run: node build-lab/test.mjs && node build-lab/build.mjs
+      - run: npm install --prefix cloudflare --no-save playwright@1.55.0 && cd cloudflare && npx playwright install --with-deps chromium
+      - run: node build-lab/browser-test.mjs
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: build-lab-evidence
+          path: realtime-qa/build-lab-*

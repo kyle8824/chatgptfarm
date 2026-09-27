@@ -1,4 +1,5 @@
 export {LiveValley} from '../realtime/worker.mjs';
+export {BuildLab} from '../build-lab/worker.mjs';
 import {DurableObject} from 'cloudflare:workers';
 import {WorldController} from './world.mjs';
 import {BUILD_INFO} from './build-info.mjs';
@@ -48,6 +49,8 @@ export default {
   ]).then(results=>{for(const result of results)if(result.status==='rejected'||!result.value.ok)console.error('Scheduled world recovery deferred');}));},
   async fetch(request,env){
     const path=new URL(request.url).pathname;
+    if(path.startsWith('/live/build-lab/api/'))return env.BUILD_LAB.getByName('build-lab-v1').fetch(request);
+    if(path==='/build-lab'||path==='/build-lab/'||path==='/live/build-lab')return Response.redirect(new URL('/live/build-lab/',request.url),302);
     if(['/live/ws','/live/state','/live/health','/live/geometry'].includes(path)||path.startsWith('/live/design/')){try{return await env.LIVE_VALLEY.getByName('live-valley-v1').fetch(request);}catch(e){return unavailableResponse(e,{diagnostic:path==='/live/health',build:BUILD_INFO});}}
     if(path==='/live')return Response.redirect(new URL('/live/',request.url),302);
     if(['/state','/health','/evidence','/start','/pause','/resume'].includes(path)){
