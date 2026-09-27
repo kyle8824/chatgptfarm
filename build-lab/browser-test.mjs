@@ -4,7 +4,7 @@ import {createRequire} from 'node:module';
 import {startServer} from './dev-server.mjs';
 const require=createRequire(process.env.LAB_BROWSER_MODULES||new URL('../cloudflare/package.json',import.meta.url));
 const {chromium}=require('playwright');
-const server=await startServer(0),base='http://127.0.0.1:'+server.address().port+'/live/build-lab/';
+const server=await startServer(0),base='http://127.0.0.1:'+server.address().port+'/live/build-lab';
 const browser=await chromium.launch({headless:true,args:['--no-sandbox','--use-gl=angle','--use-angle=swiftshader','--enable-unsafe-swiftshader']});
 try{
  const context=await browser.newContext({viewport:{width:1440,height:1050}}),page=await context.newPage(),errors=[];
