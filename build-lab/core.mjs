@@ -61,7 +61,7 @@ export function measures(lab){
   const place=restPlace(w,{...a,coordinates:s.position},{projectId:p.id,surfaceId:s.id});if(!place)continue;
   rest.push({projectId:p.id,surfaceId:s.id,position:s.position,posture:s.posture,comfort:place.score,cover:place.shelter,heatPerHour:exposureAt(w,a,s.position).net});
  }
- return {needs:{...a.needs},comfort:a.comfort.value,elapsedMinutes:lab.elapsedMinutes,projects:projects.length,completed:projects.filter(p=>p.status==='complete').length,
+ return {needs:{...a.needs},comfort:a.comfort.value,lastRest:structuredClone(a.comfort.lastRest),elapsedMinutes:lab.elapsedMinutes,projects:projects.length,completed:projects.filter(p=>p.status==='complete').length,
  builtParts:projects.reduce((n,p)=>n+p.parts.filter(x=>x.built).length,0),totalParts:projects.reduce((n,p)=>n+p.parts.length,0),
  workMinutes:projects.reduce((n,p)=>n+p.parts.reduce((m,q)=>m+q.workMinutes,0),0),rest,bindings:projects.map(p=>({id:p.id,...bindingBudget(p)})),
  practice:structuredClone(a.craftPractice||{}),action:a.currentAction,position:{...a.coordinates}};
@@ -110,7 +110,7 @@ export function selectRestTest(lab,projectId,surfaceId){
  const w=lab.world,a=w.agents[0],candidate=comfortCandidates(w,a,{relax:true}).find(c=>c.job.projectId===projectId&&c.job.surfaceId===surfaceId);
  if(!candidate)throw Error('That completed surface is not reachable or available.');
  if(a.task)(a.suspendedTasks??=[]).push(structuredClone(a.task));
- candidate.job={...candidate.job,kind:'rest',minutes:10};
- a.task={id:'lab-rest-'+clock(w),actionId:'rest_on:'+projectId+':'+surfaceId,label:'Controlled use test',selected:candidate,source:'lab-directed',targetPosition:a.position,workMinutes:0,requiredMinutes:10,phase:'travel',origin:{...a.coordinates}};
+ candidate.job={...candidate.job,minutes:10};
+ a.task={id:'lab-rest-'+clock(w),actionId:candidate.id,label:'Controlled use test',selected:candidate,source:'lab-directed',targetPosition:a.position,workMinutes:0,requiredMinutes:10,phase:'travel',origin:{...a.coordinates}};
  configureTask(w,a);return candidate;
 }
