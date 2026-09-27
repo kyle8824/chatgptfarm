@@ -1,11 +1,17 @@
 import {distance} from '../engine/navigation.js';
 import {homeAccount,campLayout} from '../shared/frontier.js';
-import {clock,roomFor} from './holdings.mjs';
+import {clock,roomFor,loadOf,ITEM} from './holdings.mjs';
 import {findMaterialSource,interactionPoint} from './settlement.mjs';
 
 // A cold person needs executable preparation, not just a wish for an already
 // lit fire. These jobs use the ordinary finite gathering/handling machinery.
 export function coldPreparationCandidates(w,a){
+ // Finish putting aside material actually picked up to clear a drying pile.
+ // The carried amount and this intent survive interruptions and checkpoints.
+ if(a.dryingClearance){
+  const {item,quantity}=a.dryingClearance,keep={...a.inventory,[item]:Math.max(0,(a.inventory[item]||0)-quantity)};
+  return [{id:'prepare_warmth:put_aside',label:'Put construction supplies beside the drying pile',score:148,reasons:[['finish clearing space for fuel',148]],job:{kind:'put_down',keep,clearDrying:true,coldPreparation:true,minutes:.75,destination:{...a.coordinates}}}];
+ }
  if(a.needs.warmth>=40||w.structures.fire||!w.settlement)return [];
  const result=[],raw=(a.inventory.dryWood||0)+(a.inventory.wetWood||0),camp=campLayout(w);
  const blocked=id=>a.liveFailures?.[id]&&clock(w)-a.liveFailures[id].at<a.liveFailures[id].retryMinutes;
@@ -26,6 +32,16 @@ export function coldPreparationCandidates(w,a){
   for(const s of drying.filter(s=>roomFor(w,s,'wetWood')>0).sort((s,t)=>distance(s.position,camp.shelter)-distance(t.position,camp.shelter))){
    const keep={...a.inventory,wetWood:0};
    if(offer('prepare_warmth:drying:'+s.id,'Put damp fuel under cover to dry',{kind:'deposit',storeId:s.id,keep,minutes:.75},s.position,140))return result;
+  }
+  // A full communal drying pile can be blocked by construction stock. Pick
+  // up a carryable amount first, then put it at the person's actual feet;
+  // existing capacity, ownership, travel and elapsed handling still apply.
+  for(const s of drying.filter(s=>s.id===homeAccount(w,'camp-drying'))){
+   const load=loadOf(w,s),volume=Math.max(0,Math.min(2,a.inventory.wetWood)*3-(s.capacityVolume-load.volume)),mass=Math.max(0,Math.min(2,a.inventory.wetWood)*1.55-(s.capacityKg-load.mass));
+   for(const item of ['woodPole','pointedPole','stones','clay']){
+    const quantity=Math.min(s.items[item]||0,roomFor(w,a,item),Math.max(Math.ceil(volume/ITEM[item][1]),Math.ceil(mass/ITEM[item][0])));
+    if(quantity>0&&offer('prepare_warmth:clear:'+s.id+':'+item,'Move construction stock to make room for drying fuel',{kind:'take',storeId:s.id,item,quantity,clearDrying:true,minutes:.75},s.position,140))return result;
+   }
   }
  }
  // Two branches already drying are enough to wait for actual evaporation;

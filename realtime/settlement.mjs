@@ -244,12 +244,14 @@ export function workSettlement(w,a,t,minutes){
   const q=Math.min(w.resources[j.item]||0,j.quantity,roomFor(w,a,j.item));if(!q)return fail('No fallen wood or carrying space remains.');woodCommand(w,a,{from:{kind:'ground',id:homeAccount(w,'log')},quantity:q,category:j.item,reason:'collect loose fallen branches for construction'});return {done:true,success:true,detail:`Collected ${q} loose fallen branches.`};
  }
  if(j.kind==='put_down'||j.kind==='deposit'){
-  const dest=s||ownPile(w,a);if(s&&!allowed(a,s))return fail('This is not available storage.');let count=0;
+  let dest=s||ownPile(w,a);if(s&&!allowed(a,s))return fail('This is not available storage.');let count=0;const clearing=j.clearDrying&&a.dryingClearance,carriedBefore=clearing?a.inventory[clearing.item]||0:0;
+  if(clearing&&!s&&!roomFor(w,dest,clearing.item))dest=makeStore(w,{position:a.coordinates,ownerId:a.id,name:`${a.name}’s ground supplies`});
   for(const [k,n]of Object.entries(a.inventory)){const keep=j.keep?.[k]??(FOOD.includes(k)?2:['sharpStone','boundSharpTool','firedVessel'].includes(k)?1:0);count+=transferItems(w,a,dest,k,Math.max(0,n-keep));}
+  if(clearing){clearing.quantity=Math.min(a.inventory[clearing.item]||0,clearing.quantity-carriedBefore+(a.inventory[clearing.item]||0));if(clearing.quantity<=0)delete a.dryingClearance;}
   if(count&&s)recordStructureUse(w,a,w.settlement.projects.find(p=>p.id===s.projectId),'storage');return {done:true,success:count>0,detail:`${a.name} physically put ${count} items into ${dest.name}.`};
  }
  if(j.kind==='take'){
-  if(!s)return fail('The store no longer exists.');const q=transferItems(w,s,a,j.item,j.quantity);if(q){recordTaking(w,a,s,j.item,q);recordStructureUse(w,a,w.settlement.projects.find(p=>p.id===s.projectId),'supplies');}return {done:true,success:q>0,detail:`${a.name} collected ${q} ${j.item} from ${s.name}.`};
+  if(!s)return fail('The store no longer exists.');const q=transferItems(w,s,a,j.item,j.quantity);if(q){if(j.clearDrying)a.dryingClearance={item:j.item,quantity:q,storeId:s.id};recordTaking(w,a,s,j.item,q);recordStructureUse(w,a,w.settlement.projects.find(p=>p.id===s.projectId),'supplies');}return {done:true,success:q>0,detail:`${a.name} collected ${q} ${j.item} from ${s.name}.`};
  }
  if(j.kind==='deliver'){
   if(!s||!p||!allowed(a,s))return fail('The building site is unavailable.');const q=transferItems(w,a,s,j.item,j.quantity);if(p.status!=='complete')p.status='gathering';p.revision++;return {done:true,success:q>0,detail:`${a.name} delivered ${q} ${j.item} to ${p.name}.`};
